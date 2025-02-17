@@ -2,14 +2,14 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Παρουσίαση: Περίοδοι έως το Στοιχείο 30</title>
+  <title>Παρουσίαση: Στοιχεία 3–30 με Διάταξη</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f7f7f7;
       margin: 20px;
     }
-    /* Περίοδος 2: grid με 8 στήλες */
+    /* Περίοδος 2: 8 στήλες */
     #period2 {
       display: grid;
       grid-template-columns: repeat(8, 40px);
@@ -17,23 +17,23 @@
       justify-content: center;
       margin-bottom: 20px;
     }
-    /* Περίοδος 3: grid με 9 στήλες (στήλες 1-2 για s‑block, στήλη 3 κενή, στήλες 4–9 για p‑block) */
+    /* Περίοδος 3: 8 στήλες (χωρίς κενά) */
     #period3 {
       display: grid;
-      grid-template-columns: repeat(9, 40px);
+      grid-template-columns: repeat(8, 40px);
       gap: 2px;
       justify-content: center;
       margin-bottom: 20px;
     }
-    /* Περίοδος 4: grid με 14 στήλες ώστε να χωρέσει τη μετατόπιση του d‑block */
+    /* Περίοδος 4: grid με 13 στήλες ώστε να εισαχθεί το κενό πριν από το στοιχείο 21 */
     #period4 {
       display: grid;
-      grid-template-columns: repeat(14, 40px);
+      grid-template-columns: repeat(13, 40px);
       gap: 2px;
       justify-content: center;
       margin-bottom: 20px;
     }
-    /* Στυλ για τα κουτάκια των στοιχείων */
+    /* Στυλ για τα κουτάκια στοιχείων */
     .element {
       width: 40px;
       height: 40px;
@@ -58,8 +58,10 @@
       cursor: pointer;
       user-select: none;
     }
-    #electronConfig.expanded { background-color: #eef; }
-    /* Στυλ για τα κουμπιά */
+    #electronConfig.expanded {
+      background-color: #eef;
+    }
+    /* Στυλ κουμπιών */
     #nextElement, #continue {
       display: block;
       margin: 20px auto;
@@ -70,8 +72,7 @@
   </style>
 </head>
 <body>
-
-  <!-- Containers για τις τρεις περιόδους -->
+  <!-- Containers για κάθε περίοδο -->
   <div id="period2"></div>
   <div id="period3"></div>
   <div id="period4"></div>
@@ -80,11 +81,11 @@
   <button id="nextElement">Επόμενο Στοιχείο</button>
   <button id="continue" style="display:none;">Συνέχεια</button>
 
-  <!-- Πλαίσιο για την ηλεκτρονιακή δομή -->
+  <!-- Πλαίσιο εμφάνισης ηλεκτρονιακής δομής -->
   <div id="electronConfig">Κάνε κλικ για λεπτομερή δομή</div>
 
   <script>
-    // Δεδομένα Περίοδου 2: στοιχεία 3–10
+    // Περίοδος 2: στοιχεία 3–10 (8 στοιχεία)
     const period2Elements = [
       { number: 3, category: 's-block', electronConfig: '1s2 2s1' },
       { number: 4, category: 's-block', electronConfig: '1s2 2s2' },
@@ -95,9 +96,8 @@
       { number: 9, category: 'p-block', electronConfig: '1s2 2s2 2p5' },
       { number: 10, category: 'p-block', electronConfig: '1s2 2s2 2p6' }
     ];
-    
-    // Δεδομένα Περίοδου 3: στοιχεία 11–18  
-    // Σημείωση: τα 2 πρώτα (11,12) τοποθετούνται κανονικά, από το 13 και μετά (6 στοιχεία) θα "forced" τοποθετηθούν ώστε να ξεκινήσουν από τη στήλη 4.
+
+    // Περίοδος 3: στοιχεία 11–18 (8 στοιχεία, χωρίς κενά)
     const period3Elements = [
       { number: 11, category: 's-block', electronConfig: '1s2 2s2 2p6 3s1' },
       { number: 12, category: 's-block', electronConfig: '1s2 2s2 2p6 3s2' },
@@ -108,9 +108,10 @@
       { number: 17, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p5' },
       { number: 18, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p6' }
     ];
-    
-    // Δεδομένα Περίοδου 4: στοιχεία 19–30  
-    // Τα 2 πρώτα (19,20) είναι s‑block, τα υπόλοιπα (21–30) είναι d‑block.
+
+    // Περίοδος 4: στοιχεία 19–30 (12 στοιχεία)
+    // Τα 2 πρώτα (19,20) τοποθετούνται κανονικά.
+    // Για τα στοιχεία από το 21 και μετά (index ≥ 2) θα γίνει forced grid-column = (index + 2) ώστε να αφήσουμε κενό την 3η στήλη.
     const period4Elements = [
       { number: 19, category: 's-block', electronConfig: '1s2 2s2 2p6 3s2 3p6 4s1' },
       { number: 20, category: 's-block', electronConfig: '1s2 2s2 2p6 3s2 3p6 4s2' },
@@ -125,23 +126,21 @@
       { number: 29, category: 'd-block', electronConfig: '1s2 2s2 2p6 3s2 3p6 4s2 3d9' },
       { number: 30, category: 'd-block', electronConfig: '1s2 2s2 2p6 3s2 3p6 4s2 3d10' }
     ];
-    
-    // Καταστάσεις ελέγχου
-    let currentPeriod = 2; // Ξεκινάμε με Περίοδο 2
+
+    let currentPeriod = 2;
     let indexPeriod2 = 0;
     let indexPeriod3 = 0;
     let indexPeriod4 = 0;
-    
-    // Αναφορές στους containers
+
     const period2Container = document.getElementById('period2');
     const period3Container = document.getElementById('period3');
     const period4Container = document.getElementById('period4');
     const electronConfigDiv = document.getElementById('electronConfig');
     const nextElementBtn = document.getElementById('nextElement');
     const continueBtn = document.getElementById('continue');
-    
-    /* Συνάρτηση που δημιουργεί και προσθέτει το στοιχείο στο grid.
-       Αν το forcedColumn δεν είναι null, τότε το στοιχείο τοποθετείται στην συγκεκριμένη στήλη. */
+
+    // Συνάρτηση για δημιουργία και προσθήκη στοιχείου στο grid.
+    // Αν ορίσετε το forcedColumn, τότε το στοιχείο τοποθετείται στην αντίστοιχη στήλη.
     function revealElement(el, container, forcedColumn = null) {
       const elDiv = document.createElement('div');
       elDiv.className = `element ${el.category}`;
@@ -156,7 +155,7 @@
       });
       container.appendChild(elDiv);
     }
-    
+
     // Συνάρτηση μορφοποίησης της ηλεκτρονιακής δομής
     function formatElectronConfig(configStr) {
       const parts = configStr.split(' ');
@@ -176,8 +175,8 @@
       });
       return html;
     }
-    
-    /* Χειριστής του κουμπιού "Επόμενο Στοιχείο" για Περίοδους 2 και 3 */
+
+    // Χειριστής κουμπιού "Επόμενο Στοιχείο" για Περίοδους 2 και 3
     nextElementBtn.addEventListener('click', () => {
       if (currentPeriod === 2) {
         if (indexPeriod2 < period2Elements.length) {
@@ -192,13 +191,8 @@
       } else if (currentPeriod === 3) {
         if (indexPeriod3 < period3Elements.length) {
           const el = period3Elements[indexPeriod3];
-          // Για τα δύο πρώτα στοιχεία (11,12) τοποθετούνται κανονικά (στήλες 1-2)
-          // Από το τρίτο (στοιχείο 13, index 2) και μετά, θέτουμε forcedColumn = indexPeriod3 + 2
-          if (indexPeriod3 < 2) {
-            revealElement(el, period3Container);
-          } else {
-            revealElement(el, period3Container, indexPeriod3 + 2);
-          }
+          // Για Περίοδο 3 τοποθετούμε τα στοιχεία χωρίς καμία μετατόπιση.
+          revealElement(el, period3Container);
           electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
           indexPeriod3++;
           if (indexPeriod3 === period3Elements.length) {
@@ -209,21 +203,21 @@
         }
       }
     });
-    
-    /* Χειριστής του κουμπιού "Συνέχεια" για την Περίοδο 4 */
+
+    // Χειριστής κουμπιού "Συνέχεια" για Περίοδο 4
     continueBtn.addEventListener('click', () => {
       if (currentPeriod === 4) {
         if (indexPeriod4 < period4Elements.length) {
           const el = period4Elements[indexPeriod4];
-          // Για τα 2 πρώτα (19,20) τοποθετούνται κανονικά.
-          // Για τα υπόλοιπα (d‑block, index ≥ 2) θέτουμε forcedColumn = (indexPeriod4 + 3)
           if (indexPeriod4 < 2) {
+            // Τα στοιχεία 19 και 20 τοποθετούνται κανονικά.
             revealElement(el, period4Container);
           } else {
-            revealElement(el, period4Container, indexPeriod4 + 3);
-            // Για το πρώτο στοιχείο του d‑block (στοιχείο 21, index 2) εμφανίζουμε το ειδικό μήνυμα.
+            // Για τα στοιχεία από το 21 και μετά (index ≥ 2), ορίζουμε forced grid-column = (indexPeriod4 + 2).
+            // Έτσι, για το στοιχείο 21 (index 2) έχουμε forced grid-column = 4, δηλαδή η στήλη 3 παραμένει κενή.
+            revealElement(el, period4Container, indexPeriod4 + 2);
             if (indexPeriod4 === 2) {
-              electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}<br><br><em>Παρατηρείστε τη δομή του στοιχείου. Μετά από μετατόπιση των 6 στηλών του p κατά μία στήλη προς τα δεξιά, αυτό το στοιχείο τοποθετείται ως μετάπτωσης.</em>`;
+              electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}<br><br><em>Παρατηρείστε τη δομή του στοιχείου. Μετά από μετατόπιση, αυτό το στοιχείο τοποθετείται ως μετάπτωσης.</em>`;
             } else {
               electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
             }
@@ -236,12 +230,10 @@
         }
       }
     });
-    
-    // Εναλλαγή εμφάνισης λεπτομερειών με κλικ στο πλαίσιο δομής
+
     electronConfigDiv.addEventListener('click', () => {
       electronConfigDiv.classList.toggle('expanded');
     });
-    
   </script>
 </body>
 </html>
