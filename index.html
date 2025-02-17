@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Παρουσίαση: Ζ=3 έως Ζ=10</title>
+  <title>Παρουσίαση: Στοιχεία 3-10 &amp; 11-18</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
     #elementsContainer {
       display: flex;
       flex-wrap: wrap;
-      gap: 2px; /* Το ίδιο κενό ανάμεσα σε όλα τα κουτάκια */
+      gap: 2px; /* Ομοιόμορφο κενό γύρω από κάθε κουτάκι */
       max-width: 600px;
       margin: 20px auto;
       justify-content: center;
@@ -46,12 +46,12 @@
       cursor: pointer;
       user-select: none;
     }
-    /* Εφέ «επεκτάσεως» για λεπτομέρειες */
+    /* Εφέ επέκτασης για λεπτομέρειες */
     #electronConfig.expanded {
       background-color: #eef;
     }
-    /* Κουμπί για εμφάνιση του επόμενου στοιχείου */
-    #nextElement {
+    /* Στυλ για τα κουμπιά */
+    #nextElement, #continue {
       display: block;
       margin: 20px auto;
       padding: 10px 20px;
@@ -62,11 +62,12 @@
 </head>
 <body>
 
-  <!-- Container για όλα τα στοιχεία -->
+  <!-- Container για τα στοιχεία -->
   <div id="elementsContainer"></div>
 
-  <!-- Κουμπί για εμφάνιση του επόμενου στοιχείου -->
+  <!-- Κουμπιά ελέγχου: αρχικά εμφανίζεται μόνο το "Επόμενο Στοιχείο" -->
   <button id="nextElement">Επόμενο Στοιχείο</button>
+  <button id="continue" style="display:none;">Συνέχεια</button>
 
   <!-- Container για την ηλεκτρονιακή δόμηση -->
   <div id="electronConfig">
@@ -74,8 +75,8 @@
   </div>
 
   <script>
-    /* Δεδομένα για τα στοιχεία Ζ=3 έως Ζ=10 */
-    const elements = [
+    /* Δεδομένα πρώτης φάσης: Στοιχεία 3 έως 10 */
+    const firstPhaseElements = [
       { number: 3, category: 's-block', electronConfig: '1s2 2s1' },
       { number: 4, category: 's-block', electronConfig: '1s2 2s2' },
       { number: 5, category: 'p-block', electronConfig: '1s2 2s2 2p1' },
@@ -85,17 +86,30 @@
       { number: 9, category: 'p-block', electronConfig: '1s2 2s2 2p5' },
       { number: 10, category: 'p-block', electronConfig: '1s2 2s2 2p6' }
     ];
-
-    let currentIndex = 0;
+    
+    /* Δεδομένα δεύτερης φάσης: Στοιχεία 11 έως 18 */
+    const secondPhaseElements = [
+      { number: 11, category: 's-block', electronConfig: '1s2 2s2 2p6 3s1' },
+      { number: 12, category: 's-block', electronConfig: '1s2 2s2 2p6 3s2' },
+      { number: 13, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p1' },
+      { number: 14, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p2' },
+      { number: 15, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p3' },
+      { number: 16, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p4' },
+      { number: 17, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p5' },
+      { number: 18, category: 'p-block', electronConfig: '1s2 2s2 2p6 3s2 3p6' }
+    ];
+    
+    // Μεταβλητές ελέγχου φάσεων
+    let currentPhase = 1;
+    let indexPhase1 = 0;
+    let indexPhase2 = 0; // θα χρησιμοποιηθεί στη δεύτερη φάση (προσοχή: το στοιχείο 11 εμφανίζεται ως πρώτο)
+    
     const elementsContainer = document.getElementById('elementsContainer');
     const electronConfigDiv = document.getElementById('electronConfig');
     const nextElementBtn = document.getElementById('nextElement');
-
-    /* Συνάρτηση μορφοποίησης της ηλεκτρονιακής δόμησης:
-       - Ομαδοποιεί τα κομμάτια (π.χ. "1s2") ανά στιβάδα
-       - Χρησιμοποιεί το <sup> για τους εκθέτες
-       - Προσθέτει ετικέτες στιβάδων: Κ (2), L (8), M (18), κ.λπ.
-    */
+    const continueBtn = document.getElementById('continue');
+    
+    /* Συνάρτηση μορφοποίησης ηλεκτρονιακής δομής (με <sup>) και ετικέτες στιβάδων */
     function formatElectronConfig(configStr) {
       const parts = configStr.split(' ');
       const shells = {};
@@ -120,39 +134,67 @@
       });
       return html;
     }
-
-    /* Συνάρτηση για την εμφάνιση του επόμενου στοιχείου */
-    function revealNextElement() {
-      if (currentIndex >= elements.length) {
-        nextElementBtn.disabled = true;
-        nextElementBtn.textContent = "Τέλος";
-        return;
-      }
-      const el = elements[currentIndex];
+    
+    /* Συνάρτηση που δημιουργεί και προσθέτει το κουτάκι ενός στοιχείου */
+    function revealElement(el) {
       const elDiv = document.createElement('div');
       elDiv.className = `element ${el.category}`;
       elDiv.textContent = el.number;
-      
-      // Με κλικ στο στοιχείο εμφανίζεται η λεπτομερής δόμησή του
       elDiv.addEventListener('click', (e) => {
         e.stopPropagation();
         electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
         electronConfigDiv.classList.toggle('expanded');
       });
-      
-      // Προσθήκη στο container
       elementsContainer.appendChild(elDiv);
-      
-      // Ενημέρωση της κύριας περιοχής με την ηλεκτρονιακή δόμηση του στοιχείου
-      electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
-      currentIndex++;
     }
-
-    nextElementBtn.addEventListener('click', revealNextElement);
-
+    
+    /* Συνάρτηση για ενημέρωση του κεντρικού πλαισίου με τη δομή του στοιχείου */
+    function updateElectronConfig(el, extraText = '') {
+      electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}${extraText}`;
+    }
+    
+    /* Event handler για το κουμπί "Επόμενο Στοιχείο" */
+    nextElementBtn.addEventListener('click', () => {
+      if (currentPhase === 1) {
+        if (indexPhase1 < firstPhaseElements.length) {
+          const el = firstPhaseElements[indexPhase1];
+          revealElement(el);
+          updateElectronConfig(el);
+          indexPhase1++;
+        } else {
+          // Μετά το στοιχείο 10: εμφάνιση του στοιχείου 11 με το επιπλέον λεκτικό
+          const el = secondPhaseElements[0]; // στοιχείο 11
+          revealElement(el);
+          updateElectronConfig(el, `<br><br><em>Παρατηρείστε τη δομή του στοιχείου. Περιλαμβάνει ίδιο αριθμό ηλεκτρονίων εξωτερικής στιβάδας με το στοιχείο 3. Έχει επομένως τις ίδιες ιδιότητες με αυτό. Ας το γράψουμε λοιπόν κάτω από αυτό.</em>`);
+          currentPhase = 2;
+          indexPhase2 = 1; // το στοιχείο 11 έχει ήδη εμφανιστεί
+          nextElementBtn.style.display = 'none';
+          continueBtn.style.display = 'block';
+        }
+      }
+    });
+    
+    /* Event handler για το κουμπί "Συνέχεια" (από το στοιχείο 12 έως 18) */
+    continueBtn.addEventListener('click', () => {
+      if (currentPhase === 2) {
+        if (indexPhase2 < secondPhaseElements.length) {
+          const el = secondPhaseElements[indexPhase2];
+          revealElement(el);
+          updateElectronConfig(el);
+          indexPhase2++;
+          if (indexPhase2 === secondPhaseElements.length) {
+            continueBtn.disabled = true;
+            continueBtn.textContent = 'Τέλος';
+          }
+        }
+      }
+    });
+    
+    /* Επιπλέον: Εναλλαγή εμφάνισης λεπτομερειών με κλικ στο πλαίσιο δομής */
     electronConfigDiv.addEventListener('click', () => {
       electronConfigDiv.classList.toggle('expanded');
     });
+    
   </script>
 </body>
 </html>
