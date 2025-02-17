@@ -9,16 +9,15 @@
       background-color: #f7f7f7;
       margin: 20px;
     }
-    /* Container που φιλοξενεί τους δύο τομείς */
+    /* Ο εξωτερικός container χωρίς εξωτερικά περιγράμματα */
     #tableContainer {
       display: flex;
       max-width: 600px;
       margin: 20px auto;
-      border: 2px solid #000;
+      gap: 0; /* δεν υπάρχει κενό μεταξύ των τομέων */
     }
-    /* Ο container του s‑τομέα (χωρίς τίτλο) */
+    /* Container για τον s‑τομέα: διατηρεί μόνο το κοινό δεξί περίγραμμα */
     #sContainer {
-      margin: 0;
       padding: 10px;
       border-right: 2px solid #000; /* κοινό περιθώριο */
       display: flex;
@@ -28,9 +27,8 @@
       justify-content: center;
       min-width: 80px;
     }
-    /* Ο container του p‑τομέα (χωρίς τίτλο) */
+    /* Container για τον p‑τομέα */
     #pContainer {
-      margin: 0;
       padding: 10px;
       display: flex;
       flex-wrap: wrap;
@@ -71,7 +69,7 @@
     #electronConfig.expanded {
       background-color: #eef;
     }
-    /* Κουμπί για την εμφάνιση του επόμενου στοιχείου */
+    /* Κουμπί για εμφάνιση του επόμενου στοιχείου */
     #nextElement {
       display: block;
       margin: 20px auto;
@@ -83,7 +81,7 @@
 </head>
 <body>
 
-  <!-- Ο πίνακας χωρίζεται σε δύο containers (χωρίς τίτλους) -->
+  <!-- Ο πίνακας χωρίζεται σε δύο containers χωρίς εξωτερικά περιγράμματα -->
   <div id="tableContainer">
     <div id="sContainer"></div>
     <div id="pContainer"></div>
@@ -117,25 +115,22 @@
     const nextElementBtn = document.getElementById('nextElement');
 
     /* Συνάρτηση μορφοποίησης της ηλεκτρονιακής δόμησης:
-       - Ομαδοποιεί τα υποστοιχεία ανά στιβάδα (πρώτος αριθμός, π.χ. 1, 2, …)
-       - Εμφανίζει κάθε υποστοιχείο με το εκθέτη (μέσω <sup>)
+       - Ομαδοποιεί τα κομμάτια (π.χ. "1s2") ανά στιβάδα (βάσει του πρώτου αριθμού)
+       - Χρησιμοποιεί το <sup> για τους εκθέτες
        - Προσθέτει ετικέτες στιβάδων: Κ (2), L (8), M (18), κ.λπ.
     */
     function formatElectronConfig(configStr) {
       const parts = configStr.split(' ');
       const shells = {};
       parts.forEach(part => {
-        // Αναγνωρίζουμε το μοτίβο: αριθμός, γράμμα (s, p, d, f) και αριθμός
         const match = part.match(/^(\d+)([spdf])(\d+)/);
         if (match) {
           const shellNum = match[1];
-          // Μετατρέπουμε το "2" σε <sup>2</sup>
           const formatted = `${match[1]}${match[2]}<sup>${match[3]}</sup>`;
           if (!shells[shellNum]) shells[shellNum] = [];
           shells[shellNum].push(formatted);
         }
       });
-      // Ορισμός των ετικετών για τις στιβάδες
       const shellLabels = {
         '1': 'Κ (2)',
         '2': 'L (8)',
@@ -161,14 +156,14 @@
       elDiv.className = `element ${el.category}`;
       elDiv.textContent = el.number;
       
-      // Με κλικ πάνω στο στοιχείο, εμφανίζεται λεπτομερής η ηλεκτρονιακή δόμηση του
+      // Με κλικ στο στοιχείο εμφανίζεται η λεπτομερής δόμησή του
       elDiv.addEventListener('click', (e) => {
         e.stopPropagation();
         electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
         electronConfigDiv.classList.toggle('expanded');
       });
-
-      // Προσθήκη στο αντίστοιχο container
+      
+      // Προσθήκη στο κατάλληλο container
       if (el.category === 's-block') {
         sContainer.appendChild(elDiv);
       } else if (el.category === 'p-block') {
@@ -181,7 +176,6 @@
 
     nextElementBtn.addEventListener('click', revealNextElement);
 
-    // Με κλικ στο κάτω μέρος (στον container της ηλεκτρονιακής δόμησης) εναλλάσσεται η λεπτομερής εμφάνιση
     electronConfigDiv.addEventListener('click', () => {
       electronConfigDiv.classList.toggle('expanded');
     });
