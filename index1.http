@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Εξέλιξη Περιοδικού Πίνακα</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(32, 20px); /* 32 στήλες, πλάτος 20px το καθένα */
+            gap: 2px;
+            margin: auto;
+            max-width: 660px; /* 32 * 20px + 31 * 2px gap */
+        }
+
+        .element {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            text-align: center;
+            font-size: 8px;
+            line-height: 18px; /* Ίδιο με το ύψος του κελιού */
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .element:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Χρώματα για διαφορετικές περιοχές */
+        .s-block { background-color: #ff6961; }
+        .p-block { background-color: #77dd77; }
+        .d-block { background-color: #84b6f4; }
+        .f-block { background-color: #ffd1dc; }
+    </style>
+</head>
+<body>
+    <h1>Εξέλιξη Περιοδικού Πίνακα</h1>
+    <div class="periodic-table" id="periodicTable"></div>
+
+    <script>
+        // Δεδομένα για τα στοιχεία (μόνο ατομικός αριθμός και κατηγορία)
+        const elements = [];
+        for (let i = 1; i <= 118; i++) {
+            let category;
+            if (i === 1 || i === 2) {
+                category = "s-block"; // Υδρογόνο και Ήλιος
+            } else if (i >= 3 && i <= 10) {
+                category = "s-block"; // s-block (αλκάλια, αλκαλικές γαίες)
+            } else if (i >= 11 && i <= 18) {
+                category = "p-block"; // p-block
+            } else if (i >= 19 && i <= 36) {
+                category = (i >= 21 && i <= 30) ? "d-block" : "p-block"; // d-block και p-block
+            } else if (i >= 37 && i <= 54) {
+                category = (i >= 39 && i <= 48) ? "d-block" : "p-block"; // d-block και p-block
+            } else if (i >= 55 && i <= 86) {
+                category = (i >= 57 && i <= 80) ? "f-block" : (i >= 81 && i <= 86) ? "p-block" : "d-block"; // f-block, d-block, p-block
+            } else if (i >= 87 && i <= 118) {
+                category = (i >= 89 && i <= 102) ? "f-block" : (i >= 103 && i <= 118) ? "d-block" : "p-block"; // f-block, d-block, p-block
+            }
+            elements.push({ number: i, category });
+        }
+
+        // Δημιουργία του πίνακα
+        function createPeriodicTable() {
+            const container = document.getElementById('periodicTable');
+            
+            elements.forEach(element => {
+                const div = document.createElement('div');
+                div.className = `element ${element.category}`;
+                div.textContent = element.number;
+                container.appendChild(div);
+            });
+        }
+
+        // Αρχικοποίηση όταν φορτωθεί η σελίδα
+        window.onload = createPeriodicTable;
+    </script>
+</body>
+</html>
