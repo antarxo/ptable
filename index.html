@@ -2,21 +2,21 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμικός Περιοδικός Πίνακας – Βήμα Βήμα (Νέα Λογική)</title>
+  <title>Περιοδικός Πίνακας – Δική μου Λογική Βήμα Βήμα</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
+      background: #f7f7f7;
       text-align: center;
     }
-    h2 {
-      margin: 20px 0 5px;
+    #tableContainer {
+      margin: 20px auto;
+      width: max-content;
     }
-    .blockContainer {
-      margin: 0 auto 30px;
+    .rowContainer {
       display: grid;
       gap: 2px;
-      justify-content: center;
+      margin-bottom: 5px;
     }
     .element {
       width: 50px;
@@ -25,272 +25,184 @@
       text-align: center;
       font-size: 14px;
       border: 1px solid #555;
-      background-color: #ddd;
+      background: #ddd;
       cursor: pointer;
       user-select: none;
     }
-    /* Χρώματα κατηγοριών */
-    .s-block { background-color: #ffb3b3; }
-    .d-block { background-color: #b3b3ff; }
-    .p-block { background-color: #b3ffb3; }
-    .f-block { background-color: #ffd699; }
+    .s-block { background: #ffb3b3; }
+    .d-block { background: #b3b3ff; }
+    .p-block { background: #b3ffb3; }
+    .f-block { background: #ffd699; }
     #electronConfig {
       max-width: 600px;
       margin: 20px auto;
       padding: 10px;
       border: 2px solid #333;
-      background-color: #fff;
+      background: #fff;
       text-align: left;
     }
     #nextElement {
-      margin: 20px auto;
+      margin: 20px;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
-      display: block;
     }
   </style>
 </head>
 <body>
   <button id="nextElement">Επόμενο Στοιχείο</button>
-  
-  <!-- Containers για κάθε Block -->
-  <div id="tableContainer">
-    <h2>Block A (Κύριος Πίνακας)</h2>
-    <div id="blockAContainer" class="blockContainer"></div>
-    
-    <h2>Block B (Άνω f‑τομέας)</h2>
-    <div id="blockBContainer" class="blockContainer"></div>
-    
-    <h2>Block C (Κάτω μπλοκ)</h2>
-    <div id="blockCContainer" class="blockContainer"></div>
-  </div>
-  
-  <div id="electronConfig">Κάνε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
+  <div id="tableContainer"></div>
+  <div id="electronConfig">Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
   
   <script>
-    // Δημιουργία πίνακα στοιχείων (από 3 έως 94)
-    const elements = [];
-    for (let n = 3; n <= 94; n++) {
-      let category = '';
-      // Block A:
-      if ([3,4,11,12,19,20].includes(n)) {
-        category = 's-block';
-      } else if ((n>=21 && n<=30)) {
-        category = 'd-block';
-      } else if ((n>=5 && n<=10) || (n>=13 && n<=18) || (n>=31 && n<=36)) {
-        category = 'p-block';
+    /* --- Ορισμός κατηγοριών βάσει του αριθμού --- */
+    function getCategory(n) {
+      if (n >= 3 && n <= 10) {
+        return (n === 3 || n === 4) ? 's-block' : 'p-block';
+      } else if (n >= 11 && n <= 18) {
+        return (n === 11 || n === 12) ? 's-block' : 'p-block';
+      } else if (n >= 19 && n <= 36) {
+        if(n === 19 || n === 20) return 's-block';
+        if(n >= 21 && n <= 30) return 'd-block';
+        return 'p-block';
+      } else if (n >= 37 && n <= 54) {
+        if(n === 37 || n === 38) return 's-block';
+        if(n >= 39 && n <= 48) return 'd-block';
+        return 'p-block';
+      } else if (n >= 55 && n <= 76) {
+        if(n === 55 || n === 56) return 's-block';
+        if(n >= 57 && n <= 70) return 'f-block';
+        return 'p-block';
+      } else if (n >= 77 && n <= 98) {
+        if(n === 77 || n === 78) return 's-block';
+        if(n >= 79 && n <= 92) return 'f-block';
+        return 'p-block';
       }
-      // Block B:
-      else if ([37,38,55,56].includes(n)) {
-        category = 's-block';
-      } else if ((n>=39 && n<=48) || (n>=57 && n<=66)) {
-        category = 'd-block';
-      } else if ((n>=49 && n<=54) || (n>=67 && n<=72)) {
-        category = 'p-block';
-      }
-      // Block C:
-      else if ([73,84].includes(n)) {
-        category = 's-block';
-      } else if ((n>=74 && n<=80) || (n>=85 && n<=91)) {
-        category = 'f-block';
-      } else if ((n>=81 && n<=83) || (n>=92 && n<=94)) {
-        category = 'p-block';
-      }
-      elements.push({
-        number: n,
-        category: category,
-        electronConfig: `1s² ... ${n}`
-      });
+      return 'p-block';
     }
     
-    // Συνάρτηση δημιουργίας κελιού με click handler για λεπτομέρειες
+    /* --- Δημιουργία κελιού στοιχείου --- */
     function createCell(elObj) {
       const cell = document.createElement('div');
       cell.className = 'element ' + elObj.category;
       cell.textContent = elObj.number;
       cell.addEventListener('click', () => {
         document.getElementById('electronConfig').innerHTML =
-          `<strong>Στοιχείο ${elObj.number}:</strong><br>${elObj.electronConfig}`;
+          `<strong>Στοιχείο ${elObj.number}:</strong><br>Διαμόρφωση: 1s² ... ${elObj.number}`;
       });
       return cell;
     }
     
-    // Συνάρτηση εισαγωγής νέας στήλης (μετατόπιση) σε κάθε σειρά του αντίστοιχου block
-    function insertColumnAtBlock(block, colIndex) {
-      block.rows.forEach(row => {
-        row.splice(colIndex, 0, null);
+    /* --- Ορισμός μοτίβων (patterns) για κάθε γραμμή --- */
+    // Κάθε pattern είναι ένας πίνακας αντικειμένων: { count: number, shifting: boolean }
+    const rowPatterns = [
+      [ { count: 8, shifting: false } ],                           // Row 1: 8 fixed
+      [ { count: 8, shifting: false } ],                           // Row 2: 8 fixed
+      [ { count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false } ], // Row 3
+      [ { count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false } ], // Row 4 (ίδιο με τη 3η)
+      [ { count: 2, shifting: false }, { count: 14, shifting: true }, { count: 6, shifting: false } ], // Row 5
+      [ { count: 2, shifting: false }, { count: 14, shifting: true }, { count: 6, shifting: false } ]  // Row 6
+    ];
+    
+    // Δημιουργούμε τα δεδομένα για κάθε row:
+    const rowsData = rowPatterns.map((pattern, idx) => ({
+      pattern: pattern,           // ο πίνακας τμημάτων
+      currentSegment: 0,          // δείκτης τρέχοντος τμήματος
+      countInSegment: 0,          // πόσα στοιχεία έχουν τοποθετηθεί στο τρέχον τμήμα
+      insertionIndex: 0,          // χρησιμοποιείται όταν το τμήμα απαιτεί shifting
+      cells: []                   // ο πίνακας των κελιών για το row
+    }));
+    
+    // Για κάθε row, αρχικά εάν το πρώτο τμήμα δεν είναι shifting, δεν χρειάζεται insertionIndex.
+    // Αν το πρώτο τμήμα είναι fixed, insertionIndex δεν χρησιμοποιείται.
+    
+    // Ο συνολικός αριθμός στοιχείων που θα τοποθετηθούν ανά row (αθροίζοντας τα count):
+    const rowTotals = rowPatterns.map(pattern => pattern.reduce((sum, seg) => sum + seg.count, 0));
+    
+    // Global δείκτης για τα στοιχεία (αριθμοί από 3 έως 98)
+    const totalElements = rowTotals.reduce((a, b) => a + b, 0);
+    let globalElementNumber = 3; // ξεκινάμε από 3
+    let currentRowIndex = 0;     // ξεκινάμε από την πρώτη σειρά (index 0)
+    
+    // Δημιουργούμε έναν container για κάθε row μέσα στο #tableContainer
+    const tableContainer = document.getElementById('tableContainer');
+    function renderAllRows() {
+      tableContainer.innerHTML = '';
+      rowsData.forEach((rowData, idx) => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'rowContainer';
+        // Ορίζουμε τον αριθμό στηλών ίσο με το πλήθος των κελιών (αν υπάρχουν)
+        const cols = rowData.cells.length || rowTotals[idx];
+        rowDiv.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+        rowData.cells.forEach(cell => rowDiv.appendChild(cell));
+        tableContainer.appendChild(rowDiv);
       });
-      block.totalColumns++;
     }
     
-    /*–– Block A ––*/
-    // Block A: 3 σειρές, συνολικά 34 στοιχεία
-    // Row 1: 8 στοιχεία, Row 2: 8 στοιχεία, Row 3: 18 στοιχεία
-    const blockA = {
-      rows: [ [], [], [] ],
-      totalColumns: 8, // αρχικά οι 2 πρώτες σειρές έχουν 8 κελιά
-      currentElementCount: 0, // από 0 έως 33
-      // Για τη 3η σειρά (index 2) έχουμε υποφάσεις:
-      // sub-phase 1: 2 στοιχεία (fixed, τοποθετούνται στα indices 0 και 1)
-      // sub-phase 2: 10 στοιχεία (πριν κάθε στοιχείο γίνεται εισαγωγή νέας στήλης) 
-      // sub-phase 3: 6 στοιχεία (fixed, χωρίς εισαγωγή)
-      row2InsertionIndex: 2, // ξεκινά στο 2
-      addNext(element) {
-        const localIdx = this.currentElementCount;
-        if (localIdx < 8) { // Row 1 (index 0)
-          this.rows[0].push(createCell(element));
-        } else if (localIdx < 16) { // Row 2 (index 1)
-          const pos = localIdx - 8;
-          this.rows[1][pos] = createCell(element);
-        } else { // Row 3 (index 2), στοιχεία 16 έως 33 (18 στοιχεία)
-          const row2Idx = localIdx - 16; // 0 έως 17
-          if (row2Idx < 2) { // sub-phase 1: fixed
-            this.rows[2][row2Idx] = createCell(element);
-          } else if (row2Idx < 2 + 10) { // sub-phase 2: shifting (10 στοιχεία)
-            insertColumnAtBlock(this, this.row2InsertionIndex);
-            this.rows[2][this.row2InsertionIndex] = createCell(element);
-            this.row2InsertionIndex++;
-          } else { // sub-phase 3: fixed (6 στοιχεία)
-            this.rows[2][this.row2InsertionIndex] = createCell(element);
-            this.row2InsertionIndex++;
-          }
-        }
-        this.currentElementCount++;
-      }
-    };
-    // Block A συνολικά 34 στοιχεία (αριθμοί 3–36)
-    
-    /*–– Block B ––*/
-    // Block B: 2 σειρές, κάθε μία με 18 στοιχεία
-    const blockB = {
-      rows: [ [], [] ],
-      totalColumns: 8, // αρχικά 8 κελιά
-      // Για κάθε σειρά: sub-phase: πρώτα 2 fixed, μετά 10 shifting, μετά 6 fixed
-      rowCounters: [0, 0], // μετρητής στοιχείων για κάθε σειρά
-      rowInsertionIndex: [2, 2], // για κάθε σειρά ξεκινά στο 2
-      currentRow: 0, // ξεκινάμε από την πρώτη σειρά (Row 4)
-      addNext(element) {
-        const r = this.currentRow;
-        const count = this.rowCounters[r];
-        if (count < 2) { // fixed
-          this.rows[r][count] = createCell(element);
-        } else if (count < 2 + 10) { // shifting
-          insertColumnAtBlock(this, this.rowInsertionIndex[r]);
-          this.rows[r][this.rowInsertionIndex[r]] = createCell(element);
-          this.rowInsertionIndex[r]++;
-        } else { // fixed
-          this.rows[r][this.rowInsertionIndex[r]] = createCell(element);
-          this.rowInsertionIndex[r]++;
-        }
-        this.rowCounters[r]++;
-        if (this.rowCounters[r] === 18 && this.currentRow === 0) {
-          this.currentRow = 1; // μετά την πρώτη σειρά, πάμε στη δεύτερη
+    // Συνάρτηση για προσθήκη του επόμενου στοιχείου στην τρέχουσα σειρά σύμφωνα με το μοτίβο
+    function addElementToCurrentRow() {
+      if (currentRowIndex >= rowsData.length) return; // όλα τελειώσαν
+      
+      const rowData = rowsData[currentRowIndex];
+      const pattern = rowData.pattern;
+      const seg = pattern[rowData.currentSegment];
+      
+      // Δημιουργούμε το στοιχείο με τον τρέχοντα global αριθμό
+      const elObj = {
+        number: globalElementNumber,
+        category: getCategory(globalElementNumber)
+      };
+      const cell = createCell(elObj);
+      
+      if (seg.shifting) {
+        // Αν είναι shifting, εισάγουμε το κελί στη θέση insertionIndex
+        // (η θέση insertionIndex αρχικοποιείται στο τέλος του ήδη τοποθετημένου row)
+        rowData.cells.splice(rowData.insertionIndex, 0, cell);
+        rowData.insertionIndex++; // αυξάνουμε για την επόμενη εισαγωγή
+      } else {
+        // Fixed: απλή προσθήκη στο τέλος
+        rowData.cells.push(cell);
+        // Σε περίπτωση που μετά fixed τμήμα ξεκινά shifting, θέτουμε το insertionIndex ίσο με το πλήθος των ήδη τοποθετημένων κελιών.
+        if (rowData.countInSegment + 1 === seg.count && (rowData.currentSegment + 1 < pattern.length) && pattern[rowData.currentSegment + 1].shifting) {
+          // όταν τελειώνει το fixed τμήμα και το επόμενο είναι shifting, ορίζουμε το insertionIndex ως το τρέχον μήκος
+          rowData.insertionIndex = rowData.cells.length;
         }
       }
-    };
-    // Block B συνολικά 36 στοιχεία (αριθμοί 37–72)
-    
-    /*–– Block C ––*/
-    // Block C: 2 σειρές, κάθε μία με 11 στοιχεία
-    // Μοτίβο: 1 fixed (s), μετά 7 shifting (f) και τέλος 3 fixed (p)
-    const blockC = {
-      rows: [ [], [] ],
-      totalColumns: 1, // αρχικά 1 κελί
-      rowCounters: [0, 0], // για κάθε σειρά
-      rowInsertionIndex: [1, 1], // ξεκινάμε από το 1 (επειδή το index 0 έχει ήδη το fixed s)
-      currentRow: 0,
-      addNext(element) {
-        const r = this.currentRow;
-        const count = this.rowCounters[r];
-        if (count < 1) { // fixed (το πρώτο στοιχείο)
-          this.rows[r][0] = createCell(element);
-        } else if (count < 1 + 7) { // shifting για 7 στοιχεία
-          insertColumnAtBlock(this, this.rowInsertionIndex[r]);
-          this.rows[r][this.rowInsertionIndex[r]] = createCell(element);
-          this.rowInsertionIndex[r]++;
-        } else { // fixed για τα τελευταία 3
-          this.rows[r][this.rowInsertionIndex[r]] = createCell(element);
-          this.rowInsertionIndex[r]++;
-        }
-        this.rowCounters[r]++;
-        if (this.rowCounters[r] === 11 && this.currentRow === 0) {
-          this.currentRow = 1;
+      
+      rowData.countInSegment++;
+      globalElementNumber++;
+      
+      // Αν το τρέχον τμήμα έχει συμπληρωθεί, μεταβαίνουμε στο επόμενο τμήμα του row
+      if (rowData.countInSegment === seg.count) {
+        rowData.currentSegment++;
+        rowData.countInSegment = 0;
+        // Αν το νέο τμήμα απαιτεί shifting, θέτουμε την insertionIndex στο τέλος των ήδη τοποθετημένων κελιών
+        if (rowData.currentSegment < pattern.length && pattern[rowData.currentSegment].shifting) {
+          rowData.insertionIndex = rowData.cells.length;
         }
       }
-    };
-    // Block C συνολικά 22 στοιχεία (αριθμοί 73–94)
+      
+      // Αν έχουμε συμπληρώσει όλα τα στοιχεία του τρέχοντος row, προχωράμε στο επόμενο row
+      const totalForRow = rowTotals[currentRowIndex];
+      if (rowData.cells.length === totalForRow) {
+        currentRowIndex++;
+      }
+    }
     
-    // Ο συνολικός αριθμός στοιχείων ανά μπλοκ:
-    const blockACount = 34;  // στοιχεία 3–36
-    const blockBCount = 36;  // στοιχεία 37–72
-    const blockCCount = 22;  // στοιχεία 73–94
-    
-    // Δείκτης για το global array των στοιχείων
-    let globalIndex = 0;
-    
-    // Δείκτες για τα blocks:
-    let currentBlock = 0; // 0: Block A, 1: Block B, 2: Block C
-    
+    // Συνάρτηση που καλείται με το πάτημα του κουμπιού "Επόμενο Στοιχείο"
     function addNextElement() {
-      if (globalIndex >= elements.length) {
+      if (globalElementNumber >= 3 + totalElements || currentRowIndex >= rowsData.length) {
         document.getElementById('nextElement').disabled = true;
         return;
       }
-      if (currentBlock === 0) {
-        blockA.addNext(elements[globalIndex]);
-        globalIndex++;
-        if (blockA.currentElementCount === blockACount) {
-          currentBlock = 1;
-        }
-      } else if (currentBlock === 1) {
-        blockB.addNext(elements[globalIndex]);
-        globalIndex++;
-        // blockB έχει 36 στοιχεία συνολικά (δύο σειρές των 18)
-        if (blockB.rowCounters[0] + blockB.rowCounters[1] === blockBCount) {
-          currentBlock = 2;
-        }
-      } else if (currentBlock === 2) {
-        blockC.addNext(elements[globalIndex]);
-        globalIndex++;
-        if (blockC.rowCounters[0] + blockC.rowCounters[1] === blockCCount) {
-          document.getElementById('nextElement').disabled = true;
-        }
-      }
-      renderAll();
+      addElementToCurrentRow();
+      renderAllRows();
     }
     
     document.getElementById('nextElement').addEventListener('click', addNextElement);
     
-    // Συνάρτηση απόδοσης (render) ενός block στο container του
-    function renderBlock(containerId, block) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-      // Ορίστε το grid με το πλήθος στηλών του block
-      container.style.gridTemplateColumns = `repeat(${block.totalColumns}, 50px)`;
-      block.rows.forEach(row => {
-        // Για κάθε σειρά, συμπληρώνουμε κενά κελιά αν χρειάζεται
-        const rowLength = row.length;
-        for (let i = 0; i < block.totalColumns; i++) {
-          let cell = row[i];
-          if (!cell) {
-            cell = document.createElement('div');
-            cell.className = 'element';
-            cell.style.backgroundColor = '#fff';
-          }
-          container.appendChild(cell);
-        }
-      });
-    }
-    
-    function renderAll() {
-      renderBlock("blockAContainer", blockA);
-      renderBlock("blockBContainer", blockB);
-      renderBlock("blockCContainer", blockC);
-    }
-    
     // Αρχική απόδοση
-    renderAll();
+    renderAllRows();
   </script>
 </body>
 </html>
