@@ -41,27 +41,27 @@
 
   <script>
     // Αρχικός κώδικας (χωρίς αλλαγές στη λογική)
-    function getCategory(n) {
-      if (n === 1 || n === 2) return 's-block';
-      if (n >= 3 && n === 4) return 's-block';
-      if (n >= 5 && n <= 10) return 'p-block';
-      if (n >= 11 && n === 12) return 's-block';
-      if (n >= 13 && n <= 18) return 'p-block';
-      if (n >= 19 && n === 20) return 's-block';
-      if (n >= 21 && n <= 30) return 'd-block';
-      if (n >= 31 && n <= 36) return 'p-block';
-      if (n >= 37 && n === 38) return 's-block';
-      if (n >= 39 && n <= 48) return 'd-block';
-      if (n >= 49 && n <= 54) return 'p-block';
-      if (n >= 55 && n === 56) return 's-block';
-      if (n >= 57 && n <= 70) return 'f-block';
-      if (n >= 71 && n <= 80) return 'd-block';
-      if (n >= 81 && n <= 86) return 'p-block';
-      if (n >= 87 && n === 88) return 's-block';
-      if (n >= 89 && n <= 102) return 'f-block';
-      if (n >= 103 && n <= 112) return 'd-block';
-      return 'p-block';
-    }
+ function getCategory(n) {
+  if (n === 1 || n === 2) return n === 1 ? 's-block' : 'p-block'; // H (s-block), He (p-block)
+  if (n >= 3 && n <= 4) return 's-block'; // Li, Be
+  if (n >= 5 && n <= 10) return 'p-block'; // B έως Ne
+  if (n >= 11 && n <= 12) return 's-block'; // Na, Mg
+  if (n >= 13 && n <= 18) return 'p-block'; // Al έως Ar
+  if (n >= 19 && n <= 20) return 's-block'; // K, Ca
+  if (n >= 21 && n <= 30) return 'd-block'; // Sc έως Zn
+  if (n >= 31 && n <= 36) return 'p-block'; // Ga έως Kr
+  if (n >= 37 && n <= 38) return 's-block'; // Rb, Sr
+  if (n >= 39 && n <= 48) return 'd-block'; // Y έως Cd
+  if (n >= 49 && n <= 54) return 'p-block'; // In έως Xe
+  if (n >= 55 && n <= 56) return 's-block'; // Cs, Ba
+  if (n >= 57 && n <= 70) return 'f-block'; // Lanthanides
+  if (n >= 71 && n <= 80) return 'd-block'; // Hf έως Hg
+  if (n >= 81 && n <= 86) return 'p-block'; // Tl έως Rn
+  if (n >= 87 && n <= 88) return 's-block'; // Fr, Ra
+  if (n >= 89 && n <= 102) return 'f-block'; // Actinides
+  if (n >= 103 && n <= 112) return 'd-block'; // Rf έως Cn
+  return 'p-block'; // Για τα υπόλοιπα (αν υπάρχουν)
+}
 
     const patterns = [
       [{ count: 8, shifting: false }],
@@ -185,43 +185,43 @@
       noLoop();
     }
 
-    function draw() {
-      background(247);
-      let yOffset = 100;
-      rowsData.forEach((row, rowIndex) => {
-        let xOffset = 50; // Σταθερή αρχική θέση για όλες τις σειρές
-        row.cells.forEach((cell, cellIndex) => {
-          if (cell) {
-            fill(
-              cell.category === 's-block'
-                ? '#ffb3b3'
-                : cell.category === 'd-block'
-                ? '#b3b3ff'
-                : cell.category === 'p-block'
-                ? '#b3ffb3'
-                : '#ffd699'
-            );
-            stroke(85);
-            rect(xOffset, yOffset, cell.width, cell.height);
-            fill(0);
-            textSize(12);
-            textAlign(CENTER, CENTER);
-            text(cell.number, xOffset + cell.width / 2, yOffset + cell.height / 2);
-          }
-          xOffset += 42;
-        });
-        yOffset += 42;
-      });
+   function draw() {
+  background(247);
+  let yOffset = 100;
+  rowsData.forEach((row, rowIndex) => {
+    let xOffset = 50; // Σταθερή αρχική θέση για όλες τις σειρές
+    row.cells.forEach((cell, cellIndex) => {
+      if (cell) {
+        fill(
+          cell.category === 's-block'
+            ? '#ff6666'  // Πιο έντονο κόκκινο
+            : cell.category === 'd-block'
+            ? '#6666ff'  // Πιο έντονο μπλε
+            : cell.category === 'p-block'
+            ? '#66ff66'  // Πιο έντονο πράσινο
+            : '#ffcc99'  // Πιο έντονο πορτοκαλί (για f-block)
+        );
+        stroke(85);
+        rect(xOffset, yOffset, cell.width, cell.height);
+        fill(0);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text(cell.number, xOffset + cell.width / 2, yOffset + cell.height / 2);
+      }
+      xOffset += 42;
+    });
+    yOffset += 42;
+  });
 
-      // Εμφάνιση πληροφοριών για το επιλεγμένο στοιχείο
-      fill(255);
-      stroke(0);
-      rect(50, height - 60, width - 100, 50);
-      fill(0);
-      textSize(16);
-      textAlign(LEFT, CENTER);
-      text(selectedElementInfo, 60, height - 35);
-    }
+  // Εμφάνιση πληροφοριών για το επιλεγμένο στοιχείο
+  fill(255);
+  stroke(0);
+  rect(50, height - 60, width - 100, 50);
+  fill(0);
+  textSize(16);
+  textAlign(LEFT, CENTER);
+  text(selectedElementInfo, 60, height - 35);
+}
 
     function mousePressed() {
       let yOffset = 100;
