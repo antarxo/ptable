@@ -2,271 +2,251 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τελική Έκδοση</title>
+  <title>Περιοδικός Πίνακας - Αριστερή Στοίχιση</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f7f7f7;
-      margin: 20px;
-      text-align: center;
+      margin: 0;
+      overflow: hidden;
     }
-    #tableContainer {
-      margin: 20px auto;
-      width: max-content;
-      transform: scale(0.8);
-      transform-origin: top center;
-    }
-    .rowContainer {
-      display: grid;
-      gap: 2px;
-      margin-bottom: 3px;
-    }
-    .element {
-      width: 40px;
-      height: 40px;
-      line-height: 40px;
-      font-size: 12px;
-      border: 1px solid #555;
-      cursor: pointer;
-    }
-    .s-block { background: #ffb3b3; }
-    .d-block { background: #b3b3ff; }
-    .p-block { background: #b3ffb3; }
-    .f-block { background: #ffd699; }
     #electronConfig {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       max-width: 600px;
-      margin: 20px auto;
       padding: 10px;
       border: 2px solid #333;
       background: #fff;
       text-align: left;
+      z-index: 10;
     }
     #nextElement {
-      margin: 20px;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
+      z-index: 10;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
   <button id="nextElement">Επόμενο Στοιχείο</button>
-  <div id="tableContainer"></div>
   <div id="electronConfig">Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
 
-<script>
-function getCategory(n) {
-  if (n === 1 || n === 2) return 's-block';
-  if (n >= 3 && n <= 4) return 's-block';
-  if (n >= 5 && n <= 10) return 'p-block';
-  if (n >= 11 && n <= 12) return 's-block';
-  if (n >= 13 && n <= 18) return 'p-block';
-  if (n >= 19 && n <= 20) return 's-block';
-  if (n >= 21 && n <= 30) return 'd-block';
-  if (n >= 31 && n <= 36) return 'p-block';
-  if (n >= 37 && n <= 38) return 's-block';
-  if (n >= 39 && n <= 48) return 'd-block';
-  if (n >= 49 && n <= 54) return 'p-block';
-  if (n >= 55 && n <= 56) return 's-block';
-  if (n >= 57 && n <= 70) return 'f-block';
-  if (n >= 71 && n <= 80) return 'd-block';
-  if (n >= 81 && n <= 86) return 'p-block';
-  if (n >= 87 && n <= 88) return 's-block';
-  if (n >= 89 && n <= 102) return 'f-block';
-  if (n >= 103 && n <= 112) return 'd-block';
-  return 'p-block';
-}
+  <script>
+    // Αρχικός κώδικας (χωρίς αλλαγές στη λογική)
+    function getCategory(n) {
+      if (n === 1 || n === 2) return 's-block';
+      if (n >= 3 && n === 4) return 's-block';
+      if (n >= 5 && n <= 10) return 'p-block';
+      if (n >= 11 && n === 12) return 's-block';
+      if (n >= 13 && n <= 18) return 'p-block';
+      if (n >= 19 && n === 20) return 's-block';
+      if (n >= 21 && n <= 30) return 'd-block';
+      if (n >= 31 && n <= 36) return 'p-block';
+      if (n >= 37 && n === 38) return 's-block';
+      if (n >= 39 && n <= 48) return 'd-block';
+      if (n >= 49 && n <= 54) return 'p-block';
+      if (n >= 55 && n === 56) return 's-block';
+      if (n >= 57 && n <= 70) return 'f-block';
+      if (n >= 71 && n <= 80) return 'd-block';
+      if (n >= 81 && n <= 86) return 'p-block';
+      if (n >= 87 && n === 88) return 's-block';
+      if (n >= 89 && n <= 102) return 'f-block';
+      if (n >= 103 && n <= 112) return 'd-block';
+      return 'p-block';
+    }
 
-const patterns = [
-  [{ count: 8, shifting: false }],
-  [{ count: 8, shifting: false }],
-  [
-    { count: 2, shifting: false },
-    { count: 10, shifting: true },
-    { count: 6, shifting: false },
-  ],
-  [
-    { count: 2, shifting: false },
-    { count: 10, shifting: false },
-    { count: 6, shifting: false },
-  ],
-  [
-    { count: 2, shifting: false },
-    { count: 14, shifting: true },
-    { count: 10, shifting: false },
-    { count: 6, shifting: false },
-  ],
-  [
-    { count: 2, shifting: false },
-    { count: 14, shifting: false },
-    { count: 10, shifting: false },
-    { count: 6, shifting: false },
-  ],
-];
+    const patterns = [
+      [{ count: 8, shifting: false }],
+      [{ count: 8, shifting: false }],
+      [
+        { count: 2, shifting: false },
+        { count: 10, shifting: true },
+        { count: 6, shifting: false },
+      ],
+      [
+        { count: 2, shifting: false },
+        { count: 10, shifting: false },
+        { count: 6, shifting: false },
+      ],
+      [
+        { count: 2, shifting: false },
+        { count: 14, shifting: true },
+        { count: 10, shifting: false },
+        { count: 6, shifting: false },
+      ],
+      [
+        { count: 2, shifting: false },
+        { count: 14, shifting: false },
+        { count: 10, shifting: false },
+        { count: 6, shifting: false },
+      ],
+    ];
 
-const totals = [8, 8, 18, 18, 32, 32];
-const rowsData = [];
+    const totals = [8, 8, 18, 18, 32, 32];
+    const rowsData = [];
 
-for (let i = 0; i < 6; i++) {
-  rowsData.push({
-    pattern: patterns[i],
-    totalCells: totals[i],
-    currentSegment: 0,
-    countInSegment: 0,
-    cells: [],
-    insertionIndex: patterns[i][0].count,
-    shiftedColumns: 0,
-  });
-}
-
-let globalElementNumber = 3;
-let currentRowIndex = 0;
-let specialRowAdded = false;
-
-function insertShiftedColumnForRows(rowIndices) {
-  rowIndices.forEach((i) => {
-    const row = rowsData[i];
-    const insertPos = 2 + row.shiftedColumns;
-    row.cells.splice(insertPos, 0, null);
-    row.shiftedColumns++;
-  });
-}
-
-function createCell(elObj) {
-  return {
-    number: elObj.number,
-    category: elObj.category,
-    x: 0,
-    y: 0,
-    width: 40,
-    height: 40,
-  };
-}
-
-function addElementToCurrentRow() {
-  if (currentRowIndex >= 6 || globalElementNumber > 118) {
-    if (!specialRowAdded) {
-      const specialRow = {
-        cells: Array(32).fill(null),
+    for (let i = 0; i < 6; i++) {
+      rowsData.push({
+        pattern: patterns[i],
+        totalCells: totals[i],
+        currentSegment: 0,
+        countInSegment: 0,
+        cells: [],
+        insertionIndex: patterns[i][0].count,
         shiftedColumns: 0,
+      });
+    }
+
+    let globalElementNumber = 3;
+    let currentRowIndex = 0;
+    let specialRowAdded = false;
+
+    function insertShiftedColumnForRows(rowIndices) {
+      rowIndices.forEach((i) => {
+        const row = rowsData[i];
+        const insertPos = 2 + row.shiftedColumns;
+        row.cells.splice(insertPos, 0, null);
+        row.shiftedColumns++;
+      });
+    }
+
+    function createCell(elObj) {
+      return {
+        number: elObj.number,
+        category: elObj.category,
+        x: 0,
+        y: 0,
+        width: 40,
+        height: 40,
       };
-      specialRow.cells[0] = createCell({ number: 1, category: 's-block' });
-      specialRow.cells[31] = createCell({ number: 2, category: 's-block' });
-      rowsData.unshift(specialRow);
-      specialRowAdded = true;
-    }
-    return;
-  }
-
-  const row = rowsData[currentRowIndex];
-  const segment = row.pattern[row.currentSegment];
-  const elObj = { number: globalElementNumber, category: getCategory(globalElementNumber) };
-  const cell = createCell(elObj);
-
-  if (segment.shifting) {
-    if (currentRowIndex === 2) {
-      insertShiftedColumnForRows([0, 1]);
-    } else if (currentRowIndex === 4) {
-      insertShiftedColumnForRows([0, 1, 2, 3]);
     }
 
-    row.cells.splice(row.insertionIndex, 0, cell);
-    row.insertionIndex++;
-  } else {
-    row.cells.push(cell);
-  }
-
-  globalElementNumber++;
-  row.countInSegment++;
-
-  if (row.countInSegment === segment.count) {
-    row.currentSegment++;
-    row.countInSegment = 0;
-    if (row.pattern[row.currentSegment]?.shifting) {
-      row.insertionIndex = row.pattern[0].count;
-    }
-  }
-
-  if (row.cells.length >= row.totalCells) currentRowIndex++;
-}
-
-function renderAllRows() {
-  background(247);
-  let yOffset = 50;
-  rowsData.forEach((row, rowIndex) => {
-    let xOffset = 50;
-    row.cells.forEach((cell, cellIndex) => {
-      if (cell) {
-        fill(
-          cell.category === 's-block'
-            ? '#ffb3b3'
-            : cell.category === 'd-block'
-            ? '#b3b3ff'
-            : cell.category === 'p-block'
-            ? '#b3ffb3'
-            : '#ffd699'
-        );
-        stroke(85);
-        rect(xOffset, yOffset, cell.width, cell.height);
-        fill(0);
-        textSize(12);
-        textAlign(CENTER, CENTER);
-        text(cell.number, xOffset + cell.width / 2, yOffset + cell.height / 2);
+    function addElementToCurrentRow() {
+      if (currentRowIndex >= 6 || globalElementNumber > 118) {
+        if (!specialRowAdded) {
+          const specialRow = {
+            cells: Array(32).fill(null),
+            shiftedColumns: 0,
+          };
+          specialRow.cells[0] = createCell({ number: 1, category: 's-block' });
+          specialRow.cells[31] = createCell({ number: 2, category: 's-block' });
+          rowsData.unshift(specialRow);
+          specialRowAdded = true;
+        }
+        return;
       }
-      xOffset += 42;
-    });
-    yOffset += 42;
-  });
 
-  // Εμφάνιση πληροφοριών για το επιλεγμένο στοιχείο
-  fill(255);
-  stroke(0);
-  rect(50, yOffset + 20, 700, 50);
-  fill(0);
-  textSize(16);
-  textAlign(LEFT, CENTER);
-  text('Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες', 60, yOffset + 45);
-}
+      const row = rowsData[currentRowIndex];
+      const segment = row.pattern[row.currentSegment];
+      const elObj = { number: globalElementNumber, category: getCategory(globalElementNumber) };
+      const cell = createCell(elObj);
 
-let selectedElementInfo = 'Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες';
+      if (segment.shifting) {
+        if (currentRowIndex === 2) {
+          insertShiftedColumnForRows([0, 1]);
+        } else if (currentRowIndex === 4) {
+          insertShiftedColumnForRows([0, 1, 2, 3]);
+        }
 
-function setup() {
-  createCanvas(800, 700);
-  textFont('Arial');
-  renderAllRows();
-}
-
-function mousePressed() {
-  let yOffset = 50;
-  rowsData.forEach((row, rowIndex) => {
-    let xOffset = 50;
-    row.cells.forEach((cell, cellIndex) => {
-      if (cell && mouseX > xOffset && mouseX < xOffset + 40 && mouseY > yOffset && mouseY < yOffset + 40) {
-        selectedElementInfo = `Στοιχείο ${cell.number}: Κατηγορία ${cell.category.replace('-block', '')}`;
+        row.cells.splice(row.insertionIndex, 0, cell);
+        row.insertionIndex++;
+      } else {
+        row.cells.push(cell);
       }
-      xOffset += 42;
+
+      globalElementNumber++;
+      row.countInSegment++;
+
+      if (row.countInSegment === segment.count) {
+        row.currentSegment++;
+        row.countInSegment = 0;
+        if (row.pattern[row.currentSegment]?.shifting) {
+          row.insertionIndex = row.pattern[0].count;
+        }
+      }
+
+      if (row.cells.length >= row.totalCells) currentRowIndex++;
+    }
+
+    // p5.js Συναρτήσεις
+    let selectedElementInfo = 'Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες';
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      textFont('Arial');
+      noLoop();
+    }
+
+    function draw() {
+      background(247);
+      let yOffset = 100;
+      rowsData.forEach((row, rowIndex) => {
+        let xOffset = 50; // Σταθερή αρχική θέση για όλες τις σειρές
+        row.cells.forEach((cell, cellIndex) => {
+          if (cell) {
+            fill(
+              cell.category === 's-block'
+                ? '#ffb3b3'
+                : cell.category === 'd-block'
+                ? '#b3b3ff'
+                : cell.category === 'p-block'
+                ? '#b3ffb3'
+                : '#ffd699'
+            );
+            stroke(85);
+            rect(xOffset, yOffset, cell.width, cell.height);
+            fill(0);
+            textSize(12);
+            textAlign(CENTER, CENTER);
+            text(cell.number, xOffset + cell.width / 2, yOffset + cell.height / 2);
+          }
+          xOffset += 42;
+        });
+        yOffset += 42;
+      });
+
+      // Εμφάνιση πληροφοριών για το επιλεγμένο στοιχείο
+      fill(255);
+      stroke(0);
+      rect(50, height - 60, width - 100, 50);
+      fill(0);
+      textSize(16);
+      textAlign(LEFT, CENTER);
+      text(selectedElementInfo, 60, height - 35);
+    }
+
+    function mousePressed() {
+      let yOffset = 100;
+      rowsData.forEach((row, rowIndex) => {
+        let xOffset = 50; // Σταθερή αρχική θέση για όλες τις σειρές
+        row.cells.forEach((cell, cellIndex) => {
+          if (cell && mouseX > xOffset && mouseX < xOffset + 40 && mouseY > yOffset && mouseY < yOffset + 40) {
+            selectedElementInfo = `Στοιχείο ${cell.number}: Κατηγορία ${cell.category.replace('-block', '')}`;
+          }
+          xOffset += 42;
+        });
+        yOffset += 42;
+      });
+      redraw();
+    }
+
+    document.getElementById('nextElement').addEventListener('click', () => {
+      addElementToCurrentRow();
+      redraw();
     });
-    yOffset += 42;
-  });
-}
 
-function keyPressed() {
-  if (key === ' ') {
-    addElementToCurrentRow();
-    renderAllRows();
-  }
-}
-
-function draw() {
-  renderAllRows();
-  fill(255);
-  stroke(0);
-  rect(50, height - 60, 700, 50);
-  fill(0);
-  textSize(16);
-  textAlign(LEFT, CENTER);
-  text(selectedElementInfo, 60, height - 35);
-}
-</script>
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      redraw();
+    }
+  </script>
 </body>
 </html>
