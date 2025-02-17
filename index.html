@@ -2,241 +2,161 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας – Λογική με Σταθερό Insertion</title>
+  <title>Περιοδικός Πίνακας – Διορθωμένη Λογική</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      text-align: center;
-    }
-    #tableContainer {
-      margin: 20px auto;
-      width: max-content;
-    }
-    .rowContainer {
-      display: grid;
-      gap: 2px;
-      margin-bottom: 5px;
-    }
-    .element {
-      width: 50px;
-      height: 50px;
-      line-height: 50px;
-      text-align: center;
-      font-size: 14px;
-      border: 1px solid #555;
-      background: #ddd;
-      cursor: pointer;
-      user-select: none;
-    }
-    /* Χρώματα κατηγοριών */
-    .s-block { background: #ffb3b3; }
-    .d-block { background: #b3b3ff; }
-    .p-block { background: #b3ffb3; }
-    .f-block { background: #ffd699; }
-    #electronConfig {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 10px;
-      border: 2px solid #333;
-      background: #fff;
-      text-align: left;
-    }
-    #nextElement {
-      margin: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    body { font-family: Arial, sans-serif; background: #f7f7f7; text-align: center; }
+    #tableContainer { margin: 20px auto; width: max-content; }
+    .rowContainer { display: grid; gap: 2px; margin-bottom: 5px; }
+    .element { width: 50px; height: 50px; line-height: 50px; text-align: center;
+      font-size: 14px; border: 1px solid #555; background: #ddd; cursor: pointer; }
+    .s-block { background: #ffb3b3; } .d-block { background: #b3b3ff; }
+    .p-block { background: #b3ffb3; } .f-block { background: #ffd699; }
+    #electronConfig { max-width: 600px; margin: 20px auto; padding: 10px;
+      border: 2px solid #333; background: #fff; text-align: left; }
+    #nextElement { margin: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
   <button id="nextElement">Επόμενο Στοιχείο</button>
   <div id="tableContainer"></div>
   <div id="electronConfig">Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
-  
-  <script>
-    // Συνάρτηση που ορίζει την κατηγορία με βάση τον αριθμό του στοιχείου
-    function getCategory(n) {
-      if(n >= 3 && n <= 10) {
-        return (n === 3 || n === 4) ? 's-block' : 'p-block';
-      } else if(n >= 11 && n <= 18) {
-        return (n === 11 || n === 12) ? 's-block' : 'p-block';
-      } else if(n >= 19 && n <= 36) {
-        if(n === 19 || n === 20) return 's-block';
-        if(n >= 21 && n <= 30) return 'd-block';
-        return 'p-block';
-      } else if(n >= 37 && n <= 54) {
-        if(n === 37 || n === 38) return 's-block';
-        if(n >= 39 && n <= 48) return 'd-block';
-        return 'p-block';
-      } else if(n >= 55 && n <= 86) {
-        // Group3, Row5: 2 fixed, 14 shifting, 10 fixed, 6 fixed
-        if(n === 55 || n === 56) return 's-block';
-        if(n >= 57 && n <= 70) return 'f-block';
-        if(n >= 71 && n <= 80) return 'd-block';
-        return 'p-block';
-      } else if(n >= 87 && n <= 118) {
-        // Group3, Row6: παρόμοιο μοτίβο
-        if(n === 87 || n === 88) return 's-block';
-        if(n >= 89 && n <= 102) return 'f-block';
-        if(n >= 103 && n <= 112) return 'd-block';
-        return 'p-block';
+
+<script>
+function getCategory(n) {
+  if(n >= 3 && n <= 10) return (n <= 4) ? 's-block' : 'p-block';
+  if(n >= 11 && n <= 18) return (n <= 12) ? 's-block' : 'p-block';
+  if(n >= 19 && n <= 36) {
+    if(n <= 20) return 's-block';
+    if(n <= 30) return 'd-block';
+    return 'p-block';
+  }
+  if(n >= 37 && n <= 54) {
+    if(n <= 38) return 's-block';
+    if(n <= 48) return 'd-block';
+    return 'p-block';
+  }
+  if(n >= 55 && n <= 86) {
+    if(n <= 56) return 's-block';
+    if(n <= 70) return 'f-block';
+    if(n <= 80) return 'd-block';
+    return 'p-block';
+  }
+  if(n >= 87) {
+    if(n <= 88) return 's-block';
+    if(n <= 102) return 'f-block';
+    if(n <= 112) return 'd-block';
+    return 'p-block';
+  }
+  return 'p-block';
+}
+
+function createCell(elObj) {
+  const cell = document.createElement('div');
+  cell.className = `element ${elObj.category}`;
+  cell.textContent = elObj.number;
+  cell.addEventListener('click', () => {
+    document.getElementById('electronConfig').innerHTML = 
+      `<strong>Στοιχείο ${elObj.number}:</strong><br>Διαμόρφωση: ...`;
+  });
+  return cell;
+}
+
+const patterns = [
+  [{count: 8, shifting: false}],
+  [{count: 8, shifting: false}],
+  [{count: 2, shifting: false}, {count: 10, shifting: true}, {count: 6, shifting: false}],
+  [{count: 2, shifting: false}, {count: 10, shifting: true}, {count: 6, shifting: false}],
+  [{count: 2, shifting: false}, {count: 14, shifting: true}, {count: 10, shifting: false}, {count: 6, shifting: false}],
+  [{count: 2, shifting: false}, {count: 14, shifting: true}, {count: 10, shifting: false}, {count: 6, shifting: false}]
+];
+
+const totals = [8, 8, 18, 18, 32, 32];
+const rowsData = [];
+for(let i = 0; i < 6; i++) {
+  rowsData.push({
+    pattern: patterns[i],
+    totalCells: totals[i],
+    currentSegment: 0,
+    countInSegment: 0,
+    cells: [],
+    insertionIndex: patterns[i][0].count,
+    shiftedColumns: 0 // Νέα ιδιότητα για μετατόπιση
+  });
+}
+
+let globalElementNumber = 3;
+let currentRowIndex = 0;
+
+function insertShiftedColumnForRows(rowIndices) {
+  rowIndices.forEach(i => {
+    const row = rowsData[i];
+    const insertPos = 2 + row.shiftedColumns; // Δυναμική θέση βάσει προηγούμενων μετατοπίσεων
+    row.cells.splice(insertPos, 0, null);
+    row.shiftedColumns++; // Ενημέρωση μετρητή
+  });
+}
+
+function addElementToCurrentRow() {
+  if(currentRowIndex >= 6 || globalElementNumber > 118) {
+    document.getElementById('nextElement').disabled = true;
+    return;
+  }
+
+  const row = rowsData[currentRowIndex];
+  const segment = row.pattern[row.currentSegment];
+  const elObj = { number: globalElementNumber, category: getCategory(globalElementNumber) };
+  const cell = createCell(elObj);
+
+  if(segment.shifting) {
+    const group = currentRowIndex < 2 ? 1 : currentRowIndex < 4 ? 2 : 3;
+    if(group === 2) insertShiftedColumnForRows([0,1]);
+    else if(group === 3) insertShiftedColumnForRows([0,1,2,3]);
+    
+    row.cells.splice(row.insertionIndex, 0, cell);
+    row.insertionIndex++;
+  } else {
+    row.cells.push(cell);
+  }
+
+  globalElementNumber++;
+  row.countInSegment++;
+
+  if(row.countInSegment === segment.count) {
+    row.currentSegment++;
+    row.countInSegment = 0;
+    if(row.pattern[row.currentSegment]?.shifting) {
+      row.insertionIndex = row.pattern[0].count;
+    }
+  }
+
+  if(row.cells.length >= row.totalCells) currentRowIndex++;
+}
+
+function renderAllRows() {
+  const container = document.getElementById('tableContainer');
+  container.innerHTML = '';
+  rowsData.forEach(row => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'rowContainer';
+    rowDiv.style.gridTemplateColumns = `repeat(${row.cells.length}, 50px)`;
+    row.cells.forEach(cell => {
+      const div = cell || document.createElement('div');
+      if(!cell) {
+        div.className = 'element';
+        div.style.background = '#fff';
       }
-      return 'p-block';
-    }
-    
-    // Δημιουργία κελιού στοιχείου
-    function createCell(elObj) {
-      const cell = document.createElement('div');
-      cell.className = 'element ' + elObj.category;
-      cell.textContent = elObj.number;
-      cell.addEventListener('click', () => {
-        document.getElementById('electronConfig').innerHTML =
-          `<strong>Στοιχείο ${elObj.number}:</strong><br>Διαμόρφωση: 1s² ... ${elObj.number}`;
-      });
-      return cell;
-    }
-    
-    /* --- Ορισμός μοτίβων ανά row --- */
-    // Group1: Rows 0–1: [ { count: 8, shifting: false } ]
-    // Group2: Rows 2–3: [ { count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false } ]
-    // Group3: Rows 4–5: [ { count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false } ]
-    const patterns = [
-      [ {count: 8, shifting: false} ],
-      [ {count: 8, shifting: false} ],
-      [ {count: 2, shifting: false}, {count: 10, shifting: true}, {count: 6, shifting: false} ],
-      [ {count: 2, shifting: false}, {count: 10, shifting: true}, {count: 6, shifting: false} ],
-      [ {count: 2, shifting: false}, {count: 14, shifting: true}, {count: 10, shifting: false}, {count: 6, shifting: false} ],
-      [ {count: 2, shifting: false}, {count: 14, shifting: true}, {count: 10, shifting: false}, {count: 6, shifting: false} ]
-    ];
-    // Συνολικός αριθμός κελιών ανά row (άθροισμα των segments)
-    const totals = [8, 8, 18, 18, 32, 32];
-    
-    // Δεδομένα για κάθε row
-    const rowsData = [];
-    for(let i = 0; i < 6; i++){
-      // Για τις rows που έχουν shifting, όταν αρχίζει το shifting τμήμα (δηλαδή μετά τα πρώτα fixed),
-      // θέτουμε το insertionIndex σταθερά ίσο με το πλήθος των fixed στοιχείων (δηλαδή το count του πρώτου segment).
-      const initialInsertion = (patterns[i].length > 1 && patterns[i][1].shifting) ? patterns[i][0].count : 0;
-      rowsData.push({
-        pattern: patterns[i],
-        totalCells: totals[i],
-        currentSegment: 0,
-        countInSegment: 0,
-        cells: [],
-        insertionIndex: initialInsertion  // αρχικό insertion index (π.χ. 2 για Group2 & Group3)
-      });
-    }
-    
-    // Global δείκτης για το επόμενο στοιχείο (αριθμός)
-    let globalElementNumber = 3;
-    // Δείκτης για το τρέχον row (0 έως 5)
-    let currentRowIndex = 0;
-    
-    // Βοηθητική: Εισαγωγή "κενής" στήλης (null) σε συγκεκριμένες rows, στις οποίες πρέπει να γίνει μετατόπιση,
-    // με σταθερό insertion index (δηλαδή, όχι στο τέλος αλλά αμέσως μετά τα fixed).
-    function insertShiftedColumnForRows(rowIndices) {
-      rowIndices.forEach(i => {
-        const row = rowsData[i];
-        const seg = row.pattern[row.currentSegment];
-        if(seg && seg.shifting) {
-          let idx = row.insertionIndex;
-          row.cells.splice(idx, 0, null);
-          row.insertionIndex++; // αύξηση για το επόμενο στοιχείο της shifting φάσης
-        }
-      });
-    }
-    
-    // Συνάρτηση για προσθήκη του επόμενου στοιχείου στο τρέχον row σύμφωνα με το μοτίβο
-    function addElementToCurrentRow() {
-      if(currentRowIndex >= rowsData.length) return; // τελείωσαν όλα
-      
-      const row = rowsData[currentRowIndex];
-      const pattern = row.pattern;
-      const segment = pattern[row.currentSegment];
-      
-      // Δημιουργούμε το στοιχείο
-      const elObj = {
-        number: globalElementNumber,
-        category: getCategory(globalElementNumber)
-      };
-      const cell = createCell(elObj);
-      
-      if(segment.shifting) {
-        // Πριν την εισαγωγή στο shifting τμήμα, κάνουμε insert τις μετατοπίσεις στις "άνω" σειρές ανάλογα με το group
-        // Group2 (rows 2-3) επηρεάζουν τις Group1 (rows 0-1)
-        // Group3 (rows 4-5) επηρεάζουν τις Group1 & Group2 (rows 0-3)
-        const group = (currentRowIndex < 2) ? 1 : (currentRowIndex < 4 ? 2 : 3);
-        if(group === 2) {
-          insertShiftedColumnForRows([0,1]);
-        } else if(group === 3) {
-          insertShiftedColumnForRows([0,1,2,3]);
-        }
-        // Εισάγουμε το στοιχείο στη θέση insertionIndex (που έχει οριστεί σταθερά ως το τέλος του fixed τμήματος)
-        row.cells.splice(row.insertionIndex, 0, cell);
-        row.insertionIndex++;  // αύξηση του insertion index για το επόμενο στοιχείο στο shifting τμήμα
-      } else {
-        // Fixed: απλή προσθήκη στο τέλος
-        row.cells.push(cell);
-      }
-      
-      row.countInSegment++;
-      globalElementNumber++;
-      
-      // Όταν ολοκληρωθεί ένα τμήμα, μεταβαίνουμε στο επόμενο
-      if(row.countInSegment === segment.count) {
-        row.currentSegment++;
-        row.countInSegment = 0;
-        // Εάν υπάρχει επόμενο τμήμα και αυτό είναι shifting,
-        // ορίζουμε το insertionIndex σταθερά στο πλήθος των fixed στοιχείων (δηλαδή το count του πρώτου τμήματος)
-        if(row.currentSegment < pattern.length && pattern[row.currentSegment].shifting) {
-          row.insertionIndex = pattern[0].count;
-        }
-      }
-      
-      // Εάν η τρέχουσα γραμμή έχει συμπληρωθεί, προχωράμε στο επόμενο row
-      if(row.cells.length >= row.totalCells) {
-        currentRowIndex++;
-      }
-    }
-    
-    // Συνάρτηση που καλείται με το πάτημα του κουμπιού "Επόμενο Στοιχείο"
-    function addNextElement() {
-      if(globalElementNumber > 118 || currentRowIndex >= rowsData.length) {
-        document.getElementById('nextElement').disabled = true;
-        return;
-      }
-      addElementToCurrentRow();
-      renderAllRows();
-    }
-    
-    document.getElementById('nextElement').addEventListener('click', addNextElement);
-    
-    // Συνάρτηση για απόδοση όλων των rows στον container
-    function renderAllRows() {
-      const container = document.getElementById('tableContainer');
-      container.innerHTML = '';
-      rowsData.forEach(row => {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'rowContainer';
-        rowDiv.style.gridTemplateColumns = `repeat(${row.cells.length}, 50px)`;
-        row.cells.forEach(cell => {
-          if(cell === null) {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'element';
-            emptyDiv.style.background = '#fff';
-            rowDiv.appendChild(emptyDiv);
-          } else {
-            rowDiv.appendChild(cell);
-          }
-        });
-        container.appendChild(rowDiv);
-      });
-    }
-    
-    // Αρχική απόδοση
-    renderAllRows();
-  </script>
+      rowDiv.appendChild(div);
+    });
+    container.appendChild(rowDiv);
+  });
+}
+
+document.getElementById('nextElement').addEventListener('click', () => {
+  addElementToCurrentRow();
+  renderAllRows();
+});
+
+renderAllRows();
+</script>
 </body>
 </html>
