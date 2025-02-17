@@ -59,9 +59,8 @@
       electronConfig: `1s2 ... ${i + 3}`
     }));
     let currentIndex = 0;
-    let rowIndex = 0;
     let columns = 1;
-    let grid = [[]];
+    let grid = Array.from({ length: 3 }, () => Array(10).fill(null));
     const container = document.getElementById('tableContainer');
     const nextButton = document.getElementById('nextElement');
     const continueButton = document.getElementById('continueButton');
@@ -70,10 +69,8 @@
     function renderGrid() {
       container.innerHTML = '';
       container.style.gridTemplateColumns = `repeat(${columns}, 50px)`;
-      grid.forEach(row => {
-        row.forEach(cell => {
-          if (cell) container.appendChild(cell);
-        });
+      grid.flat().forEach(cell => {
+        if (cell) container.appendChild(cell);
       });
     }
 
@@ -87,14 +84,12 @@
         electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${el.electronConfig}`;
       });
       
-      if (currentIndex < 10) {
-        if (grid[0].length < 10) grid[0].push(elDiv);
-        if (grid[0].length > columns) columns++;
+      if (currentIndex < 8) {
+        grid[0][currentIndex] = elDiv;
+        columns = Math.max(columns, currentIndex + 1);
       } else if (currentIndex < 18) {
-        if (!grid[1]) grid[1] = Array(10).fill(null);
-        grid[1][currentIndex - 10] = elDiv;
+        grid[1][currentIndex - 8] = elDiv;
       } else if (currentIndex < 20) {
-        if (!grid[2]) grid[2] = Array(10).fill(null);
         grid[2][currentIndex - 18] = elDiv;
       } else {
         if (grid[0].length === columns) {
@@ -103,6 +98,7 @@
         }
         grid[2][currentIndex - 18] = elDiv;
       }
+      
       currentIndex++;
       renderGrid();
       if (currentIndex === 20) {
