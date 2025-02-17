@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Ανηγμένη Μορφή Περιοδικού Πίνακα</title>
+  <title>Παρουσίαση Σχηματισμού Περιοδικού Πίνακα</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,12 +12,11 @@
     }
     .periodic-table {
       display: grid;
-      /* 32 στήλες, κάθε κελί 20px πλάτος */
       grid-template-columns: repeat(32, 20px);
       grid-auto-rows: 20px;
       gap: 2px;
       margin: auto;
-      max-width: 660px; /* 32 * 20px + 31 * 2px gap */
+      max-width: 660px;
     }
     .element {
       background-color: #fff;
@@ -26,7 +25,11 @@
       font-size: 8px;
       line-height: 20px;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, opacity 0.5s;
+      opacity: 1;
+    }
+    .element.hidden {
+      opacity: 0;
     }
     .element:hover {
       background-color: #e0e0e0;
@@ -36,28 +39,89 @@
     .p-block { background-color: #77dd77; }
     .d-block { background-color: #84b6f4; }
     .f-block { background-color: #ffd1dc; }
+    #electron-config {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Ανηγμένη Μορφή Περιοδικού Πίνακα</h1>
-  <div class="periodic-table" id="periodicTable"></div>
-
+  <h1>Παρουσίαση Σχηματισμού Περιοδικού Πίνακα</h1>
+  
+  <!-- Το grid του πίνακα -->
+  <div class="periodic-table" id="periodicTable">
+    <!-- Τα στοιχεία θα δημιουργηθούν δυναμικά μέσω JavaScript -->
+  </div>
+  
+  <!-- Κουμπί για το επόμενο βήμα -->
+  <button id="nextStep">Επόμενο Βήμα</button>
+  
+  <!-- Περιοχή για την εμφάνιση της ηλεκτρονιακής δόμησης -->
+  <div id="electron-config">Επιλέξτε ένα στοιχείο για να δείτε την ηλεκτρονιακή του δόμηση.</div>
+  
   <script>
-    const integratedPositions = [
-      // Περίοδος 1 (row 1)
-      { number: 1, row: 1, col: 1 },
-      { number: 2, row: 1, col: 32 },
-
-      // Περίοδος 2 (row 2)
-      { number: 3, row: 2, col: 1 },
-      { number: 4, row: 2, col: 2 },
-      { number: 5, row: 2, col: 27 },
-      { number: 6, row: 2, col: 28 },
-      { number: 7, row: 2, col: 29 },
-      { number: 8, row: 2, col: 30 },
-      { number: 9, row: 2, col: 31 },
-      { number: 10, row: 2, col: 32 },
-
-      // Περίοδος 3 (row 3)
-      { number: 11, row: 3, col: 1 },
-      { num
+    /* 
+      Δείγμα δεδομένων για ορισμένα στοιχεία.
+      Κάθε στοιχείο έχει:
+      - number: ατομικός αριθμός
+      - row, col: θέση στο grid (μπορεί να είναι ενσωματωμένη διάταξη)
+      - category: για το χρώμα (s-, p-, d-, f-block)
+      - electronConfig: μια απλοποιημένη αναπαράσταση της ηλεκτρονιακής δόμησης
+    */
+    const elements = [
+      { number: 1, row: 1, col: 1, category: 's-block', electronConfig: '1s1' },
+      { number: 2, row: 1, col: 32, category: 's-block', electronConfig: '1s2' },
+      { number: 3, row: 2, col: 1, category: 's-block', electronConfig: '1s2 2s1' },
+      { number: 4, row: 2, col: 2, category: 's-block', electronConfig: '1s2 2s2' },
+      { number: 5, row: 2, col: 27, category: 'p-block', electronConfig: '1s2 2s2 2p1' },
+      { number: 6, row: 2, col: 28, category: 'p-block', electronConfig: '1s2 2s2 2p2' },
+      // … Μπορείς να προσθέσεις τα υπόλοιπα στοιχεία σύμφωνα με την διάταξη
+    ];
+    
+    // Στα αρχικά βήματα, όλα τα στοιχεία ξεκινούν "κρυμμένα"
+    const tableContainer = document.getElementById('periodicTable');
+    elements.forEach((el, index) => {
+      const div = document.createElement('div');
+      div.className = 'element ' + el.category + ' hidden';
+      div.textContent = el.number;
+      div.style.gridRow = el.row;
+      div.style.gridColumn = el.col;
+      div.dataset.index = index;
+      // Όταν κάνεις κλικ σε ένα στοιχείο, εμφανίζεται η ηλεκτρονιακή του δόμηση
+      div.addEventListener('click', () => {
+        document.getElementById('electron-config').textContent = 
+          `Στοιχείο ${el.number}: ${el.electronConfig}`;
+      });
+      tableContainer.appendChild(div);
+    });
+    
+    // Διαχείριση σταδιακής εμφάνισης: π.χ. αποκαλύπτουμε γραμμές βάσει του αριθμού βήματος
+    let currentStep = 0;
+    const maxStep = 3;  // Δείγμα: 3 βήματα (μπορείς να το αυξήσεις για πλήρη παρουσίαση)
+    
+    function revealNextStep() {
+      currentStep++;
+      // Αποκαλύπτουμε όλα τα στοιχεία που ανήκουν σε γραμμές <= currentStep
+      const items = document.querySelectorAll('.periodic-table .element');
+      items.forEach(item => {
+        const row = parseInt(item.style.gridRow);
+        if(row <= currentStep) {
+          item.classList.remove('hidden');
+        }
+      });
+      // Απενεργοποίηση του κουμπιού όταν τελειώσουν τα βήματα
+      if(currentStep >= maxStep) {
+        document.getElementById('nextStep').disabled = true;
+      }
+    }
+    
+    document.getElementById('nextStep').addEventListener('click', revealNextStep);
+  </script>
+</body>
+</html>
