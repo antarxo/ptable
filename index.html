@@ -9,33 +9,14 @@
       background-color: #f7f7f7;
       margin: 20px;
     }
-    /* Ο εξωτερικός container χωρίς εξωτερικά περιγράμματα */
-    #tableContainer {
+    /* Container για όλα τα στοιχεία με ομοιόμορφο gap */
+    #elementsContainer {
       display: flex;
+      flex-wrap: wrap;
+      gap: 2px; /* Το ίδιο κενό ανάμεσα σε όλα τα κουτάκια */
       max-width: 600px;
       margin: 20px auto;
-      gap: 0; /* δεν υπάρχει κενό μεταξύ των τομέων */
-    }
-    /* Container για τον s‑τομέα: διατηρεί μόνο το κοινό δεξί περίγραμμα */
-    #sContainer {
-      padding: 10px;
-      border-right: 2px solid #000; /* κοινό περιθώριο */
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px;
-      align-items: center;
       justify-content: center;
-      min-width: 80px;
-    }
-    /* Container για τον p‑τομέα */
-    #pContainer {
-      padding: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px;
-      align-items: center;
-      justify-content: center;
-      min-width: 300px;
     }
     /* Στυλ για τα κουτάκια των στοιχείων */
     .element {
@@ -81,11 +62,8 @@
 </head>
 <body>
 
-  <!-- Ο πίνακας χωρίζεται σε δύο containers χωρίς εξωτερικά περιγράμματα -->
-  <div id="tableContainer">
-    <div id="sContainer"></div>
-    <div id="pContainer"></div>
-  </div>
+  <!-- Container για όλα τα στοιχεία -->
+  <div id="elementsContainer"></div>
 
   <!-- Κουμπί για εμφάνιση του επόμενου στοιχείου -->
   <button id="nextElement">Επόμενο Στοιχείο</button>
@@ -109,13 +87,12 @@
     ];
 
     let currentIndex = 0;
-    const sContainer = document.getElementById('sContainer');
-    const pContainer = document.getElementById('pContainer');
+    const elementsContainer = document.getElementById('elementsContainer');
     const electronConfigDiv = document.getElementById('electronConfig');
     const nextElementBtn = document.getElementById('nextElement');
 
     /* Συνάρτηση μορφοποίησης της ηλεκτρονιακής δόμησης:
-       - Ομαδοποιεί τα κομμάτια (π.χ. "1s2") ανά στιβάδα (βάσει του πρώτου αριθμού)
+       - Ομαδοποιεί τα κομμάτια (π.χ. "1s2") ανά στιβάδα
        - Χρησιμοποιεί το <sup> για τους εκθέτες
        - Προσθέτει ετικέτες στιβάδων: Κ (2), L (8), M (18), κ.λπ.
     */
@@ -163,12 +140,9 @@
         electronConfigDiv.classList.toggle('expanded');
       });
       
-      // Προσθήκη στο κατάλληλο container
-      if (el.category === 's-block') {
-        sContainer.appendChild(elDiv);
-      } else if (el.category === 'p-block') {
-        pContainer.appendChild(elDiv);
-      }
+      // Προσθήκη στο container
+      elementsContainer.appendChild(elDiv);
+      
       // Ενημέρωση της κύριας περιοχής με την ηλεκτρονιακή δόμηση του στοιχείου
       electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
       currentIndex++;
