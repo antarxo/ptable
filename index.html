@@ -101,9 +101,12 @@
       
       currentIndex++;
       renderGrid();
+      
       if (currentIndex === 20) {
         nextButton.style.display = 'none';
         continueButton.style.display = 'block';
+      } else if (currentIndex === 30) {
+        continueButton.style.display = 'none';
       }
     }
     
