@@ -2,21 +2,21 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Παρουσίαση: Στοιχεία 3-10 &amp; 11-18</title>
+  <title>Παρουσίαση: Στοιχεία 3-10 &amp; 11-18 σε Δύο Γραμμές</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f7f7f7;
       margin: 20px;
     }
-    /* Container για όλα τα στοιχεία με ομοιόμορφο gap */
+    /* Container ως grid: 8 στήλες για 8 στοιχεία ανά γραμμή */
     #elementsContainer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px; /* Ομοιόμορφο κενό γύρω από κάθε κουτάκι */
-      max-width: 600px;
-      margin: 20px auto;
+      display: grid;
+      grid-template-columns: repeat(8, 40px);
+      grid-auto-rows: 40px;
+      gap: 2px;
       justify-content: center;
+      margin: 20px auto;
     }
     /* Στυλ για τα κουτάκια των στοιχείων */
     .element {
@@ -46,7 +46,7 @@
       cursor: pointer;
       user-select: none;
     }
-    /* Εφέ επέκτασης για λεπτομέρειες */
+    /* Εφέ επέκτασης */
     #electronConfig.expanded {
       background-color: #eef;
     }
@@ -62,10 +62,10 @@
 </head>
 <body>
 
-  <!-- Container για τα στοιχεία -->
+  <!-- Container για τα στοιχεία σε grid -->
   <div id="elementsContainer"></div>
 
-  <!-- Κουμπιά ελέγχου: αρχικά εμφανίζεται μόνο το "Επόμενο Στοιχείο" -->
+  <!-- Κουμπιά ελέγχου -->
   <button id="nextElement">Επόμενο Στοιχείο</button>
   <button id="continue" style="display:none;">Συνέχεια</button>
 
@@ -75,7 +75,7 @@
   </div>
 
   <script>
-    /* Δεδομένα πρώτης φάσης: Στοιχεία 3 έως 10 */
+    /* Δεδομένα πρώτης φάσης: Στοιχεία 3 έως 10 (γραμμή 1) */
     const firstPhaseElements = [
       { number: 3, category: 's-block', electronConfig: '1s2 2s1' },
       { number: 4, category: 's-block', electronConfig: '1s2 2s2' },
@@ -87,7 +87,7 @@
       { number: 10, category: 'p-block', electronConfig: '1s2 2s2 2p6' }
     ];
     
-    /* Δεδομένα δεύτερης φάσης: Στοιχεία 11 έως 18 */
+    /* Δεδομένα δεύτερης φάσης: Στοιχεία 11 έως 18 (γραμμή 2) */
     const secondPhaseElements = [
       { number: 11, category: 's-block', electronConfig: '1s2 2s2 2p6 3s1' },
       { number: 12, category: 's-block', electronConfig: '1s2 2s2 2p6 3s2' },
@@ -102,14 +102,14 @@
     // Μεταβλητές ελέγχου φάσεων
     let currentPhase = 1;
     let indexPhase1 = 0;
-    let indexPhase2 = 0; // θα χρησιμοποιηθεί στη δεύτερη φάση (προσοχή: το στοιχείο 11 εμφανίζεται ως πρώτο)
+    let indexPhase2 = 0; // για τη δεύτερη φάση
     
     const elementsContainer = document.getElementById('elementsContainer');
     const electronConfigDiv = document.getElementById('electronConfig');
     const nextElementBtn = document.getElementById('nextElement');
     const continueBtn = document.getElementById('continue');
     
-    /* Συνάρτηση μορφοποίησης ηλεκτρονιακής δομής (με <sup>) και ετικέτες στιβάδων */
+    /* Συνάρτηση μορφοποίησης ηλεκτρονιακής δομής (χρησιμοποιεί <sup> για τους εκθέτες) */
     function formatElectronConfig(configStr) {
       const parts = configStr.split(' ');
       const shells = {};
@@ -148,7 +148,7 @@
       elementsContainer.appendChild(elDiv);
     }
     
-    /* Συνάρτηση για ενημέρωση του κεντρικού πλαισίου με τη δομή του στοιχείου */
+    /* Συνάρτηση ενημέρωσης του πλαισίου με τη δομή του στοιχείου */
     function updateElectronConfig(el, extraText = '') {
       electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}${extraText}`;
     }
@@ -162,19 +162,19 @@
           updateElectronConfig(el);
           indexPhase1++;
         } else {
-          // Μετά το στοιχείο 10: εμφάνιση του στοιχείου 11 με το επιπλέον λεκτικό
+          // Μετά το στοιχείο 10, εμφανίζεται το στοιχείο 11 στη θέση 1 της δεύτερης γραμμής
           const el = secondPhaseElements[0]; // στοιχείο 11
           revealElement(el);
           updateElectronConfig(el, `<br><br><em>Παρατηρείστε τη δομή του στοιχείου. Περιλαμβάνει ίδιο αριθμό ηλεκτρονίων εξωτερικής στιβάδας με το στοιχείο 3. Έχει επομένως τις ίδιες ιδιότητες με αυτό. Ας το γράψουμε λοιπόν κάτω από αυτό.</em>`);
           currentPhase = 2;
-          indexPhase2 = 1; // το στοιχείο 11 έχει ήδη εμφανιστεί
+          indexPhase2 = 1; // το στοιχείο 11 έχει ήδη τοποθετηθεί
           nextElementBtn.style.display = 'none';
           continueBtn.style.display = 'block';
         }
       }
     });
     
-    /* Event handler για το κουμπί "Συνέχεια" (από το στοιχείο 12 έως 18) */
+    /* Event handler για το κουμπί "Συνέχεια" (προσθήκη στοιχείων 12 έως 18 στη δεύτερη γραμμή) */
     continueBtn.addEventListener('click', () => {
       if (currentPhase === 2) {
         if (indexPhase2 < secondPhaseElements.length) {
@@ -190,7 +190,7 @@
       }
     });
     
-    /* Επιπλέον: Εναλλαγή εμφάνισης λεπτομερειών με κλικ στο πλαίσιο δομής */
+    /* Εναλλαγή εμφάνισης λεπτομερειών με κλικ στο πλαίσιο δομής */
     electronConfigDiv.addEventListener('click', () => {
       electronConfigDiv.classList.toggle('expanded');
     });
