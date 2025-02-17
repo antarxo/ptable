@@ -170,4 +170,70 @@
                currentPeriod = 3;
             }
          }
-      } else if (currentPeriod ==
+      } else if (currentPeriod === 3) {
+         if (indexPeriod3 < period3Elements.length) {
+            const el = period3Elements[indexPeriod3];
+            revealElement(el, period3Container);
+            electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
+            indexPeriod3++;
+            if (indexPeriod3 === period3Elements.length) {
+               currentPeriod = 4;
+               nextElementBtn.style.display = 'none';
+               continueBtn.style.display = 'block';
+            }
+         }
+      }
+    });
+
+    // Χειριστής για την Περίοδο 4 (κουμπί "Συνέχεια")
+    continueBtn.addEventListener('click', () => {
+      if (currentPeriod === 4) {
+         if (indexPeriod4 < period4Elements.length) {
+            // Όταν βάλουμε το στοιχείο 21 (index 2) εφαρμόζουμε την αναδιάταξη
+            if (indexPeriod4 === 2 && !transitionApplied) {
+               // Ενημέρωση grid για Περίοδους 2 και 3 σε 9 στήλες
+               period2Container.style.gridTemplateColumns = "repeat(9, 40px)";
+               period3Container.style.gridTemplateColumns = "repeat(9, 40px)";
+               // Ενημέρωση grid για Περίοδο 4 σε 13 στήλες
+               period4Container.style.gridTemplateColumns = "repeat(13, 40px)";
+               // Εισαγωγή "κενών" κελιών μετά τα 2 πρώτα στην Περίοδο 2 και 3
+               let gap2 = document.createElement('div');
+               gap2.className = "element";
+               gap2.style.border = "none";
+               gap2.textContent = "";
+               period2Container.insertBefore(gap2, period2Container.children[2]);
+               let gap3 = document.createElement('div');
+               gap3.className = "element";
+               gap3.style.border = "none";
+               gap3.textContent = "";
+               period3Container.insertBefore(gap3, period3Container.children[2]);
+               transitionApplied = true;
+            }
+            const el = period4Elements[indexPeriod4];
+            if (indexPeriod4 < 2) {
+               // Τα στοιχεία 19 και 20
+               revealElement(el, period4Container);
+            } else {
+               // Για τα στοιχεία από 21 και μετά, τοποθετούμε στο forced column = indexPeriod4 + 2
+               revealElement(el, period4Container, indexPeriod4 + 2);
+               if (indexPeriod4 === 2) {
+                  electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}<br><br><em>Μετά την εισαγωγή του στοιχείου μετάπτωσης, οι γραμμές αναδιατάσσονται.</em>`;
+               } else {
+                  electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
+               }
+            }
+            indexPeriod4++;
+            if (indexPeriod4 === period4Elements.length) {
+               continueBtn.disabled = true;
+               continueBtn.textContent = 'Τέλος';
+            }
+         }
+      }
+    });
+
+    electronConfigDiv.addEventListener('click', () => {
+      electronConfigDiv.classList.toggle('expanded');
+    });
+  </script>
+</body>
+</html>
