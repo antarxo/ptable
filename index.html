@@ -2,177 +2,133 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Παρουσίαση Σχηματισμού Περιοδικού Πίνακα - Βήμα-Βήμα</title>
+  <title>Containers για Τομείς του Περιοδικού Πίνακα</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f0f0f0;
-      margin: 0;
+      margin: 20px;
     }
-    .periodic-table {
+    .container {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .container h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+    .block {
       display: grid;
-      grid-template-columns: repeat(32, 20px);
-      grid-auto-rows: 20px;
+      grid-template-columns: repeat(8, 20px);
       gap: 2px;
-      margin: auto;
-      max-width: 660px;
-      position: relative;
     }
     .element {
-      position: relative;
-      background-color: #fff;
       border: 1px solid #ccc;
       text-align: center;
-      font-size: 8px;
       line-height: 20px;
+      font-size: 10px;
       cursor: pointer;
-      transition: opacity 0.5s;
-      opacity: 1;
+      background-color: #eee;
     }
-    .element.hidden {
-      opacity: 0;
-    }
-    /* Όταν εμφανίζεται το detail της ηλεκτρονιακής δόμησης πάνω στο στοιχείο */
-    .config-detail {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      background: #fff;
-      border: 1px solid #ccc;
-      font-size: 8px;
-      padding: 2px;
-      z-index: 100;
-      white-space: nowrap;
-      display: none;
-    }
-    .element.show-config .config-detail {
-      display: block;
-    }
-    /* Χρωματισμοί για τα block */
+    /* Χρωματισμοί ανά τομέα */
     .s-block { background-color: #ff6961; }
     .p-block { background-color: #77dd77; }
     .d-block { background-color: #84b6f4; }
     .f-block { background-color: #ffd1dc; }
-    /* Global περιοχή εμφάνισης ηλεκτρονιακής δόμησης */
-    #globalConfig {
+    /* Ο συγχωνευμένος πίνακας έχει διαφορετικό grid (π.χ. 32 στήλες) */
+    #mergedTable {
+      display: none;
       margin-top: 20px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      background: #fff;
-      font-size: 10px;
     }
-    button {
-      margin-top: 20px;
-      padding: 10px;
+    #mergedTable .block {
+      grid-template-columns: repeat(32, 20px);
     }
   </style>
 </head>
 <body>
-  <h1>Παρουσίαση Σχηματισμού Περιοδικού Πίνακα - Βήμα-Βήμα</h1>
+  <h1>Containers για Τομείς του Περιοδικού Πίνακα</h1>
   
-  <!-- Grid του περιοδικού πίνακα -->
-  <div class="periodic-table" id="periodicTable">
-    <!-- Τα στοιχεία δημιουργούνται δυναμικά από το script -->
+  <!-- Κουμπί για συγχώνευση/αποσυγχώνευση -->
+  <button id="mergeTableBtn">Συγχώνευση Πίνακα</button>
+  
+  <!-- Containers για τους ξεχωριστούς τομείς -->
+  <div id="separateContainers">
+    <div id="sContainer" class="container">
+      <h2>s‑block</h2>
+      <div class="block" id="sBlock"></div>
+    </div>
+    <div id="pContainer" class="container">
+      <h2>p‑block</h2>
+      <div class="block" id="pBlock"></div>
+    </div>
+    <div id="dContainer" class="container">
+      <h2>d‑block</h2>
+      <div class="block" id="dBlock"></div>
+    </div>
+    <div id="fContainer" class="container">
+      <h2>f‑block</h2>
+      <div class="block" id="fBlock"></div>
+    </div>
   </div>
   
-  <!-- Κουμπί για την εμφάνιση του επόμενου στοιχείου -->
-  <button id="nextElement">Επόμενο Στοιχείο</button>
-  
-  <!-- Περιοχή για την εμφάνιση της ηλεκτρονιακής δόμησης -->
-  <div id="globalConfig">
-    Επιλέξτε ή αποκαλύψτε ένα στοιχείο για να δείτε την ηλεκτρονιακή του δόμηση.
+  <!-- Συγχωνευμένος πίνακας -->
+  <div id="mergedTable" class="container">
+    <h2>Συγχωνευμένος Πίνακας</h2>
+    <div class="block" id="mergedBlock"></div>
   </div>
   
   <script>
-    /* 
-      Δείγμα δεδομένων για μερικά στοιχεία.
-      Κάθε αντικείμενο περιέχει:
-      - number: τον ατομικό αριθμό
-      - row, col: θέση στο grid (η διάταξη μπορεί να προσαρμοστεί)
-      - category: για το χρώμα (s-, p-, d-, f-block)
-      - electronConfig: το string της ηλεκτρονιακής δόμησης
-    */
-    const elements = [
-      { number: 1, row: 1, col: 1, category: 's-block', electronConfig: '1s1' },
-      { number: 2, row: 1, col: 32, category: 's-block', electronConfig: '1s2' },
-      { number: 3, row: 2, col: 1, category: 's-block', electronConfig: '1s2 2s1' },
-      { number: 4, row: 2, col: 2, category: 's-block', electronConfig: '1s2 2s2' },
-      { number: 5, row: 2, col: 27, category: 'p-block', electronConfig: '1s2 2s2 2p1' },
-      { number: 6, row: 2, col: 28, category: 'p-block', electronConfig: '1s2 2s2 2p2' },
-      { number: 7, row: 2, col: 29, category: 'p-block', electronConfig: '1s2 2s2 2p3' },
-      { number: 8, row: 2, col: 30, category: 'p-block', electronConfig: '1s2 2s2 2p4' },
-      // Μπορείς να επεκτείνεις το array για όλα τα στοιχεία.
+    // Δείγμα δεδομένων: κάθε αντικείμενο αναπαριστά ένα στοιχείο με ατομικό αριθμό και τομέα.
+    const sampleElements = [
+      { number: 1, category: 's-block' },
+      { number: 2, category: 's-block' },
+      { number: 5, category: 'p-block' },
+      { number: 6, category: 'p-block' },
+      { number: 21, category: 'd-block' },
+      { number: 22, category: 'd-block' },
+      { number: 57, category: 'f-block' },
+      { number: 58, category: 'f-block' }
     ];
     
-    // Δείκτης για το επόμενο στοιχείο προς εμφάνιση
-    let currentIndex = 0;
-    
-    const tableContainer = document.getElementById('periodicTable');
-    
-    // Δημιουργία όλων των στοιχείων στο grid (αρχικά κρυμμένα)
-    elements.forEach((el, idx) => {
+    // Συνάρτηση για την προσθήκη στοιχείων στους αντίστοιχους containers
+    function addElementToContainer(el) {
+      let containerId;
+      if (el.category === 's-block') containerId = 'sBlock';
+      else if (el.category === 'p-block') containerId = 'pBlock';
+      else if (el.category === 'd-block') containerId = 'dBlock';
+      else if (el.category === 'f-block') containerId = 'fBlock';
+      
+      const container = document.getElementById(containerId);
       const div = document.createElement('div');
-      div.className = 'element ' + el.category + ' hidden';
+      div.className = 'element ' + el.category;
       div.textContent = el.number;
-      div.style.gridRow = el.row;
-      div.style.gridColumn = el.col;
-      div.dataset.index = idx;
+      container.appendChild(div);
       
-      // Δημιουργία εσωτερικού div για την εμφάνιση της ηλεκτρονιακής δόμησης (ως "tool-tip")
-      const configDiv = document.createElement('div');
-      configDiv.className = 'config-detail';
-      configDiv.innerHTML = formatElectronConfig(el.electronConfig);
-      div.appendChild(configDiv);
-      
-      // Όταν κάνεις κλικ σε ένα στοιχείο, εναλλάσσεται η εμφάνιση του config detail
-      div.addEventListener('click', (e) => {
-         // Αποφυγή ενεργοποίησης του click του κουμπιού
-         e.stopPropagation();
-         div.classList.toggle('show-config');
-         // Ενημέρωση της global περιοχής με το config του στοιχείου
-         document.getElementById('globalConfig').innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>` + formatElectronConfig(el.electronConfig);
-      });
-      
-      tableContainer.appendChild(div);
-    });
-    
-    // Συνάρτηση που μορφοποιεί το string της ηλεκτρονιακής δόμησης σε "στιβάδες" και "υποστιβάδες"
-    function formatElectronConfig(config) {
-      const parts = config.split(' ');
-      const shells = {};
-      parts.forEach(part => {
-         const match = part.match(/^(\d+)/);
-         if(match) {
-           const shellNum = match[1];
-           if(!shells[shellNum]) {
-             shells[shellNum] = [];
-           }
-           shells[shellNum].push(part);
-         }
-      });
-      let html = "";
-      for (let shell in shells) {
-         html += `<div><strong>Στίβα ${shell}:</strong> ${shells[shell].join(' ')}</div>`;
-      }
-      return html;
+      // Επίσης, προσθέτουμε το στοιχείο στον συγχωνευμένο πίνακα
+      const mergedContainer = document.getElementById('mergedBlock');
+      const div2 = document.createElement('div');
+      div2.className = 'element ' + el.category;
+      div2.textContent = el.number;
+      mergedContainer.appendChild(div2);
     }
     
-    // Κάθε κλικ στο κουμπί αποκαλύπτει το επόμενο στοιχείο (σύμφωνα με το global currentIndex)
-    document.getElementById('nextElement').addEventListener('click', () => {
-       if (currentIndex < elements.length) {
-          const elDiv = document.querySelector(`.element[data-index='${currentIndex}']`);
-          if(elDiv) {
-             elDiv.classList.remove('hidden');
-             // Ενημέρωση της global περιοχής με την ηλεκτρονιακή δόμηση του στοιχείου που αποκαλύφθηκε
-             const elData = elements[currentIndex];
-             document.getElementById('globalConfig').innerHTML = `<strong>Στοιχείο ${elData.number}:</strong><br>` + formatElectronConfig(elData.electronConfig);
-          }
-          currentIndex++;
-       }
-       if (currentIndex >= elements.length) {
-          document.getElementById('nextElement').disabled = true;
-       }
+    sampleElements.forEach(addElementToContainer);
+    
+    // Λειτουργία κουμπιού για συγχώνευση/αποσυγχώνευση των containers
+    document.getElementById('mergeTableBtn').addEventListener('click', () => {
+      const separate = document.getElementById('separateContainers');
+      const merged = document.getElementById('mergedTable');
+      if (separate.style.display !== 'none') {
+        // Απόκρυψη ξεχωριστών containers και εμφάνιση συγχωνευμένου πίνακα
+        separate.style.display = 'none';
+        merged.style.display = 'block';
+        document.getElementById('mergeTableBtn').textContent = 'Αποσυγχώνευση Πίνακα';
+      } else {
+        // Επιστροφή στην αρχική διάταξη
+        separate.style.display = 'block';
+        merged.style.display = 'none';
+        document.getElementById('mergeTableBtn').textContent = 'Συγχώνευση Πίνακα';
+      }
     });
   </script>
 </body>
