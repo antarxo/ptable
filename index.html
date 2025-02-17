@@ -96,7 +96,7 @@
         grid[2][currentIndex - 18] = elDiv;
       } else {
         if (currentIndex === 20) {
-          grid.forEach(row => row.push('-'));
+          grid.forEach(row => row.splice(2, 0, null)); // Εισαγωγή στήλης
           columns++;
         }
         grid[2][currentIndex - 18] = elDiv;
