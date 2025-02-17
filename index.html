@@ -1,86 +1,236 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <title>Εξέλιξη Περιοδικού Πίνακα</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background-color: #f0f0f0;
-            margin: 0;
-        }
-
-        .periodic-table {
-            display: grid;
-            grid-template-columns: repeat(32, 20px); /* 32 στήλες, πλάτος 20px το καθένα */
-            gap: 2px;
-            margin: auto;
-            max-width: 660px; /* 32 * 20px + 31 * 2px gap */
-        }
-
-        .element {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            text-align: center;
-            font-size: 8px;
-            line-height: 18px; /* Ίδιο με το ύψος του κελιού */
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .element:hover {
-            background-color: #e0e0e0;
-        }
-
-        /* Χρώματα για διαφορετικές περιοχές */
-        .s-block { background-color: #ff6961; }
-        .p-block { background-color: #77dd77; }
-        .d-block { background-color: #84b6f4; }
-        .f-block { background-color: #ffd1dc; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Κανονική Διάταξη Περιοδικού Πίνακα</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f0f0f0;
+      margin: 0;
+    }
+    .periodic-table {
+      display: grid;
+      /* Το grid έχει 32 στήλες, ώστε να υπάρχει περιθώριο για κενά */
+      grid-template-columns: repeat(32, 20px);
+      grid-auto-rows: 20px;
+      gap: 2px;
+      margin: auto;
+      max-width: 660px; /* (32 * 20px) + (31 * 2px) */
+    }
+    .element {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      text-align: center;
+      font-size: 8px;
+      line-height: 20px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .element:hover {
+      background-color: #e0e0e0;
+    }
+    /* Χρωματισμοί ανά block */
+    .s-block { background-color: #ff6961; }
+    .p-block { background-color: #77dd77; }
+    .d-block { background-color: #84b6f4; }
+    .f-block { background-color: #ffd1dc; }
+  </style>
 </head>
 <body>
-    <h1>Εξέλιξη Περιοδικού Πίνακα</h1>
-    <div class="periodic-table" id="periodicTable"></div>
+  <h1>Κανονική Διάταξη Περιοδικού Πίνακα</h1>
+  <div class="periodic-table" id="periodicTable"></div>
 
-    <script>
-        // Δεδομένα για τα στοιχεία (μόνο ατομικός αριθμός και κατηγορία)
-        const elements = [];
-        for (let i = 1; i <= 118; i++) {
-            let category;
-            if (i === 1 || i === 2) {
-                category = "s-block"; // Υδρογόνο και Ήλιος
-            } else if (i >= 3 && i <= 10) {
-                category = "s-block"; // s-block (αλκάλια, αλκαλικές γαίες)
-            } else if (i >= 11 && i <= 18) {
-                category = "p-block"; // p-block
-            } else if (i >= 19 && i <= 36) {
-                category = (i >= 21 && i <= 30) ? "d-block" : "p-block"; // d-block και p-block
-            } else if (i >= 37 && i <= 54) {
-                category = (i >= 39 && i <= 48) ? "d-block" : "p-block"; // d-block και p-block
-            } else if (i >= 55 && i <= 86) {
-                category = (i >= 57 && i <= 80) ? "f-block" : (i >= 81 && i <= 86) ? "p-block" : "d-block"; // f-block, d-block, p-block
-            } else if (i >= 87 && i <= 118) {
-                category = (i >= 89 && i <= 102) ? "f-block" : (i >= 103 && i <= 118) ? "d-block" : "p-block"; // f-block, d-block, p-block
-            }
-            elements.push({ number: i, category });
-        }
+  <script>
+    /* 
+      Ο παρακάτω πίνακας 'positions' ορίζει για κάθε στοιχείο τον ατομικό αριθμό,
+      τη σειρά (gridRow) και την στήλη (gridColumn) με βάση την τυπική διάταξη.
+      
+      Επιλογή offset: οι ομάδες 1-18 τοποθετούνται με μετατόπιση ώστε να κεντραριστεί ο πίνακας στο grid.
+      Στις γραμμές των κύριων περιόδων (1-7) χρησιμοποιούνται οι ομάδες, ενώ οι λανθανίδες (57–71) 
+      και οι ακτινίδες (89–103) τοποθετούνται σε ξεχωριστές σειρές (8 και 9 αντίστοιχα) 
+      με στήλες από 10 έως 24 (που αντιστοιχούν περίπου στις ομάδες 3 έως 17).
+    */
+    const positions = [
+      // Περίοδος 1
+      { number: 1, row: 1, col: 8 },   // Ομάδα 1
+      { number: 2, row: 1, col: 25 },  // Ομάδα 18
 
-        // Δημιουργία του πίνακα
-        function createPeriodicTable() {
-            const container = document.getElementById('periodicTable');
-            
-            elements.forEach(element => {
-                const div = document.createElement('div');
-                div.className = `element ${element.category}`;
-                div.textContent = element.number;
-                container.appendChild(div);
-            });
-        }
+      // Περίοδος 2
+      { number: 3, row: 2, col: 8 },   // Λίθιο, Ομάδα 1
+      { number: 4, row: 2, col: 9 },   // Βηρίλιο, Ομάδα 2
+      { number: 5, row: 2, col: 20 },  // Βόριο, Ομάδα 13
+      { number: 6, row: 2, col: 21 },  // Άνθρακας, Ομάδα 14
+      { number: 7, row: 2, col: 22 },  // Άζωτο, Ομάδα 15
+      { number: 8, row: 2, col: 23 },  // Οξυγόνο, Ομάδα 16
+      { number: 9, row: 2, col: 24 },  // Φθόριο, Ομάδα 17
+      { number: 10, row: 2, col: 25 }, // Νέον, Ομάδα 18
 
-        // Αρχικοποίηση όταν φορτωθεί η σελίδα
-        window.onload = createPeriodicTable;
-    </script>
+      // Περίοδος 3
+      { number: 11, row: 3, col: 8 },  // Νάτριο, Ομάδα 1
+      { number: 12, row: 3, col: 9 },  // Μαγνήσιο, Ομάδα 2
+      { number: 13, row: 3, col: 20 }, // Αλουμίνιο, Ομάδα 13
+      { number: 14, row: 3, col: 21 }, // Σιλικόνη, Ομάδα 14
+      { number: 15, row: 3, col: 22 }, // Φωσφόρος, Ομάδα 15
+      { number: 16, row: 3, col: 23 }, // Θείο, Ομάδα 16
+      { number: 17, row: 3, col: 24 }, // Χλώριο, Ομάδα 17
+      { number: 18, row: 3, col: 25 }, // Αργό, Ομάδα 18
+
+      // Περίοδος 4
+      { number: 19, row: 4, col: 8 },  // Καλίου, Ομάδα 1
+      { number: 20, row: 4, col: 9 },  // Ασβέστιο, Ομάδα 2
+      { number: 21, row: 4, col: 10 }, // Σκάνδιο, Ομάδα 3
+      { number: 22, row: 4, col: 11 }, // Τιτανία, Ομάδα 4
+      { number: 23, row: 4, col: 12 }, // Βανάδιο, Ομάδα 5
+      { number: 24, row: 4, col: 13 }, // Χρώμιο, Ομάδα 6
+      { number: 25, row: 4, col: 14 }, // Μαγγάνιο, Ομάδα 7
+      { number: 26, row: 4, col: 15 }, // Σίδηρος, Ομάδα 8
+      { number: 27, row: 4, col: 16 }, // Κοβάλτιο, Ομάδα 9
+      { number: 28, row: 4, col: 17 }, // Νικέλιο, Ομάδα 10
+      { number: 29, row: 4, col: 18 }, // Χαλκός, Ομάδα 11
+      { number: 30, row: 4, col: 19 }, // Ψευδάργυρος, Ομάδα 12
+      { number: 31, row: 4, col: 20 }, // Γάλλιο, Ομάδα 13
+      { number: 32, row: 4, col: 21 }, // Γερμάνιο, Ομάδα 14
+      { number: 33, row: 4, col: 22 }, // Αρσενικό, Ομάδα 15
+      { number: 34, row: 4, col: 23 }, // Σελήνιο, Ομάδα 16
+      { number: 35, row: 4, col: 24 }, // Βρώμιο, Ομάδα 17
+      { number: 36, row: 4, col: 25 }, // Κρυπτόν, Ομάδα 18
+
+      // Περίοδος 5
+      { number: 37, row: 5, col: 8 },  // Ρουβίδιο, Ομάδα 1
+      { number: 38, row: 5, col: 9 },  // Στρόντιο, Ομάδα 2
+      { number: 39, row: 5, col: 10 }, // Υττρόιο, Ομάδα 3
+      { number: 40, row: 5, col: 11 }, // Ζιρκόνιο, Ομάδα 4
+      { number: 41, row: 5, col: 12 }, // Νιόβιο, Ομάδα 5
+      { number: 42, row: 5, col: 13 }, // Μολυβδάνιο, Ομάδα 6
+      { number: 43, row: 5, col: 14 }, // Τεχνητέιο, Ομάδα 7
+      { number: 44, row: 5, col: 15 }, // Ρουθηένιο, Ομάδα 8
+      { number: 45, row: 5, col: 16 }, // Ροδένιο, Ομάδα 9
+      { number: 46, row: 5, col: 17 }, // Παλλάδιο, Ομάδα 10
+      { number: 47, row: 5, col: 18 }, // Αργύρος, Ομάδα 11
+      { number: 48, row: 5, col: 19 }, // Καδμίου, Ομάδα 12
+      { number: 49, row: 5, col: 20 }, // Ινδικό, Ομάδα 13
+      { number: 50, row: 5, col: 21 }, // Ούστιο, Ομάδα 14
+      { number: 51, row: 5, col: 22 }, // Αντιμόνιο, Ομάδα 15
+      { number: 52, row: 5, col: 23 }, // Τελλούριο, Ομάδα 16
+      { number: 53, row: 5, col: 24 }, // Ιώδιο, Ομάδα 17
+      { number: 54, row: 5, col: 25 }, // Ξένο, Ομάδα 18
+
+      // Περίοδος 6 (κύριος πίνακας, χωρίς τις λανθανίδες)
+      { number: 55, row: 6, col: 8 },  // Κησέλιος, Ομάδα 1
+      { number: 56, row: 6, col: 9 },  // Βαρύο, Ομάδα 2
+      // (Η Ομάδα 3 εδώ παραλείπεται – οι λανθανίδες εμφανίζονται παρακάτω)
+      { number: 72, row: 6, col: 11 }, // Χαφνίου, Ομάδα 4
+      { number: 73, row: 6, col: 12 }, // Ταλαντίου, Ομάδα 5
+      { number: 74, row: 6, col: 13 }, // Τουγκστενίου, Ομάδα 6
+      { number: 75, row: 6, col: 14 }, // Ρενίου, Ομάδα 7
+      { number: 76, row: 6, col: 15 }, // Όσμιου, Ομάδα 8
+      { number: 77, row: 6, col: 16 }, // Ιριδίου, Ομάδα 9
+      { number: 78, row: 6, col: 17 }, // Πλατινίου, Ομάδα 10
+      { number: 79, row: 6, col: 18 }, // Χρυσού, Ομάδα 11
+      { number: 80, row: 6, col: 19 }, // Υδραργύρου, Ομάδα 12
+      { number: 81, row: 6, col: 20 }, // Θαλίου, Ομάδα 13
+      { number: 82, row: 6, col: 21 }, // Ουσδίου, Ομάδα 14
+      { number: 83, row: 6, col: 22 }, // Βισμουθίου, Ομάδα 15
+      { number: 84, row: 6, col: 23 }, // Πολωνίου, Ομάδα 16
+      { number: 85, row: 6, col: 24 }, // Αστατίνης, Ομάδα 17
+      { number: 86, row: 6, col: 25 }, // Ραδόνιου, Ομάδα 18
+
+      // Περίοδος 7 (κύριος πίνακας, χωρίς τις ακτινίδες)
+      { number: 87, row: 7, col: 8 },  // Φραγκίσιο, Ομάδα 1
+      { number: 88, row: 7, col: 9 },  // Ραδίου, Ομάδα 2
+      // (Η Ομάδα 3 παραλείπεται – οι ακτινίδες εμφανίζονται παρακάτω)
+      { number: 104, row: 7, col: 11 }, // Ρουθενέργη, Ομάδα 4
+      { number: 105, row: 7, col: 12 }, // Ντουμπίνιο, Ομάδα 5
+      { number: 106, row: 7, col: 13 }, // Σεαμπόργιο, Ομάδα 6
+      { number: 107, row: 7, col: 14 }, // Μπορίη, Ομάδα 7
+      { number: 108, row: 7, col: 15 }, // Χασσίου, Ομάδα 8
+      { number: 109, row: 7, col: 16 }, // Μάιτνερίου, Ομάδα 9
+      { number: 110, row: 7, col: 17 }, // Νταρμσταδίου, Ομάδα 10
+      { number: 111, row: 7, col: 18 }, // Ροντγένη, Ομάδα 11
+      { number: 112, row: 7, col: 19 }, // Κοπέρνικιου, Ομάδα 12
+      { number: 113, row: 7, col: 20 }, // Νιχονοβίου, Ομάδα 13
+      { number: 114, row: 7, col: 21 }, // Φλεροβίου, Ομάδα 14
+      { number: 115, row: 7, col: 22 }, // Μοσκοβίου, Ομάδα 15
+      { number: 116, row: 7, col: 23 }, // Λιβερμόριου, Ομάδα 16
+      { number: 117, row: 7, col: 24 }, // Τενεσίνης, Ομάδα 17
+      { number: 118, row: 7, col: 25 }, // Ογανεσών, Ομάδα 18
+
+      // Λανθανίδες (περίοδος 6, αλλά τοποθετούνται σε ξεχωριστή σειρά 8)
+      { number: 57, row: 8, col: 10 }, // Λανθάνιο
+      { number: 58, row: 8, col: 11 }, // Κήρη
+      { number: 59, row: 8, col: 12 }, // Πρασεοδυμίου
+      { number: 60, row: 8, col: 13 }, // Νεοδυμίου
+      { number: 61, row: 8, col: 14 }, // Προμεθίου
+      { number: 62, row: 8, col: 15 }, // Σαμάριο
+      { number: 63, row: 8, col: 16 }, // Ευρώπιο
+      { number: 64, row: 8, col: 17 }, // Γαδολινίου
+      { number: 65, row: 8, col: 18 }, // Τερβίου
+      { number: 66, row: 8, col: 19 }, // Δισπροζίου
+      { number: 67, row: 8, col: 20 }, // Ολόμιου
+      { number: 68, row: 8, col: 21 }, // Ερβίου
+      { number: 69, row: 8, col: 22 }, // Θουλμίου
+      { number: 70, row: 8, col: 23 }, // Υλλερβίου
+      { number: 71, row: 8, col: 24 }, // Λουτετίου
+
+      // Ακτινίδες (περίοδος 7, τοποθετούνται σε ξεχωριστή σειρά 9)
+      { number: 89, row: 9, col: 10 }, // Ακτινίδιο
+      { number: 90, row: 9, col: 11 }, // Θωρίου
+      { number: 91, row: 9, col: 12 }, // Προτακτινίου
+      { number: 92, row: 9, col: 13 }, // Ουρανίου
+      { number: 93, row: 9, col: 14 }, // Νεπτουνίου
+      { number: 94, row: 9, col: 15 }, // Πλουτωνίου
+      { number: 95, row: 9, col: 16 }, // Αμερικίου
+      { number: 96, row: 9, col: 17 }, // Κουρίου
+      { number: 97, row: 9, col: 18 }, // Μπέρκλίου
+      { number: 98, row: 9, col: 19 }, // Καλιφόρνιου
+      { number: 99, row: 9, col: 20 }, // Αϊνστάνιου
+      { number: 100, row: 9, col: 21 }, // Φερμιίου
+      { number: 101, row: 9, col: 22 }, // Μεντελείου
+      { number: 102, row: 9, col: 23 }, // Νομπελίου
+      { number: 103, row: 9, col: 24 }  // Λωρενσίου
+    ];
+
+    // Συνάρτηση για τον καθορισμό του block βάσει του ατομικού αριθμού
+    function getCategory(n) {
+      if (n === 1 || n === 2 || n === 3 || n === 4 ||
+          n === 11 || n === 12 || n === 19 || n === 20 ||
+          n === 37 || n === 38 || n === 55 || n === 56 ||
+          n === 87 || n === 88) {
+        return "s-block";
+      } else if ((n >= 5 && n <= 10) ||
+                 (n >= 13 && n <= 18) ||
+                 (n >= 31 && n <= 36) ||
+                 (n >= 49 && n <= 54) ||
+                 (n >= 81 && n <= 86) ||
+                 (n >= 113 && n <= 118)) {
+        return "p-block";
+      } else if ((n >= 21 && n <= 30) ||
+                 (n >= 39 && n <= 48) ||
+                 (n >= 72 && n <= 80) ||
+                 (n >= 104 && n <= 112)) {
+        return "d-block";
+      } else if ((n >= 57 && n <= 71) || (n >= 89 && n <= 103)) {
+        return "f-block";
+      }
+      return "";
+    }
+
+    function createPeriodicTable() {
+      const container = document.getElementById('periodicTable');
+      positions.forEach(el => {
+        const div = document.createElement('div');
+        div.className = 'element ' + getCategory(el.number);
+        div.textContent = el.number;
+        // Ορίζουμε τη θέση στο grid
+        div.style.gridColumn = el.col;
+        div.style.gridRow = el.row;
+        container.appendChild(div);
+      });
+    }
+
+    window.onload = createPeriodicTable;
+  </script>
 </body>
 </html>
