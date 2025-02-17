@@ -185,7 +185,7 @@
       noLoop();
     }
 
-   function draw() {
+  function draw() {
   background(247);
   let yOffset = 100;
   rowsData.forEach((row, rowIndex) => {
@@ -194,12 +194,12 @@
       if (cell) {
         fill(
           cell.category === 's-block'
-            ? '#ff6666'  // Πιο έντονο κόκκινο
+            ? '#ffcccc'  // Απαλό ροζ
             : cell.category === 'd-block'
-            ? '#6666ff'  // Πιο έντονο μπλε
+            ? '#ccccff'  // Απαλό μπλε
             : cell.category === 'p-block'
-            ? '#66ff66'  // Πιο έντονο πράσινο
-            : '#ffcc99'  // Πιο έντονο πορτοκαλί (για f-block)
+            ? '#ccffcc'  // Απαλό πράσινο
+            : '#ffe5cc'  // Απαλό πορτοκαλί (για f-block)
         );
         stroke(85);
         rect(xOffset, yOffset, cell.width, cell.height);
