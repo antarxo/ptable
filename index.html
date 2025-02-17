@@ -2,43 +2,42 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Βήμα-Βήμα Παρουσίαση: Ζ=3 έως Ζ=10</title>
+  <title>Παρουσίαση: Ζ=3 έως Ζ=10</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
       background-color: #f7f7f7;
+      margin: 20px;
     }
-    h1 {
-      text-align: center;
-    }
-    /* Container για τον πίνακα (με δύο πλευρικές περιοχές) */
+    /* Container που φιλοξενεί τους δύο τομείς */
     #tableContainer {
       display: flex;
       max-width: 600px;
       margin: 20px auto;
       border: 2px solid #000;
     }
-    /* Container για το s‑block (αριστερά) */
+    /* Ο container του s‑τομέα (χωρίς τίτλο) */
     #sContainer {
-      flex: 0 0 auto;
+      margin: 0;
       padding: 10px;
-      border-right: 2px solid #000; /* Κοινό περίγραμμα */
+      border-right: 2px solid #000; /* κοινό περιθώριο */
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      align-items: center;
+      justify-content: center;
       min-width: 80px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      justify-content: center;
     }
-    /* Container για το p‑block (δεξιά) */
+    /* Ο container του p‑τομέα (χωρίς τίτλο) */
     #pContainer {
-      flex: 1 0 auto;
+      margin: 0;
       padding: 10px;
-      min-width: 300px;
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
+      gap: 2px;
+      align-items: center;
       justify-content: center;
+      min-width: 300px;
     }
     /* Στυλ για τα κουτάκια των στοιχείων */
     .element {
@@ -50,15 +49,15 @@
       border: 1px solid #555;
       background-color: #ddd;
       cursor: pointer;
-      transition: background-color 0.3s;
+      user-select: none;
     }
-    .element:hover {
-      background-color: #ccc;
+    .element.s-block {
+      background-color: #ffb3b3;
     }
-    /* Χρώματα ανά τομέα */
-    .s-block { background-color: #ffb3b3; }
-    .p-block { background-color: #b3ffb3; }
-    /* Η περιοχή εμφάνισης της ηλεκτρονιακής δόμησης */
+    .element.p-block {
+      background-color: #b3ffb3;
+    }
+    /* Container για την ηλεκτρονιακή δόμηση */
     #electronConfig {
       max-width: 600px;
       margin: 20px auto;
@@ -68,11 +67,11 @@
       cursor: pointer;
       user-select: none;
     }
-    /* Μικρό εφέ για την εμφάνιση λεπτομερειών */
+    /* Εφέ «επεκτάσεως» για λεπτομέρειες */
     #electronConfig.expanded {
       background-color: #eef;
     }
-    /* Κουμπί για το επόμενο στοιχείο */
+    /* Κουμπί για την εμφάνιση του επόμενου στοιχείου */
     #nextElement {
       display: block;
       margin: 20px auto;
@@ -83,26 +82,21 @@
   </style>
 </head>
 <body>
-  <h1>Παρουσίαση: Από Ζ=3 έως Ζ=10</h1>
-  
-  <!-- Container για τον πίνακα (διαχωρισμένος σε s και p τομείς) -->
+
+  <!-- Ο πίνακας χωρίζεται σε δύο containers (χωρίς τίτλους) -->
   <div id="tableContainer">
-    <div id="sContainer">
-      <!-- Τα στοιχεία του s‑block (Ζ=3,4) θα εμφανιστούν εδώ -->
-    </div>
-    <div id="pContainer">
-      <!-- Τα στοιχεία του p‑block (Ζ=5–10) θα εμφανιστούν εδώ -->
-    </div>
+    <div id="sContainer"></div>
+    <div id="pContainer"></div>
   </div>
-  
-  <!-- Κουμπί για την εμφάνιση του επόμενου στοιχείου -->
+
+  <!-- Κουμπί για εμφάνιση του επόμενου στοιχείου -->
   <button id="nextElement">Επόμενο Στοιχείο</button>
-  
+
   <!-- Container για την ηλεκτρονιακή δόμηση -->
   <div id="electronConfig">
-    Κάνε κλικ εδώ για να δεις την λεπτομερής δομή (στιβάδες/υποστιβάδες)
+    Κάνε κλικ για λεπτομερή δομή
   </div>
-  
+
   <script>
     /* Δεδομένα για τα στοιχεία Ζ=3 έως Ζ=10 */
     const elements = [
@@ -115,65 +109,79 @@
       { number: 9, category: 'p-block', electronConfig: '1s2 2s2 2p5' },
       { number: 10, category: 'p-block', electronConfig: '1s2 2s2 2p6' }
     ];
-    
-    // Δείκτης για το επόμενο στοιχείο προς εμφάνιση
+
     let currentIndex = 0;
-    
-    // Εύρεση των containers
     const sContainer = document.getElementById('sContainer');
     const pContainer = document.getElementById('pContainer');
     const electronConfigDiv = document.getElementById('electronConfig');
     const nextElementBtn = document.getElementById('nextElement');
-    
-    // Συνάρτηση που μορφοποιεί την ηλεκτρονιακή δόμηση σε "στιβάδες" και "υποστιβάδες"
+
+    /* Συνάρτηση μορφοποίησης της ηλεκτρονιακής δόμησης:
+       - Ομαδοποιεί τα υποστοιχεία ανά στιβάδα (πρώτος αριθμός, π.χ. 1, 2, …)
+       - Εμφανίζει κάθε υποστοιχείο με το εκθέτη (μέσω <sup>)
+       - Προσθέτει ετικέτες στιβάδων: Κ (2), L (8), M (18), κ.λπ.
+    */
     function formatElectronConfig(configStr) {
-      // Παράδειγμα: '1s2 2s2 2p1' → ομαδοποίηση με βάση τον αριθμό του κελιού (πρώτος χαρακτήρας)
       const parts = configStr.split(' ');
       const shells = {};
       parts.forEach(part => {
-        const shell = part.match(/^(\d+)/)[1];
-        if (!shells[shell]) shells[shell] = [];
-        shells[shell].push(part);
+        // Αναγνωρίζουμε το μοτίβο: αριθμός, γράμμα (s, p, d, f) και αριθμός
+        const match = part.match(/^(\d+)([spdf])(\d+)/);
+        if (match) {
+          const shellNum = match[1];
+          // Μετατρέπουμε το "2" σε <sup>2</sup>
+          const formatted = `${match[1]}${match[2]}<sup>${match[3]}</sup>`;
+          if (!shells[shellNum]) shells[shellNum] = [];
+          shells[shellNum].push(formatted);
+        }
       });
+      // Ορισμός των ετικετών για τις στιβάδες
+      const shellLabels = {
+        '1': 'Κ (2)',
+        '2': 'L (8)',
+        '3': 'M (18)',
+        '4': 'N (32)'
+      };
       let html = '';
-      // Ταξινομούμε τους αριθμούς των στιβάδων σε αύξουσα σειρά
       Object.keys(shells).sort((a, b) => a - b).forEach(shell => {
-        html += `<div><strong>Στίβα ${shell}:</strong> ${shells[shell].join(' ')}</div>`;
+        html += `<div>${shellLabels[shell] || ('Στίβα ' + shell)}: ${shells[shell].join(' ')}</div>`;
       });
       return html;
     }
-    
-    // Συνάρτηση για την εμφάνιση του επόμενου στοιχείου
+
+    /* Συνάρτηση για την εμφάνιση του επόμενου στοιχείου */
     function revealNextElement() {
       if (currentIndex >= elements.length) {
         nextElementBtn.disabled = true;
         nextElementBtn.textContent = "Τέλος";
         return;
       }
-      
       const el = elements[currentIndex];
       const elDiv = document.createElement('div');
       elDiv.className = `element ${el.category}`;
       elDiv.textContent = el.number;
       
-      // Ενημέρωση της ηλεκτρονιακής δόμησης στο κάτω μέρος με κάθε κλικ
-      electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
-      
-      // Τοποθέτηση στο κατάλληλο container
+      // Με κλικ πάνω στο στοιχείο, εμφανίζεται λεπτομερής η ηλεκτρονιακή δόμηση του
+      elDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
+        electronConfigDiv.classList.toggle('expanded');
+      });
+
+      // Προσθήκη στο αντίστοιχο container
       if (el.category === 's-block') {
         sContainer.appendChild(elDiv);
       } else if (el.category === 'p-block') {
         pContainer.appendChild(elDiv);
       }
-      
+      // Ενημέρωση της κύριας περιοχής με την ηλεκτρονιακή δόμηση του στοιχείου
+      electronConfigDiv.innerHTML = `<strong>Στοιχείο ${el.number}:</strong><br>${formatElectronConfig(el.electronConfig)}`;
       currentIndex++;
     }
-    
-    // Κάθε κλικ στο κουμπί αποκαλύπτει το επόμενο στοιχείο
+
     nextElementBtn.addEventListener('click', revealNextElement);
-    
-    // Επίσης, όταν κάνεις κλικ στο container της ηλεκτρονιακής δόμησης,
-    // μπορείς να «επεκτείνεις» ή να «συμπτύσσεις» τη λεπτομερή του παρουσίαση.
+
+    // Με κλικ στο κάτω μέρος (στον container της ηλεκτρονιακής δόμησης) εναλλάσσεται η λεπτομερής εμφάνιση
     electronConfigDiv.addEventListener('click', () => {
       electronConfigDiv.classList.toggle('expanded');
     });
