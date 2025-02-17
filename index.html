@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμικός Περιοδικός Πίνακας - Βήμα Βήμα</title>
+  <title>Δυναμικός Περιοδικός Πίνακας - Βήμα Βήμα (με f‑τομέα)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,9 +26,11 @@
       cursor: pointer;
       user-select: none;
     }
+    /* Χρώματα για κάθε τομέα */
     .s-block { background-color: #ffb3b3; }
     .p-block { background-color: #b3ffb3; }
     .d-block { background-color: #b3b3ff; }
+    .f-block { background-color: #ffd699; }
     #electronConfig {
       max-width: 600px;
       margin: 20px auto;
@@ -52,15 +54,22 @@
   <div id="electronConfig">Κάνε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
   
   <script>
-    // Δημιουργία στοιχείων από το 3 έως το 36.
+    // Δημιουργούμε στοιχεία από το 3 έως το 50.
     const elements = [];
-    for (let n = 3; n <= 36; n++) {
+    for (let n = 3; n <= 50; n++) {
       let category;
-      // Παραδειγματικός ορισμός κατηγορίας (μπορείς να τον τροποποιήσεις όπως επιθυμείς)
-      if (n === 3 || n === 4 || n === 11 || n === 12 || n === 19 || n === 20) {
+      /* Ορισμός κατηγορίας:
+         - s-block: 3, 4, 11, 12, 19, 20
+         - d-block: 21–30
+         - f-block: 37–50
+         - p-block: τα υπόλοιπα (5–10, 13–18, 31–36)
+      */
+      if ([3, 4, 11, 12, 19, 20].includes(n)) {
          category = 's-block';
       } else if (n >= 21 && n <= 30) {
          category = 'd-block';
+      } else if (n >= 37 && n <= 50) {
+         category = 'f-block';
       } else {
          category = 'p-block';
       }
@@ -75,20 +84,27 @@
     const electronConfigDiv = document.getElementById('electronConfig');
     const nextButton = document.getElementById('nextElement');
     
-    // Δημιουργούμε 3 γραμμές: row0, row1 και row2.
+    /* Το grid θα περιέχει τις σειρές του πίνακα.
+       Αρχικά έχουμε 3 σειρές για τα στοιχεία s, d, p.
+       Όταν ξεκινήσει ο f‑τομέας, προστίθεται νέα σειρά (row3).
+    */
     let grid = [ [], [], [] ];
-    let totalColumns = 0;       // Ο τρέχων συνολικός αριθμός στηλών
-    let currentIndex = 0;       // Δείκτης του επόμενου στοιχείου (στο array elements)
-    let insertionIndex = 2;     // Για τις φάσεις 4 και 5 (στοιχεία του row2)
+    let totalColumns = 0;      // Ο τρέχων συνολικός αριθμός στηλών
+    let currentIndex = 0;      // Δείκτης του επόμενου στοιχείου στο array elements
     
-    // Βοηθητική συνάρτηση: Εξασφαλίζει ότι η γραμμή έχει τουλάχιστον 'len' θέσεις
+    // Δείκτης εισαγωγής για τις μετατοπίσεις στη σειρά 2 (p‑τομέας)
+    let dInsertionIndex = 2;
+    // Για τη νέα σειρά του f‑τομέα (row3)
+    let fInsertionIndex = null;
+    
+    // Βοηθητική συνάρτηση: Εξασφαλίζει ότι η σειρά grid[rowIndex] έχει τουλάχιστον 'len' θέσεις.
     function ensureRowLength(rowIndex, len) {
       while (grid[rowIndex].length < len) {
          grid[rowIndex].push(null);
       }
     }
     
-    // Εισάγει νέα στήλη (δηλαδή ένα κελί null) σε κάθε γραμμή στο index 'colIndex'
+    // Εισάγει νέα στήλη (κενό κελί) σε κάθε σειρά στο index colIndex.
     function insertColumnAt(colIndex) {
       for (let r = 0; r < grid.length; r++) {
          grid[r].splice(colIndex, 0, null);
@@ -96,7 +112,7 @@
       totalColumns++;
     }
     
-    // Δημιουργεί το κελί ενός στοιχείου με κλικ handler για την ηλεκτρονιακή διαμόρφωση
+    // Δημιουργεί ένα κελί για ένα στοιχείο με click handler για την εμφάνιση της ηλεκτρονιακής διαμόρφωσης.
     function createCell(elObj) {
       const cell = document.createElement('div');
       cell.className = 'element ' + elObj.category;
@@ -107,7 +123,7 @@
       return cell;
     }
     
-    // Εμφανίζει το grid στον container
+    // Εμφανίζει το grid στον container.
     function renderGrid() {
       tableContainer.innerHTML = '';
       tableContainer.style.gridTemplateColumns = `repeat(${totalColumns}, 50px)`;
@@ -115,7 +131,7 @@
          for (let c = 0; c < totalColumns; c++) {
             let cell = grid[r][c];
             if (!cell) {
-              // Δημιουργούμε ένα "κενό" κελί για διατήρηση της διάταξης
+              // Δημιουργούμε ένα "κενό" κελί για τη διατήρηση της διάταξης.
               cell = document.createElement('div');
               cell.className = 'element';
               cell.style.backgroundColor = '#fff';
@@ -125,50 +141,82 @@
       }
     }
     
-    // Συνάρτηση που προσθέτει το επόμενο στοιχείο, ανάλογα με τη φάση
+    // Συνάρτηση που προσθέτει το επόμενο στοιχείο με βάση τη φάση.
     function addElement() {
-      // Έλεγχος αν έχουν τοποθετηθεί όλα τα στοιχεία
       if (currentIndex >= elements.length) {
          nextButton.disabled = true;
          return;
       }
       
-      // **Phase 1:** Στοιχεία 3–10 (indices 0 έως 7) στη row0.
+      /* ---------------------------
+         PHASE 1: Row 0 – στοιχεία 3 έως 10 (8 στοιχεία)
+      ---------------------------- */
       if (currentIndex < 8) {
          const cell = createCell(elements[currentIndex]);
          grid[0].push(cell);
-         totalColumns = grid[0].length; // Ενημέρωση συνολικών στηλών
-         // Εξασφαλίζουμε ότι οι υπόλοιπες γραμμές έχουν τουλάχιστον τόσες στήλες
+         totalColumns = grid[0].length;
+         // Διασφαλίζουμε ότι οι σειρές 1 και 2 έχουν τουλάχιστον τόσες στήλες.
          ensureRowLength(1, totalColumns);
          ensureRowLength(2, totalColumns);
       }
-      // **Phase 2:** Στοιχεία 11–18 (indices 8 έως 15) στη row1.
+      /* ---------------------------
+         PHASE 2: Row 1 – στοιχεία 11 έως 18 (indices 8–15)
+      ---------------------------- */
       else if (currentIndex < 16) {
-         const pos = currentIndex - 8; // Θέση στη row1 (0 έως 7)
+         const pos = currentIndex - 8; // θέσεις 0 έως 7
          const cell = createCell(elements[currentIndex]);
          ensureRowLength(1, totalColumns);
          grid[1][pos] = cell;
       }
-      // **Phase 3:** Στοιχεία 19–20 (indices 16 έως 17) στη row2.
+      /* ---------------------------
+         PHASE 3: Row 2 – τα 2 πρώτα στοιχεία (19, 20) (indices 16–17)
+      ---------------------------- */
       else if (currentIndex < 18) {
-         const pos = currentIndex - 16; // Θέσεις 0 ή 1
+         const pos = currentIndex - 16; // θέση 0 ή 1
          const cell = createCell(elements[currentIndex]);
          ensureRowLength(2, totalColumns);
          grid[2][pos] = cell;
       }
-      // **Phase 4:** Στοιχεία 21–30 (indices 18 έως 27) στη row2, με εισαγωγή νέας στήλης πριν από τοποθέτηση.
+      /* ---------------------------
+         PHASE 4: Row 2 – για στοιχεία 21 έως 30 (indices 18–27)
+         Κάθε νέο στοιχείο απαιτεί εισαγωγή νέας στήλης (μετατόπιση προς τα δεξιά)
+      ---------------------------- */
       else if (currentIndex < 28) {
-         // Εισαγωγή νέας στήλης σε όλες τις γραμμές στο insertionIndex
-         insertColumnAt(insertionIndex);
+         insertColumnAt(dInsertionIndex);
          const cell = createCell(elements[currentIndex]);
-         grid[2][insertionIndex] = cell;
-         insertionIndex++; // Μετατόπιση του δείκτη εισαγωγής για το επόμενο στοιχείο
+         grid[2][dInsertionIndex] = cell;
+         dInsertionIndex++;
       }
-      // **Phase 5:** Στοιχεία 31–36 (indices 28 έως 33) στη row2 στα υπόλοιπα κενά κελιά.
+      /* ---------------------------
+         PHASE 5: Row 2 – συμπλήρωση κενών για στοιχεία 31 έως 36 (indices 28–33)
+      ---------------------------- */
       else if (currentIndex < 34) {
          const cell = createCell(elements[currentIndex]);
-         grid[2][insertionIndex] = cell;
-         insertionIndex++;
+         grid[2][dInsertionIndex] = cell;
+         dInsertionIndex++;
+      }
+      /* ---------------------------
+         PHASE 6: f‑τομέας – νέα σειρά (Row 3)
+         Εφαρμόζεται η ίδια λογική (όπως για s, d, p):
+           - Τα 2 πρώτα στοιχεία τοποθετούνται στα αριστερά.
+           - Για κάθε επόμενο στοιχείο, πριν την τοποθέτηση γίνεται εισαγωγή νέας στήλης (με μετατόπιση προς τα δεξιά) σε όλες τις σειρές.
+      ---------------------------- */
+      else if (currentIndex < 48) {  // f‑block: 14 στοιχεία (αριθμοί 37 έως 50)
+         // Όταν ξεκινά ο f‑τομέας, δημιουργούμε νέα σειρά (Row 3)
+         if (currentIndex === 34) {
+            grid.push(new Array(totalColumns).fill(null));
+            fInsertionIndex = 2; // Ξεκινάμε από την 3η θέση, όπως και πριν
+         }
+         // Τα 2 πρώτα στοιχεία τοποθετούνται κανονικά στα κελιά 0 και 1.
+         if (currentIndex < 34 + 2) {
+            const pos = currentIndex - 34; // 0 ή 1
+            grid[3][pos] = createCell(elements[currentIndex]);
+         } else {
+            // Για κάθε επόμενο στοιχείο, εισάγουμε νέα στήλη (όπως έγινε και στο phase 4)
+            insertColumnAt(fInsertionIndex);
+            grid[3][fInsertionIndex] = createCell(elements[currentIndex]);
+            fInsertionIndex++;
+         }
       }
       
       currentIndex++;
@@ -177,7 +225,7 @@
     
     nextButton.addEventListener('click', addElement);
     
-    // Αρχική εμφάνιση (κενό grid)
+    // Αρχική απόδοση του grid (κενό)
     renderGrid();
   </script>
 </body>
