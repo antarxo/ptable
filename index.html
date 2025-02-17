@@ -55,9 +55,12 @@
   <script>
     const elements = [...Array(36)].map((_, i) => ({
       number: i + 3,
-      category: i < 2 ? 's-block' : i < 10 ? 'p-block' : 'd-block',
+      category: (i + 3 === 3 || i + 3 === 4 || i + 3 === 11 || i + 3 === 12 || i + 3 === 19 || i + 3 === 20) ? 's-block' :
+                (i + 3 >= 5 && i + 3 <= 10) || (i + 3 >= 13 && i + 3 <= 18) ? 'p-block' :
+                'd-block',
       electronConfig: `1s2 ... ${i + 3}`
     }));
+    
     let currentIndex = 0;
     let columns = 1;
     let grid = Array.from({ length: 3 }, () => Array(10).fill(null));
@@ -92,7 +95,7 @@
       } else if (currentIndex < 20) {
         grid[2][currentIndex - 18] = elDiv;
       } else {
-        if (grid[0].length === columns) {
+        if (currentIndex === 20) {
           grid.forEach(row => row.push(null));
           columns++;
         }
