@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμικός Περιοδικός Πίνακας - Δοκιμή Λογικής</title>
+  <title>Δυναμικός Περιοδικός Πίνακας - Βήμα Βήμα</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,7 +26,6 @@
       cursor: pointer;
       user-select: none;
     }
-    /* Απλά παραδείγματα χρωμάτων ανά κατηγορία */
     .s-block { background-color: #ffb3b3; }
     .p-block { background-color: #b3ffb3; }
     .d-block { background-color: #b3b3ff; }
@@ -38,18 +37,26 @@
       background-color: #fff;
       text-align: left;
     }
+    #nextElement {
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      display: block;
+    }
   </style>
 </head>
 <body>
+  <button id="nextElement">Επόμενο Στοιχείο</button>
   <div id="tableContainer"></div>
   <div id="electronConfig">Κάνε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
-
+  
   <script>
-    // Δημιουργούμε πίνακα με στοιχεία από το 3 έως το 36
+    // Δημιουργία στοιχείων από το 3 έως το 36.
     const elements = [];
     for (let n = 3; n <= 36; n++) {
       let category;
-      // Ορισμός κατηγορίας με βάση το στοιχείο (παράδειγμα, μπορείς να το προσαρμόσεις)
+      // Παραδειγματικός ορισμός κατηγορίας (μπορείς να τον τροποποιήσεις όπως επιθυμείς)
       if (n === 3 || n === 4 || n === 11 || n === 12 || n === 19 || n === 20) {
          category = 's-block';
       } else if (n >= 21 && n <= 30) {
@@ -57,28 +64,47 @@
       } else {
          category = 'p-block';
       }
-      elements.push({ 
-        number: n, 
-        category: category, 
-        electronConfig: `1s² ... ${n}` 
+      elements.push({
+         number: n,
+         category: category,
+         electronConfig: `1s² ... ${n}`
       });
     }
     
     const tableContainer = document.getElementById('tableContainer');
     const electronConfigDiv = document.getElementById('electronConfig');
+    const nextButton = document.getElementById('nextElement');
     
-    let grid = [];       // Ο πίνακας (array) με τις γραμμές του πίνακα
-    let totalColumns = 0; // Ο τρέχων συνολικός αριθμός στηλών σε κάθε γραμμή
-
-    // Δημιουργεί ένα κελί για ένα στοιχείο
+    // Δημιουργούμε 3 γραμμές: row0, row1 και row2.
+    let grid = [ [], [], [] ];
+    let totalColumns = 0;       // Ο τρέχων συνολικός αριθμός στηλών
+    let currentIndex = 0;       // Δείκτης του επόμενου στοιχείου (στο array elements)
+    let insertionIndex = 2;     // Για τις φάσεις 4 και 5 (στοιχεία του row2)
+    
+    // Βοηθητική συνάρτηση: Εξασφαλίζει ότι η γραμμή έχει τουλάχιστον 'len' θέσεις
+    function ensureRowLength(rowIndex, len) {
+      while (grid[rowIndex].length < len) {
+         grid[rowIndex].push(null);
+      }
+    }
+    
+    // Εισάγει νέα στήλη (δηλαδή ένα κελί null) σε κάθε γραμμή στο index 'colIndex'
+    function insertColumnAt(colIndex) {
+      for (let r = 0; r < grid.length; r++) {
+         grid[r].splice(colIndex, 0, null);
+      }
+      totalColumns++;
+    }
+    
+    // Δημιουργεί το κελί ενός στοιχείου με κλικ handler για την ηλεκτρονιακή διαμόρφωση
     function createCell(elObj) {
-      const div = document.createElement('div');
-      div.className = 'element ' + elObj.category;
-      div.textContent = elObj.number;
-      div.addEventListener('click', () => {
-         electronConfigDiv.innerHTML = `<strong>Στοιχείο ${elObj.number}:</strong><br>${elObj.electronConfig}`;
+      const cell = document.createElement('div');
+      cell.className = 'element ' + elObj.category;
+      cell.textContent = elObj.number;
+      cell.addEventListener('click', () => {
+        electronConfigDiv.innerHTML = `<strong>Στοιχείο ${elObj.number}:</strong><br>${elObj.electronConfig}`;
       });
-      return div;
+      return cell;
     }
     
     // Εμφανίζει το grid στον container
@@ -86,82 +112,73 @@
       tableContainer.innerHTML = '';
       tableContainer.style.gridTemplateColumns = `repeat(${totalColumns}, 50px)`;
       for (let r = 0; r < grid.length; r++) {
-        for (let c = 0; c < totalColumns; c++) {
-          if (grid[r][c]) {
-             tableContainer.appendChild(grid[r][c]);
-          } else {
-             // Κενό κελί (για διατήρηση της διάταξης)
-             const emptyDiv = document.createElement('div');
-             emptyDiv.className = 'element';
-             emptyDiv.style.backgroundColor = '#fff';
-             tableContainer.appendChild(emptyDiv);
-          }
-        }
+         for (let c = 0; c < totalColumns; c++) {
+            let cell = grid[r][c];
+            if (!cell) {
+              // Δημιουργούμε ένα "κενό" κελί για διατήρηση της διάταξης
+              cell = document.createElement('div');
+              cell.className = 'element';
+              cell.style.backgroundColor = '#fff';
+            }
+            tableContainer.appendChild(cell);
+         }
       }
     }
     
-    // Εισάγει νέα στήλη σε κάθε γραμμή στο συγκεκριμένο index
-    function insertColumnAt(index) {
-      for (let r = 0; r < grid.length; r++) {
-         grid[r].splice(index, 0, null);
+    // Συνάρτηση που προσθέτει το επόμενο στοιχείο, ανάλογα με τη φάση
+    function addElement() {
+      // Έλεγχος αν έχουν τοποθετηθεί όλα τα στοιχεία
+      if (currentIndex >= elements.length) {
+         nextButton.disabled = true;
+         return;
       }
-      totalColumns++;
-    }
-    
-    // Δημιουργούμε το grid σύμφωνα με τη λογική που περιέγραψες
-    function buildTable() {
-      /* Phase 1: Γραμμή 1 για στοιχεία 3 έως 10.
-         Ξεκινάμε με 1 κελί και προσθέτουμε σταδιακά μέχρι να έχουμε 8 στοιχεία. */
-      let row0 = [];
-      for (let i = 0; i < 8; i++) { // στοιχεία elements[0] έως elements[7]
-         row0.push(createCell(elements[i]));
+      
+      // **Phase 1:** Στοιχεία 3–10 (indices 0 έως 7) στη row0.
+      if (currentIndex < 8) {
+         const cell = createCell(elements[currentIndex]);
+         grid[0].push(cell);
+         totalColumns = grid[0].length; // Ενημέρωση συνολικών στηλών
+         // Εξασφαλίζουμε ότι οι υπόλοιπες γραμμές έχουν τουλάχιστον τόσες στήλες
+         ensureRowLength(1, totalColumns);
+         ensureRowLength(2, totalColumns);
       }
-      totalColumns = row0.length; // εδώ γίνεται 8
-      grid.push(row0);
-      
-      /* Phase 2: Γραμμή 2 για στοιχεία 11 έως 18.
-         Δημιουργούμε μια γραμμή με 8 κελιά και τοποθετούμε τα στοιχεία στις πρώτες 8 θέσεις. */
-      let row1 = new Array(totalColumns).fill(null);
-      for (let i = 0; i < 8; i++) {
-         row1[i] = createCell(elements[8 + i]); // elements[8] έως elements[15]
+      // **Phase 2:** Στοιχεία 11–18 (indices 8 έως 15) στη row1.
+      else if (currentIndex < 16) {
+         const pos = currentIndex - 8; // Θέση στη row1 (0 έως 7)
+         const cell = createCell(elements[currentIndex]);
+         ensureRowLength(1, totalColumns);
+         grid[1][pos] = cell;
       }
-      grid.push(row1);
-      
-      /* Phase 3: Γραμμή 3 για στοιχεία 19 και 20.
-         Δημιουργούμε μια γραμμή με 8 κελιά και τοποθετούμε τα στοιχεία στα πρώτα 2 κελιά. */
-      let row2 = new Array(totalColumns).fill(null);
-      row2[0] = createCell(elements[16]); // στοιχείο 19
-      row2[1] = createCell(elements[17]); // στοιχείο 20
-      grid.push(row2);
-      
-      /* Phase 4: Για στοιχεία 21 έως 30.
-         Για κάθε στοιχείο εισάγουμε νέα στήλη δεξιά από το τελευταίο τοποθετημένο κελί στη γραμμή 3.
-         Η μεταβλητή insertionIndex ξεκινάει από τη θέση 2 (δηλαδή μετά το στοιχείο 20). */
-      let insertionIndex = 2;
-      for (let i = 0; i < 10; i++) {
-         // Εισαγωγή νέας στήλης στο index insertionIndex σε όλες τις γραμμές
+      // **Phase 3:** Στοιχεία 19–20 (indices 16 έως 17) στη row2.
+      else if (currentIndex < 18) {
+         const pos = currentIndex - 16; // Θέσεις 0 ή 1
+         const cell = createCell(elements[currentIndex]);
+         ensureRowLength(2, totalColumns);
+         grid[2][pos] = cell;
+      }
+      // **Phase 4:** Στοιχεία 21–30 (indices 18 έως 27) στη row2, με εισαγωγή νέας στήλης πριν από τοποθέτηση.
+      else if (currentIndex < 28) {
+         // Εισαγωγή νέας στήλης σε όλες τις γραμμές στο insertionIndex
          insertColumnAt(insertionIndex);
-         // Τοποθέτηση του επόμενου στοιχείου στη γραμμή 3 στο κελί που μόλις δημιουργήθηκε
-         let el = createCell(elements[18 + i]); // elements[18] έως elements[27] αντιστοιχούν στα 21-30
-         grid[2][insertionIndex] = el;
-         // Μετατοπίσουμε το insertionIndex για το επόμενο στοιχείο
+         const cell = createCell(elements[currentIndex]);
+         grid[2][insertionIndex] = cell;
+         insertionIndex++; // Μετατόπιση του δείκτη εισαγωγής για το επόμενο στοιχείο
+      }
+      // **Phase 5:** Στοιχεία 31–36 (indices 28 έως 33) στη row2 στα υπόλοιπα κενά κελιά.
+      else if (currentIndex < 34) {
+         const cell = createCell(elements[currentIndex]);
+         grid[2][insertionIndex] = cell;
          insertionIndex++;
       }
       
-      /* Phase 5: Για στοιχεία 31 έως 36.
-         Μετά το στοιχείο 30, τα κελιά που απομένουν στη γραμμή 3 (μέχρι το συνολικό width του grid)
-         είναι ακριβώς 6 και εκεί τοποθετούμε τα στοιχεία 31 έως 36. */
-      let freeIndex = insertionIndex; // η πρώτη κενή θέση στη γραμμή 3
-      for (let i = 0; i < 6; i++) {
-         grid[2][freeIndex] = createCell(elements[28 + i]); // elements[28] έως elements[33] για τα 31-36
-         freeIndex++;
-      }
-      
+      currentIndex++;
       renderGrid();
     }
     
-    // Δημιουργούμε το πίνακα με την παραπάνω λογική αμέσως με το φόρτωμα της σελίδας.
-    buildTable();
+    nextButton.addEventListener('click', addElement);
+    
+    // Αρχική εμφάνιση (κενό grid)
+    renderGrid();
   </script>
 </body>
 </html>
