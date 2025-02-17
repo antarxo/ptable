@@ -2,18 +2,51 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας – Διορθωμένη Λογική</title>
+  <title>Περιοδικός Πίνακας - Τελική Έκδοση</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f7f7f7; text-align: center; }
-    #tableContainer { margin: 20px auto; width: max-content; }
-    .rowContainer { display: grid; gap: 2px; margin-bottom: 5px; }
-    .element { width: 50px; height: 50px; line-height: 50px; text-align: center;
-      font-size: 14px; border: 1px solid #555; background: #ddd; cursor: pointer; }
-    .s-block { background: #ffb3b3; } .d-block { background: #b3b3ff; }
-    .p-block { background: #b3ffb3; } .f-block { background: #ffd699; }
-    #electronConfig { max-width: 600px; margin: 20px auto; padding: 10px;
-      border: 2px solid #333; background: #fff; text-align: left; }
-    #nextElement { margin: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 20px;
+      text-align: center;
+    }
+    #tableContainer {
+      margin: 20px auto;
+      width: max-content;
+      transform: scale(0.8);
+      transform-origin: top center;
+    }
+    .rowContainer {
+      display: grid;
+      gap: 2px;
+      margin-bottom: 3px;
+    }
+    .element {
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      font-size: 12px;
+      border: 1px solid #555;
+      cursor: pointer;
+    }
+    .s-block { background: #ffb3b3; }
+    .d-block { background: #b3b3ff; }
+    .p-block { background: #b3ffb3; }
+    .f-block { background: #ffd699; }
+    #electronConfig {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 2px solid #333;
+      background: #fff;
+      text-align: left;
+    }
+    #nextElement {
+      margin: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -23,56 +56,58 @@
 
 <script>
 function getCategory(n) {
-  if(n >= 3 && n <= 10) return (n <= 4) ? 's-block' : 'p-block';
-  if(n >= 11 && n <= 18) return (n <= 12) ? 's-block' : 'p-block';
-  if(n >= 19 && n <= 36) {
-    if(n <= 20) return 's-block';
-    if(n <= 30) return 'd-block';
-    return 'p-block';
-  }
-  if(n >= 37 && n <= 54) {
-    if(n <= 38) return 's-block';
-    if(n <= 48) return 'd-block';
-    return 'p-block';
-  }
-  if(n >= 55 && n <= 86) {
-    if(n <= 56) return 's-block';
-    if(n <= 70) return 'f-block';
-    if(n <= 80) return 'd-block';
-    return 'p-block';
-  }
-  if(n >= 87) {
-    if(n <= 88) return 's-block';
-    if(n <= 102) return 'f-block';
-    if(n <= 112) return 'd-block';
-    return 'p-block';
-  }
+  if (n === 1 || n === 2) return 's-block';
+  if (n >= 3 && n <= 4) return 's-block';
+  if (n >= 5 && n <= 10) return 'p-block';
+  if (n >= 11 && n <= 12) return 's-block';
+  if (n >= 13 && n <= 18) return 'p-block';
+  if (n >= 19 && n <= 20) return 's-block';
+  if (n >= 21 && n <= 30) return 'd-block';
+  if (n >= 31 && n <= 36) return 'p-block';
+  if (n >= 37 && n <= 38) return 's-block';
+  if (n >= 39 && n <= 48) return 'd-block';
+  if (n >= 49 && n <= 54) return 'p-block';
+  if (n >= 55 && n <= 56) return 's-block';
+  if (n >= 57 && n <= 70) return 'f-block';
+  if (n >= 71 && n <= 80) return 'd-block';
+  if (n >= 81 && n <= 86) return 'p-block';
+  if (n >= 87 && n <= 88) return 's-block';
+  if (n >= 89 && n <= 102) return 'f-block';
+  if (n >= 103 && n <= 112) return 'd-block';
   return 'p-block';
 }
 
-function createCell(elObj) {
-  const cell = document.createElement('div');
-  cell.className = `element ${elObj.category}`;
-  cell.textContent = elObj.number;
-  cell.addEventListener('click', () => {
-    document.getElementById('electronConfig').innerHTML = 
-      `<strong>Στοιχείο ${elObj.number}:</strong><br>Διαμόρφωση: ...`;
-  });
-  return cell;
-}
-
 const patterns = [
-  [{count: 8, shifting: false}],
-  [{count: 8, shifting: false}],
-  [{count: 2, shifting: false}, {count: 10, shifting: true}, {count: 6, shifting: false}],
-  [{count: 2, shifting: false}, {count: 10, shifting: true}, {count: 6, shifting: false}],
-  [{count: 2, shifting: false}, {count: 14, shifting: true}, {count: 10, shifting: false}, {count: 6, shifting: false}],
-  [{count: 2, shifting: false}, {count: 14, shifting: true}, {count: 10, shifting: false}, {count: 6, shifting: false}]
+  [{ count: 8, shifting: false }],
+  [{ count: 8, shifting: false }],
+  [
+    { count: 2, shifting: false },
+    { count: 10, shifting: true },
+    { count: 6, shifting: false },
+  ],
+  [
+    { count: 2, shifting: false },
+    { count: 10, shifting: false },
+    { count: 6, shifting: false },
+  ],
+  [
+    { count: 2, shifting: false },
+    { count: 14, shifting: true },
+    { count: 10, shifting: false },
+    { count: 6, shifting: false },
+  ],
+  [
+    { count: 2, shifting: false },
+    { count: 14, shifting: false },
+    { count: 10, shifting: false },
+    { count: 6, shifting: false },
+  ],
 ];
 
 const totals = [8, 8, 18, 18, 32, 32];
 const rowsData = [];
-for(let i = 0; i < 6; i++) {
+
+for (let i = 0; i < 6; i++) {
   rowsData.push({
     pattern: patterns[i],
     totalCells: totals[i],
@@ -80,25 +115,46 @@ for(let i = 0; i < 6; i++) {
     countInSegment: 0,
     cells: [],
     insertionIndex: patterns[i][0].count,
-    shiftedColumns: 0 // Νέα ιδιότητα για μετατόπιση
+    shiftedColumns: 0,
   });
 }
 
 let globalElementNumber = 3;
 let currentRowIndex = 0;
+let specialRowAdded = false;
 
 function insertShiftedColumnForRows(rowIndices) {
-  rowIndices.forEach(i => {
+  rowIndices.forEach((i) => {
     const row = rowsData[i];
-    const insertPos = 2 + row.shiftedColumns; // Δυναμική θέση βάσει προηγούμενων μετατοπίσεων
+    const insertPos = 2 + row.shiftedColumns;
     row.cells.splice(insertPos, 0, null);
-    row.shiftedColumns++; // Ενημέρωση μετρητή
+    row.shiftedColumns++;
   });
 }
 
+function createCell(elObj) {
+  return {
+    number: elObj.number,
+    category: elObj.category,
+    x: 0,
+    y: 0,
+    width: 40,
+    height: 40,
+  };
+}
+
 function addElementToCurrentRow() {
-  if(currentRowIndex >= 6 || globalElementNumber > 118) {
-    document.getElementById('nextElement').disabled = true;
+  if (currentRowIndex >= 6 || globalElementNumber > 118) {
+    if (!specialRowAdded) {
+      const specialRow = {
+        cells: Array(32).fill(null),
+        shiftedColumns: 0,
+      };
+      specialRow.cells[0] = createCell({ number: 1, category: 's-block' });
+      specialRow.cells[31] = createCell({ number: 2, category: 's-block' });
+      rowsData.unshift(specialRow);
+      specialRowAdded = true;
+    }
     return;
   }
 
@@ -107,11 +163,13 @@ function addElementToCurrentRow() {
   const elObj = { number: globalElementNumber, category: getCategory(globalElementNumber) };
   const cell = createCell(elObj);
 
-  if(segment.shifting) {
-    const group = currentRowIndex < 2 ? 1 : currentRowIndex < 4 ? 2 : 3;
-    if(group === 2) insertShiftedColumnForRows([0,1]);
-    else if(group === 3) insertShiftedColumnForRows([0,1,2,3]);
-    
+  if (segment.shifting) {
+    if (currentRowIndex === 2) {
+      insertShiftedColumnForRows([0, 1]);
+    } else if (currentRowIndex === 4) {
+      insertShiftedColumnForRows([0, 1, 2, 3]);
+    }
+
     row.cells.splice(row.insertionIndex, 0, cell);
     row.insertionIndex++;
   } else {
@@ -121,42 +179,94 @@ function addElementToCurrentRow() {
   globalElementNumber++;
   row.countInSegment++;
 
-  if(row.countInSegment === segment.count) {
+  if (row.countInSegment === segment.count) {
     row.currentSegment++;
     row.countInSegment = 0;
-    if(row.pattern[row.currentSegment]?.shifting) {
+    if (row.pattern[row.currentSegment]?.shifting) {
       row.insertionIndex = row.pattern[0].count;
     }
   }
 
-  if(row.cells.length >= row.totalCells) currentRowIndex++;
+  if (row.cells.length >= row.totalCells) currentRowIndex++;
 }
 
 function renderAllRows() {
-  const container = document.getElementById('tableContainer');
-  container.innerHTML = '';
-  rowsData.forEach(row => {
-    const rowDiv = document.createElement('div');
-    rowDiv.className = 'rowContainer';
-    rowDiv.style.gridTemplateColumns = `repeat(${row.cells.length}, 50px)`;
-    row.cells.forEach(cell => {
-      const div = cell || document.createElement('div');
-      if(!cell) {
-        div.className = 'element';
-        div.style.background = '#fff';
+  background(247);
+  let yOffset = 50;
+  rowsData.forEach((row, rowIndex) => {
+    let xOffset = 50;
+    row.cells.forEach((cell, cellIndex) => {
+      if (cell) {
+        fill(
+          cell.category === 's-block'
+            ? '#ffb3b3'
+            : cell.category === 'd-block'
+            ? '#b3b3ff'
+            : cell.category === 'p-block'
+            ? '#b3ffb3'
+            : '#ffd699'
+        );
+        stroke(85);
+        rect(xOffset, yOffset, cell.width, cell.height);
+        fill(0);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text(cell.number, xOffset + cell.width / 2, yOffset + cell.height / 2);
       }
-      rowDiv.appendChild(div);
+      xOffset += 42;
     });
-    container.appendChild(rowDiv);
+    yOffset += 42;
+  });
+
+  // Εμφάνιση πληροφοριών για το επιλεγμένο στοιχείο
+  fill(255);
+  stroke(0);
+  rect(50, yOffset + 20, 700, 50);
+  fill(0);
+  textSize(16);
+  textAlign(LEFT, CENTER);
+  text('Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες', 60, yOffset + 45);
+}
+
+let selectedElementInfo = 'Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες';
+
+function setup() {
+  createCanvas(800, 700);
+  textFont('Arial');
+  renderAllRows();
+}
+
+function mousePressed() {
+  let yOffset = 50;
+  rowsData.forEach((row, rowIndex) => {
+    let xOffset = 50;
+    row.cells.forEach((cell, cellIndex) => {
+      if (cell && mouseX > xOffset && mouseX < xOffset + 40 && mouseY > yOffset && mouseY < yOffset + 40) {
+        selectedElementInfo = `Στοιχείο ${cell.number}: Κατηγορία ${cell.category.replace('-block', '')}`;
+      }
+      xOffset += 42;
+    });
+    yOffset += 42;
   });
 }
 
-document.getElementById('nextElement').addEventListener('click', () => {
-  addElementToCurrentRow();
-  renderAllRows();
-});
+function keyPressed() {
+  if (key === ' ') {
+    addElementToCurrentRow();
+    renderAllRows();
+  }
+}
 
-renderAllRows();
+function draw() {
+  renderAllRows();
+  fill(255);
+  stroke(0);
+  rect(50, height - 60, 700, 50);
+  fill(0);
+  textSize(16);
+  textAlign(LEFT, CENTER);
+  text(selectedElementInfo, 60, height - 35);
+}
 </script>
 </body>
 </html>
