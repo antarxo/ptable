@@ -21,7 +21,7 @@
     }
     #infoPanel {
       position: absolute;
-      bottom: 100px; /* Μετακίνηση πάνελ πληροφοριών πιο πάνω */
+      bottom: 100px;
       left: 50%;
       transform: translateX(-50%);
       width: 800px;
@@ -70,6 +70,10 @@
   <div id="infoPanel">
     <div id="elementInfo">Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
     <div id="explanation" style="margin-top: 10px; font-style: italic; color: #666;"></div>
+    <div id="subshells" style="margin-top: 10px; color: #444;"></div>
+    <div id="shells" style="margin-top: 10px; color: #444;"></div>
+    <div id="outerShell" style="margin-top: 10px; color: #444;"></div>
+    <div id="remarks" style="margin-top: 10px; color: #666;"></div>
   </div>
 
   <script>
@@ -89,24 +93,25 @@
     let currentRowIndex = 0;
     let specialRowAdded = false;
     let groupNumbersAdded = false;
+    let elementsData = [];
 
+    // Φόρτωση δεδομένων από το JSON αρχείο
+    async function loadElementsData() {
+      try {
+        const response = await fetch('elements.json'); // Διαδρομή προς το JSON αρχείο
+        if (!response.ok) {
+          throw new Error('Το αρχείο δεν βρέθηκε');
+        }
+        elementsData = await response.json();
+        console.log('Τα δεδομένα φορτώθηκαν επιτυχώς:', elementsData);
+      } catch (error) {
+        console.error('Σφάλμα κατά τη φόρτωση των δεδομένων:', error);
+      }
+    }
+
+    // Αρχικοποίηση του πίνακα
     function initialize() {
       rowsData = [];
-      // Προσθήκη γραμμής ομάδων (παλιός και νέος τρόπος)
-      const groupRow = {
-        cells: Array(32).fill(null),
-        shiftedColumns: 0,
-      };
-      const groupsOld = ['IA', 'IIA', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'IIIB', 'IVB', 'VB', 'VIB', 'VIIB', 'VIIIB', 'VIIIB', 'VIIIB', 'IB', 'IIB', 'IIIA', 'IVA', 'VA', 'VIA', 'VIIA', 'VIIIA'];
-      const groupsNew = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-      groupsOld.forEach((num, i) => {
-        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group-old' });
-      });
-      groupsNew.forEach((num, i) => {
-        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group-new' });
-      });
-      rowsData.push(groupRow);
-
       for (let i = 0; i < 6; i++) {
         rowsData.push({
           pattern: patterns[i],
@@ -203,7 +208,7 @@
         return;
       }
 
-      const row = rowsData[currentRowIndex + 1]; // +1 για να παραλείψουμε την πρώτη γραμμή ομάδων
+      const row = rowsData[currentRowIndex];
       const segment = row.pattern[row.currentSegment];
       
       if (globalElementNumber <= 118) {
@@ -229,10 +234,19 @@
     }
 
     function updateInfoPanelForElement(elObj) {
-      const elementInfo = `Στοιχείο ${elObj.number}: ${getElementName(elObj.number)} (${getElementSymbol(elObj.number)})`;
-      const explanation = getElementExplanation(elObj.number);
-      document.getElementById('elementInfo').innerText = elementInfo;
-      document.getElementById('explanation').innerText = explanation;
+      const element = getElementData(elObj.number);
+      if (element) {
+        document.getElementById('elementInfo').innerText = `Στοιχείο ${element.number}: ${element.name} (${element.symbol})`;
+        document.getElementById('explanation').innerText = element.explanation;
+        document.getElementById('subshells').innerText = `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').innerText = `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').innerText = `Εξωτερική στιβάδα: ${element.outerShell}`;
+        document.getElementById('remarks').innerText = `Παρατηρήσεις: ${element.remarks}`;
+      }
+    }
+
+    function getElementData(Z) {
+      return elementsData.find(e => e.number === Z) || null;
     }
 
     function handleShifting(row) {
@@ -257,13 +271,13 @@
         cells: Array(32).fill(null),
         shiftedColumns: 0,
       };
-      const groupsOld = ['IA', 'IIA', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'IIIB', 'IVB', 'VB', 'VIB', 'VIIB', 'VIIIB', 'VIIIB', 'VIIIB', 'IB', 'IIB', 'IIIA', 'IVA', 'VA', 'VIA', 'VIIA', 'VIIIA'];
-      const groupsNew = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-      groupsOld.forEach((num, i) => {
-        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group-old' });
-      });
-      groupsNew.forEach((num, i) => {
-        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group-new' });
+      const groups = [
+        1, 2, null, null, null, null, null, null, null, null, 
+        null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 
+        9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+      ];
+      groups.forEach((num, i) => {
+        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group' });
       });
       rowsData.unshift(groupNumbersRow);
     }
@@ -275,7 +289,9 @@
       createCanvas(windowWidth, windowHeight);
       textFont('Times New Roman');
       noLoop();
-      initialize();
+      loadElementsData().then(() => {
+        initialize(); // Αρχικοποίηση μόνο μετά τη φόρτωση των δεδομένων
+      });
     }
 
     function draw() {
@@ -302,8 +318,8 @@
         let xOffset = 80; // Αυξημένο περιθώριο για τα ονόματα στιβάδων
         row.cells.forEach((cell) => {
           if (cell) {
-            if (cell.category === 'group-old' || cell.category === 'group-new') {
-              drawGroupNumber(xOffset, yOffset, cell.number, cell.category);
+            if (cell.category === 'group') {
+              drawGroupNumber(xOffset, yOffset, cell.number);
             } else {
               drawElement(xOffset, yOffset, cell);
             }
@@ -314,20 +330,11 @@
       });
     }
 
-    function drawGroupNumber(x, y, number, category) {
+    function drawGroupNumber(x, y, number) {
       fill(0);
       textSize(14);
       textAlign(CENTER, CENTER);
       text(number, x + 20, y + 20);
-      if (category === 'group-old') {
-        textSize(10);
-        textAlign(CENTER, TOP);
-        text('(Παλιός)', x + 20, y + 30);
-      } else if (category === 'group-new') {
-        textSize(10);
-        textAlign(CENTER, TOP);
-        text('(Νέος)', x + 20, y + 30);
-      }
     }
 
     function drawElement(x, y, cell) {
@@ -365,30 +372,22 @@
     }
 
     function updateSelectedElement(Z) {
-      selectedElementInfo = `Στοιχείο ${Z}: ${getElementName(Z)} (${getElementSymbol(Z)})`;
-      document.getElementById('explanation').innerText = getElementExplanation(Z);
-    }
-
-    // Δεδομένα στοιχείων
-    function getElementSymbol(Z) {
-      const symbols = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No", "Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts", "Og"];
-      return symbols[Z - 1] || '';
-    }
-
-    function getElementName(Z) {
-      const names = ["Υδρογόνο", "Ήλιο", "Λίθιο", "Βηρύλλιο", "Βόριο", "Άνθρακας", "Άζωτο", "Οξυγόνο", "Φθόριο", "Νέον", "Νάτριο", "Μαγνήσιο", "Αργίλιο", "Πυρίτιο", "Φωσφόρος", "Θείο", "Χλώριο", "Αργό", "Κάλιο", "Ασβέστιο", "Σκάνδιο", "Τιτάνιο", "Βανάδιο", "Χρώμιο", "Μαγγάνιο", "Σίδηρος", "Κοβάλτιο", "Νικέλιο", "Χαλκός", "Ψευδάργυρος", "Γάλλιο", "Γερμάνιο", "Αρσενικό", "Σελήνιο", "Βρώμιο", "Κρυπτό", "Ρουβίδιο", "Στρόντιο", "Ύττριο", "Ζιρκόνιο", "Νιόβιο", "Μολυβδένιο", "Τεχνήτιο", "Ρουθήνιο", "Ρόδιο", "Παλλάδιο", "Άργυρος", "Κάδμιο", "Ίνδιο", "Κασσίτερος", "Αντιμόνιο", "Τελλούριο", "Ιώδιο", "Ξένο", "Καίσιο", "Βάριο", "Λανθάνιο", "Δημήτριο", "Πρασινοδύμιο", "Νεοδύμιο", "Προμήθειο", "Σαμάριο", "Ευρώπιο", "Γαδολίνιο", "Τέρβιο", "Δυσπρόσιο", "Όλμιο", "Θούλιο", "Υττέρβιο", "Λουτήτιο", "Άφνιο", "Ταντάλιο", "Βολφράμιο", "Ρήνιο", "Όσμιο", "Ιρίδιο", "Λευκόχρυσος", "Χρυσός", "Υδράργυρος", "Θάλλιο", "Μόλυβδος", "Βισμούθιο", "Πολώνιο", "Αστάτιο", "Ραδόνιο", "Φράγκιο", "Ράδιο", "Ακτίνιο", "Θόριο", "Πρωτακτίνιο", "Ουράνιο", "Νεπτούλιο", "Πλουτώνιο", "Αμερίκιο", "Κιούριο", "Μπερκέλιο", "Καλιφόρνιο", "Αϊνστάνιο", "Φέρμιο", "Μεντελέβιο", "Νομπέλιο", "Λωρένσιο", "Ραδερφόρντιο", "Ντούμπνιο", "Σηπόργκιο", "Μπόριο", "Χάσιο", "Μάιτνεριο", "Νταρμστάντιο", "Ρεντγκένιο", "Κοπερνίκιο", "Νιχόνιο", "Φλερόβιο", "Μοσκόβιο", "Λιβερμόριο", "Τενέσιο", "Ογκανέσιο"];
-      return names[Z - 1] || '';
-    }
-
-    function getElementExplanation(Z) {
-      const explanations = {
-        1: "Βασικό συστατικό του νερού και πιο ελαφρύ στοιχείο",
-        2: "Ευγενές αέριο, χρησιμοποιείται σε μπαλόνια",
-        3: "Αλκάλιο μέταλλο, πολύ δραστικό",
-        19: "Απαραίτητο για τη λειτουργία νευρικού συστήματος",
-        // Προσθέστε περισσότερες επεξηγήσεις
-      };
-      return explanations[Z] || 'Δεν υπάρχει διαθέσιμη επεξήγηση για αυτό το στοιχείο';
+      const element = getElementData(Z);
+      if (element) {
+        selectedElementInfo = `Στοιχείο ${element.number}: ${element.name} (${element.symbol})`;
+        document.getElementById('explanation').innerText = element.explanation;
+        document.getElementById('subshells').innerText = `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').innerText = `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').innerText = `Εξωτερική στιβάδα: ${element.outerShell}`;
+        document.getElementById('remarks').innerText = `Παρατηρήσεις: ${element.remarks}`;
+      } else {
+        selectedElementInfo = 'Το στοιχείο δεν βρέθηκε';
+        document.getElementById('explanation').innerText = '';
+        document.getElementById('subshells').innerText = '';
+        document.getElementById('shells').innerText = '';
+        document.getElementById('outerShell').innerText = '';
+        document.getElementById('remarks').innerText = '';
+      }
     }
 
     // Event listeners
@@ -401,6 +400,10 @@
       initialize();
       selectedElementInfo = 'Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες';
       document.getElementById('explanation').innerText = '';
+      document.getElementById('subshells').innerText = '';
+      document.getElementById('shells').innerText = '';
+      document.getElementById('outerShell').innerText = '';
+      document.getElementById('remarks').innerText = '';
       redraw();
     });
 
