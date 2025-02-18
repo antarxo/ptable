@@ -63,7 +63,7 @@
 
   <script>
     // Σταθερές και ρυθμίσεις
-    const PERIOD_LABELS = ['K (n=1)', 'L (n=2)', 'M (n=3)', 'N (n=4)', 'O (n=5)', 'P (n=6)'];
+    const PERIOD_LABELS = ['K 1', 'L 2', 'M 3', 'N 4', 'O 5', 'P 6'];
     const CATEGORY_COLORS = {
       'alkali-block': '#ff9999',
       's-block': '#ffcccc',
@@ -81,6 +81,17 @@
 
     function initialize() {
       rowsData = [];
+      // Προσθήκη γραμμής ομάδων
+      const groupRow = {
+        cells: Array(32).fill(null),
+        shiftedColumns: 0,
+      };
+      const groups = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+      groups.forEach((num, i) => {
+        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group' });
+      });
+      rowsData.push(groupRow);
+
       for (let i = 0; i < 6; i++) {
         rowsData.push({
           pattern: patterns[i],
@@ -169,15 +180,10 @@
           rowsData.unshift(specialRow);
           specialRowAdded = true;
         }
-
-        if (!groupNumbersAdded) {
-          addGroupNumbers();
-          groupNumbersAdded = true;
-        }
         return;
       }
 
-      const row = rowsData[currentRowIndex];
+      const row = rowsData[currentRowIndex + 1]; // +1 για να παραλείψουμε την πρώτη γραμμή ομάδων
       const segment = row.pattern[row.currentSegment];
       
       if (globalElementNumber <= 118) {
@@ -196,9 +202,17 @@
         }
 
         globalElementNumber++;
+        updateInfoPanelForElement(elObj); // Ενημέρωση πληροφοριών
       }
 
       updateRowState(row, segment);
+    }
+
+    function updateInfoPanelForElement(elObj) {
+      const elementInfo = `Στοιχείο ${elObj.number}: ${getElementName(elObj.number)} (${getElementSymbol(elObj.number)})`;
+      const explanation = getElementExplanation(elObj.number);
+      document.getElementById('elementInfo').innerText = elementInfo;
+      document.getElementById('explanation').innerText = explanation;
     }
 
     function handleShifting(row) {
@@ -216,22 +230,6 @@
         }
       }
       if (row.cells.length >= row.totalCells) currentRowIndex++;
-    }
-
-    function addGroupNumbers() {
-      const groupNumbersRow = {
-        cells: Array(32).fill(null),
-        shiftedColumns: 0,
-      };
-      const groups = [
-        1, 2, null, null, null, null, null, null, null, null, 
-        null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 
-        9, 10, 11, 12, 13, 14, 15, 16, 17, 18
-      ];
-      groups.forEach((num, i) => {
-        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group' });
-      });
-      rowsData.unshift(groupNumbersRow);
     }
 
     // p5.js Συναρτήσεις
@@ -257,7 +255,7 @@
           textSize(14);
           textAlign(RIGHT, CENTER);
           fill(0);
-          text(PERIOD_LABELS[index], 30, 150 + index * 42 + 20);
+          text(PERIOD_LABELS[index - 1], 60, 150 + (index - 1) * 42 + 20); // Αλλαγή περιθωρίου
         }
       });
     }
@@ -265,7 +263,7 @@
     function drawTable() {
       let yOffset = 150;
       rowsData.forEach((row) => {
-        let xOffset = 50;
+        let xOffset = 80; // Αυξημένο περιθώριο για τα ονόματα στιβάδων
         row.cells.forEach((cell) => {
           if (cell) {
             if (cell.category === 'group') {
@@ -294,7 +292,7 @@
       fill(0);
       textSize(12);
       textAlign(CENTER, CENTER);
-      text(cell.number, x + cell.width/2, y + cell.height/2);
+      text(cell.number, x + cell.width / 2, y + cell.height / 2);
     }
 
     function updateInfoPanel() {
@@ -304,7 +302,7 @@
     function mousePressed() {
       let yOffset = 150;
       rowsData.forEach((row) => {
-        let xOffset = 50;
+        let xOffset = 80;
         row.cells.forEach((cell) => {
           if (cell && isMouseOver(xOffset, yOffset, cell)) {
             updateSelectedElement(cell.number);
