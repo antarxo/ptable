@@ -81,17 +81,6 @@
 
     function initialize() {
       rowsData = [];
-      // Προσθήκη γραμμής ομάδων
-      const groupRow = {
-        cells: Array(32).fill(null),
-        shiftedColumns: 0,
-      };
-      const groups = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-      groups.forEach((num, i) => {
-        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group' });
-      });
-      rowsData.push(groupRow);
-
       for (let i = 0; i < 6; i++) {
         rowsData.push({
           pattern: patterns[i],
@@ -180,10 +169,15 @@
           rowsData.unshift(specialRow);
           specialRowAdded = true;
         }
+
+        if (!groupNumbersAdded) {
+          addGroupNumbers();
+          groupNumbersAdded = true;
+        }
         return;
       }
 
-      const row = rowsData[currentRowIndex + 1]; // +1 για να παραλείψουμε την πρώτη γραμμή ομάδων
+      const row = rowsData[currentRowIndex];
       const segment = row.pattern[row.currentSegment];
       
       if (globalElementNumber <= 118) {
@@ -230,6 +224,22 @@
         }
       }
       if (row.cells.length >= row.totalCells) currentRowIndex++;
+    }
+
+    function addGroupNumbers() {
+      const groupNumbersRow = {
+        cells: Array(32).fill(null),
+        shiftedColumns: 0,
+      };
+      const groups = [
+        1, 2, null, null, null, null, null, null, null, null, 
+        null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 
+        9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+      ];
+      groups.forEach((num, i) => {
+        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group' });
+      });
+      rowsData.unshift(groupNumbersRow);
     }
 
     // p5.js Συναρτήσεις
