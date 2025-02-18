@@ -48,7 +48,7 @@
       font-size: 14px;
       font-weight: bold;
       color: #444;
-      left: 20px;
+      left: 30px;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -64,7 +64,7 @@
 
   <script>
     // Σταθερές και ρυθμίσεις
-    const PERIOD_LABELS = ['K 1', 'L 2', 'M 3', 'N 4', 'O 5', 'P 6'];
+    const PERIOD_LABELS = ['K 1', 'L 2', 'M 3', 'N 4', 'O 5', 'P 6', 'Q 7'];
     const OLD_GROUP_NAMES = ['I A', 'II A', '', '', '', '', '', '', 'III B', 'IV B', 'V B', 'VI B', 'VII B', 'VIII', 'I B', 'II B', 'III A', 'IV A', 'V A', 'VI A', 'VII A', '0'];
     const CATEGORY_COLORS = {
       'alkali-block': '#ff9999',
@@ -81,26 +81,6 @@
     let specialRowAdded = false;
     let groupNumbersAdded = false;
     let lastAddedElement = null;
-
-    function initialize() {
-      rowsData = [];
-      for (let i = 0; i < 6; i++) {
-        rowsData.push({
-          pattern: patterns[i],
-          totalCells: totals[i],
-          currentSegment: 0,
-          countInSegment: 0,
-          cells: [],
-          insertionIndex: patterns[i][0].count,
-          shiftedColumns: 0,
-        });
-      }
-      globalElementNumber = 3;
-      currentRowIndex = 0;
-      specialRowAdded = false;
-      groupNumbersAdded = false;
-      lastAddedElement = null;
-    }
 
     const patterns = [
       [{ count: 8, shifting: false }],
@@ -131,13 +111,46 @@
 
     const totals = [8, 8, 18, 18, 32, 32];
 
+    function initialize() {
+      rowsData = [];
+      for (let i = 0; i < 6; i++) {
+        rowsData.push({
+          pattern: patterns[i],
+          totalCells: totals[i],
+          currentSegment: 0,
+          countInSegment: 0,
+          cells: [],
+          insertionIndex: patterns[i][0].count,
+          shiftedColumns: 0,
+        });
+      }
+      globalElementNumber = 3;
+      currentRowIndex = 0;
+      specialRowAdded = false;
+      groupNumbersAdded = false;
+      lastAddedElement = null;
+    }
+
     function getCategory(n) {
-      const alkaliMetals = [3, 11, 19, 37, 55, 87];
-      if (alkaliMetals.includes(n)) return 'alkali-block';
-      if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
-      if (n >= 5 && n <= 10 || n >= 13 && n <= 18 || n >= 31 && n <= 36 || n >= 49 && n <= 54 || n >= 81 && n <= 86) return 'p-block';
-      if (n >= 21 && n <= 30 || n >= 39 && n <= 48 || n >= 71 && n <= 80 || n >= 103 && n <= 112) return 'd-block';
-      if (n >= 57 && n <= 70 || n >= 89 && n <= 102) return 'f-block';
+      const periods = [
+        {start: 1, end: 2, cat: 's-block'},
+        {start: 3, end: 10, cat: 'mixed'},
+        {start: 11, end: 18, cat: 'mixed'},
+        {start: 19, end: 36, cat: 'mixed'},
+        {start: 37, end: 54, cat: 'mixed'},
+        {start: 55, end: 86, cat: 'mixed'},
+        {start: 87, end: 118, cat: 'mixed'}
+      ];
+
+      const currentPeriod = periods.find(p => n >= p.start && n <= p.end);
+      
+      if ([1,2,3,11,19,37,55,87].includes(n)) return 's-block';
+      if (n >= 57 && n <= 70) return 'f-block';
+      if (n >= 89 && n <= 102) return 'f-block';
+      if (currentPeriod?.cat === 'mixed') {
+        if (n >= currentPeriod.start + 2) return 'd-block';
+        return 's-block';
+      }
       return 'p-block';
     }
 
@@ -170,7 +183,7 @@
       const row = rowsData[currentRowIndex];
       const segment = row.pattern[row.currentSegment];
       
-      if (globalElementNumber <= 118) {
+      while (globalElementNumber <= 118) {
         const elObj = { 
           number: globalElementNumber, 
           category: getCategory(globalElementNumber)
@@ -178,7 +191,7 @@
         const cell = createCell(elObj);
 
         if (segment.shifting) {
-          handleShifting(row);
+          insertShiftedColumnForRows([2,3,4,5]);
           row.cells.splice(row.insertionIndex, 0, cell);
           row.insertionIndex++;
         } else {
@@ -187,9 +200,20 @@
 
         lastAddedElement = elObj;
         globalElementNumber++;
+        
+        row.countInSegment++;
+        if (row.countInSegment === segment.count) {
+          row.currentSegment++;
+          row.countInSegment = 0;
+          if (row.pattern[row.currentSegment]?.shifting) {
+            row.insertionIndex = row.pattern[0].count;
+          }
+        }
+        if (row.cells.length >= row.totalCells) {
+          currentRowIndex++;
+          break;
+        }
       }
-
-      updateRowState(row, segment);
       updateInfoPanel(lastAddedElement);
     }
 
@@ -215,13 +239,11 @@
     }
 
     function addGroupNumbers() {
-      // Νέα ονοματολογία
       const newGroups = Array(32).fill(null);
       [0,1,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31].forEach((pos, idx) => {
         newGroups[pos] = createCell({ number: idx+1, category: 'group' });
       });
       
-      // Παλιά ονοματολογία
       const oldGroups = Array(32).fill(null);
       OLD_GROUP_NAMES.forEach((name, idx) => {
         if(name) oldGroups[idx+2] = createCell({ number: name, category: 'old-group' });
@@ -231,19 +253,41 @@
       rowsData.unshift({ cells: oldGroups, shiftedColumns: 0 });
     }
 
-    function updateRowState(row, segment) {
-      row.countInSegment++;
-      if (row.countInSegment === segment.count) {
-        row.currentSegment++;
-        row.countInSegment = 0;
-        if (row.pattern[row.currentSegment]?.shifting) {
-          row.insertionIndex = row.pattern[0].count;
-        }
+    function updateInfoPanel(element) {
+      const infoElement = document.getElementById('elementInfo');
+      const detailsElement = document.getElementById('elementDetails');
+      
+      if(element) {
+        infoElement.innerHTML = `Στοιχείο ${element.number}: <strong>${getElementName(element.number)}</strong> (${getElementSymbol(element.number)})`;
+        detailsElement.innerHTML = `
+          <div>Κατηγορία: ${getCategoryName(element.category)}</div>
+          <div>Στιβάδα: ${getElectronShell(element.number)}</div>
+        `;
       }
-      if (row.cells.length >= row.totalCells) currentRowIndex++;
     }
 
-    // p5.js Συναρτήσεις
+    function drawPeriodLabels() {
+      const periodMap = {
+        1: 0,   // H (K)
+        2: 0,   // He (K)
+        3: 1,   // Li (L)
+        11: 2,  // Na (M)
+        19: 3,  // K (N)
+        37: 4,  // Rb (O)
+        55: 5,  // Cs (P)
+        87: 6   // Fr (Q)
+      };
+
+      Object.entries(periodMap).forEach(([element, periodIndex]) => {
+        if (globalElementNumber > element) {
+          textSize(14);
+          textAlign(LEFT, CENTER);
+          fill(0);
+          text(PERIOD_LABELS[periodIndex], 30, 190 + periodIndex * 42);
+        }
+      });
+    }
+
     function setup() {
       createCanvas(windowWidth, windowHeight);
       textFont('Times New Roman');
@@ -257,21 +301,10 @@
       drawTable();
     }
 
-    function drawPeriodLabels() {
-      rowsData.forEach((row, index) => {
-        if (row.cells.some(cell => cell?.category === 's-block')) {
-          textSize(14);
-          textAlign(LEFT, CENTER);
-          fill(0);
-          text(PERIOD_LABELS[index], 50, 190 + index * 42);
-        }
-      });
-    }
-
     function drawTable() {
       let yOffset = 150;
       rowsData.forEach((row) => {
-        let xOffset = 100; // Μεγαλύτερο αριστερό περιθώριο
+        let xOffset = 100;
         row.cells.forEach((cell) => {
           if (cell) {
             if (cell.category === 'group' || cell.category === 'old-group') {
@@ -303,20 +336,7 @@
       text(cell.number, x + cell.width/2, y + cell.height/2);
     }
 
-    function updateInfoPanel(element) {
-      const infoElement = document.getElementById('elementInfo');
-      const detailsElement = document.getElementById('elementDetails');
-      
-      if(element) {
-        infoElement.innerHTML = `Στοιχείο ${element.number}: <strong>${getElementName(element.number)}</strong> (${getElementSymbol(element.number)})`;
-        detailsElement.innerHTML = `
-          <div>Κατηγορία: ${getCategoryName(element.category)}</div>
-          <div>Στιβάδα: ${getElectronShell(element.number)}</div>
-        `;
-      }
-    }
-
-    // Δεδομένα και βοηθητικές συναρτήσεις
+    // Βοηθητικές συναρτήσεις
     function getCategoryName(category) {
       const names = {
         's-block': 's-τομέας',
