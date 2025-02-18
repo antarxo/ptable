@@ -242,6 +242,13 @@
         document.getElementById('shells').innerText = `Στιβάδες: ${element.shells}`;
         document.getElementById('outerShell').innerText = `Εξωτερική στιβάδα: ${element.outerShell}`;
         document.getElementById('remarks').innerText = `Παρατηρήσεις: ${element.remarks}`;
+      } else {
+        document.getElementById('elementInfo').innerText = 'Το στοιχείο δεν βρέθηκε';
+        document.getElementById('explanation').innerText = '';
+        document.getElementById('subshells').innerText = '';
+        document.getElementById('shells').innerText = '';
+        document.getElementById('outerShell').innerText = '';
+        document.getElementById('remarks').innerText = '';
       }
     }
 
