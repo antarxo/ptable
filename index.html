@@ -92,14 +92,18 @@
 
     function initialize() {
       rowsData = [];
-      // Προσθήκη γραμμής ομάδων (παλιός τρόπος)
+      // Προσθήκη γραμμής ομάδων (παλιός και νέος τρόπος)
       const groupRow = {
         cells: Array(32).fill(null),
         shiftedColumns: 0,
       };
-      const groups = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-      groups.forEach((num, i) => {
-        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group' });
+      const groupsOld = ['IA', 'IIA', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'IIIB', 'IVB', 'VB', 'VIB', 'VIIB', 'VIIIB', 'VIIIB', 'VIIIB', 'IB', 'IIB', 'IIIA', 'IVA', 'VA', 'VIA', 'VIIA', 'VIIIA'];
+      const groupsNew = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+      groupsOld.forEach((num, i) => {
+        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group-old' });
+      });
+      groupsNew.forEach((num, i) => {
+        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group-new' });
       });
       rowsData.push(groupRow);
 
@@ -253,13 +257,13 @@
         cells: Array(32).fill(null),
         shiftedColumns: 0,
       };
-      const groups = [
-        1, 2, null, null, null, null, null, null, null, null, 
-        null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 
-        9, 10, 11, 12, 13, 14, 15, 16, 17, 18
-      ];
-      groups.forEach((num, i) => {
-        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group' });
+      const groupsOld = ['IA', 'IIA', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'IIIB', 'IVB', 'VB', 'VIB', 'VIIB', 'VIIIB', 'VIIIB', 'VIIIB', 'IB', 'IIB', 'IIIA', 'IVA', 'VA', 'VIA', 'VIIA', 'VIIIA'];
+      const groupsNew = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+      groupsOld.forEach((num, i) => {
+        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group-old' });
+      });
+      groupsNew.forEach((num, i) => {
+        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group-new' });
       });
       rowsData.unshift(groupNumbersRow);
     }
@@ -298,8 +302,8 @@
         let xOffset = 80; // Αυξημένο περιθώριο για τα ονόματα στιβάδων
         row.cells.forEach((cell) => {
           if (cell) {
-            if (cell.category === 'group') {
-              drawGroupNumber(xOffset, yOffset, cell.number);
+            if (cell.category === 'group-old' || cell.category === 'group-new') {
+              drawGroupNumber(xOffset, yOffset, cell.number, cell.category);
             } else {
               drawElement(xOffset, yOffset, cell);
             }
@@ -310,11 +314,20 @@
       });
     }
 
-    function drawGroupNumber(x, y, number) {
+    function drawGroupNumber(x, y, number, category) {
       fill(0);
       textSize(14);
       textAlign(CENTER, CENTER);
       text(number, x + 20, y + 20);
+      if (category === 'group-old') {
+        textSize(10);
+        textAlign(CENTER, TOP);
+        text('(Παλιός)', x + 20, y + 30);
+      } else if (category === 'group-new') {
+        textSize(10);
+        textAlign(CENTER, TOP);
+        text('(Νέος)', x + 20, y + 30);
+      }
     }
 
     function drawElement(x, y, cell) {
