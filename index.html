@@ -21,7 +21,7 @@
     }
     #infoPanel {
       position: absolute;
-      bottom: 20px;
+      bottom: 100px; /* Μετακίνηση πάνελ πληροφοριών πιο πάνω */
       left: 50%;
       transform: translateX(-50%);
       width: 800px;
@@ -31,18 +31,27 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       z-index: 10;
     }
-    #nextElement, #reset {
+    #buttons {
       position: absolute;
       bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+    #nextElement, #reset {
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
-      z-index: 10;
       border: 1px solid #333;
       background: #fff;
+      transition: background 0.3s, color 0.3s;
     }
-    #nextElement { right: 120px; }
-    #reset { right: 20px; }
+    #nextElement:hover, #reset:hover {
+      background: #333;
+      color: #fff;
+    }
     .period-label {
       position: absolute;
       font-size: 14px;
@@ -54,8 +63,10 @@
 </head>
 <body>
   <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
-  <button id="nextElement">Επόμενο Στοιχείο</button>
-  <button id="reset">Επαναφορά</button>
+  <div id="buttons">
+    <button id="nextElement">Επόμενο Στοιχείο</button>
+    <button id="reset">Επαναφορά</button>
+  </div>
   <div id="infoPanel">
     <div id="elementInfo">Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
     <div id="explanation" style="margin-top: 10px; font-style: italic; color: #666;"></div>
@@ -81,6 +92,17 @@
 
     function initialize() {
       rowsData = [];
+      // Προσθήκη γραμμής ομάδων (παλιός τρόπος)
+      const groupRow = {
+        cells: Array(32).fill(null),
+        shiftedColumns: 0,
+      };
+      const groups = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+      groups.forEach((num, i) => {
+        if (num !== null) groupRow.cells[i] = createCell({ number: num, category: 'group' });
+      });
+      rowsData.push(groupRow);
+
       for (let i = 0; i < 6; i++) {
         rowsData.push({
           pattern: patterns[i],
@@ -177,7 +199,7 @@
         return;
       }
 
-      const row = rowsData[currentRowIndex];
+      const row = rowsData[currentRowIndex + 1]; // +1 για να παραλείψουμε την πρώτη γραμμή ομάδων
       const segment = row.pattern[row.currentSegment];
       
       if (globalElementNumber <= 118) {
