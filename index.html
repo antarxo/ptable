@@ -96,19 +96,19 @@
     let elementsData = [];
 
     // Φόρτωση δεδομένων από το JSON αρχείο
-    async function loadElementsData() {
-      try {
-        const response = await fetch('elements.json'); // Διαδρομή προς το JSON αρχείο
-        if (!response.ok) {
-          throw new Error('Το αρχείο δεν βρέθηκε');
-        }
-        elementsData = await response.json();
-        console.log('Τα δεδομένα φορτώθηκαν επιτυχώς:', elementsData);
-      } catch (error) {
-        console.error('Σφάλμα κατά τη φόρτωση των δεδομένων:', error);
-      }
+async function loadElementsData() {
+  try {
+    const response = await fetch('elements.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
+    elementsData = await response.json();
+    console.log('Τα δεδομένα φορτώθηκαν επιτυχώς:', elementsData);
+  } catch (error) {
+    console.error('Σφάλμα κατά τη φόρτωση των δεδομένων:', error);
+    alert('Σφάλμα κατά τη φόρτωση των δεδομένων. Ελέγξτε την κονσόλα για περισσότερες πληροφορίες.');
+  }
+}
     // Αρχικοποίηση του πίνακα
     function initialize() {
       rowsData = [];
