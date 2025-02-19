@@ -61,6 +61,12 @@
       background: #333;
       color: #fff;
     }
+    .period-label {
+      position: absolute;
+      font-size: 14px;
+      font-weight: bold;
+      color: #444;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -90,6 +96,7 @@
 
   <script>
     // Σταθερές και ρυθμίσεις
+    const PERIOD_LABELS = ['K 1', 'L 2', 'M 3', 'N 4', 'O 5', 'P 6'];
     const CATEGORY_COLORS = {
       'alkali-block': '#ff9999',
       's-block': '#ffcccc',
@@ -97,14 +104,14 @@
       'd-block': '#ccccff',
       'f-block': '#ffe5cc',
       'group': '#f0f0f0',
-      'group-name': '#f0f0f0',
-      'period-label': '#f0f0f0'
+      'group-name': '#f0f0f0'
     };
 
     // Αρχικοποίηση μεταβλητών
     let rowsData = [];
     let globalElementNumber = 3;
-    let currentRowIndex = 3; // Ξεκινάμε από την 4η σειρά
+    let currentRowIndex = 0;
+    let specialRowAdded = false;
     let groupNumbersAdded = false;
     let elementsData = [];
 
@@ -126,48 +133,61 @@
     // Αρχικοποίηση του πίνακα
     function initialize() {
       rowsData = [];
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < 6; i++) {
         rowsData.push({
-          cells: Array(33).fill(null), // 33 στήλες
+          pattern: patterns[i],
+          totalCells: totals[i],
+          currentSegment: 0,
+          countInSegment: 0,
+          cells: [],
+          insertionIndex: patterns[i][0].count,
           shiftedColumns: 0,
         });
       }
 
-      // Προσθήκη των στοιχείων 1 και 2 στην 3η σειρά
-      rowsData[2].cells[1] = createCell({ number: 1, category: 's-block' });
-      rowsData[2].cells[32] = createCell({ number: 2, category: 's-block' }); // Το στοιχείο 2 στο κελί 33
+      // Προσθήκη της πρώτης σειράς με τα στοιχεία 1 και 2
+      const specialRow = {
+        cells: Array(32).fill(null),
+        shiftedColumns: 0,
+      };
+      specialRow.cells[0] = createCell({ number: 1, category: 's-block' });
+      specialRow.cells[31] = createCell({ number: 2, category: 's-block' }); // Το στοιχείο 2 στο κελί 32
+      rowsData.unshift(specialRow);
+      specialRowAdded = true;
 
       globalElementNumber = 3;
-      currentRowIndex = 3; // Ξεκινάμε από την 4η σειρά
+      currentRowIndex = 0;
       groupNumbersAdded = false;
     }
 
     const patterns = [
-      [{ count: 2, shifting: false }], // 4η σειρά
-      [{ count: 8, shifting: false }], // 5η σειρά
+      [{ count: 8, shifting: false }],
+      [{ count: 8, shifting: false }],
       [
         { count: 2, shifting: false },
         { count: 10, shifting: true },
         { count: 6, shifting: false },
-      ], // 6η σειρά
+      ],
       [
         { count: 2, shifting: false },
         { count: 10, shifting: false },
         { count: 6, shifting: false },
-      ], // 7η σειρά
+      ],
       [
         { count: 2, shifting: false },
         { count: 14, shifting: true },
         { count: 10, shifting: false },
         { count: 6, shifting: false },
-      ], // 8η σειρά
+      ],
       [
         { count: 2, shifting: false },
         { count: 14, shifting: false },
         { count: 10, shifting: false },
         { count: 6, shifting: false },
-      ], // 9η σειρά
+      ],
     ];
+
+    const totals = [8, 8, 18, 18, 32, 32];
 
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
@@ -188,8 +208,19 @@
       };
     }
 
+    function insertShiftedColumnForRows(rowIndices) {
+      rowIndices.forEach((i) => {
+        const row = rowsData[i];
+        const insertPos = 2 + row.shiftedColumns;
+        if (insertPos <= row.cells.length) {
+          row.cells.splice(insertPos, 0, null);
+          row.shiftedColumns++;
+        }
+      });
+    }
+
     function addElementToCurrentRow() {
-      if (currentRowIndex >= 9 || globalElementNumber > 118) {
+      if (currentRowIndex >= 6 || globalElementNumber > 118) {
         if (!groupNumbersAdded) {
           addGroupNumbers();
           groupNumbersAdded = true;
@@ -198,8 +229,8 @@
       }
 
       const row = rowsData[currentRowIndex];
-      const segment = patterns[currentRowIndex - 3][row.currentSegment];
-
+      const segment = row.pattern[row.currentSegment];
+      
       if (globalElementNumber <= 118) {
         const elObj = { 
           number: globalElementNumber, 
@@ -208,31 +239,50 @@
         const cell = createCell(elObj);
 
         if (segment.shifting) {
-          handleShifting(currentRowIndex);
-          row.cells.splice(row.shiftedColumns + 1, 0, cell);
-          row.shiftedColumns++;
+          handleShifting(row);
+          row.cells.splice(row.insertionIndex, 0, cell);
+          row.insertionIndex++;
         } else {
-          row.cells[1 + row.shiftedColumns] = cell;
+          row.cells.push(cell);
         }
 
         globalElementNumber++;
-        updateInfoPanelForElement(elObj);
+        updateInfoPanelForElement(elObj); // Ενημέρωση πίνακα πληροφοριών
       }
 
       updateRowState(row, segment);
     }
 
-    function handleShifting(rowIndex) {
-      const rowsToShift = [];
-      if (rowIndex === 3) rowsToShift.push(0, 1, 2); // Shifting για 4η σειρά
-      if (rowIndex === 5) rowsToShift.push(0, 1, 2, 3, 4); // Shifting για 6η σειρά
-      if (rowIndex === 7) rowsToShift.push(0, 1, 2, 3, 4, 5, 6); // Shifting για 8η σειρά
+    function updateInfoPanelForElement(elObj) {
+      const element = getElementData(elObj.number);
+      if (element) {
+        // Αριστερό τμήμα
+        document.getElementById('elementInfo').innerText = `Στοιχείο ${element.number}: ${element.name} (${element.symbol})`;
+        document.getElementById('explanation').innerText = element.explanation;
+        document.getElementById('subshells').innerText = `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').innerText = `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').innerText = `Εξωτερική στιβάδα: ${element.outerShell}`;
 
-      rowsToShift.forEach((i) => {
-        const row = rowsData[i];
-        row.cells.splice(1 + row.shiftedColumns, 0, null);
-        row.shiftedColumns++;
-      });
+        // Μεσαίο τμήμα
+        document.getElementById('remarks').innerText = element.remarks;
+      } else {
+        // Καθαρισμός πίνακα αν δεν βρεθεί το στοιχείο
+        document.getElementById('elementInfo').innerText = 'Το στοιχείο δεν βρέθηκε';
+        document.getElementById('explanation').innerText = '';
+        document.getElementById('subshells').innerText = '';
+        document.getElementById('shells').innerText = '';
+        document.getElementById('outerShell').innerText = '';
+        document.getElementById('remarks').innerText = '';
+      }
+    }
+
+    function getElementData(Z) {
+      return elementsData.find(e => e.number === Z) || null;
+    }
+
+    function handleShifting(row) {
+      if (currentRowIndex === 2) insertShiftedColumnForRows([0, 1]);
+      if (currentRowIndex === 4) insertShiftedColumnForRows([0, 1, 2, 3]);
     }
 
     function updateRowState(row, segment) {
@@ -248,50 +298,46 @@
     }
 
     function addGroupNumbers() {
-      // Προσθήκη νέου τρόπου αρίθμησης (1-18) στην 1η σειρά
-      const groupNumbers = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-      groupNumbers.forEach((num, i) => {
-        if (num !== null) rowsData[0].cells[i + 1] = createCell({ number: num, category: 'group' });
+      const groupNumbersRow = {
+        cells: Array(32).fill(null),
+        shiftedColumns: 0,
+      };
+      const groups = [
+        1, 2, null, null, null, null, null, null, null, null, 
+        null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 
+        9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+      ];
+      groups.forEach((num, i) => {
+        if (num !== null) groupNumbersRow.cells[i] = createCell({ number: num, category: 'group' });
       });
+      rowsData.unshift(groupNumbersRow);
 
-      // Προσθήκη παλιού τρόπου αρίθμησης (I A, II A, κ.λ.π.) στην 2η σειρά
-      const groupNames = ['I A', 'II A', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'III B', 'IV B', 'V B', 'VI B', 'VII B', 'VIII', 'VIII', 'VIII', 'I B', 'II B', 'III A', 'IV A', 'V A', 'VI A', 'VII A', 'VIII A'];
+      // Προσθήκη της δεύτερης ονομασίας των ομάδων
+      const groupNamesRow = {
+        cells: Array(32).fill(null),
+        shiftedColumns: 0,
+      };
+      const groupNames = [
+        'I A', 'II A', null, null, null, null, null, null, null, null, 
+        null, null, null, null, null, null, 'III B', 'IV B', 'V B', 'VI B', 'VII B', 'VIII', 
+        'VIII', 'VIII', 'I B', 'II B', 'III A', 'IV A', 'V A', 'VI A', 'VII A', 'VIII A'
+      ];
       groupNames.forEach((name, i) => {
-        if (name !== null) rowsData[1].cells[i + 1] = createCell({ number: name, category: 'group-name' });
+        if (name !== null) groupNamesRow.cells[i] = createCell({ number: name, category: 'group-name' });
       });
-
-      // Προσθήκη ονομάτων στιβάδων στην 1η στήλη
-      const periodLabels = ['1η K', '2η L', '3η M', '4η N', '5η O', '6η P', '7η Q'];
-      periodLabels.forEach((label, i) => {
-        rowsData[i + 2].cells[0] = createCell({ number: label, category: 'period-label' });
-      });
-    }
-
-    function updateInfoPanelForElement(elObj) {
-      const element = getElementData(elObj.number);
-      if (element) {
-        document.getElementById('elementInfo').innerText = `Στοιχείο ${element.number}: ${element.name} (${element.symbol})`;
-        document.getElementById('explanation').innerText = element.explanation;
-        document.getElementById('subshells').innerText = `Υποστιβάδες: ${element.subshells}`;
-        document.getElementById('shells').innerText = `Στιβάδες: ${element.shells}`;
-        document.getElementById('outerShell').innerText = `Εξωτερική στιβάδα: ${element.outerShell}`;
-        document.getElementById('remarks').innerText = element.remarks;
-      } else {
-        document.getElementById('elementInfo').innerText = 'Το στοιχείο δεν βρέθηκε';
-        document.getElementById('explanation').innerText = '';
-        document.getElementById('subshells').innerText = '';
-        document.getElementById('shells').innerText = '';
-        document.getElementById('outerShell').innerText = '';
-        document.getElementById('remarks').innerText = '';
-      }
-    }
-
-    function getElementData(Z) {
-      return elementsData.find(e => e.number === Z) || null;
+      rowsData.unshift(groupNamesRow);
     }
 
     // Συνάρτηση για τη συμπλήρωση όλου του πίνακα
     function fillAllElements() {
+      // Προσθήκη των στοιχείων 1 και 2
+      const specialRow = rowsData.find(row => row.cells.some(cell => cell?.number === 1));
+      if (specialRow) {
+        specialRow.cells[0] = createCell({ number: 1, category: 's-block' });
+        specialRow.cells[31] = createCell({ number: 2, category: 's-block' }); // Το στοιχείο 2 στο κελί 32
+      }
+
+      // Συμπλήρωση όλων των στοιχείων
       while (globalElementNumber <= 118) {
         addElementToCurrentRow();
       }
@@ -306,22 +352,38 @@
       textFont('Times New Roman');
       noLoop();
       loadElementsData().then(() => {
-        initialize();
+        initialize(); // Αρχικοποίηση μόνο μετά τη φόρτωση των δεδομένων
       });
     }
 
     function draw() {
       background(247);
+      drawPeriodLabels();
       drawTable();
     }
 
+    function drawPeriodLabels() {
+      const periodLabels = ['K 1', 'L 2', 'M 3', 'N 4', 'O 5', 'P 6'];
+      let yOffset = 50; // Μετακίνηση πιο ψηλά
+
+      rowsData.forEach((row, index) => {
+        if (row.cells.some(cell => cell?.category === 's-block')) {
+          textSize(14);
+          textAlign(RIGHT, CENTER);
+          fill(0);
+          text(periodLabels[index - 1], 60, yOffset + 20); // Σωστή θέση για τις στιβάδες
+        }
+        yOffset += 42; // Αύξηση του yOffset για κάθε σειρά
+      });
+    }
+
     function drawTable() {
-      let yOffset = 50;
-      rowsData.forEach((row, rowIndex) => {
+      let yOffset = 50; // Μετακίνηση πιο ψηλά
+      rowsData.forEach((row) => {
         let xOffset = 80;
-        row.cells.forEach((cell, colIndex) => {
+        row.cells.forEach((cell) => {
           if (cell) {
-            if (cell.category === 'group' || cell.category === 'group-name' || cell.category === 'period-label') {
+            if (cell.category === 'group' || cell.category === 'group-name') {
               drawGroupNumber(xOffset, yOffset, cell.number);
             } else {
               drawElement(xOffset, yOffset, cell);
@@ -351,10 +413,10 @@
     }
 
     function mousePressed() {
-      let yOffset = 50;
-      rowsData.forEach((row, rowIndex) => {
+      let yOffset = 50; // Μετακίνηση πιο ψηλά
+      rowsData.forEach((row) => {
         let xOffset = 80;
-        row.cells.forEach((cell, colIndex) => {
+        row.cells.forEach((cell) => {
           if (cell && isMouseOver(xOffset, yOffset, cell)) {
             updateInfoPanelForElement(cell);
           }
@@ -382,7 +444,7 @@
 
     document.getElementById('reset').addEventListener('click', () => {
       initialize();
-      updateInfoPanelForElement({ number: 0 });
+      updateInfoPanelForElement({ number: 0 }); // Καθαρισμός πίνακα πληροφοριών
       redraw();
     });
 
