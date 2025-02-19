@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα</title>
+  <title>Δυναμικός Περιοδικός Πίνακας</title>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -61,6 +61,14 @@
       background: #333;
       color: #fff;
     }
+    .element-cell {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 1px solid #333;
+      text-align: center;
+      line-height: 40px;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -80,199 +88,114 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <button id="togglePanel">Σύμπτυξε/Ανάπτυξε</button>
       <button id="reset">Reset</button>
     </div>
   </div>
 
   <script>
     const CATEGORY_COLORS = {
-      'alkali-block': '#ff9999',
       's-block': '#ffcccc',
       'p-block': '#ccffcc',
       'd-block': '#ccccff',
       'f-block': '#ffe5cc',
-      'group': '#f0f0f0',
-      'group-name': '#f0f0f0',
-      'period-label': '#f0f0f0'
+      'group': '#f0f0f0'
     };
 
     let rowsData = [];
     let globalElementNumber = 3;
     let currentRowIndex = 3;
-    let groupNumbersAdded = false;
+    let elementsData = [];
+
+    async function loadElementsData() {
+      try {
+        const response = await fetch('elements.json');
+        elementsData = await response.json();
+        initialize();
+      } catch (error) {
+        console.error('Σφάλμα φόρτωσης:', error);
+      }
+    }
 
     function initialize() {
-      rowsData = [];
-      for (let i = 0; i < 9; i++) {
-        rowsData.push({
-          cells: Array(33).fill(null),
-          shiftedColumns: 0,
-          currentSegment: 0,
-          countInSegment: 0
-        });
-      }
+      rowsData = Array(9).fill().map(() => ({
+        cells: Array(33).fill(null),
+        shifted: 0
+      }));
+      
+      // Προσθήκη H (1) και He (2)
+      rowsData[2].cells[1] = createCell(1, 's-block');
+      rowsData[2].cells[32] = createCell(2, 's-block');
+      
       globalElementNumber = 3;
       currentRowIndex = 3;
-      groupNumbersAdded = false;
+      redraw();
     }
 
-    const patterns = [
-      [{ count: 8, shifting: false }],    // 4η σειρά (περίοδος 2)
-      [{ count: 8, shifting: false }],    // 5η σειρά (περίοδος 3)
-      [                                   // 6η σειρά (περίοδος 4)
-        { count: 2, shifting: false },
-        { count: 10, shifting: true },
-        { count: 6, shifting: false },
-      ],
-      [                                   // 7η σειρά (περίοδος 5)
-        { count: 2, shifting: false },
-        { count: 10, shifting: false },
-        { count: 6, shifting: false },
-      ],
-      [                                   // 8η σειρά (περίοδος 6)
-        { count: 2, shifting: false },
-        { count: 14, shifting: true },
-        { count: 10, shifting: false },
-        { count: 6, shifting: false },
-      ],
-      [                                   // 9η σειρά (περίοδος 7)
-        { count: 2, shifting: false },
-        { count: 14, shifting: false },
-        { count: 10, shifting: false },
-        { count: 6, shifting: false },
-      ]
-    ];
-
-    function getCategory(n) {
-      const alkaliMetals = [3, 11, 19, 37, 55, 87];
-      if (alkaliMetals.includes(n)) return 'alkali-block';
-      if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
-      if (n >= 5 && n <= 10 || n >= 13 && n <= 18 || n >= 31 && n <= 36 || n >= 49 && n <= 54 || n >= 81 && n <= 86) return 'p-block';
-      if (n >= 21 && n <= 30 || n >= 39 && n <= 48 || n >= 71 && n <= 80 || n >= 103 && n <= 112) return 'd-block';
-      if (n >= 57 && n <= 70 || n >= 89 && n <= 102) return 'f-block';
-      return 'p-block';
-    }
-
-    function createCell(elObj) {
-      return { 
-        number: elObj.number, 
-        category: elObj.category,
-        width: 40,
-        height: 40
-      };
+    function createCell(number, category) {
+      return { number, category };
     }
 
     function addElementToCurrentRow() {
-      if (globalElementNumber > 120) return;
-
-      // Προσθήκη 1 & 2 μετά το 118
-      if (globalElementNumber === 119) {
-        currentRowIndex = 2; // 3η σειρά
-        globalElementNumber = 1;
-      }
+      if (currentRowIndex >= 9 || globalElementNumber > 118) return;
 
       const row = rowsData[currentRowIndex];
-
-      // Ειδική λογική για 3η σειρά
-      if (currentRowIndex === 2) {
-        const insertIndex = (globalElementNumber === 1) ? 1 : 32;
-        row.cells[insertIndex] = createCell({ 
-          number: globalElementNumber, 
-          category: getCategory(globalElementNumber)
-        });
-        globalElementNumber++;
-        redraw();
-        return;
+      const pattern = getPatternForRow(currentRowIndex);
+      
+      let inserted = false;
+      for (let segment of pattern) {
+        if (row.shifted >= segment.start && !segment.used) {
+          row.cells[segment.position] = createCell(globalElementNumber, getCategory(globalElementNumber));
+          globalElementNumber++;
+          segment.used = true;
+          inserted = true;
+          break;
+        }
       }
-
-      // Κανονική λογική για 4η-9η σειρά
-      if (currentRowIndex >= 9 || globalElementNumber > 118) {
-        if (!groupNumbersAdded) addGroupNumbers();
-        return;
-      }
-
-      const segment = patterns[currentRowIndex - 3][row.currentSegment];
-      const cell = createCell({ number: globalElementNumber, category: getCategory(globalElementNumber) });
-
-      if (segment.shifting) {
-        handleShifting(currentRowIndex);
-        row.cells.splice(1 + row.shiftedColumns, 0, cell);
-        row.shiftedColumns++;
-      } else {
-        row.cells[1 + row.shiftedColumns] = cell;
-      }
-
-      globalElementNumber++;
-
-      // Ενημέρωση κατάστασης
-      row.countInSegment++;
-      if (row.countInSegment === segment.count) {
-        row.currentSegment++;
-        row.countInSegment = 0;
-      }
-      if (row.currentSegment >= patterns[currentRowIndex - 3].length) {
-        currentRowIndex++;
-      }
+      
+      if (!inserted) currentRowIndex++;
+      updateInfoPanel();
     }
 
-    function handleShifting(rowIndex) {
-      const rowsToShift = [];
-      if (rowIndex === 5) rowsToShift.push(0, 1, 2, 3, 4);     // 6η σειρά
-      if (rowIndex === 7) rowsToShift.push(0, 1, 2, 3, 4, 5, 6); // 8η σειρά
-
-      rowsToShift.forEach(i => {
-        const row = rowsData[i];
-        row.cells.splice(1 + row.shiftedColumns, 0, null);
-        row.shiftedColumns++;
-      });
+    function getPatternForRow(row) {
+      const patterns = {
+        3: [{start:0, position:1}, {start:2, position:2}], // 2η περίοδος
+        4: [{start:0, position:3}], // 3η περίοδος
+        5: [{start:0, position:4}, {start:10, position:5}], // 4η περίοδος
+        6: [{start:0, position:6}], // 5η περίοδος
+        7: [{start:0, position:7}, {start:14, position:8}], // 6η περίοδος
+        8: [{start:0, position:9}] // 7η περίοδος
+      };
+      return patterns[row] || [];
     }
 
-    function addGroupNumbers() {
-      // Προσθήκη αρίθμησης ομάδων
-      const groupNumbers = [1, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-      groupNumbers.forEach((num, i) => {
-        if (num) rowsData[0].cells[i + 1] = createCell({ number: num, category: 'group' });
-      });
-
-      // Προσθήκη ονομάτων στιβάδων
-      const periodLabels = ['1η K', '2η L', '3η M', '4η N', '5η O', '6η P', '7η Q'];
-      periodLabels.forEach((label, i) => {
-        rowsData[i + 2].cells[0] = createCell({ number: label, category: 'period-label' });
-      });
-      groupNumbersAdded = true;
-    }
-
-    function drawTable() {
-      background(247);
-      let yOffset = 50;
-      rowsData.forEach((row, rowIndex) => {
-        let xOffset = 80;
-        row.cells.forEach((cell, colIndex) => {
-          if (cell) {
-            fill(CATEGORY_COLORS[cell.category]);
-            stroke(85);
-            rect(xOffset, yOffset, cell.width, cell.height);
-            fill(0);
-            textSize(12);
-            textAlign(CENTER, CENTER);
-            text(cell.number, xOffset + 20, yOffset + 20);
-          }
-          xOffset += 42;
-        });
-        yOffset += 42;
-      });
-    }
-
-    function setup() {
-      createCanvas(windowWidth, windowHeight);
-      textFont('Times New Roman');
-      noLoop();
-      initialize();
+    function getCategory(Z) {
+      if ([3,11,19,37,55,87].includes(Z)) return 's-block';
+      if (Z <= 2 || [4,12,20,38,56,88].includes(Z)) return 's-block';
+      if (Z >= 21 && Z <= 30) return 'd-block';
+      if (Z >= 57 && Z <= 71) return 'f-block';
+      return 'p-block';
     }
 
     function draw() {
-      drawTable();
+      background(247);
+      drawPeriodicTable();
+    }
+
+    function drawPeriodicTable() {
+      let y = 50;
+      rowsData.forEach((row, rowIdx) => {
+        let x = 80;
+        row.cells.forEach((cell, colIdx) => {
+          if (cell) {
+            fill(CATEGORY_COLORS[cell.category]);
+            rect(x, y, 40, 40);
+            fill(0);
+            text(cell.number, x + 20, y + 20);
+          }
+          x += 42;
+        });
+        y += 42;
+      });
     }
 
     // Event Listeners
@@ -282,19 +205,14 @@
     });
 
     document.getElementById('fillAll').addEventListener('click', () => {
-      while (globalElementNumber <= 120) addElementToCurrentRow();
+      while(globalElementNumber <= 118) addElementToCurrentRow();
       redraw();
     });
 
-    document.getElementById('reset').addEventListener('click', () => {
-      initialize();
-      redraw();
-    });
+    document.getElementById('reset').addEventListener('click', initialize);
 
-    function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
-      redraw();
-    }
+    // Εκκίνηση
+    loadElementsData();
   </script>
 </body>
 </html>
