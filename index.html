@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Νέα Λογική</title>
+  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Νέα Λογική με Δεξιό Shifting</title>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -65,7 +65,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -167,10 +167,13 @@
 
     /* 
       Συνάρτηση για το shifting:
-      Αν η τρέχουσα σειρά απαιτεί shifting, τότε:
-      - Στην 4η σειρά (index 3): μετατοπίζουμε τις σειρές 0,1,2 (τα headers)
-      - Στην 6η σειρά (index 5): μετατοπίζουμε τις σειρές 0–4
-      - Στην 8η σειρά (index 7): μετατοπίζουμε τις σειρές 0–6
+      Αν η τρέχουσα σειρά απαιτεί shifting, τότε θα εισάγουμε ένα κενό κελί στα δεξιά της τρέχουσας θέσης εισαγωγής.
+      Δηλαδή, για την τρέχουσα σειρά που έχει insertionIndex (της οποίας η θέση είναι η βάση),
+      θα μετατοπίσουμε τις προηγούμενες σειρές στις οποίες απαιτείται shifting στο ίδιο index.
+      Οι ομάδες σειρών που μετατοπίζονται καθορίζονται ως εξής:
+        - Για Row 3: μετατοπίζουμε rows 0,1,2.
+        - Για Row 5: μετατοπίζουμε rows 0–4.
+        - Για Row 7: μετατοπίζουμε rows 0–6.
     */
     function handleShiftingForRow(currentRow) {
       let rowsToShift = [];
@@ -181,9 +184,12 @@
       } else if (currentRow === 7) {
         rowsToShift = [0, 1, 2, 3, 4, 5, 6];
       }
+      // Χρησιμοποιούμε την τρέχουσα θέση εισαγωγής (insertionIndex) της τρέχουσας σειράς
+      let currentInsertionPos = rowsData[currentRow].insertionIndex;
       rowsToShift.forEach(i => {
         let row = rowsData[i];
-        row.cells.splice(1 + row.shiftedColumns, 0, null);
+        // Εισαγωγή κενού κελιού στα δεξιά της τρέχουσας θέσης (δηλαδή στη θέση currentInsertionPos + τα ήδη μετατοπισμένα κελιά)
+        row.cells.splice(currentInsertionPos + row.shiftedColumns, 0, null);
         row.shiftedColumns++;
       });
     }
@@ -226,10 +232,10 @@
         });
 
         if (pattern.shifting) {
-          // Αν απαιτείται shifting, μετατοπίζουμε τις αντίστοιχες προηγούμενες σειρές
+          // Εφαρμογή shifting στα δεξιά της τρέχουσας θέσης εισαγωγής
           handleShiftingForRow(currentRowIndex);
           row.cells.splice(row.insertionIndex, 0, cell);
-          row.shiftedColumns++;
+          // Δεν αυξάνουμε πάλι row.shiftedColumns εδώ, αφού αυτό γίνεται στην handleShiftingForRow
         } else {
           // Συμπλήρωση χωρίς shifting: τοποθετούμε το στοιχείο στη θέση που δείχνει το insertionIndex
           row.cells[row.insertionIndex] = cell;
@@ -253,7 +259,10 @@
       }
     }
 
-    // Συνάρτηση για την προσθήκη της νέας και παλαιάς αρίθμησης καθώς και των ονομάτων στιβάδων
+    // Συνάρτηση για την προσθήκη των headers:
+    // - 1η σειρά: νέα αρίθμηση (1–18)
+    // - 2η σειρά: παλιά αρίθμηση (π.χ. "ΙΑ", "ΙΙΑ", …)
+    // - Στις σειρές 2–8, η 1η στήλη δείχνει τα ονόματα των περιόδων
     function addGroupNumbers() {
       // 1η σειρά: νέα αρίθμηση (1–18) ξεκινώντας από τη 2η στήλη
       let newNumbers = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
