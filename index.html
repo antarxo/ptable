@@ -20,6 +20,8 @@
       z-index: 10;
     }
     #infoPanel {
+      display: flex;
+      justify-content: space-between;
       position: absolute;
       bottom: 100px;
       left: 50%;
@@ -31,16 +33,20 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       z-index: 10;
     }
-    #buttons {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 10;
+    #leftPanel, #middlePanel, #rightPanel {
+      flex: 1;
+      margin: 0 10px;
     }
-    #nextElement, #reset {
+    #middlePanel {
+      font-style: italic;
+      color: #666;
+    }
+    #rightPanel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #rightPanel button {
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
@@ -48,7 +54,7 @@
       background: #fff;
       transition: background 0.3s, color 0.3s;
     }
-    #nextElement:hover, #reset:hover {
+    #rightPanel button:hover {
       background: #333;
       color: #fff;
     }
@@ -63,17 +69,26 @@
 </head>
 <body>
   <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
-  <div id="buttons">
-    <button id="nextElement">Επόμενο Στοιχείο</button>
-    <button id="reset">Επαναφορά</button>
-  </div>
   <div id="infoPanel">
-    <div id="elementInfo">Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες</div>
-    <div id="explanation" style="margin-top: 10px; font-style: italic; color: #666;"></div>
-    <div id="subshells" style="margin-top: 10px; color: #444;"></div>
-    <div id="shells" style="margin-top: 10px; color: #444;"></div>
-    <div id="outerShell" style="margin-top: 10px; color: #444;"></div>
-    <div id="remarks" style="margin-top: 10px; color: #666;"></div>
+    <!-- Αριστερό τμήμα -->
+    <div id="leftPanel">
+      <div id="elementInfo"></div>
+      <div id="explanation"></div>
+      <div id="subshells"></div>
+      <div id="shells"></div>
+      <div id="outerShell"></div>
+    </div>
+    <!-- Μεσαίο τμήμα -->
+    <div id="middlePanel">
+      <div id="remarks"></div>
+    </div>
+    <!-- Δεξιό τμήμα -->
+    <div id="rightPanel">
+      <button id="nextElement">Επόμενο</button>
+      <button id="fillAll">Συμπλήρωσε</button>
+      <button id="togglePanel">Σύμπτυξε/Ανάπτυξε</button>
+      <button id="reset">Reset</button>
+    </div>
   </div>
 
   <script>
@@ -96,19 +111,20 @@
     let elementsData = [];
 
     // Φόρτωση δεδομένων από το JSON αρχείο
-async function loadElementsData() {
-  try {
-    const response = await fetch('elements.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    async function loadElementsData() {
+      try {
+        const response = await fetch('elements.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        elementsData = await response.json();
+        console.log('Τα δεδομένα φορτώθηκαν επιτυχώς:', elementsData);
+      } catch (error) {
+        console.error('Σφάλμα κατά τη φόρτωση των δεδομένων:', error);
+        alert('Σφάλμα κατά τη φόρτωση των δεδομένων. Ελέγξτε την κονσόλα για περισσότερες πληροφορίες.');
+      }
     }
-    elementsData = await response.json();
-    console.log('Τα δεδομένα φορτώθηκαν επιτυχώς:', elementsData);
-  } catch (error) {
-    console.error('Σφάλμα κατά τη φόρτωση των δεδομένων:', error);
-    alert('Σφάλμα κατά τη φόρτωση των δεδομένων. Ελέγξτε την κονσόλα για περισσότερες πληροφορίες.');
-  }
-}
+
     // Αρχικοποίηση του πίνακα
     function initialize() {
       rowsData = [];
@@ -227,7 +243,7 @@ async function loadElementsData() {
         }
 
         globalElementNumber++;
-        updateInfoPanelForElement(elObj); // Ενημέρωση πληροφοριών
+        updateInfoPanelForElement(elObj); // Ενημέρωση πίνακα πληροφοριών
       }
 
       updateRowState(row, segment);
@@ -236,13 +252,17 @@ async function loadElementsData() {
     function updateInfoPanelForElement(elObj) {
       const element = getElementData(elObj.number);
       if (element) {
+        // Αριστερό τμήμα
         document.getElementById('elementInfo').innerText = `Στοιχείο ${element.number}: ${element.name} (${element.symbol})`;
         document.getElementById('explanation').innerText = element.explanation;
         document.getElementById('subshells').innerText = `Υποστιβάδες: ${element.subshells}`;
         document.getElementById('shells').innerText = `Στιβάδες: ${element.shells}`;
         document.getElementById('outerShell').innerText = `Εξωτερική στιβάδα: ${element.outerShell}`;
+
+        // Μεσαίο τμήμα
         document.getElementById('remarks').innerText = `Παρατηρήσεις: ${element.remarks}`;
       } else {
+        // Καθαρισμός πίνακα αν δεν βρεθεί το στοιχείο
         document.getElementById('elementInfo').innerText = 'Το στοιχείο δεν βρέθηκε';
         document.getElementById('explanation').innerText = '';
         document.getElementById('subshells').innerText = '';
@@ -289,6 +309,14 @@ async function loadElementsData() {
       rowsData.unshift(groupNumbersRow);
     }
 
+    // Συνάρτηση για τη συμπλήρωση όλου του πίνακα
+    function fillAllElements() {
+      while (globalElementNumber <= 118) {
+        addElementToCurrentRow();
+      }
+      redraw();
+    }
+
     // p5.js Συναρτήσεις
     let selectedElementInfo = 'Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες';
 
@@ -305,7 +333,6 @@ async function loadElementsData() {
       background(247);
       drawPeriodLabels();
       drawTable();
-      updateInfoPanel();
     }
 
     function drawPeriodLabels() {
@@ -314,7 +341,7 @@ async function loadElementsData() {
           textSize(14);
           textAlign(RIGHT, CENTER);
           fill(0);
-          text(PERIOD_LABELS[index - 1], 60, 150 + (index - 1) * 42 + 20); // Αλλαγή περιθωρίου
+          text(PERIOD_LABELS[index - 1], 60, 150 + (index - 1) * 42 + 20);
         }
       });
     }
@@ -322,7 +349,7 @@ async function loadElementsData() {
     function drawTable() {
       let yOffset = 150;
       rowsData.forEach((row) => {
-        let xOffset = 80; // Αυξημένο περιθώριο για τα ονόματα στιβάδων
+        let xOffset = 80;
         row.cells.forEach((cell) => {
           if (cell) {
             if (cell.category === 'group') {
@@ -354,17 +381,13 @@ async function loadElementsData() {
       text(cell.number, x + cell.width / 2, y + cell.height / 2);
     }
 
-    function updateInfoPanel() {
-      document.getElementById('elementInfo').innerText = selectedElementInfo;
-    }
-
     function mousePressed() {
       let yOffset = 150;
       rowsData.forEach((row) => {
         let xOffset = 80;
         row.cells.forEach((cell) => {
           if (cell && isMouseOver(xOffset, yOffset, cell)) {
-            updateSelectedElement(cell.number);
+            updateInfoPanelForElement(cell);
           }
           xOffset += 42;
         });
@@ -378,39 +401,19 @@ async function loadElementsData() {
              mouseY > y && mouseY < y + cell.height;
     }
 
-    function updateSelectedElement(Z) {
-      const element = getElementData(Z);
-      if (element) {
-        selectedElementInfo = `Στοιχείο ${element.number}: ${element.name} (${element.symbol})`;
-        document.getElementById('explanation').innerText = element.explanation;
-        document.getElementById('subshells').innerText = `Υποστιβάδες: ${element.subshells}`;
-        document.getElementById('shells').innerText = `Στιβάδες: ${element.shells}`;
-        document.getElementById('outerShell').innerText = `Εξωτερική στιβάδα: ${element.outerShell}`;
-        document.getElementById('remarks').innerText = `Παρατηρήσεις: ${element.remarks}`;
-      } else {
-        selectedElementInfo = 'Το στοιχείο δεν βρέθηκε';
-        document.getElementById('explanation').innerText = '';
-        document.getElementById('subshells').innerText = '';
-        document.getElementById('shells').innerText = '';
-        document.getElementById('outerShell').innerText = '';
-        document.getElementById('remarks').innerText = '';
-      }
-    }
-
     // Event listeners
     document.getElementById('nextElement').addEventListener('click', () => {
       addElementToCurrentRow();
       redraw();
     });
 
+    document.getElementById('fillAll').addEventListener('click', () => {
+      fillAllElements();
+    });
+
     document.getElementById('reset').addEventListener('click', () => {
       initialize();
-      selectedElementInfo = 'Κάντε κλικ σε ένα στοιχείο για λεπτομέρειες';
-      document.getElementById('explanation').innerText = '';
-      document.getElementById('subshells').innerText = '';
-      document.getElementById('shells').innerText = '';
-      document.getElementById('outerShell').innerText = '';
-      document.getElementById('remarks').innerText = '';
+      updateInfoPanelForElement({ number: 0 }); // Καθαρισμός πίνακα πληροφοριών
       redraw();
     });
 
