@@ -399,7 +399,7 @@
         "explanation": "Χρησιμοποιείται σε πυρηνικούς αντιδραστήρες",
         "remarks": ""
     },
-    {
+        {
         "number": 41,
         "symbol": "Nb",
         "name": "Νιόβιο",
@@ -877,6 +877,306 @@
         "shells": "2, 8, 18, 32, 18, 8, 2",
         "outerShell": "7",
         "explanation": "Ραδιενεργό αλκαλικό γαιώδες μέταλλο, χρησιμοποιείται στην ιατρική",
+        "remarks": ""
+    },
+    {
+        "number": 89,
+        "symbol": "Ac",
+        "name": "Ακτίνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 6d¹",
+        "shells": "2, 8, 18, 32, 18, 9, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 90,
+        "symbol": "Th",
+        "name": "Θόριο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 6d²",
+        "shells": "2, 8, 18, 32, 18, 10, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πυρηνικά καύσιμα",
+        "remarks": ""
+    },
+    {
+        "number": 91,
+        "symbol": "Pa",
+        "name": "Πρωτακτίνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f² 6d¹",
+        "shells": "2, 8, 18, 32, 20, 9, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 92,
+        "symbol": "U",
+        "name": "Ουράνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f³ 6d¹",
+        "shells": "2, 8, 18, 32, 21, 9, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πυρηνικά καύσιμα",
+        "remarks": ""
+    },
+    {
+        "number": 93,
+        "symbol": "Np",
+        "name": "Νεπτούνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁴ 6d¹",
+        "shells": "2, 8, 18, 32, 22, 9, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 94,
+        "symbol": "Pu",
+        "name": "Πλουτώνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁶",
+        "shells": "2, 8, 18, 32, 24, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πυρηνικά καύσιμα",
+        "remarks": ""
+    },
+    {
+        "number": 95,
+        "symbol": "Am",
+        "name": "Αμερίκιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁷",
+        "shells": "2, 8, 18, 32, 25, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 96,
+        "symbol": "Cm",
+        "name": "Κιούριο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁷ 6d¹",
+        "shells": "2, 8, 18, 32, 25, 9, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 97,
+        "symbol": "Bk",
+        "name": "Μπερκέλιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁹",
+        "shells": "2, 8, 18, 32, 27, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 98,
+        "symbol": "Cf",
+        "name": "Καλιφόρνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁰",
+        "shells": "2, 8, 18, 32, 28, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 99,
+        "symbol": "Es",
+        "name": "Αϊνστάνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹¹",
+        "shells": "2, 8, 18, 32, 29, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 100,
+        "symbol": "Fm",
+        "name": "Φέρμιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹²",
+        "shells": "2, 8, 18, 32, 30, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 101,
+        "symbol": "Md",
+        "name": "Μεντελέβιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹³",
+        "shells": "2, 8, 18, 32, 31, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 102,
+        "symbol": "No",
+        "name": "Νομπέλιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴",
+        "shells": "2, 8, 18, 32, 32, 8, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 103,
+        "symbol": "Lr",
+        "name": "Λωρένσιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹",
+        "shells": "2, 8, 18, 32, 32, 9, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 104,
+        "symbol": "Rf",
+        "name": "Ραδερφόρντιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d²",
+        "shells": "2, 8, 18, 32, 32, 10, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 105,
+        "symbol": "Db",
+        "name": "Ντούμπνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d³",
+        "shells": "2, 8, 18, 32, 32, 11, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 106,
+        "symbol": "Sg",
+        "name": "Σιμπόργκιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁴",
+        "shells": "2, 8, 18, 32, 32, 12, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 107,
+        "symbol": "Bh",
+        "name": "Μπόριο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁵",
+        "shells": "2, 8, 18, 32, 32, 13, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 108,
+        "symbol": "Hs",
+        "name": "Χάσιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁶",
+        "shells": "2, 8, 18, 32, 32, 14, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 109,
+        "symbol": "Mt",
+        "name": "Μάιτνεριο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁷",
+        "shells": "2, 8, 18, 32, 32, 15, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 110,
+        "symbol": "Ds",
+        "name": "Νταρμστάντιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁸",
+        "shells": "2, 8, 18, 32, 32, 16, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 111,
+        "symbol": "Rg",
+        "name": "Ρεντγκέντιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁹",
+        "shells": "2, 8, 18, 32, 32, 17, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 112,
+        "symbol": "Cn",
+        "name": "Κοπερνίκιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰",
+        "shells": "2, 8, 18, 32, 32, 18, 2",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 113,
+        "symbol": "Nh",
+        "name": "Νιχόνιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p¹",
+        "shells": "2, 8, 18, 32, 32, 18, 3",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 114,
+        "symbol": "Fl",
+        "name": "Φλερόβιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p²",
+        "shells": "2, 8, 18, 32, 32, 18, 4",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 115,
+        "symbol": "Mc",
+        "name": "Μοσκόβιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p³",
+        "shells": "2, 8, 18, 32, 32, 18, 5",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 116,
+        "symbol": "Lv",
+        "name": "Λιβερμόριο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p⁴",
+        "shells": "2, 8, 18, 32, 32, 18, 6",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 117,
+        "symbol": "Ts",
+        "name": "Τενέσιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p⁵",
+        "shells": "2, 8, 18, 32, 32, 18, 7",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
+        "remarks": ""
+    },
+    {
+        "number": 118,
+        "symbol": "Og",
+        "name": "Ογκανέσσιο",
+        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p⁶",
+        "shells": "2, 8, 18, 32, 32, 18, 8",
+        "outerShell": "7",
+        "explanation": "Ραδιενεργό ευγενές αέριο, χρησιμοποιείται σε έρευνα",
         "remarks": ""
     }
 ]
