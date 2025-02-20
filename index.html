@@ -68,7 +68,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -327,6 +327,11 @@
     // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού για τα hover effects.
     function drawTable() {
       background(247);
+      // Ορισμός σταθερών για τα gaps:
+      const groupNamesGap = 20;   // gap μεταξύ σειρών για τα ονόματα ομάδων (σειρές 0 και 1)
+      const contentGap    = 50;   // gap μεταξύ της τελευταίας σειράς ονομάτων (σειρά 1) και της πρώτης δυναμικής σειράς (σειρά 2)
+      const normalGap     = 42;   // gap για τις υπόλοιπες σειρές
+
       let yOffset = 50;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
@@ -377,11 +382,13 @@
             xOffset += 42;
           }
         }
-        // Χρησιμοποιούμε μικρότερο gap για τις πρώτες 3 σειρές (ομάδες + 1η περίοδο)
-        if (rowIndex < 2 || rowIndex === 2) {
-          yOffset += 25;
+        // Εφαρμογή διαφορετικού gap για τις σειρές:
+        if (rowIndex === 0) {
+          yOffset += groupNamesGap;
+        } else if (rowIndex === 1) {
+          yOffset += contentGap;
         } else {
-          yOffset += 42;
+          yOffset += normalGap;
         }
       }
     }
