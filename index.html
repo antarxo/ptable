@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -98,7 +98,8 @@
       'd-block': '#ccccff',
       'f-block': '#ffe5cc',
       'group-name': '#f0f0f0',
-      'period-label': '#f0f0f0'
+      'period-label': '#f0f0f0',
+      'hydrogen-color': '#ffff99' // Κίτρινο για το Υδρογόνο
     };
 
     let rowsData = [];
@@ -134,9 +135,10 @@
     }
 
     function getCategory(n) {
+      if (n === 1) return 'hydrogen-color'; // Ειδικό χρώμα για το Υδρογόνο
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (alkaliMetals.includes(n)) return 'alkali-block';
-      if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
+      if (n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
       if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 31 && n <= 36) || (n >= 49 && n <= 54) || (n >= 81 && n <= 86)) return 'p-block';
       if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
       if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
@@ -300,6 +302,7 @@
       textFont('Times New Roman');
       noLoop();
       initialize();
+      redraw(); // Προσθήκη για να ξεκινήσει η εμφάνιση
     }
 
     function draw() {
