@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -93,11 +93,13 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, στην σχεδίαση γίνεται σύμπτυξη,
-    // δηλαδή μεταφέρονται οι 16 τελευταίες στήλες 14 θέσεις αριστερότερα.
+    // hideFBlock: όταν true, γίνεται σύμπτυξη των 32 στηλών,
+    // δηλαδή εμφανίζονται μόνο οι στήλες 0-1 και 16-31 στον κύριο πίνακα.
+    // Επιπλέον, ο f τομέας (οι κελιά που κρύβονται, δηλαδή indices 2-15)
+    // θα εμφανίζεται ξεχωριστά κάτω από τον πίνακα.
     let hideFBlock = false;
 
-    // Βοηθητική συνάρτηση resampleCells (δεν θα χρησιμοποιηθεί πλέον για τη σύμπτυξη)
+    // Βοηθητική συνάρτηση resampleCells (δεν χρησιμοποιείται πλέον για τη σύμπτυξη)
     function resampleCells(cells, newLength) {
       let result = [];
       if(cells.length === 0) return result;
@@ -155,7 +157,7 @@
     /*
       rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά)
       rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά)
-      rowsData[2] έως [8]: 7 περίοδοι (στην αρχικοποίηση, για τις περίοδους ξεκινάμε με κενό πίνακα)
+      rowsData[2] έως [8]: 7 περίοδοι (για τις περίοδους ξεκινάμε με κενό πίνακα)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -181,7 +183,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          // Οι περίοδοι ξεκινάνε πλέον από index 0
+          // Οι περίοδοι ξεκινάνε από index 0
           insertionIndex: 0,
           periodLabel: null
         });
@@ -333,9 +335,7 @@
 
     // Σχεδίαση του πίνακα.
     // Όταν η σύμπτυξη είναι ενεργή (hideFBlock === true),
-    // μεταφέρονται οι 16 τελευταίες στήλες 14 θέσεις αριστερότερα:
-    // δηλαδή, για έναν πίνακα 32 κελιών, τα κελιά στα index 0 και 1 παραμένουν,
-    // ενώ τα κελιά από το index 16 έως 31 εμφανίζονται ως νέα index 2 έως 17.
+    // εμφανίζονται μόνο οι στήλες 0-1 και 16-31.
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -347,7 +347,6 @@
         let xOffset = 80;
         let cellsToDraw = [];
         if (hideFBlock) {
-          // Εφαρμογή της μετατόπισης μόνο όταν ο πίνακας έχει 32 στήλες
           if (row.cells.length === 32) {
             cellsToDraw = row.cells.slice(0, 2).concat( row.cells.slice(16, 32) );
           } else {
@@ -402,6 +401,70 @@
           }
         }
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
+      }
+    }
+
+    // Σχεδίαση του f τομέα ως ξεχωριστή περιοχή κάτω από τον πίνακα.
+    // Συλλέγουμε όλα τα κελιά με κατηγορία 'f-block', ταξινομούμε κατά αύξουσα τιμή Z,
+    // και τα εμφανίζουμε ως δύο σειρές (λανθάνιοι και ακτινίδια).
+    function drawFBlockRegion() {
+      let fCells = [];
+      // Συλλογή από όλους τους πίνακες (rowsData)
+      for (let r = 0; r < rowsData.length; r++) {
+        for (let i = 0; i < rowsData[r].cells.length; i++) {
+          let cell = rowsData[r].cells[i];
+          if (cell && cell.category === 'f-block') {
+            fCells.push(cell);
+          }
+        }
+      }
+      // Ταξινόμηση με βάση το Z (αν υπάρχουν λεπτομέρειες)
+      fCells.sort((a, b) => {
+        let an = a.details ? a.details.number : a.number;
+        let bn = b.details ? b.details.number : b.number;
+        return an - bn;
+      });
+      // Διαχωρισμός σε δύο ομάδες: λανθάνιοι (57-70) και ακτινίδια (89-102)
+      let lanthanides = fCells.filter(cell => {
+        let num = cell.details ? cell.details.number : cell.number;
+        return num >= 57 && num <= 70;
+      });
+      let actinides = fCells.filter(cell => {
+        let num = cell.details ? cell.details.number : cell.number;
+        return num >= 89 && num <= 102;
+      });
+      // Θέτουμε τις αρχικές συντεταγμένες για την περιοχή του f τομέα
+      let startX = 80;
+      // Το yOffset ξεκινάει λίγο κάτω από τον κύριο πίνακα (περίπου στο 450)
+      let startY = 450;
+      let colGap = 42;
+      // Σχεδίαση των λανθανίων
+      for (let i = 0; i < lanthanides.length; i++) {
+        let cell = lanthanides[i];
+        let x = startX + i * colGap;
+        let y = startY;
+        fill(CATEGORY_COLORS[cell.category]);
+        noStroke();
+        rect(x, y, cell.width, cell.height);
+        fill(0);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
+      }
+      // Σχεδίαση των ακτινιδίων κάτω από τους λανθάνιους
+      let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
+      let actinidesY = startY + fHeight + 10;
+      for (let i = 0; i < actinides.length; i++) {
+        let cell = actinides[i];
+        let x = startX + i * colGap;
+        let y = actinidesY;
+        fill(CATEGORY_COLORS[cell.category]);
+        noStroke();
+        rect(x, y, cell.width, cell.height);
+        fill(0);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
     }
 
@@ -477,6 +540,10 @@
 
     function draw() {
       drawTable();
+      // Εάν η σύμπτυξη είναι ενεργή, σχεδιάζουμε και τον f τομέα κάτω από τον πίνακα.
+      if (hideFBlock) {
+        drawFBlockRegion();
+      }
     }
 
     // Κουμπιά
