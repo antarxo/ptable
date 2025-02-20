@@ -99,13 +99,13 @@
 
     /* Δομή:
          - rowsData[0]: Σειρά 1 → Νέο σύστημα ομαδοποίησης
-         - rowsData[1]: Σειρά 2 → Παλιό σύστημα ομαδοποίησης
+         - rowsData[1]: Σειρά 2 → Παλαιό σύστημα ομαδοποίησης
          - rowsData[2] έως rowsData[8]: Σειρές 3–9 → 7 περίοδοι. Σε κάθε μία, το κελί index 0 δείχνει το όνομα περίοδου,
            ενώ τα υπόλοιπα 32 κελιά προορίζονται για τα στοιχεία.
     */
     let rowsData = [];
     let globalElementNumber = 3;
-    // Τα στοιχεία 3–118 τοποθετούνται στις σειρές 4–9 (rowsData[3] έως rowsData[8]).
+    // Τα στοιχεία 3–118 τοποθετούνται στις σειρές 4–9 (δηλαδή rowsData[3] έως rowsData[8]).
     // Όταν ολοκληρωθούν, στη Phase 2, στη σειρά 3 (rowsData[2]) θα τοποθετηθούν τα στοιχεία 1 και 2.
     let currentRowIndex = 3;
     let groupNumbersAdded = false;
@@ -134,10 +134,10 @@
       for (let i = 0; i < 9; i++) {
         let cells;
         if (i < 2) {
-          // Σειρές 1 και 2 για ομαδοποίηση: δημιουργούμε πίνακα 33 κελιών (έτοιμος)
+          // Σειρές 1 και 2 για ομαδοποίηση: δημιουργούμε πίνακα 33 κελιών έτοιμο για χρήση
           cells = new Array(33).fill(null);
         } else {
-          // Σειρές 3 έως 9: το κελί index 0 θα δείχνει το όνομα περίοδου, τα υπόλοιπα (δυναμική επέκταση)
+          // Σειρές 3 έως 9: το κελί index 0 θα δείχνει το όνομα περίοδου, τα υπόλοιπα (με δυνατότητα επέκτασης)
           cells = [null];
         }
         rowsData.push({
@@ -294,7 +294,8 @@
         "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
       ];
       let row = rowsData[1];
-      // Δεν επαναδημιουργούμε τον πίνακα· απλώς τοποθετούμε στα συγκεκριμένα indices
+      // Επαναδημιουργούμε πλήρως τον πίνακα 33 κελιών για τη σωστή στοίχιση
+      row.cells = new Array(33).fill(null);
       row.cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
       row.cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
       let idx = 2;
@@ -305,9 +306,11 @@
     }
 
     // Phase 5: Τοποθέτηση του νέου συστήματος ομαδοποίησης στη σειρά 1 (rowsData[0])
-    // Το pattern είναι: στα indices 1 και 2 τιμές 1 και 2, στα indices 3-16 κενά, στα indices 17 έως 32 τιμές 3 έως 18.
+    // Pattern: στα indices 1,2 τιμές 1,2, στα indices 3-16 κενά, στα indices 17 έως 32 τιμές 3 έως 18.
     function addNewGroupNumbers() {
       let row = rowsData[0];
+      // Επαναδημιουργούμε πλήρως τον πίνακα 33 κελιών
+      row.cells = new Array(33).fill(null);
       row.cells[1] = createCell({ number: 1, category: 'group-name' });
       row.cells[2] = createCell({ number: 2, category: 'group-name' });
       let num = 3;
@@ -323,7 +326,7 @@
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset;
-        if (rowIndex < 2) { // Σειρές ομαδοποίησης: 33 κελιά
+        if (rowIndex < 2) { // Σειρές ομαδοποίησης (rowsData[0] και rowsData[1])
           xOffset = 80;
           for (let i = 0; i < row.cells.length; i++) {
             let cell = row.cells[i];
@@ -339,7 +342,8 @@
             xOffset += 42;
           }
         } else {
-          // Σειρές περιόδων: το κελί index 0 για το όνομα περίοδου, υπόλοιπα για στοιχεία
+          // Σειρές περιόδων (rowsData[2] έως rowsData[8])
+          // Σχεδιάζουμε πρώτα το κελί του ονόματος περίοδου (index 0)
           if (row.periodLabel) {
             fill(0);
             textSize(12);
