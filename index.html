@@ -65,9 +65,11 @@
     }
     .collapsed .main-table {
       transform: translateX(-588px); /* Μετατόπιση 14 κελιών */
+      transition: transform 0.5s ease-in-out;
     }
     .collapsed .f-block {
       transform: translateY(140px); /* Μετατόπιση f-block κάτω */
+      transition: transform 0.5s ease-in-out;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -165,6 +167,8 @@
       globalElementNumber = 3;
       currentRowIndex = 3;
       phase = 1;
+      isCollapsed = false; // Επαναφορά κατάστασης σύμπτυξης
+      document.body.classList.remove('collapsed');
     }
 
     function createCell(elObj) {
