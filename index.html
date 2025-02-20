@@ -130,10 +130,10 @@
       'hydrogen-color': '#ffff99'
     };
 
-    /* Δομή:
-         rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, υπόλοιπα: 3..18 στο τέλος)
-         rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, υπόλοιπα: 16 στοιχεία)
-         rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, τα υπόλοιπα για στοιχεία)
+    /*
+      rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, υπόλοιπα: 3..18 στο τέλος)
+      rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, υπόλοιπα: 16 στοιχεία)
+      rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, υπόλοιπα για στοιχεία)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -306,13 +306,11 @@
       }
     }
 
-    // Σχεδιάζει τον πίνακα. Το yOffset ξεκινά από 80.
     function drawTable() {
       background(247);
       let yOffset = 80;
-      const groupRowsGap = 20;  // gap για σειρές 0 και 1 (ομάδες)
-      const normalGap = 42;     // gap για τις υπόλοιπες σειρές
-
+      const groupRowsGap = 20;
+      const normalGap = 42;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
@@ -365,7 +363,6 @@
       }
     }
 
-    // Ενημερώνει το infoPanel με πληροφορίες για το στοιχείο.
     function updateInfoPanel(cell) {
       if (elementsData && cell.details) {
         document.getElementById('elementInfo').innerHTML =
@@ -422,7 +419,6 @@
       if (!found) clearInfoPanel();
     }
 
-    // Εγγραφή του event listener για κλικ
     window.addEventListener('click', (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
@@ -430,7 +426,6 @@
     });
 
     function setup() {
-      // Δημιουργούμε το canvas και το τοποθετούμε πίσω από τα HTML στοιχεία
       let canvas = createCanvas(windowWidth, windowHeight);
       canvas.style('z-index', '-1');
       textFont('Roboto');
@@ -444,7 +439,8 @@
     }
 
     // Κουμπιά
-    document.getElementById('nextElement').addEventListener('click', () => {
+    document.getElementById('nextElement').addEventListener('click', (e) => {
+      e.stopPropagation();
       addElementToCurrentRow();
       redraw();
     });
