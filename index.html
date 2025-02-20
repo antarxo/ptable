@@ -303,7 +303,10 @@
       row.cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
       let idx = 2;
       for (let i = 17; i <= 32; i++) {
-        row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
+        // Μόνο αν υπάρχει τιμή στο oldNumbers, δημιουργούμε το κελί.
+        if (oldNumbers[idx] != null) {
+          row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
+        }
         idx++;
       }
     }
@@ -320,14 +323,14 @@
       }
     }
 
-    // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού ώστε να χρησιμοποιηθούν για hover effects.
+    // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού για τα hover effects.
     function drawTable() {
       background(247);
       let yOffset = 50;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset;
-        if (rowIndex < 2) { // Σειρές ομαδοποίησης
+        if (rowIndex < 2) {
           xOffset = 80;
           for (let i = 0; i < row.cells.length; i++) {
             let cell = row.cells[i];
@@ -342,13 +345,12 @@
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
-              text(cell.number || '', xOffset + cell.width / 2, yOffset + cell.height / 2);
-
+              // Εξασφαλίζουμε ότι περνάμε συμβολοσειρά στην text() λειτουργία.
+              text(String(cell.number || ''), xOffset + cell.width / 2, yOffset + cell.height / 2);
             }
             xOffset += 42;
           }
         } else {
-          // Σειρές περιόδων
           if (row.periodLabel) {
             fill(0);
             textSize(12);
@@ -369,8 +371,7 @@
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
-              text(cell.number || '', xOffset + cell.width / 2, yOffset + cell.height / 2);
-
+              text(String(cell.number || ''), xOffset + cell.width / 2, yOffset + cell.height / 2);
             }
             xOffset += 42;
           }
@@ -379,7 +380,7 @@
       }
     }
 
-    // Ενημερώνει τον infoPanel με τις πληροφορίες του στοιχείου (χρησιμοποιώντας τα δεδομένα από το JSON)
+    // Ενημερώνει το infoPanel με πληροφορίες για το στοιχείο (χρησιμοποιώντας τα δεδομένα από το JSON).
     function updateInfoPanel(cell) {
       if (cell.details) {
         document.getElementById('elementInfo').innerHTML = `<strong>${cell.details.name} (${cell.details.symbol})</strong> [Z=${cell.details.number}]`;
@@ -400,7 +401,7 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // p5.js event: όταν μετακινείται το ποντίκι, ανιχνεύονται οι συντεταγμένες και ενημερώνεται ο infoPanel.
+    // Ελέγχει το hover πάνω στα κελιά και ενημερώνει το infoPanel.
     function mouseMoved() {
       let found = false;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
