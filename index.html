@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Τροποποιημένο Shifting</title>
+  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Τροποποιημένο Shifting & Ονομασία Ομάδων</title>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -98,36 +98,38 @@
     };
 
     /* Δομή τελικού πίνακα:
-       - Row 0: Νέα αρίθμηση (1–18)
-       - Row 1: Παλιά αρίθμηση (π.χ. ΙΑ, ΙΙΑ …)
+       - Row 0: Νέα αρίθμηση (ομαδοποίηση σύμφωνα με τη λογική: 1,2, 10 κενά, 3...18)
+       - Row 1: Παλιά αρίθμηση (π.χ. "ΙΑ", "ΙΙΑ", …)
        - Row 2: 1η περίοδος (στοιχεία 1 και 2, που θα συμπληρωθούν μετά το 118)
        - Rows 3–8: Περιόδοι 2–7 (η δυναμική συμπλήρωση ξεκινά με το στοιχείο 3 στη 4η σειρά, 2η στήλη)
-       Η 1η στήλη κάθε σειράς δεσμεύεται για τα ονόματα των περιόδων.
+       Η 1η στήλη κάθε σειράς δεσμεύεται για τα ονόματα περιόδων.
+       
+       **Σημείωση:** Η δημιουργία των ονομάτων ομάδων και περιόδων θα γίνει μετά τη συμπλήρωση των στοιχείων 1 και 2.
     */
 
     let rowsData = [];
     let globalElementNumber = 3; // Ξεκινάμε από το στοιχείο 3
-    let currentRowIndex = 3;     // Συμπλήρωση ξεκινά από την 4η σειρά (περίοδος 2)
+    let currentRowIndex = 3;     // Η δυναμική συμπλήρωση ξεκινάει από την 4η σειρά (Περίοδος 2)
     let groupNumbersAdded = false;
 
     /* Ορισμός patterns για τις σειρές (rows 3–8):
-       - Row 3 (4η σειρά, περίοδος 2): shifting απαιτείται (επηρεάζει rows 0,1,2)
-       - Row 4 (5η σειρά, περίοδος 3): χωρίς shifting
-       - Row 5 (6η σειρά, περίοδος 4): shifting απαιτείται (επηρεάζει rows 0–4)
-       - Row 6 (7η σειρά, περίοδος 5): χωρίς shifting
-       - Row 7 (8η σειρά, περίοδος 6): shifting απαιτείται (επηρεάζει rows 0–6)
-       - Row 8 (9η σειρά, περίοδος 7): χωρίς shifting
+       - Row 3 (Περίοδος 2, index 3): { count: 8, shifting: true }
+       - Row 4 (Περίοδος 3, index 4): { count: 8, shifting: false }
+       - Row 5 (Περίοδος 4, index 5): 2 πρώτα στοιχεία χωρίς shifting, μετά { count: 10, shifting: true }, και τέλος { count: 6, shifting: false }
+       - Row 6 (Περίοδος 5, index 6): Συμπλήρωση χωρίς shifting (π.χ. 2,10,6, όλα χωρίς shifting)
+       - Row 7 (Περίοδος 6, index 7): 2 πρώτα στοιχεία χωρίς shifting, μετά { count: 14, shifting: true }, μετά { count: 10, shifting: false } και { count: 6, shifting: false }
+       - Row 8 (Περίοδος 7, index 8): Συμπλήρωση χωρίς shifting
     */
     const fillingPatterns = [
-      [{ count: 8, shifting: true }],   // Row 3 (Period 2)
-      [{ count: 8, shifting: false }],  // Row 4 (Period 3)
-      [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }], // Row 5 (Period 4)
-      [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }], // Row 6 (Period 5)
-      [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }], // Row 7 (Period 6)
-      [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]  // Row 8 (Period 7)
+      [{ count: 8, shifting: true }],                           // Row 3 (Περίοδος 2)
+      [{ count: 8, shifting: false }],                          // Row 4 (Περίοδος 3)
+      [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],  // Row 5 (Περίοδος 4)
+      [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],  // Row 6 (Περίοδος 5)
+      [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],  // Row 7 (Περίοδος 6)
+      [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]   // Row 8 (Περίοδος 7)
     ];
 
-    // Αρχικοποίηση του πίνακα: 9 σειρές, αρχικά με 2 στήλες (η πρώτη για το period label, η δεύτερη για το πρώτο στοιχείο)
+    // Αρχικοποίηση του πίνακα: δημιουργούμε 9 σειρές, ξεκινώντας με 2 στήλες (η πρώτη για το period label, η δεύτερη για τα στοιχεία)
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
@@ -140,7 +142,7 @@
         });
       }
       globalElementNumber = 3;
-      currentRowIndex = 3; // Συμπλήρωση από την 4η σειρά (περίοδος 2)
+      currentRowIndex = 3; // Ξεκινάμε τη δυναμική συμπλήρωση από την 4η σειρά (Περίοδος 2)
       groupNumbersAdded = false;
     }
 
@@ -155,7 +157,7 @@
       return 'p-block';
     }
 
-    // Δημιουργία κελιού με μειωμένες διαστάσεις (30×30); το μέγεθος της γραμματοσειράς παραμένει στο 12px.
+    // Δημιουργία κελιού με μειωμένες διαστάσεις (30×30), ενώ το μέγεθος της γραμματοσειράς παραμένει 12px.
     function createCell(elObj) {
       return { 
         number: elObj.number, 
@@ -166,73 +168,52 @@
     }
 
     /* 
-      Νέα λογική shifting:
-      1. Κατά την κανονική διαδικασία, αν το pattern απαιτεί shifting, καλείται η συνάρτηση handleShiftingForRow.
-      2. Επιπρόσθετα, όταν το globalElementNumber είναι μεταξύ 20 και 30,
-         εκτελείται το extra shifting για όλες τις γραμμές 0-5 και 6 (δηλαδή, rows 0 έως 6).
-         Σε αυτή τη διαδικασία, αντί να μετατοπίζονται τα ήδη γραμμένα στοιχεία, προστίθεται ένα "κενό" κελί
-         (δηλαδή, αν η θέση προορισμού είναι άδεια, τότε απλώς "κρατείται" ως κενή) και δεν γίνεται μετακίνηση.
+      Συνάρτηση για το shifting:
+      - Για τη 4η σειρά (row index 3): πραγματοποιείται shifting σε rows 0,1,2.
+      - Για τη 6η σειρά (row index 5): μετά τα δύο πρώτα στοιχεία, πραγματοποιείται shifting σε rows 0,1,2,3,4.
+      - Για τη 8η σειρά (row index 7): μετά τα δύο πρώτα στοιχεία, πραγματοποιείται shifting σε rows 0,1,2,3,4,5,6.
+      
+      Η διαδικασία "shifting" εδώ δεν μετακινεί το ήδη καταχωρημένο περιεχόμενο αλλά προσθέτει ένα κενό κελί (αν η θέση είναι κενή)
+      ώστε να καταχωρηθεί ο νέος ατομικός αριθμός.
     */
     function handleShiftingForRow(currentRow) {
       let rowsToShift = [];
-      if (currentRow === 3) {
+      if (currentRow === 3) { // 4η σειρά: shift rows 0,1,2
         rowsToShift = [0, 1, 2];
-      } else if (currentRow === 5) {
+      } else if (currentRow === 5) { // 6η σειρά: shift rows 0,1,2,3,4
         rowsToShift = [0, 1, 2, 3, 4];
-      } else if (currentRow === 7) {
+      } else if (currentRow === 7) { // 8η σειρά: shift rows 0,1,2,3,4,5,6
         rowsToShift = [0, 1, 2, 3, 4, 5, 6];
       }
       let currentInsertionPos = rowsData[currentRow].insertionIndex;
       rowsToShift.forEach(i => {
         let row = rowsData[i];
         let targetPos = currentInsertionPos + row.shiftedColumns;
-        // Με splice θα μετατοπίσει το περιεχόμενο, οπότε εδώ επεκτείνουμε το array αν χρειάζεται
         while (row.cells.length <= targetPos) {
           row.cells.push(null);
         }
-        // Αν η θέση είναι κενή, "κρατάμε" το κελί ως διαθέσιμο για την εισαγωγή του νέου στοιχείου
         if (row.cells[targetPos] === null) {
+          // Απλώς "κρατάμε" το κελί ως κενό, χωρίς να μετακινείται το ήδη γραμμένο περιεχόμενο
           row.shiftedColumns++;
         }
       });
     }
 
-    // Νέα συνάρτηση extra shifting για τα στοιχεία 20 έως 30:
-    // Ελέγχουμε όλες τις γραμμές 0 έως 6 και για κάθε μία, στην θέση (insertionIndex + shiftedColumns),
-    // αν το κελί είναι κενό, το "κρατάμε" (χωρίς να μετακινούμε το ήδη γραμμένο περιεχόμενο).
-    function handleExtraShifting() {
-      for (let i = 0; i <= 6; i++) {
-        let row = rowsData[i];
-        let targetPos = row.insertionIndex + row.shiftedColumns;
-        while (row.cells.length <= targetPos) {
-          row.cells.push(null);
-        }
-        if (row.cells[targetPos] === null) {
-          row.shiftedColumns++;
-        }
-      }
-    }
-
-    // Συνάρτηση για την τοποθέτηση του νέου στοιχείου.
+    // Συνάρτηση για την τοποθέτηση του νέου στοιχείου
     function addElementToCurrentRow() {
       if (globalElementNumber > 120) return;
 
-      // Ειδική περίπτωση: όταν φτάνουμε στο 119, συμπληρώνουμε τα στοιχεία 1 και 2 στη 3η σειρά (index 2)
+      // Ειδική περίπτωση: όταν φτάνουμε στο 119, συμπληρώνουμε τα στοιχεία 1 και 2 στη 3η σειρά (row index 2)
       if (globalElementNumber === 119) {
         currentRowIndex = 2; // 3η σειρά (1η περίοδος)
         globalElementNumber = 1;
-      }
-
-      // Εάν το globalElementNumber είναι μεταξύ 20 και 30, εκτελούμε extra shifting για rows 0–6
-      if (globalElementNumber >= 20 && globalElementNumber <= 30) {
-        handleExtraShifting();
       }
 
       const row = rowsData[currentRowIndex];
 
       // Ειδική διαχείριση για τη 3η σειρά (στοιχεία 1 και 2)
       if (currentRowIndex === 2) {
-        let insertIndex = (globalElementNumber === 1) ? 1 : 32; // στοιχείο 1 στη 2η στήλη, στοιχείο 2 στην 33η στήλη
+        let insertIndex = (globalElementNumber === 1) ? 1 : 32; // Το στοιχείο 1 τοποθετείται στη 2η στήλη, το στοιχείο 2 στην 33η στήλη
         while (row.cells.length <= insertIndex) {
           row.cells.push(null);
         }
@@ -245,7 +226,7 @@
         return;
       }
 
-      // Συμπλήρωση στις σειρές 3–8 (περιόδους 2–7)
+      // Κανονική συμπλήρωση στις σειρές 3–8 (Περίοδοι 2–7)
       if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
         let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
         let cell = createCell({
@@ -256,7 +237,7 @@
         if (pattern.shifting) {
           handleShiftingForRow(currentRowIndex);
         }
-        // Βρίσκουμε την πρώτη διαθέσιμη (κενή) θέση από το insertionIndex
+        // Αναζήτηση της πρώτης διαθέσιμης (κενής) θέσης ξεκινώντας από το insertionIndex
         let targetIndex = row.insertionIndex;
         while (row.cells[targetIndex] != null) {
           targetIndex++;
@@ -270,31 +251,46 @@
         if (row.countInSegment === pattern.count) {
           row.currentSegment++;
           row.countInSegment = 0;
-          row.insertionIndex = row.cells.length;
+          row.insertionIndex = row.cells.length; // Ενημέρωση για την επόμενη εισαγωγή
         }
         if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
           currentRowIndex++;
         }
       }
 
+      // Μετά τη συμπλήρωση των στοιχείων 1 και 2, προστίθενται τα ονόματα ομάδων και περιόδων
       if (currentRowIndex > 8 && !groupNumbersAdded) {
         addGroupNumbers();
+        groupNumbersAdded = true;
       }
     }
 
-    // Συνάρτηση για την προσθήκη των headers:
-    // Row 0: νέα αρίθμηση (1–18) ξεκινώντας από τη 2η στήλη,
-    // Row 1: παλιά αρίθμηση (π.χ. "ΙΑ", "ΙΙΑ", …),
-    // Rows 2–8: στην 1η στήλη τοποθετούνται τα ονόματα των περιόδων.
+    /* Συνάρτηση προσθήκης των ονομάτων των ομάδων και περιόδων:
+       - Στον header (row 0) η νέα αρίθμηση ακολουθεί τη λογική:
+         Στήλη 1 παραμένει κενή, στη στήλη 2 το 1, στη στήλη 3 το 2, στις στήλες 4 έως 13 (10 κενά),
+         και στις στήλες 14 έως 29 οι ομάδες 3 έως 18.
+       - Στον header (row 1) διατηρείται η παλιά αρίθμηση (π.χ. "ΙΑ", "ΙΙΑ", …).
+       - Στις σειρές 2–8, στην πρώτη στήλη τοποθετούνται τα ονόματα των περιόδων.
+    */
     function addGroupNumbers() {
-      let newNumbers = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
+      // Νέα αρίθμηση (Row 0)
       while (rowsData[0].cells.length < 33) {
         rowsData[0].cells.push(null);
       }
-      newNumbers.forEach((num, i) => {
-        rowsData[0].cells[i+1] = createCell({ number: num, category: 'group' });
-      });
-
+      // Στήλη 1 (index 0) δεν χρησιμοποιείται για αριθμούς εδώ
+      rowsData[0].cells[1] = createCell({ number: 1, category: 'group' });
+      rowsData[0].cells[2] = createCell({ number: 2, category: 'group' });
+      // Στήλες 3 έως 12: αφήνονται κενές
+      for (let i = 3; i <= 12; i++) {
+        rowsData[0].cells[i] = null;
+      }
+      // Από τη στήλη 13 έως 28 τοποθετούμε τις ομάδες 3 έως 18
+      let group = 3;
+      for (let i = 13; i <= 28; i++) {
+        rowsData[0].cells[i] = createCell({ number: group, category: 'group' });
+        group++;
+      }
+      // Παλιά αρίθμηση (Row 1)
       let oldNumbers = ["ΙΑ", "ΙΙΑ", "ΙΙΙ", "ΙV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII"];
       while (rowsData[1].cells.length < 33) {
         rowsData[1].cells.push(null);
@@ -302,18 +298,17 @@
       oldNumbers.forEach((label, i) => {
         rowsData[1].cells[i+1] = createCell({ number: label, category: 'group-name' });
       });
-
+      // Ονόματα περιόδων (για rows 2–8) στην πρώτη στήλη
       const periodLabels = ['1η K', '2η L', '3η M', '4η N', '5η O', '6η P', '7η Q'];
       for (let i = 2; i < 9; i++) {
         rowsData[i].cells[0] = createCell({ number: periodLabels[i-2], category: 'period-label' });
       }
-      groupNumbersAdded = true;
     }
 
     function drawTable() {
       background(247);
       let yOffset = 50;
-      // Λόγω των μειωμένων διαστάσεων, χρησιμοποιούμε βήμα 32 pixels
+      // Χρησιμοποιούμε βήμα 32 pixels λόγω των μειωμένων διαστάσεων των κελιών
       rowsData.forEach((row) => {
         let xOffset = 80;
         row.cells.forEach((cell) => {
