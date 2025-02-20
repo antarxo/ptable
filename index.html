@@ -33,7 +33,7 @@
       padding: 20px;
       background: rgba(255, 255, 255, 0.95);
       border: 2px solid #333;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
     #leftPanel, #middlePanel, #rightPanel {
@@ -68,7 +68,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -89,9 +89,9 @@
   </div>
 
   <script>
-    // Παγκόσμια μεταβλητή για τα δεδομένα των στοιχείων (JSON)
+    // Παγκόσμια μεταβλητή για τα δεδομένα των στοιχείων από το αρχείο JSON
     let elementsData = [];
-    // p5.js preload: φόρτωση του αρχείου JSON πριν το setup.
+    // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
     function preload() {
       elementsData = loadJSON('elements.json');
     }
@@ -109,9 +109,9 @@
     };
 
     /* Δομή:
-         - rowsData[0]: Νέο σύστημα ομαδοποίησης (18 κελιά: indices 0..17, όπου το κελί 0 θα έχει το 1, το 1 το 2, το 2 το 3 κ.ο.κ.)
-         - rowsData[1]: Παλιό σύστημα ομαδοποίησης (18 κελιά, όπου, για παράδειγμα, το κελί 2 θα έχει το "IIIB")
-         - rowsData[2] έως rowsData[8]: 7 περίοδοι (πρώτο κελί δείχνει το όνομα περίοδου, τα υπόλοιπα για τα στοιχεία)
+         - rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0 και 1 γεμάτα, index 2-15 κενά, index 16-31 = 3..18)
+         - rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", index 2-15 κενά, index 16-31 = 16 στοιχεία)
+         - rowsData[2] έως rowsData[8]: 7 περίοδοι (το κελί index 0 δείχνει το όνομα, τα υπόλοιπα για στοιχεία)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -132,8 +132,8 @@
       for (let i = 0; i < 9; i++) {
         let cells;
         if (i < 2) {
-          // Για τις σειρές ομαδοποίησης δημιουργούμε πίνακα 18 κελιών
-          cells = new Array(18).fill(null);
+          // Για τις σειρές ομαδοποίησης δημιουργούμε πίνακα 32 κελιών.
+          cells = new Array(32).fill(null);
         } else {
           cells = [null];
         }
@@ -280,43 +280,48 @@
       rowsData[8].periodLabel = "7η Q";
     }
 
-    // Νέο σύστημα ομαδοποίησης: γεμίζουμε 18 κελιά με τους αριθμούς 1..18.
+    // Νέο σύστημα ομαδοποίησης: δημιουργούμε 32 κελιά, όπου τα 2 πρώτα γεμίζονται με 1 και 2, τα επόμενα 14 παραμένουν κενά,
+    // και τα υπόλοιπα 16 γεμίζονται με τους αριθμούς 3 έως 18.
     function addNewGroupNumbers() {
       let row = rowsData[0];
-      let newNumbers = [];
-      for (let i = 1; i <= 18; i++) {
-        newNumbers.push(i);
-      }
-      row.cells = new Array(newNumbers.length).fill(null);
-      for (let i = 0; i < newNumbers.length; i++) {
-        row.cells[i] = createCell({ number: newNumbers[i], category: 'group-name' });
+      row.cells = new Array(32).fill(null);
+      row.cells[0] = createCell({ number: 1, category: 'group-name' });
+      row.cells[1] = createCell({ number: 2, category: 'group-name' });
+      let num = 3;
+      for (let i = 16; i < 32; i++) {
+        row.cells[i] = createCell({ number: num, category: 'group-name' });
+        num++;
       }
     }
 
-    // Παλιό σύστημα ομαδοποίησης: χρησιμοποιούμε έναν πίνακα με 18 τιμές, ώστε το "IIIB" να εμφανίζεται στο index 2 (δηλαδή κάτω από το 3).
+    // Παλιό σύστημα ομαδοποίησης: δημιουργούμε 32 κελιά, όπου τα 2 πρώτα γεμίζονται με "IA" και "IIA",
+    // τα 14 κενά (indices 2-15) παραμένουν, και τα 16 επόμενα γεμίζονται με τα παρακάτω 16 ονόματα.
     function addOldGroupNumbers() {
       let oldNumbers = [
         "IA", "IIA", "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
-        "IB", "IIB", "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA", "", ""
+        "VIIIB", "VIIIB", "IB", "IIB", "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
       ];
       let row = rowsData[1];
-      row.cells = new Array(oldNumbers.length).fill(null);
-      for (let i = 0; i < oldNumbers.length; i++) {
-        if (oldNumbers[i] !== "") {
-          row.cells[i] = createCell({ number: oldNumbers[i], category: 'group-name' });
-        }
+      row.cells = new Array(32).fill(null);
+      row.cells[0] = createCell({ number: oldNumbers[0], category: 'group-name' });
+      row.cells[1] = createCell({ number: oldNumbers[1], category: 'group-name' });
+      let idx = 2;
+      for (let i = 16; i < 32; i++) {
+        row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
+        idx++;
       }
     }
 
-    // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού (για τα hover effects).
+    // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού για τα hover effects.
     function drawTable() {
       background(247);
       let yOffset = 50;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
-        let xOffset;
+        let xOffset = 80;
         if (rowIndex < 2) {
-          xOffset = 80;
+          // Σειρές ομαδοποίησης: δεν εμφανίζουμε περιγράμματα ούτε στρογγυλεμένες γωνίες.
+          noStroke();
           for (let i = 0; i < row.cells.length; i++) {
             let cell = row.cells[i];
             if (cell) {
@@ -325,8 +330,7 @@
               cell.drawW = cell.width;
               cell.drawH = cell.height;
               fill(CATEGORY_COLORS[cell.category]);
-              stroke(85);
-              rect(xOffset, yOffset, cell.width, cell.height, 5);
+              rect(xOffset, yOffset, cell.width, cell.height); // χωρίς stroke και χωρίς round corners.
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
@@ -334,6 +338,7 @@
             }
             xOffset += 42;
           }
+          stroke(85); // επαναφορά stroke για τις άλλες σειρές.
         } else {
           if (row.periodLabel) {
             fill(0);
@@ -407,8 +412,6 @@
       if (!found) {
         clearInfoPanel();
       }
-      // Διάγνωση
-      // console.log('mouseMoved', mouseX, mouseY);
     }
     function mouseClicked() {
       mouseMoved();
