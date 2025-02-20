@@ -249,11 +249,10 @@
             row.countInSegment = 0;
             row.insertionIndex = row.cells.length;
           }
-          // Προσθέτουμε τον έλεγχο ώστε αν δεν υπάρχει πλέον pattern για τη σειρά, προχωράμε στην επόμενη σειρά.
+          // Εάν το τρέχον pattern έχει εξαντληθεί, προχωράμε στην επόμενη σειρά
           if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
             currentRowIndex++;
           }
-          // Με κάθε κλικ στο "Επόμενο", ενημερώνεται το infoPanel και κλειδώνεται
           updateInfoPanel(cell);
           infoLocked = true;
         }
@@ -340,7 +339,8 @@
       background(247);
       // Ξεκινάμε λίγο πιο κάτω ώστε να υπάρχει κενό κάτω από τον τίτλο
       let yOffset = 100;
-      const gap = 42; // ομοιόμορφο gap για όλες τις σειρές
+      const groupRowsGap = 20;  // μειωμένο gap για τις δύο πρώτες σειρές (ομάδες)
+      const normalGap    = 42;  // gap για τις υπόλοιπες σειρές
 
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
@@ -391,7 +391,12 @@
             xOffset += 42;
           }
         }
-        yOffset += gap;
+        // Εφαρμόζουμε το gap: για τις πρώτες δύο σειρές χρησιμοποιούμε το groupRowsGap, για τις υπόλοιπες το normalGap.
+        if (rowIndex < 2) {
+          yOffset += groupRowsGap;
+        } else {
+          yOffset += normalGap;
+        }
       }
     }
 
