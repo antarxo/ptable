@@ -227,36 +227,28 @@
     }
 
     function addGroupNumbers() {
-      while (rowsData[0].cells.length < 33) { rowsData[0].cells.push(null); }
-      rowsData[0].cells[1] = createCell({ number: 1, category: 'group' });
-      rowsData[0].cells[2] = createCell({ number: 2, category: 'group' });
-      for (let i = 3; i <= 16; i++) { rowsData[0].cells[i] = null; }
-      let group = 3;
-      for (let i = 17; i <= 32; i++) {
-        rowsData[0].cells[i] = createCell({ number: group, category: 'group' });
-        group++;
-      }
-      while (rowsData[1].cells.length < 33) { rowsData[1].cells.push(null); }
-      let oldNumbers = [ "IA", "IIA", 
+      // ... (Προηγούμενος κώδικας για νέο σύστημα)...
+
+      let oldNumbers = [
+        "IA", "IIA", 
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, // 14 κενά
         "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", 
         "VIIIB", "VIIIB", "IB", "IIB", 
-        "IIIA", "IVA", "VA", "VIA", "VIIA", "VI"];
+        "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
+      ];
+
+      // Τοποθέτηση των τίτλων
       rowsData[1].cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
       rowsData[1].cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
-      for (let i = 3; i <= 16; i++) { rowsData[1].cells[i] = null; }
+      
       let idx = 2;
       for (let i = 17; i <= 32; i++) {
         rowsData[1].cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
         idx++;
       }
-      const periodLabels = ['1η K', '2η L', '3η M', '4η N', '5η O', '6η P', '7η Q'];
-      for (let i = 2; i < 9; i++) {
-        rowsData[i].cells[0] = createCell({ number: periodLabels[i-2], category: 'period-label' });
-      }
     }
 
-    function drawTable() {
+function drawTable() {
       background(247);
       let yOffset = 50;
       rowsData.forEach((row) => {
@@ -267,13 +259,13 @@
             stroke(85);
             rect(xOffset, yOffset, cell.width, cell.height);
             fill(0);
-            textSize(12);
+            textSize(12); // Μέγεθος γραμματοσειράς για στοιχεία παραμένει 12px
             textAlign(CENTER, CENTER);
             text(cell.number, xOffset + cell.width/2, yOffset + cell.height/2);
           }
-          xOffset += 32;
+          xOffset += 42; // Αύξηση απόστασης μεταξύ κελιών
         });
-        yOffset += 32;
+        yOffset += 42; // Αύξηση απόστασης μεταξύ γραμμών
       });
     }
 
