@@ -68,7 +68,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -92,6 +92,8 @@
     // Global μεταβλητές για τα δεδομένα και για τις συντεταγμένες του ποντικιού
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
+    // Global μεταβλητή για το "κλείδωμα" των πληροφοριών
+    let infoLocked = false;
 
     // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
     function preload() {
@@ -171,6 +173,8 @@
       globalElementNumber = 3;
       currentRowIndex = 3;
       phase = 1;
+      // Κατά την εκκίνηση ξεκλειδώνουμε τις πληροφορίες
+      infoLocked = false;
     }
 
     // Δημιουργεί ένα κελί και, αν υπάρχουν δεδομένα στο elements.json, τα αποθηκεύει στο cell.details.
@@ -245,9 +249,9 @@
             row.countInSegment = 0;
             row.insertionIndex = row.cells.length;
           }
-          if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
-            currentRowIndex++;
-          }
+          // Με κάθε κλικ στο "Επόμενο" εμφανίζεται το τελευταίο στοιχείο και το infoPanel "κλειδώνει"
+          updateInfoPanel(cell);
+          infoLocked = true;
         }
         redraw();
       }
@@ -255,14 +259,17 @@
         const row = rowsData[currentRowIndex];
         let insertIndex = (globalElementNumber === 1) ? 1 : 32;
         while (row.cells.length <= insertIndex) { row.cells.push(null); }
-        row.cells[insertIndex] = createCell({
+        let cell = createCell({
           number: globalElementNumber,
           category: getCategory(globalElementNumber)
         });
+        row.cells[insertIndex] = cell;
         globalElementNumber++;
         if (globalElementNumber > 2) {
           phase = 3;
         }
+        updateInfoPanel(cell);
+        infoLocked = true;
         redraw();
       }
       else if (phase === 3) {
@@ -327,12 +334,10 @@
     // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού για τα hover effects.
     function drawTable() {
       background(247);
-      // Ορισμός σταθερών για τα gaps:
-      const groupNamesGap = 20;   // gap μεταξύ σειρών για τα ονόματα ομάδων (σειρές 0 και 1)
-      const contentGap    = 50;   // gap μεταξύ της τελευταίας σειράς ονομάτων (σειρά 1) και της πρώτης δυναμικής σειράς (σειρά 2)
-      const normalGap     = 42;   // gap για τις υπόλοιπες σειρές
+      // Ξεκινάμε το drawing λίγο πιο κάτω ώστε να υπάρχει κενό κάτω από τον τίτλο
+      let yOffset = 100;
+      const gap = 42; // Ομοιόμορφο gap για όλες τις σειρές
 
-      let yOffset = 50;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
@@ -382,14 +387,7 @@
             xOffset += 42;
           }
         }
-        // Εφαρμογή διαφορετικού gap για τις σειρές:
-        if (rowIndex === 0) {
-          yOffset += groupNamesGap;
-        } else if (rowIndex === 1) {
-          yOffset += contentGap;
-        } else {
-          yOffset += normalGap;
-        }
+        yOffset += gap;
       }
     }
 
@@ -421,8 +419,9 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Τροποποιημένη mouseMoved ώστε να χρησιμοποιεί τις συντεταγμένες που αποθηκεύονται μέσω globalMouseX/Y.
+    // Ενημερώνει τις πληροφορίες μόνο όταν δεν είναι "κλειδωμένες"
     function mouseMoved() {
+      if (infoLocked) return;
       let x = (typeof globalMouseX !== 'undefined') ? globalMouseX : mouseX;
       let y = (typeof globalMouseY !== 'undefined') ? globalMouseY : mouseY;
       let found = false;
@@ -447,10 +446,13 @@
       }
     }
     function mouseClicked() {
+      // Με κάθε κλικ σταθεροποιούνται οι πληροφορίες
       mouseMoved();
+      infoLocked = true;
     }
     function touchStarted() {
       mouseMoved();
+      infoLocked = true;
     }
 
     // Global event listeners για καταγραφή των κινήσεων του ποντικιού.
@@ -478,6 +480,7 @@
     }
 
     document.getElementById('nextElement').addEventListener('click', () => {
+      // Κάθε φορά που πατιέται "Επόμενο", εμφανίζεται το τελευταίο στοιχείο και "κλειδώνεται" το infoPanel
       addElementToCurrentRow();
       redraw();
     });
