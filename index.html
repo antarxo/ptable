@@ -2,14 +2,14 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμικός Περιοδικός Πίνακας</title>
+  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Roboto', Arial, sans-serif;
+      background: #f7f7f7;
       margin: 0;
       overflow: hidden;
-      background: #f7f7f7;
     }
     #title {
       position: absolute;
@@ -35,37 +35,46 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
-    .main-table {
-      transition: transform 0.5s ease-in-out;
+    #leftPanel, #middlePanel, #rightPanel {
+      flex: 1;
+      margin: 0 10px;
     }
-    .collapsed .main-table {
-      transform: translateX(-588px); /* 14 κελιά * 42px */
+    #middlePanel {
+      flex: 2;
+      font-style: italic;
+      color: #666;
+      padding: 0 20px;
     }
-    .f-block {
-      transition: transform 0.5s ease-in-out;
+    #rightPanel {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
-    .collapsed .f-block {
-      transform: translateY(140px);
-    }
-    button {
-      padding: 8px 16px;
-      margin: 4px;
+    #rightPanel button {
+      padding: 4px 8px;
+      font-size: 12px;
       cursor: pointer;
       border: 1px solid #333;
       background: #fff;
-      border-radius: 4px;
+      transition: background 0.3s, color 0.3s;
+      border-radius: 5px;
     }
-    button:hover {
+    #rightPanel button:hover {
       background: #333;
       color: #fff;
+    }
+    .collapsed .main-table {
+      transform: translateX(-588px); /* Μετατόπιση 14 κελιών */
+    }
+    .collapsed .f-block {
+      transform: translateY(140px); /* Μετατόπιση f-block κάτω */
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
-    <!-- Περιεχόμενο info panel όπως πριν -->
     <div id="leftPanel">
       <div id="elementInfo"></div>
       <div id="explanation"></div>
@@ -73,110 +82,384 @@
       <div id="shells"></div>
       <div id="outerShell"></div>
     </div>
+    <div id="middlePanel">
+      <div id="remarks"></div>
+    </div>
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
-      <button id="togglePanel">Σύμπτυξε f-block</button>
+      <button id="fillAll">Συμπλήρωσε</button>
+      <button id="togglePanel">Σύμπτυξε/Ανάπτυξε</button>
       <button id="reset">Reset</button>
     </div>
   </div>
 
   <script>
+    // Global μεταβλητές
     let elementsData = [];
-    let isCollapsed = false;
-    const CELL_SIZE = 42;
-    const SHIFT_COLUMNS = 14;
+    let globalMouseX = 0, globalMouseY = 0;
+    let isCollapsed = false; // Νέα μεταβλητή για σύμπτυξη/ανάπτυξη
 
+    // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
     function preload() {
-      loadJSON('elements.json', data => {
-        elementsData = data.elements;
-      }, () => console.error("Σφάλμα φόρτωσης JSON"));
+      elementsData = loadJSON('elements.json', dataLoaded, dataError);
     }
+    function dataLoaded(data) {
+      elementsData = data;
+      console.log("elements.json loaded successfully.");
+    }
+    function dataError(err) {
+      console.error("Error loading elements.json", err);
+      elementsData = null;
+    }
+
+    // Ορισμός της getCategory στο global scope
+    function getCategory(n) {
+      const alkaliMetals = [3, 11, 19, 37, 55, 87];
+      if (n === 1) return 'hydrogen-color';
+      if (alkaliMetals.includes(n)) return 'alkali-block';
+      if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
+      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 31 && n <= 36) || (n >= 49 && n <= 54) || (n >= 81 && n <= 86)) return 'p-block';
+      if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
+      if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
+      return 'p-block';
+    }
+
+    const CATEGORY_COLORS = {
+      'alkali-block': '#ff9999',
+      's-block': '#ffcccc',
+      'p-block': '#ccffcc',
+      'd-block': '#ccccff',
+      'f-block': '#ffe5cc',
+      'group-name': '#f0f0f0',
+      'period-label': '#f0f0f0',
+      'hydrogen-color': '#ffff99'
+    };
+
+    let rowsData = [];
+    let globalElementNumber = 3;
+    let currentRowIndex = 3;
+    let phase = 1;
+
+    const fillingPatterns = [
+      [{ count: 8, shifting: true }],
+      [{ count: 8, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
+    ];
+
+    function initialize() {
+      rowsData = [];
+      for (let i = 0; i < 9; i++) {
+        let cells = (i < 2) ? new Array(32).fill(null) : [null];
+        rowsData.push({
+          cells: cells,
+          shiftedColumns: 0,
+          currentSegment: 0,
+          countInSegment: 0,
+          insertionIndex: (i < 2 ? 0 : 1),
+          periodLabel: null
+        });
+      }
+      globalElementNumber = 3;
+      currentRowIndex = 3;
+      phase = 1;
+    }
+
+    function createCell(elObj) {
+      let cell = { 
+        number: elObj.number, 
+        category: elObj.category,
+        width: 40,
+        height: (elObj.category === 'group-name' ? 20 : 40),
+        fixed: !!elObj.fixed
+      };
+      if (elementsData && elementsData.length >= elObj.number) {
+        cell.details = elementsData[elObj.number - 1];
+      }
+      return cell;
+    }
+
+    function shiftBlockRight(rowIndex, groupRows) {
+      groupRows.forEach(i => {
+        let row = rowsData[i];
+        let insertPos = rowsData[rowIndex].insertionIndex + row.shiftedColumns;
+        row.cells.splice(insertPos, 0, null);
+        row.shiftedColumns++;
+      });
+    }
+
+    function handleShiftingForRow(currentRow) {
+      let groupRows = [];
+      if (currentRow === 3) groupRows = [0, 1, 2];
+      else if (currentRow === 5) groupRows = [0, 1, 2, 3, 4];
+      else if (currentRow === 7) groupRows = [0, 1, 2, 3, 4, 5, 6];
+      shiftBlockRight(currentRow, groupRows);
+    }
+
+    function addElementToCurrentRow() {
+      if (phase === 1) {
+        if (globalElementNumber > 118) {
+          currentRowIndex = 2;
+          globalElementNumber = 1;
+          phase = 2;
+          redraw();
+          return;
+        }
+        const row = rowsData[currentRowIndex];
+        if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
+          let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
+          let cell = createCell({
+            number: globalElementNumber,
+            category: getCategory(globalElementNumber)
+          });
+          if (pattern.shifting) {
+            handleShiftingForRow(currentRowIndex);
+          }
+          let targetIndex = row.insertionIndex;
+          while (row.cells[targetIndex] != null) {
+            targetIndex++;
+            if (targetIndex >= row.cells.length) row.cells.push(null);
+          }
+          row.cells[targetIndex] = cell;
+          globalElementNumber++;
+          row.countInSegment++;
+          if (row.countInSegment === pattern.count) {
+            row.currentSegment++;
+            row.countInSegment = 0;
+            row.insertionIndex = row.cells.length;
+          }
+          if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
+            currentRowIndex++;
+          }
+          updateInfoPanel(cell);
+        }
+        redraw();
+      }
+      else if (phase === 2) {
+        const row = rowsData[currentRowIndex];
+        let insertIndex = (globalElementNumber === 1) ? 1 : 32;
+        while (row.cells.length <= insertIndex) row.cells.push(null);
+        let cell = createCell({
+          number: globalElementNumber,
+          category: getCategory(globalElementNumber)
+        });
+        row.cells[insertIndex] = cell;
+        globalElementNumber++;
+        if (globalElementNumber > 2) phase = 3;
+        updateInfoPanel(cell);
+        redraw();
+      }
+      else if (phase === 3) {
+        addPeriodNames();
+        phase = 4;
+        redraw();
+      }
+      else if (phase === 4) {
+        addOldGroupNumbers();
+        phase = 5;
+        redraw();
+      }
+      else if (phase === 5) {
+        addNewGroupNumbers();
+        phase = 6;
+        redraw();
+      }
+    }
+
+    function addPeriodNames() {
+      rowsData[2].periodLabel = "1η Κ";
+      rowsData[3].periodLabel = "2η L";
+      rowsData[4].periodLabel = "3η M";
+      rowsData[5].periodLabel = "4η N";
+      rowsData[6].periodLabel = "5η O";
+      rowsData[7].periodLabel = "6η P";
+      rowsData[8].periodLabel = "7η Q";
+    }
+
+    function addNewGroupNumbers() {
+      let row = rowsData[0];
+      row.cells = new Array(32).fill(null);
+      row.cells[0] = createCell({ number: 1, category: 'group-name' });
+      row.cells[1] = createCell({ number: 2, category: 'group-name' });
+      let num = 3;
+      for (let i = 16; i < 32; i++) {
+        row.cells[i] = createCell({ number: num, category: 'group-name' });
+        num++;
+      }
+    }
+
+    function addOldGroupNumbers() {
+      let oldNumbers = [
+        "IA", "IIA", "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
+        "VIIIB", "VIIIB", "IB", "IIB", "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
+      ];
+      let row = rowsData[1];
+      row.cells = new Array(32).fill(null);
+      row.cells[0] = createCell({ number: oldNumbers[0], category: 'group-name' });
+      row.cells[1] = createCell({ number: oldNumbers[1], category: 'group-name' });
+      let idx = 2;
+      for (let i = 16; i < 32; i++) {
+        row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
+        idx++;
+      }
+    }
+
+    function drawTable() {
+      background(247);
+      let yOffset = 80;
+      const groupRowsGap = 20;
+      const normalGap = 42;
+      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+        let row = rowsData[rowIndex];
+        let xOffset = 80;
+        if (rowIndex < 2) {
+          noStroke();
+          for (let i = 0; i < row.cells.length; i++) {
+            let cell = row.cells[i];
+            if (cell) {
+              cell.drawX = xOffset;
+              cell.drawY = yOffset;
+              cell.drawW = cell.width;
+              cell.drawH = cell.height;
+              fill(CATEGORY_COLORS[cell.category]);
+              rect(xOffset, yOffset, cell.width, cell.height);
+              fill(0);
+              textSize(12);
+              textAlign(CENTER, CENTER);
+              text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
+            }
+            xOffset += 42;
+          }
+          stroke(85);
+        } else {
+          if (row.periodLabel) {
+            fill(0);
+            textSize(12);
+            textAlign(CENTER, CENTER);
+            text(row.periodLabel, 45, yOffset+20);
+          }
+          xOffset = 80;
+          for (let i = 1; i < row.cells.length; i++) {
+            let cell = row.cells[i];
+            if (cell) {
+              cell.drawX = xOffset;
+              cell.drawY = yOffset;
+              cell.drawW = cell.width;
+              cell.drawH = cell.height;
+              fill(CATEGORY_COLORS[cell.category]);
+              stroke(85);
+              rect(xOffset, yOffset, cell.width, cell.height, 5);
+              fill(0);
+              textSize(12);
+              textAlign(CENTER, CENTER);
+              text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
+            }
+            xOffset += 42;
+          }
+        }
+        yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
+      }
+    }
+
+    function updateInfoPanel(cell) {
+      if (elementsData && cell.details) {
+        document.getElementById('elementInfo').innerHTML =
+          `<strong>${cell.details.name} (${cell.details.symbol})</strong> [Z=${cell.details.number}]`;
+        document.getElementById('subshells').innerHTML =
+          `<em>Υποστιβάδες:</em> ${cell.details.subshells}`;
+        document.getElementById('shells').innerHTML =
+          `<em>Στιβάδες:</em> ${cell.details.shells}`;
+        document.getElementById('outerShell').innerHTML =
+          `<em>Εξωτερική:</em> ${cell.details.outerShell}`;
+        document.getElementById('explanation').innerHTML =
+          `<em>Επεξήγηση:</em> ${cell.details.explanation}`;
+        document.getElementById('remarks').innerHTML =
+          `<em>Παρατηρήσεις:</em> ${cell.details.remarks}`;
+      } else {
+        document.getElementById('elementInfo').innerHTML =
+          "<strong>Δεν φορτώθηκαν δεδομένα (elements.json δεν βρέθηκε ή υπάρχει σφάλμα).</strong>";
+        document.getElementById('subshells').innerHTML = '';
+        document.getElementById('shells').innerHTML = '';
+        document.getElementById('outerShell').innerHTML = '';
+        document.getElementById('explanation').innerHTML = '';
+        document.getElementById('remarks').innerHTML = '';
+      }
+    }
+
+    function clearInfoPanel() {
+      document.getElementById('elementInfo').innerHTML = '';
+      document.getElementById('subshells').innerHTML = '';
+      document.getElementById('shells').innerHTML = '';
+      document.getElementById('outerShell').innerHTML = '';
+      document.getElementById('explanation').innerHTML = '';
+      document.getElementById('remarks').innerHTML = '';
+    }
+
+    function handleMouseClick() {
+      let x = globalMouseX || mouseX;
+      let y = globalMouseY || mouseY;
+      let found = false;
+      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+        let row = rowsData[rowIndex];
+        let startIndex = (rowIndex < 2 ? 0 : 1);
+        for (let i = startIndex; i < row.cells.length; i++) {
+          let cell = row.cells[i];
+          if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
+              y >= cell.drawY && y <= cell.drawY + cell.drawH) {
+            updateInfoPanel(cell);
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (!found) clearInfoPanel();
+    }
+
+    window.addEventListener('click', (e) => {
+      globalMouseX = e.clientX;
+      globalMouseY = e.clientY;
+      handleMouseClick();
+    });
 
     function setup() {
-      createCanvas(windowWidth, windowHeight).class('main-table');
+      let canvas = createCanvas(windowWidth, windowHeight);
+      canvas.style('z-index', '-1');
       textFont('Roboto');
-      textAlign(CENTER, CENTER);
-      initializeTable();
-      drawTable();
-    }
-
-    function initializeTable() {
-      // Αρχικοποίηση πίνακα με βασικά στοιχεία
-      // ... (προσαρμόστε με την αρχική σας υλοποίηση)
+      noLoop();
+      initialize();
+      redraw();
     }
 
     function draw() {
-      background(247);
-      drawMainTable();
-      drawFBlock();
+      drawTable();
     }
 
-    function drawMainTable() {
-      push();
-      if(isCollapsed) translate(-SHIFT_COLUMNS * CELL_SIZE, 0);
-      
-      // Σχεδίαση κύριου πίνακα
-      let y = 80;
-      for(let row = 0; row < 7; row++) {
-        let x = 80;
-        for(let col = 0; col < 18; col++) {
-          if(col >= 17 && isCollapsed) continue;
-          
-          fill(getCellColor(row, col));
-          rect(x, y, 40, 40, 5);
-          fill(0);
-          text(getElementNumber(row, col), x + 20, y + 20);
-          x += CELL_SIZE;
-        }
-        y += 42;
+    // Κουμπιά
+    document.getElementById('nextElement').addEventListener('click', (e) => {
+      e.stopPropagation();
+      addElementToCurrentRow();
+      redraw();
+    });
+    document.getElementById('fillAll').addEventListener('click', () => {
+      while (phase < 6 || (phase === 1 && globalElementNumber <= 118)) {
+        addElementToCurrentRow();
       }
-      pop();
-    }
-
-    function drawFBlock() {
-      push();
-      if(isCollapsed) translate(0, 140);
-      
-      // Σχεδίαση f-block
-      let y = 80 + 6 * 42;
-      for(let row = 7; row < 9; row++) {
-        let x = 80 + 3 * CELL_SIZE;
-        for(let col = 0; col < 14; col++) {
-          fill('#ffe5cc');
-          rect(x, y, 40, 40, 5);
-          fill(0);
-          text(getFBlockNumber(row, col), x + 20, y + 20);
-          x += CELL_SIZE;
-        }
-        y += 42;
-      }
-      pop();
-    }
-
-    // Διαχείριση κουμπιών
+      redraw();
+    });
+    document.getElementById('reset').addEventListener('click', () => {
+      initialize();
+      redraw();
+    });
     document.getElementById('togglePanel').addEventListener('click', () => {
       isCollapsed = !isCollapsed;
       document.body.classList.toggle('collapsed');
       document.getElementById('togglePanel').innerText = 
-        isCollapsed ? 'Ανάπτυξε f-block' : 'Σύμπτυξε f-block';
+        isCollapsed ? 'Ανάπτυξε' : 'Σύμπτυξε';
       redraw();
     });
-
-    // Βοηθητικές συναρτήσεις
-    function getCellColor(row, col) {
-      if(col < 2) return '#ff9999';
-      if(col < 18-6) return '#ccccff';
-      return '#ccffcc';
-    }
-
-    function getElementNumber(row, col) {
-      // Λογική ανάκτησης αριθμού στοιχείου
-      return row * 18 + col + 1;
-    }
-
-    function getFBlockNumber(row, col) {
-      return row === 7 ? 57 + col : 89 + col;
-    }
 
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
