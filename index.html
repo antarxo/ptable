@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -93,11 +93,11 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, θα αναδειγματοδοτούνται οι σειρές ώστε να εμφανίζουν 18 κελιά (δηλαδή, τα f-στοιχεία αποκόπτονται)
+    // hideFBlock: όταν true, στην σχεδίαση γίνεται σύμπτυξη,
+    // δηλαδή μεταφέρονται οι 16 τελευταίες στήλες 14 θέσεις αριστερότερα.
     let hideFBlock = false;
 
-    // Βοηθητική συνάρτηση resampleCells: Δέχεται έναν πίνακα κελιών και επιστρέφει έναν νέο με το newLength στοιχεία,
-    // επιλέγοντας ομοιόμορφα τα στοιχεία.
+    // Βοηθητική συνάρτηση resampleCells (δεν θα χρησιμοποιηθεί πλέον για τη σύμπτυξη)
     function resampleCells(cells, newLength) {
       let result = [];
       if(cells.length === 0) return result;
@@ -155,7 +155,7 @@
     /*
       rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά)
       rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά)
-      rowsData[2] έως [8]: 7 περίοδοι – Τώρα οι περίοδοι ξεκινούν από index 0 χωρίς προκαθορισμένο label.
+      rowsData[2] έως [8]: 7 περίοδοι (στην αρχικοποίηση, για τις περίοδους ξεκινάμε με κενό πίνακα)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -181,7 +181,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          // Για τις περίοδους ξεκινάμε από index 0 (χωρίς προκαθορισμένο label)
+          // Οι περίοδοι ξεκινάνε πλέον από index 0
           insertionIndex: 0,
           periodLabel: null
         });
@@ -263,7 +263,7 @@
       }
       else if (phase === 2) {
         const row = rowsData[currentRowIndex];
-        // Τροποποίηση ώστε το υδρογόνο (Z=1) να τοποθετείται στο index 0 και το ήλιο (Z=2) στο index 31 (32η θέση)
+        // Τοποθέτηση υδρογόνου (Z=1) στο index 0 και ήλιου (Z=2) στη θέση 31 (32η θέση)
         let insertIndex = (globalElementNumber === 1) ? 0 : 31;
         while (row.cells.length <= insertIndex) row.cells.push(null);
         let cell = createCell({
@@ -331,8 +331,11 @@
       }
     }
 
-    // Σχεδίαση του πίνακα:
-    // Όταν hideFBlock είναι true, κάνουμε resample ολόκληρου του πίνακα (είτε για τις ομάδες είτε για τις περίοδους) σε 18 κελιά.
+    // Σχεδίαση του πίνακα.
+    // Όταν η σύμπτυξη είναι ενεργή (hideFBlock === true),
+    // μεταφέρονται οι 16 τελευταίες στήλες 14 θέσεις αριστερότερα:
+    // δηλαδή, για έναν πίνακα 32 κελιών, τα κελιά στα index 0 και 1 παραμένουν,
+    // ενώ τα κελιά από το index 16 έως 31 εμφανίζονται ως νέα index 2 έως 17.
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -344,7 +347,12 @@
         let xOffset = 80;
         let cellsToDraw = [];
         if (hideFBlock) {
-          cellsToDraw = resampleCells(row.cells, 18);
+          // Εφαρμογή της μετατόπισης μόνο όταν ο πίνακας έχει 32 στήλες
+          if (row.cells.length === 32) {
+            cellsToDraw = row.cells.slice(0, 2).concat( row.cells.slice(16, 32) );
+          } else {
+            cellsToDraw = row.cells;
+          }
         } else {
           cellsToDraw = row.cells;
         }
