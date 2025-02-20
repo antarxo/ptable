@@ -84,7 +84,6 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <!-- Το κουμπί togglePanel τώρα εναλλάσσει την εμφάνιση των f-block στοιχείων -->
       <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
@@ -94,7 +93,7 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // Μεταβλητή ελέγχου εμφάνισης των στοιχείων του f τομέα
+    // Μεταβλητή για τον έλεγχο εμφάνισης των κελιών του f τομέα
     let hideFBlock = false;
 
     // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
@@ -116,9 +115,10 @@
       if (n === 1) return 'hydrogen-color';
       if (alkaliMetals.includes(n)) return 'alkali-block';
       if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
+      // Επιστρέφουμε 'f-block' για στοιχεία 57-70 και 89-102
+      if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
       if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 31 && n <= 36) || (n >= 49 && n <= 54) || (n >= 81 && n <= 86)) return 'p-block';
       if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
-      if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
       return 'p-block';
     }
 
@@ -310,7 +310,7 @@
     }
 
     // Σχεδιάζει τον πίνακα. Το yOffset ξεκινά από 80.
-    // Τα κελιά του f τομέα (category "f-block") δεν σχεδιάζονται όταν hideFBlock είναι true.
+    // Αν hideFBlock είναι true, τα κελιά με category "f-block" δεν σχεδιάζονται (παραλείπονται).
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -323,11 +323,7 @@
           noStroke();
           for (let i = 0; i < row.cells.length; i++) {
             let cell = row.cells[i];
-            // Αν το κελί ανήκει στον f τομέα και έχουμε επιλέξει να το αποκρύψουμε, το παραλείπουμε
-            if (cell && cell.category === 'f-block' && hideFBlock) {
-              xOffset += 42;
-              continue;
-            }
+            // Δεν υπάρχουν f-block στα group rows, οπότε δεν χρειάζεται έλεγχος εδώ.
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -353,6 +349,7 @@
           xOffset = 80;
           for (let i = 1; i < row.cells.length; i++) {
             let cell = row.cells[i];
+            // Εάν το κελί έχει κατηγορία f-block και hideFBlock είναι true, το παραλείπουμε.
             if (cell && cell.category === 'f-block' && hideFBlock) {
               xOffset += 42;
               continue;
@@ -412,4 +409,73 @@
     }
 
     // Ενημέρωση πληροφοριών με κλικ πάνω σε κελί
-    function han
+    function handleMouseClick() {
+      let x = globalMouseX || mouseX;
+      let y = globalMouseY || mouseY;
+      let found = false;
+      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+        let row = rowsData[rowIndex];
+        let startIndex = (rowIndex < 2 ? 0 : 1);
+        for (let i = startIndex; i < row.cells.length; i++) {
+          let cell = row.cells[i];
+          if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
+              y >= cell.drawY && y <= cell.drawY + cell.drawH) {
+            updateInfoPanel(cell);
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (!found) clearInfoPanel();
+    }
+
+    window.addEventListener('click', (e) => {
+      globalMouseX = e.clientX;
+      globalMouseY = e.clientY;
+      handleMouseClick();
+    });
+
+    function setup() {
+      let canvas = createCanvas(windowWidth, windowHeight);
+      canvas.style('z-index', '-1');
+      textFont('Roboto');
+      noLoop();
+      initialize();
+      redraw();
+    }
+
+    function draw() {
+      drawTable();
+    }
+
+    // Κουμπιά
+    document.getElementById('nextElement').addEventListener('click', (e) => {
+      e.stopPropagation();
+      addElementToCurrentRow();
+      redraw();
+    });
+    document.getElementById('fillAll').addEventListener('click', () => {
+      while (phase < 6 || (phase === 1 && globalElementNumber <= 118)) {
+        addElementToCurrentRow();
+      }
+      redraw();
+    });
+    document.getElementById('reset').addEventListener('click', () => {
+      initialize();
+      redraw();
+    });
+    document.getElementById('togglePanel').addEventListener('click', () => {
+      // Εναλλαγή της εμφάνισης των κελιών του f τομέα
+      hideFBlock = !hideFBlock;
+      console.log("hideFBlock =", hideFBlock);
+      redraw();
+    });
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      redraw();
+    }
+  </script>
+</body>
+</html>
