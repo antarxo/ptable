@@ -68,7 +68,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -89,9 +89,9 @@
   </div>
 
   <script>
-    // Παγκόσμια μεταβλητή για τα δεδομένα των στοιχείων από το αρχείο JSON
+    // Παγκόσμια μεταβλητή για τα δεδομένα των στοιχείων (JSON)
     let elementsData = [];
-    // p5.js preload για φόρτωση του αρχείου JSON πριν το setup
+    // p5.js preload: φόρτωση του αρχείου JSON πριν το setup.
     function preload() {
       elementsData = loadJSON('elements.json');
     }
@@ -109,22 +109,13 @@
     };
 
     /* Δομή:
-         - rowsData[0]: Νέο σύστημα ομαδοποίησης (ομάδες θα εμφανίζονται με χρήση 32 κελιών)
-         - rowsData[1]: Παλαιό σύστημα ομαδοποίησης (στοιχίζεται ακριβώς κάτω από το row[0])
-         - rowsData[2] έως rowsData[8]: 7 περίοδοι, όπου το κελί index 0 δείχνει το όνομα περίοδου και τα υπόλοιπα για τα στοιχεία.
+         - rowsData[0]: Νέο σύστημα ομαδοποίησης (18 κελιά: indices 0..17, όπου το κελί 0 θα έχει το 1, το 1 το 2, το 2 το 3 κ.ο.κ.)
+         - rowsData[1]: Παλιό σύστημα ομαδοποίησης (18 κελιά, όπου, για παράδειγμα, το κελί 2 θα έχει το "IIIB")
+         - rowsData[2] έως rowsData[8]: 7 περίοδοι (πρώτο κελί δείχνει το όνομα περίοδου, τα υπόλοιπα για τα στοιχεία)
     */
     let rowsData = [];
     let globalElementNumber = 3;
     let currentRowIndex = 3;
-    let groupNumbersAdded = false;
-    /* Φάσεις:
-         Phase 1: Εισαγωγή στοιχείων 3–118 (σε σειρές 4–9, δηλαδή rowsData[3] έως rowsData[8]).
-         Phase 2: Εισαγωγή στοιχείων 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1).
-         Phase 3: Εμφάνιση ονομάτων περιόδων στις σειρές 3–9.
-         Phase 4: Εμφάνιση του παλιού συστήματος ομαδοποίησης (rowsData[1]).
-         Phase 5: Εμφάνιση του νέου συστήματος ομαδοποίησης (rowsData[0]).
-         Phase 6: Ο πίνακας έχει ολοκληρωθεί.
-    */
     let phase = 1;
 
     const fillingPatterns = [
@@ -138,11 +129,11 @@
 
     function initialize() {
       rowsData = [];
-      // Δημιουργούμε 32 κελιά για τις σειρές ομαδοποίησης (rowsData[0] και rowsData[1]) ώστε να έχουμε τη σωστή στοίχιση
       for (let i = 0; i < 9; i++) {
         let cells;
         if (i < 2) {
-          cells = new Array(32).fill(null);
+          // Για τις σειρές ομαδοποίησης δημιουργούμε πίνακα 18 κελιών
+          cells = new Array(18).fill(null);
         } else {
           cells = [null];
         }
@@ -157,7 +148,6 @@
       }
       globalElementNumber = 3;
       currentRowIndex = 3;
-      groupNumbersAdded = false;
       phase = 1;
     }
 
@@ -172,7 +162,7 @@
       return 'p-block';
     }
 
-    // Δημιουργεί ένα κελί και, αν υπάρχουν δεδομένα στο elements.json, τα προσθέτει στο πεδίο details.
+    // Δημιουργεί ένα κελί και, αν υπάρχουν δεδομένα στο elements.json, τα αποθηκεύει στο cell.details.
     function createCell(elObj) {
       let cell = { 
         number: elObj.number, 
@@ -290,43 +280,35 @@
       rowsData[8].periodLabel = "7η Q";
     }
 
-    // Παλιό σύστημα ομαδοποίησης: τώρα τοποθετούμε τα ονόματα ξεκινώντας από index 0 και index 1,
-    // και για τις υπόλοιπες ομάδες (16 ομάδες) χρησιμοποιούμε τα indices 16 έως 31.
-    function addOldGroupNumbers() {
-      let oldNumbers = [
-        "IA", "IIA",
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
-        "VIIIB", "VIIIB", "IB", "IIB",
-        "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
-      ];
-      let row = rowsData[1];
-      row.cells = new Array(32).fill(null);
-      row.cells[0] = createCell({ number: oldNumbers[0], category: 'group-name' });
-      row.cells[1] = createCell({ number: oldNumbers[1], category: 'group-name' });
-      let idx = 2;
-      for (let i = 16; i <= 31; i++) {
-        if (oldNumbers[idx] != null) {
-          row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
-        }
-        idx++;
-      }
-    }
-
-    // Νέο σύστημα ομαδοποίησης: επίσης τοποθετούμε τα ονόματα από index 0,1 και στη συνέχεια στις θέσεις 16 έως 31.
+    // Νέο σύστημα ομαδοποίησης: γεμίζουμε 18 κελιά με τους αριθμούς 1..18.
     function addNewGroupNumbers() {
       let row = rowsData[0];
-      row.cells = new Array(32).fill(null);
-      row.cells[0] = createCell({ number: 1, category: 'group-name' });
-      row.cells[1] = createCell({ number: 2, category: 'group-name' });
-      let num = 3;
-      for (let i = 16; i <= 31; i++) {
-        row.cells[i] = createCell({ number: num, category: 'group-name' });
-        num++;
+      let newNumbers = [];
+      for (let i = 1; i <= 18; i++) {
+        newNumbers.push(i);
+      }
+      row.cells = new Array(newNumbers.length).fill(null);
+      for (let i = 0; i < newNumbers.length; i++) {
+        row.cells[i] = createCell({ number: newNumbers[i], category: 'group-name' });
       }
     }
 
-    // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού για τα hover effects.
+    // Παλιό σύστημα ομαδοποίησης: χρησιμοποιούμε έναν πίνακα με 18 τιμές, ώστε το "IIIB" να εμφανίζεται στο index 2 (δηλαδή κάτω από το 3).
+    function addOldGroupNumbers() {
+      let oldNumbers = [
+        "IA", "IIA", "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
+        "IB", "IIB", "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA", "", ""
+      ];
+      let row = rowsData[1];
+      row.cells = new Array(oldNumbers.length).fill(null);
+      for (let i = 0; i < oldNumbers.length; i++) {
+        if (oldNumbers[i] !== "") {
+          row.cells[i] = createCell({ number: oldNumbers[i], category: 'group-name' });
+        }
+      }
+    }
+
+    // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού (για τα hover effects).
     function drawTable() {
       background(247);
       let yOffset = 50;
@@ -348,7 +330,7 @@
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
-              text(String(cell.number || ''), xOffset + cell.width / 2, yOffset + cell.height / 2);
+              text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
             xOffset += 42;
           }
@@ -357,7 +339,7 @@
             fill(0);
             textSize(12);
             textAlign(CENTER, CENTER);
-            text(row.periodLabel, 20 + 25, yOffset + 20);
+            text(row.periodLabel, 20+25, yOffset+20);
           }
           xOffset = 80;
           for (let i = 1; i < row.cells.length; i++) {
@@ -373,7 +355,7 @@
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
-              text(String(cell.number || ''), xOffset + cell.width / 2, yOffset + cell.height / 2);
+              text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
             xOffset += 42;
           }
@@ -403,7 +385,7 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Ελέγχει το hover ή το κλικ/αφή πάνω στα κελιά και ενημερώνει το infoPanel.
+    // Ελέγχει το hover, το κλικ ή το άγγιγμα πάνω στα κελιά και ενημερώνει το infoPanel.
     function mouseMoved() {
       let found = false;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
@@ -425,8 +407,9 @@
       if (!found) {
         clearInfoPanel();
       }
+      // Διάγνωση
+      // console.log('mouseMoved', mouseX, mouseY);
     }
-    // Επίσης, αν τοποθετηθεί κλικ ή αφή πάνω στο canvas, ενημερώνεται το infoPanel.
     function mouseClicked() {
       mouseMoved();
     }
