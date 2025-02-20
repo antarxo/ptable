@@ -237,7 +237,11 @@
         group++;
       }
       while (rowsData[1].cells.length < 33) { rowsData[1].cells.push(null); }
-      let oldNumbers = ["ΙΑ", "ΙΙΑ", "ΙΙΙB", "ΙVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB",IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
+      let oldNumbers = [ "IA", "IIA", 
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, // 14 κενά
+        "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", 
+        "VIIIB", "VIIIB", "IB", "IIB", 
+        "IIIA", "IVA", "VA", "VIA", "VIIA", "VI"];
       rowsData[1].cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
       rowsData[1].cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
       for (let i = 3; i <= 16; i++) { rowsData[1].cells[i] = null; }
