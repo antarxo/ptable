@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -84,7 +84,7 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <!-- Το κουμπί "Εναλλαγή f-στοιχείων" εναλλάσσει το collapse των f-block κελιών -->
+      <!-- Το κουμπί "Εναλλαγή f-στοιχείων" εναλλάσσει το collapse σε όλες τις σειρές για 14 στήλες -->
       <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
@@ -94,7 +94,7 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, τα κελιά του f τομέα αφαιρούνται από τις σειρές του κύριου πίνακα.
+    // hideFBlock: όταν true, τα κελιά με category "f-block" αποκρύπτονται σε όλες τις σειρές
     let hideFBlock = false;
 
     // p5.js preload: φόρτωση του αρχείου JSON
@@ -116,9 +116,8 @@
       if (n === 1) return 'hydrogen-color';
       if (alkaliMetals.includes(n)) return 'alkali-block';
       if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
-      // f-block για lanthanides και actinides
+      // Επιστρέφουμε 'f-block' για στοιχεία 57-70 και 89-102
       if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
-      // Οι υπόλοιποι κατηγοριοποιούνται ως p-block ή d-block
       if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
       if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
       return 'p-block';
@@ -312,8 +311,7 @@
     }
 
     // Σχεδιάζει τον πίνακα.
-    // Αν hideFBlock είναι true, για κάθε σειρά (από 2 και μετά) φιλτράρει τα κελιά ώστε να αφαιρεθούν εκείνα με category "f-block",
-    // με αποτέλεσμα οι υπόλοιπες στήλες να συμπιέζονται.
+    // Εάν hideFBlock είναι true, σε κάθε σειρά φιλτράρονται τα κελιά ώστε να μην συμπεριληφθούν εκείνα με category "f-block".
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -322,55 +320,45 @@
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
-        let cellsToDraw = row.cells;
-        if (rowIndex >= 2 && hideFBlock) {
-          // Φιλτράρουμε τα κελιά: διατηρούμε τα κελιά που είναι null ή που δεν έχουν category f-block
-          cellsToDraw = row.cells.filter(cell => cell === null || cell.category !== 'f-block');
-        }
-        if (rowIndex < 2) {
-          noStroke();
-          for (let i = 0; i < cellsToDraw.length; i++) {
-            let cell = cellsToDraw[i];
-            if (cell) {
-              cell.drawX = xOffset;
-              cell.drawY = yOffset;
-              cell.drawW = cell.width;
-              cell.drawH = cell.height;
+        // Εφαρμόζουμε το φίλτρο για όλες τις σειρές, εάν hideFBlock είναι ενεργό.
+        let cellsToDraw = hideFBlock 
+          ? row.cells.filter(cell => cell !== null && cell.category !== 'f-block')
+          : row.cells;
+        // Σχεδιάζουμε όλα τα κελιά της σειράς (τόσο αν είναι null όσο και όχι) ώστε να διατηρηθεί η διάταξη,
+        // αλλά μόνο τα μη-null κελιά εμφανίζονται.
+        for (let i = 0; i < cellsToDraw.length; i++) {
+          let cell = cellsToDraw[i];
+          if (cell) {
+            cell.drawX = xOffset;
+            cell.drawY = yOffset;
+            cell.drawW = cell.width;
+            cell.drawH = cell.height;
+            // Για τις σειρές των τίτλων (rowIndex 0,1) δεν χρησιμοποιούμε περίγραμμα.
+            if (rowIndex < 2) {
+              noStroke();
               fill(CATEGORY_COLORS[cell.category]);
               rect(xOffset, yOffset, cell.width, cell.height);
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
-            }
-            xOffset += 42;
-          }
-          stroke(85);
-        } else {
-          if (row.periodLabel) {
-            fill(0);
-            textSize(12);
-            textAlign(CENTER, CENTER);
-            text(row.periodLabel, 45, yOffset+20);
-          }
-          xOffset = 80;
-          for (let i = 0; i < cellsToDraw.length; i++) {
-            let cell = cellsToDraw[i];
-            if (cell) {
-              cell.drawX = xOffset;
-              cell.drawY = yOffset;
-              cell.drawW = cell.width;
-              cell.drawH = cell.height;
-              fill(CATEGORY_COLORS[cell.category]);
+            } else {
+              if (row.periodLabel) {
+                fill(0);
+                textSize(12);
+                textAlign(CENTER, CENTER);
+                text(row.periodLabel, 45, yOffset+20);
+              }
               stroke(85);
+              fill(CATEGORY_COLORS[cell.category]);
               rect(xOffset, yOffset, cell.width, cell.height, 5);
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
-            xOffset += 42;
           }
+          xOffset += 42;
         }
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
       }
@@ -467,8 +455,7 @@
       initialize();
       redraw();
     });
-    // Το κουμπί "Εναλλαγή f-στοιχείων" εναλλάσσει το collapse των f-block κελιών και με τη νέα μέθοδο, 
-    // οι υπόλοιπες σειρές συμπιέζονται ώστε ο d τομέας να έρθει σε επαφή με τον s.
+    // Το κουμπί "Εναλλαγή f-στοιχείων" αλλάζει το hideFBlock σε όλες τις σειρές (14 στήλες, συμπεριλαμβανομένων των τίτλων)
     document.getElementById('togglePanel').addEventListener('click', () => {
       hideFBlock = !hideFBlock;
       console.log("hideFBlock =", hideFBlock);
