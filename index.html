@@ -84,7 +84,6 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <!-- Το κουμπί "Εναλλαγή f-στοιχείων" αλλάζει το collapse -->
       <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
@@ -94,28 +93,8 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, θα αναδειγματοδοτούνται οι σειρές ώστε να εμφανίζουν 18 στήλες (δηλαδή, τα f-στοιχεία αποκόπτονται)
+    // hideFBlock: όταν true, κάθε σειρά θα εμφανίζει μόνο τις 18 στήλες (2 από S και 16 από το τέλος)
     let hideFBlock = false;
-
-    // Βοηθητική συνάρτηση resampleCells: Δέχεται έναν πίνακα κελιών και επιστρέφει έναν νέο με το newLength στοιχεία,
-    // επιλέγοντας ομοιόμορφα τα στοιχεία.
-    function resampleCells(cells, newLength) {
-      let result = [];
-      if(cells.length === 0) return result;
-      if(cells.length <= newLength) {
-        result = cells.slice();
-        while(result.length < newLength) {
-          result.push(null);
-        }
-        return result;
-      }
-      let factor = (cells.length - 1) / (newLength - 1);
-      for (let i = 0; i < newLength; i++) {
-        let index = Math.round(i * factor);
-        result.push(cells[index]);
-      }
-      return result;
-    }
 
     // p5.js preload: φόρτωση του αρχείου JSON
     function preload() {
@@ -332,8 +311,9 @@
 
     // Σχεδίαση του πίνακα:
     // Όταν hideFBlock είναι true:
-    //  - Για τις ομάδες (rowIndex < 2): κάνουμε resample του πλήρους πίνακα (row.cells) σε 18 κελιά.
-    //  - Για τις περιόδους (rowIndex >= 2): κρατάμε το label (index 0) και κάνουμε resample στα υπόλοιπα (με φιλτράρισμα των μη-f) σε 17 κελιά.
+    //  - Για group rows (rowIndex 0,1): κρατάμε τα κελιά από index 0-1 (τα S) και τα κελιά από index 16 έως 31 (16 κελιά) → συνολικά 18.
+    //  - Για period rows (rowIndex ≥ 2): κρατάμε το label (index 0), το S (index 1) και τα κελιά από index 16 έως 31 → συνολικά 18.
+    // Όταν hideFBlock είναι false, εμφανίζεται ο πλήρης πίνακας.
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -346,20 +326,21 @@
         let cellsToDraw = [];
         if (hideFBlock) {
           if (rowIndex < 2) {
-            // Group rows: resample ολόκληρου του πίνακα σε 18 κελιά
-            cellsToDraw = resampleCells(row.cells, 18);
+            // Group rows: πέρνουμε τα κελιά από index 0-1 και από index 16 έως 31
+            let leftPart = row.cells.slice(0, 2);
+            let rightPart = row.cells.slice(16, 32); // 16 κελιά
+            cellsToDraw = leftPart.concat(rightPart);
           } else {
-            // Period rows: κρατάμε το label (index 0) και από τα υπόλοιπα, φιλτράρουμε τα μη-f και resample σε 17
-            let label = row.cells[0];
-            let elems = row.cells.slice(1).filter(cell => cell === null || cell.category !== 'f-block');
-            elems = resampleCells(elems, 17);
-            cellsToDraw = [label].concat(elems);
+            // Period rows: κρατάμε το label (index 0) και το S (index 1), και από index 16 έως 31
+            let label = row.cells.slice(0, 1);
+            let sBlock = row.cells.slice(1, 2);
+            let rightPart = row.cells.slice(16, 32);
+            cellsToDraw = label.concat(sBlock, rightPart);
           }
         } else {
           if (rowIndex < 2) {
             cellsToDraw = row.cells;
           } else {
-            // Για τις περιόδους, χρησιμοποιούμε όλο το row (ή μπορούμε να ξεκινήσουμε από index 0)
             cellsToDraw = row.cells;
           }
         }
