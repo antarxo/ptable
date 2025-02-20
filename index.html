@@ -68,7 +68,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -109,8 +109,8 @@
     };
 
     /* Δομή:
-         - rowsData[0]: Νέο σύστημα ομαδοποίησης (ομάδες ξεκινάνε από το κελί 2)
-         - rowsData[1]: Παλαιό σύστημα ομαδοποίησης (στοίχιση με το row[0])
+         - rowsData[0]: Νέο σύστημα ομαδοποίησης (ομάδες θα εμφανίζονται με χρήση 32 κελιών)
+         - rowsData[1]: Παλαιό σύστημα ομαδοποίησης (στοιχίζεται ακριβώς κάτω από το row[0])
          - rowsData[2] έως rowsData[8]: 7 περίοδοι, όπου το κελί index 0 δείχνει το όνομα περίοδου και τα υπόλοιπα για τα στοιχεία.
     */
     let rowsData = [];
@@ -138,12 +138,11 @@
 
     function initialize() {
       rowsData = [];
+      // Δημιουργούμε 32 κελιά για τις σειρές ομαδοποίησης (rowsData[0] και rowsData[1]) ώστε να έχουμε τη σωστή στοίχιση
       for (let i = 0; i < 9; i++) {
         let cells;
-        // Για τις σειρές ομαδοποίησης (rowsData[0] και rowsData[1]) δημιουργούμε πίνακα 34 κελιών,
-        // ώστε να έχουμε ένα κενό κελί στην αρχή και να τοποθετήσουμε τα ονόματα από το κελί 2 και μετά.
         if (i < 2) {
-          cells = new Array(34).fill(null);
+          cells = new Array(32).fill(null);
         } else {
           cells = [null];
         }
@@ -291,7 +290,8 @@
       rowsData[8].periodLabel = "7η Q";
     }
 
-    // Εμφανίζει το παλιό σύστημα ομαδοποίησης: μετατοπίζεται μία στήλη δεξιότερα
+    // Παλιό σύστημα ομαδοποίησης: τώρα τοποθετούμε τα ονόματα ξεκινώντας από index 0 και index 1,
+    // και για τις υπόλοιπες ομάδες (16 ομάδες) χρησιμοποιούμε τα indices 16 έως 31.
     function addOldGroupNumbers() {
       let oldNumbers = [
         "IA", "IIA",
@@ -301,11 +301,11 @@
         "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
       ];
       let row = rowsData[1];
-      row.cells = new Array(34).fill(null);
-      row.cells[2] = createCell({ number: oldNumbers[0], category: 'group-name' });
-      row.cells[3] = createCell({ number: oldNumbers[1], category: 'group-name' });
+      row.cells = new Array(32).fill(null);
+      row.cells[0] = createCell({ number: oldNumbers[0], category: 'group-name' });
+      row.cells[1] = createCell({ number: oldNumbers[1], category: 'group-name' });
       let idx = 2;
-      for (let i = 18; i <= 33; i++) {
+      for (let i = 16; i <= 31; i++) {
         if (oldNumbers[idx] != null) {
           row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
         }
@@ -313,14 +313,14 @@
       }
     }
 
-    // Εμφανίζει το νέο σύστημα ομαδοποίησης: μετατοπίζεται μία στήλη δεξιότερα
+    // Νέο σύστημα ομαδοποίησης: επίσης τοποθετούμε τα ονόματα από index 0,1 και στη συνέχεια στις θέσεις 16 έως 31.
     function addNewGroupNumbers() {
       let row = rowsData[0];
-      row.cells = new Array(34).fill(null);
-      row.cells[2] = createCell({ number: 1, category: 'group-name' });
-      row.cells[3] = createCell({ number: 2, category: 'group-name' });
+      row.cells = new Array(32).fill(null);
+      row.cells[0] = createCell({ number: 1, category: 'group-name' });
+      row.cells[1] = createCell({ number: 2, category: 'group-name' });
       let num = 3;
-      for (let i = 18; i <= 33; i++) {
+      for (let i = 16; i <= 31; i++) {
         row.cells[i] = createCell({ number: num, category: 'group-name' });
         num++;
       }
@@ -403,7 +403,7 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Ελέγχει το hover πάνω στα κελιά και ενημερώνει το infoPanel.
+    // Ελέγχει το hover ή το κλικ/αφή πάνω στα κελιά και ενημερώνει το infoPanel.
     function mouseMoved() {
       let found = false;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
@@ -425,6 +425,13 @@
       if (!found) {
         clearInfoPanel();
       }
+    }
+    // Επίσης, αν τοποθετηθεί κλικ ή αφή πάνω στο canvas, ενημερώνεται το infoPanel.
+    function mouseClicked() {
+      mouseMoved();
+    }
+    function touchStarted() {
+      mouseMoved();
     }
 
     function setup() {
