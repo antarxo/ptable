@@ -105,6 +105,7 @@
        Η 1η στήλη κάθε σειράς δεσμεύεται για τα ονόματα περιόδων.
        (Οι headers προστίθενται μετά τη συμπλήρωση των στοιχείων 1 και 2.)
     */
+
     let rowsData = [];
     let globalElementNumber = 3; // Ξεκινάμε με το στοιχείο 3
     let currentRowIndex = 3;     // Συμπλήρωση ξεκινά από την 4η σειρά (Περίοδος 2)
@@ -125,6 +126,7 @@
       [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]  // Row 8 (Περίοδος 7)
     ];
 
+    // Αρχικοποίηση: δημιουργούμε 9 σειρές, αρχικά με 2 στήλες (η πρώτη για ονόματα περιόδων)
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
@@ -133,7 +135,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          insertionIndex: 1
+          insertionIndex: 1  // Η εισαγωγή ξεκινά από τη δεύτερη στήλη
         });
       }
       globalElementNumber = 3;
@@ -141,6 +143,7 @@
       groupNumbersAdded = false;
     }
 
+    // Συνάρτηση επιλογής κατηγορίας στοιχείου βάσει του ατομικού αριθμού
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (alkaliMetals.includes(n)) return 'alkali-block';
@@ -151,6 +154,7 @@
       return 'p-block';
     }
 
+    // Δημιουργία κελιού με διαστάσεις 30×30 (γραμματοσειρά 12px)
     function createCell(elObj) {
       return { 
         number: elObj.number, 
@@ -160,6 +164,11 @@
       };
     }
 
+    /* 
+      Η λειτουργία shifting:  
+      Για τις σειρές που απαιτούν shifting (π.χ. Row 3, Row 5, Row 7) καλείται η function shiftBlockRight,
+      η οποία εισάγει ένα κενό κελί (με splice) στα αντίστοιχα rows (ομάδα) ώστε να μετατοπιστεί το μπλοκ μία θέση δεξιά.
+    */
     function shiftBlockRight(rowIndex, groupRows) {
       let currentInsertionPos = rowsData[rowIndex].insertionIndex;
       groupRows.forEach(i => {
@@ -182,11 +191,12 @@
       shiftBlockRight(currentRow, groupRows);
     }
 
+    // Συνάρτηση τοποθέτησης του νέου στοιχείου
     function addElementToCurrentRow() {
       if (globalElementNumber > 120) return;
 
-      // Όταν φτάνουμε στο 119, τότε έχουμε τοποθετήσει τα στοιχεία 3-118 στις Rows 3–8.
-      // Τώρα, μετά το στοιχείο 2 (δηλαδή, στην Row 2) θέλουμε να εμφανιστούν οι τίτλοι.
+      // Όταν φτάνουμε στο 119, έχουμε τοποθετήσει τα στοιχεία 3 έως 118 στις Rows 3–8.
+      // Τώρα θέλουμε να τοποθετήσουμε τα στοιχεία 1 και 2 στη Row 2 (Περίοδος 1) πριν τα headers.
       if (globalElementNumber === 119) {
         currentRowIndex = 2;
         globalElementNumber = 1;
@@ -194,6 +204,7 @@
 
       const row = rowsData[currentRowIndex];
 
+      // Ειδική διαχείριση για Row 2 (Περίοδος 1: στοιχεία 1 και 2)
       if (currentRowIndex === 2) {
         let insertIndex = (globalElementNumber === 1) ? 1 : 32;
         while (row.cells.length <= insertIndex) { row.cells.push(null); }
@@ -202,8 +213,7 @@
           category: getCategory(globalElementNumber)
         });
         globalElementNumber++;
-        // Μόλις τοποθετηθούν τα στοιχεία 1 και 2 (δηλαδή, μετά το κλικ που εμφανίζει το στοιχείο 2),
-        // με το επόμενο κλικ θα εμφανιστούν οι τίτλοι.
+        // Μόλις τοποθετηθούν και τα 1 και 2 (δηλαδή, όταν globalElementNumber γίνεται 3), προστίθενται τα headers.
         if (globalElementNumber > 2 && !groupNumbersAdded) {
           addGroupNumbers();
           groupNumbersAdded = true;
@@ -212,6 +222,7 @@
         return;
       }
 
+      // Για τις Rows 3–8 (Περίοδοι 2–7)
       if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
         let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
         let cell = createCell({
@@ -238,36 +249,41 @@
           currentRowIndex++;
         }
       }
-      if (currentRowIndex > 8 && !groupNumbersAdded) {
-        addGroupNumbers();
-        groupNumbersAdded = true;
-      }
+
+      // Αν τελειώσουν οι δυναμικές σειρές (δηλαδή, όταν currentRowIndex > 8) και τα στοιχεία 1 και 2 έχουν τοποθετηθεί,
+      // τότε δεν χρειάζεται πλέον να προστίθενται headers, αφού έχουν ήδη προστεθεί στη Row 2.
     }
 
+    /* Συνάρτηση προσθήκης των headers:
+       - Row 0: Νέα αρίθμηση – σύμφωνα με τη λογική: στήλη 1 κενή, στη στήλη 2 το 1, στη στήλη 3 το 2,
+         στις στήλες 4 έως 17 (14 κελία κενά) και στις στήλες 18 έως 33 οι ομάδες 3 έως 18.
+       - Row 1: Παλιά αρίθμηση – με το ίδιο διάστημα.
+       - Στις Rows 2–8, στην πρώτη στήλη τοποθετούνται τα ονόματα των περιόδων.
+       (Τα headers προστίθενται μετά τη συμπλήρωση των στοιχείων 1 και 2.)
+    */
     function addGroupNumbers() {
-      // Δεσμεύουμε 34 κελιά (indices 0..33) για να συμπεριληφθούν οι 19 ομάδες
-      while (rowsData[0].cells.length < 34) { rowsData[0].cells.push(null); }
-      // Νέος τρόπος αρίθμησης (Row 0)
+      while (rowsData[0].cells.length < 33) { rowsData[0].cells.push(null); }
       rowsData[0].cells[1] = createCell({ number: 1, category: 'group' });
       rowsData[0].cells[2] = createCell({ number: 2, category: 'group' });
       for (let i = 3; i <= 16; i++) { rowsData[0].cells[i] = null; }
-      // Από index 17 έως 33: ομάδες 3 έως 19
-      for (let i = 17; i <= 33; i++) {
-        rowsData[0].cells[i] = createCell({ number: i - 14, category: 'group' });
+      let group = 3;
+      for (let i = 17; i <= 32; i++) {
+        rowsData[0].cells[i] = createCell({ number: group, category: 'group' });
+        group++;
       }
-      // Παλιά αρίθμηση (Row 1)
-      while (rowsData[1].cells.length < 34) { rowsData[1].cells.push(null); }
-      const oldNumbers = ["ΙΑ", "ΙΙΑ", "ΙΙΙ", "ΙV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX"];
+      while (rowsData[1].cells.length < 33) { rowsData[1].cells.push(null); }
+      let oldNumbers = ["ΙΑ", "ΙΙΑ", "ΙΙΙ", "ΙV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII"];
       rowsData[1].cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
       rowsData[1].cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
       for (let i = 3; i <= 16; i++) { rowsData[1].cells[i] = null; }
-      for (let i = 17; i <= 33; i++) {
-        rowsData[1].cells[i] = createCell({ number: oldNumbers[i - 14], category: 'group-name' });
+      let idx = 2;
+      for (let i = 17; i <= 32; i++) {
+        rowsData[1].cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
+        idx++;
       }
-      // Ονόματα περιόδων (Row 2 έως Row 8) στην πρώτη στήλη
       const periodLabels = ['1η K', '2η L', '3η M', '4η N', '5η O', '6η P', '7η Q'];
       for (let i = 2; i < 9; i++) {
-        rowsData[i].cells[0] = createCell({ number: periodLabels[i - 2], category: 'period-label' });
+        rowsData[i].cells[0] = createCell({ number: periodLabels[i-2], category: 'period-label' });
       }
     }
 
@@ -281,12 +297,8 @@
             fill(CATEGORY_COLORS[cell.category]);
             stroke(85);
             rect(xOffset, yOffset, cell.width, cell.height);
-            // Αν το κελί αφορά ονόματα ομάδων, χρησιμοποιούμε μικρότερη γραμματοσειρά
-            if(cell.category === 'group' || cell.category === 'group-name'){
-              textSize(10);
-            } else {
-              textSize(12);
-            }
+            fill(0);
+            textSize(12);
             textAlign(CENTER, CENTER);
             text(cell.number, xOffset + cell.width/2, yOffset + cell.height/2);
           }
@@ -313,9 +325,7 @@
     });
 
     document.getElementById('fillAll').addEventListener('click', () => {
-      while (globalElementNumber <= 120) { 
-        addElementToCurrentRow(); 
-      }
+      while (globalElementNumber <= 120) { addElementToCurrentRow(); }
       redraw();
     });
 
