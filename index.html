@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -84,7 +84,7 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <!-- Το κουμπί εναλλάσσει το collapse του f τομέα -->
+      <!-- Το κουμπί "Εναλλαγή f-στοιχείων" αλλάζει την εμφάνιση των f στοιχείων -->
       <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
@@ -94,8 +94,24 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, κάθε σειρά θα εμφανίζει μόνο 14 κελιά όπως ορίζεται παρακάτω.
+    // hideFBlock: όταν true, οι σειρές θα "αναδειγματοδοτηθούν" ώστε να εμφανίζουν 14 στήλες χωρίς τα f-στοιχεία.
     let hideFBlock = false;
+
+    // Βοηθητική συνάρτηση για resampling ενός πίνακα σε σταθερό μήκος
+    function resampleCells(cells, newLength) {
+      let result = [];
+      if(cells.length === 0) return result;
+      if(newLength === 1) {
+        result.push(cells[0]);
+        return result;
+      }
+      let factor = (cells.length - 1) / (newLength - 1);
+      for (let i = 0; i < newLength; i++) {
+        let index = Math.round(i * factor);
+        result.push(cells[index]);
+      }
+      return result;
+    }
 
     // p5.js preload: φόρτωση του αρχείου JSON
     function preload() {
@@ -110,7 +126,7 @@
       elementsData = null;
     }
 
-    // Συνάρτηση getCategory: ορίζει την κατηγορία κάθε στοιχείου
+    // Συνάρτηση getCategory
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (n === 1) return 'hydrogen-color';
@@ -134,9 +150,9 @@
     };
 
     /*
-      rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, υπόλοιπα: 3..18 στο τέλος)
-      rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, υπόλοιπα: 16 στοιχεία)
-      rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί είναι το label, υπόλοιπα είναι τα στοιχεία)
+      rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: 0-1 γεμάτα, 2-15 κενά, 16-31 = groups 3-18)
+      rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: 0-1 γεμάτα, 2-15 κενά, 16-31 = groups IA, IIA, ...)
+      rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί είναι το label, τα υπόλοιπα προστίθενται δυναμικά)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -161,7 +177,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          insertionIndex: (i < 2 ? 0 : 1),
+          insertionIndex: (i < 2 ? 0 : 1), // Για τις περιόδους ξεκινάμε από index 1
           periodLabel: null
         });
       }
@@ -309,11 +325,10 @@
       }
     }
 
-    // Σχεδίαση του πίνακα
-    // Όταν hideFBlock είναι true, για κάθε row:
-    //   - Αν rowIndex < 2 (ομάδες): εμφανίζουμε τα κελιά από index 0-1 και από index 16 έως 27.
-    //   - Αν rowIndex >= 2 (περίοδοι): εμφανίζουμε το label (index 0) και τα κελιά από index 1 και από index 16 έως 27.
-    // Αυτό δίνει συνολικά 14 κελιά σε κάθε σειρά.
+    // Δομή αναδειγματοδότησης για collapse:
+    // Για group rows (rowIndex < 2): θέλουμε 14 κελιά από τα original, διατηρώντας την σειρά.
+    // Για period rows (rowIndex >= 2): θέλουμε να κρατήσουμε το label (original index 0) και από τα υπόλοιπα,
+    // μόνο τα κελιά που ΔΕΝ είναι f-block, και να επαναδειγματοδοτήσουμε ώστε να έχουμε συνολικά 14 κελιά.
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -323,25 +338,24 @@
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
-        let cellsToDraw;
+        let cellsToDraw = [];
         if (hideFBlock) {
           if (rowIndex < 2) {
-            // Group rows: συνένωση των κελιών index 0-1 και index 16-27
-            let leftPart = row.cells.slice(0,2);
-            let rightPart = row.cells.slice(16,28);
-            cellsToDraw = leftPart.concat(rightPart);
+            // Για τις ομάδες, επαναδειγματοδοτούμε ολόκληρο τον πίνακα (14 κελιά)
+            cellsToDraw = resampleCells(row.cells, 14);
           } else {
-            // Period rows: το πρώτο κελί είναι το label, μετά παίρνουμε το κελί index 1 και μετά τα κελιά από index 16 έως 27
-            let label = row.cells.slice(0,1);
-            let firstElement = row.cells.slice(1,2);
-            let rightPart = row.cells.slice(16,28);
-            cellsToDraw = label.concat(firstElement, rightPart);
+            // Για τις περίοδοι, κρατάμε το label από το index 0 και επαναδειγματοδοτούμε τα υπόλοιπα (χωρίς τα f-block)
+            let labelCell = row.cells[0]; // το label
+            let elems = row.cells.slice(1).filter(cell => cell === null || cell.category !== 'f-block');
+            let resampled = resampleCells(elems, 13); // 13 στοιχεία
+            cellsToDraw = [labelCell].concat(resampled);
           }
         } else {
           if (rowIndex < 2) {
             cellsToDraw = row.cells;
           } else {
-            cellsToDraw = row.cells.slice(1); // διατηρούμε το label ως ξεχωριστό, αλλά για σχεδίαση παίρνουμε από index 1
+            // Για τις περίοδοι, περιλαμβάνουμε όλα τα στοιχεία από index 0 (το label) και μετά
+            cellsToDraw = row.cells;
           }
         }
         // Σχεδίαση
@@ -365,7 +379,7 @@
           }
           stroke(85);
         } else {
-          // Σχεδίαση του label αν υπάρχει
+          // Σχεδίαση του label
           if (row.periodLabel) {
             fill(0);
             textSize(12);
