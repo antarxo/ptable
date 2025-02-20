@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</title>
+  <!-- Χρήση της γραμματοσειράς Roboto από Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -30,7 +31,7 @@
       width: 90%;
       max-width: 1200px;
       padding: 20px;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
@@ -50,6 +51,7 @@
       flex-direction: column;
       gap: 5px;
     }
+    /* Μειωμένα κουμπιά για εξοικονόμηση χώρου */
     #rightPanel button {
       padding: 4px 8px;
       font-size: 12px;
@@ -63,19 +65,11 @@
       background: #333;
       color: #fff;
     }
-    .collapsed .main-table {
-      transform: translateX(-588px); /* Μετατόπιση 14 κελιών */
-      transition: transform 0.5s ease-in-out;
-    }
-    .collapsed .f-block {
-      transform: translateY(140px); /* Μετατόπιση f-block κάτω */
-      transition: transform 0.5s ease-in-out;
-    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -90,7 +84,8 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <button id="togglePanel">Σύμπτυξε/Ανάπτυξε</button>
+      <!-- Το κουμπί togglePanel αλλάζει το collapse (hideFBlock) -->
+      <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
   </div>
@@ -99,9 +94,30 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    let isCollapsed = false; // Νέα μεταβλητή για σύμπτυξη/ανάπτυξη
+    // hideFBlock: όταν true, κάθε σειρά θα "αναδειγματοδοτείται" ώστε να έχει 14 κελιά (δηλαδή να εξαφανίζονται τα f-στοιχεία)
+    let hideFBlock = false;
 
-    // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
+    // Βοηθητική συνάρτηση resampleCells: επιστρέφει έναν πίνακα με ακριβώς newLength στοιχεία, επιλέγοντας ομοιόμορφα από τον αρχικό.
+    function resampleCells(cells, newLength) {
+      let result = [];
+      if (cells.length === 0) return result;
+      // Εάν ο αρχικός πίνακας έχει λιγότερα στοιχεία από newLength, επεκτείνουμε με null
+      if (cells.length <= newLength) {
+        result = cells.slice();
+        while(result.length < newLength) {
+          result.push(null);
+        }
+        return result;
+      }
+      let factor = (cells.length - 1) / (newLength - 1);
+      for (let i = 0; i < newLength; i++) {
+        let index = Math.round(i * factor);
+        result.push(cells[index]);
+      }
+      return result;
+    }
+
+    // p5.js preload: φόρτωση του αρχείου JSON
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
     }
@@ -114,15 +130,15 @@
       elementsData = null;
     }
 
-    // Ορισμός της getCategory στο global scope
+    // Συνάρτηση getCategory: ορίζει την κατηγορία κάθε στοιχείου.
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (n === 1) return 'hydrogen-color';
       if (alkaliMetals.includes(n)) return 'alkali-block';
-      if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
-      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 31 && n <= 36) || (n >= 49 && n <= 54) || (n >= 81 && n <= 86)) return 'p-block';
-      if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
+      if (n === 1 || n === 2 || [4,12,20,38,56,88].includes(n)) return 's-block';
       if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
+      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
+      if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
       return 'p-block';
     }
 
@@ -137,6 +153,11 @@
       'hydrogen-color': '#ffff99'
     };
 
+    /*
+      rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: στη θέση 0,1 υπάρχουν τα στοιχεία των ομάδων, τα υπόλοιπα από 16 έως 31)
+      rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: όπως παραπάνω, με κείμενα)
+      rowsData[2] έως [8]: 7 περίοδοι (στη θέση 0 το label, και τα στοιχεία καταλαμβάνουν τις υπόλοιπες θέσεις)
+    */
     let rowsData = [];
     let globalElementNumber = 3;
     let currentRowIndex = 3;
@@ -160,6 +181,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
+          // Για τις περιόδους, το label είναι στο index 0.
           insertionIndex: (i < 2 ? 0 : 1),
           periodLabel: null
         });
@@ -167,13 +189,11 @@
       globalElementNumber = 3;
       currentRowIndex = 3;
       phase = 1;
-      isCollapsed = false; // Επαναφορά κατάστασης σύμπτυξης
-      document.body.classList.remove('collapsed');
     }
 
     function createCell(elObj) {
       let cell = { 
-        number: elObj.number, 
+        number: elObj.number,
         category: elObj.category,
         width: 40,
         height: (elObj.category === 'group-name' ? 20 : 40),
@@ -196,9 +216,9 @@
 
     function handleShiftingForRow(currentRow) {
       let groupRows = [];
-      if (currentRow === 3) groupRows = [0, 1, 2];
-      else if (currentRow === 5) groupRows = [0, 1, 2, 3, 4];
-      else if (currentRow === 7) groupRows = [0, 1, 2, 3, 4, 5, 6];
+      if (currentRow === 3) groupRows = [0,1,2];
+      else if (currentRow === 5) groupRows = [0,1,2,3,4];
+      else if (currentRow === 7) groupRows = [0,1,2,3,4,5,6];
       shiftBlockRight(currentRow, groupRows);
     }
 
@@ -310,18 +330,43 @@
       }
     }
 
+    // Σχεδίαση του πίνακα με αναδειγματοδότηση ώστε να εμφανίζει 14 στήλες
     function drawTable() {
       background(247);
       let yOffset = 80;
+      const colGap = 42;
       const groupRowsGap = 20;
       const normalGap = 42;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
+        let newCells;
+        if (hideFBlock) {
+          if (rowIndex < 2) {
+            // Για τις ομάδες: κρατάμε όλα τα κελιά που δεν είναι f-block (ή είναι null)
+            newCells = row.cells.filter(cell => cell === null || cell.category !== 'f-block');
+            // Επαναδειγματοδοτούμε ώστε να πάρουμε 14 κελιά
+            newCells = resampleCells(newCells, 14);
+          } else {
+            // Για τις περιόδων: κρατάμε το πρώτο κελί ως label
+            let label = row.cells[0];
+            // Από τα υπόλοιπα, κρατάμε μόνο αυτά που δεν είναι f-block
+            let elems = row.cells.slice(1).filter(cell => cell === null || cell.category !== 'f-block');
+            elems = resampleCells(elems, 13);
+            newCells = [label].concat(elems);
+          }
+        } else {
+          if (rowIndex < 2) {
+            newCells = row.cells;
+          } else {
+            // Για τις περιόδων, θέλουμε να σχεδιάσουμε όλο το row (ξεκινώντας από index 0)
+            newCells = row.cells;
+          }
+        }
         let xOffset = 80;
         if (rowIndex < 2) {
           noStroke();
-          for (let i = 0; i < row.cells.length; i++) {
-            let cell = row.cells[i];
+          for (let i = 0; i < newCells.length; i++) {
+            let cell = newCells[i];
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -334,7 +379,7 @@
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
-            xOffset += 42;
+            xOffset += colGap;
           }
           stroke(85);
         } else {
@@ -342,11 +387,11 @@
             fill(0);
             textSize(12);
             textAlign(CENTER, CENTER);
-            text(row.periodLabel, 45, yOffset+20);
+            text(row.periodLabel, 45, yOffset + 20);
           }
           xOffset = 80;
-          for (let i = 1; i < row.cells.length; i++) {
-            let cell = row.cells[i];
+          for (let i = 0; i < newCells.length; i++) {
+            let cell = newCells[i];
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -360,7 +405,7 @@
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
-            xOffset += 42;
+            xOffset += colGap;
           }
         }
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
@@ -401,13 +446,14 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
+    // Ενημέρωση πληροφοριών με κλικ πάνω σε κελί
     function handleMouseClick() {
       let x = globalMouseX || mouseX;
       let y = globalMouseY || mouseY;
       let found = false;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
-        let startIndex = (rowIndex < 2 ? 0 : 1);
+        let startIndex = (rowIndex < 2) ? 0 : 1;
         for (let i = startIndex; i < row.cells.length; i++) {
           let cell = row.cells[i];
           if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
@@ -458,10 +504,8 @@
       redraw();
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
-      isCollapsed = !isCollapsed;
-      document.body.classList.toggle('collapsed');
-      document.getElementById('togglePanel').innerText = 
-        isCollapsed ? 'Ανάπτυξε' : 'Σύμπτυξε';
+      hideFBlock = !hideFBlock;
+      console.log("hideFBlock =", hideFBlock);
       redraw();
     });
 
