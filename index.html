@@ -126,7 +126,7 @@
       [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]  // Row 8 (Περίοδος 7)
     ];
 
-    // Αρχικοποίηση: δημιουργούμε 9 σειρές, αρχικά με 2 στήλες (1η στήλη για ονόματα περιόδων)
+    // Αρχικοποίηση: δημιουργούμε 9 σειρές, αρχικά με 2 στήλες (η πρώτη για ονόματα περιόδων)
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
@@ -135,7 +135,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          insertionIndex: 1  // Η εισαγωγή ξεκινά από τη 2η στήλη
+          insertionIndex: 1  // Η εισαγωγή ξεκινά από τη δεύτερη στήλη
         });
       }
       globalElementNumber = 3;
@@ -195,8 +195,8 @@
     function addElementToCurrentRow() {
       if (globalElementNumber > 120) return;
 
-      // Όταν φτάνουμε στο 119, τότε έχουν τοποθετηθεί τα στοιχεία 3-118 στις Rows 3-8.
-      // Τώρα μεταβαίνουμε στη Row 2 για να τοποθετήσουμε τα στοιχεία 1 και 2.
+      // Όταν φτάνουμε στο 119, έχουμε τοποθετήσει τα στοιχεία 3 έως 118 στις Rows 3–8.
+      // Τώρα θέλουμε να τοποθετήσουμε τα στοιχεία 1 και 2 στη Row 2 (Περίοδος 1) πριν τα headers.
       if (globalElementNumber === 119) {
         currentRowIndex = 2;
         globalElementNumber = 1;
@@ -213,6 +213,11 @@
           category: getCategory(globalElementNumber)
         });
         globalElementNumber++;
+        // Μόλις τοποθετηθούν και τα 1 και 2 (δηλαδή, όταν globalElementNumber γίνεται 3), προστίθενται τα headers.
+        if (globalElementNumber > 2 && !groupNumbersAdded) {
+          addGroupNumbers();
+          groupNumbersAdded = true;
+        }
         redraw();
         return;
       }
@@ -245,11 +250,8 @@
         }
       }
 
-      // Όταν έχουν τοποθετηθεί όλα τα στοιχεία, προστίθενται τα headers.
-      if (currentRowIndex > 8 && !groupNumbersAdded) {
-        addGroupNumbers();
-        groupNumbersAdded = true;
-      }
+      // Αν τελειώσουν οι δυναμικές σειρές (δηλαδή, όταν currentRowIndex > 8) και τα στοιχεία 1 και 2 έχουν τοποθετηθεί,
+      // τότε δεν χρειάζεται πλέον να προστίθενται headers, αφού έχουν ήδη προστεθεί στη Row 2.
     }
 
     /* Συνάρτηση προσθήκης των headers:
@@ -263,7 +265,6 @@
       while (rowsData[0].cells.length < 33) { rowsData[0].cells.push(null); }
       rowsData[0].cells[1] = createCell({ number: 1, category: 'group' });
       rowsData[0].cells[2] = createCell({ number: 2, category: 'group' });
-      // Αλλάξαμε το κενό διάστημα: indices 3 έως 16 (14 κελιά)
       for (let i = 3; i <= 16; i++) { rowsData[0].cells[i] = null; }
       let group = 3;
       for (let i = 17; i <= 32; i++) {
@@ -274,7 +275,6 @@
       let oldNumbers = ["ΙΑ", "ΙΙΑ", "ΙΙΙ", "ΙV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII"];
       rowsData[1].cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
       rowsData[1].cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
-      // Εδώ αλλάζουμε το κενό διάστημα στα ονόματα ομάδων: indices 3 έως 16 (14 κελιά)
       for (let i = 3; i <= 16; i++) { rowsData[1].cells[i] = null; }
       let idx = 2;
       for (let i = 17; i <= 32; i++) {
