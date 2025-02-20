@@ -84,6 +84,7 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
+      <!-- Το κουμπί togglePanel τώρα εναλλάσσει το collapse των f-στοιχείων -->
       <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
@@ -93,10 +94,11 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // Μεταβλητή για τον έλεγχο εμφάνισης των κελιών του f τομέα
+    // Μεταβλητή για έλεγχο collapse των f-στοιχείων.
+    // Όταν true, τα f-block κελιά δεν εμφανίζονται στο κύριο σώμα αλλά σχεδιάζονται σε συμπτυγμένη περιοχή.
     let hideFBlock = false;
 
-    // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
+    // p5.js preload: φόρτωση του αρχείου JSON
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
     }
@@ -109,15 +111,17 @@
       elementsData = null;
     }
 
-    // Ορισμός της getCategory στο global scope
+    // Συνάρτηση getCategory: ορίζει την κατηγορία κάθε στοιχείου.
+    // Σημειώνουμε ότι για στοιχεία με αριθμό 57-70 και 89-102 επιστρέφουμε 'f-block'
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (n === 1) return 'hydrogen-color';
       if (alkaliMetals.includes(n)) return 'alkali-block';
       if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
-      // Επιστρέφουμε 'f-block' για στοιχεία 57-70 και 89-102
+      // f-block για lanthanides και actinides
       if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
-      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 31 && n <= 36) || (n >= 49 && n <= 54) || (n >= 81 && n <= 86)) return 'p-block';
+      // Οι υπόλοιποι κατηγοριοποιούνται ως p-block ή d-block:
+      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
       if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
       return 'p-block';
     }
@@ -309,13 +313,14 @@
       }
     }
 
-    // Σχεδιάζει τον πίνακα. Το yOffset ξεκινά από 80.
-    // Αν hideFBlock είναι true, τα κελιά με category "f-block" δεν σχεδιάζονται (παραλείπονται).
+    // Σχεδιάζει τον κύριο πίνακα, χωρίς τα f-block κελιά όταν hideFBlock είναι true.
     function drawTable() {
       background(247);
       let yOffset = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
+      // Δεδομένου ότι θέλουμε τα d-block να έρθουν σε επαφή με το s, εάν hideFBlock είναι true, 
+      // συμπιέζουμε τα κελιά (δηλαδή δεν προσθέτουμε x offset για τα f-block).
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
@@ -323,7 +328,7 @@
           noStroke();
           for (let i = 0; i < row.cells.length; i++) {
             let cell = row.cells[i];
-            // Δεν υπάρχουν f-block στα group rows, οπότε δεν χρειάζεται έλεγχος εδώ.
+            // Στις group rows δεν υπάρχουν f-block, οπότε σχεδιάζουμε κανονικά
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -347,11 +352,11 @@
             text(row.periodLabel, 45, yOffset+20);
           }
           xOffset = 80;
+          // Εάν hideFBlock είναι true, σχεδιάζουμε μόνο τα κελιά που ΔΕΝ είναι f-block και αυξάνουμε το xOffset μόνο για αυτά.
           for (let i = 1; i < row.cells.length; i++) {
             let cell = row.cells[i];
-            // Εάν το κελί έχει κατηγορία f-block και hideFBlock είναι true, το παραλείπουμε.
             if (cell && cell.category === 'f-block' && hideFBlock) {
-              xOffset += 42;
+              // Δεν σχεδιάζουμε, ούτε αυξάνουμε το xOffset.
               continue;
             }
             if (cell) {
@@ -366,11 +371,65 @@
               textSize(12);
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
+              xOffset += 42;
+            } else {
+              xOffset += 42;
             }
-            xOffset += 42;
           }
         }
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
+      }
+      // Αν hideFBlock είναι true, σχεδιάζουμε ξεχωριστά το τμήμα των f-block στοιχείων.
+      if (hideFBlock) {
+        drawFBlockSection(yOffset + 20);
+      }
+    }
+
+    // Συλλέγει τα f-block κελιά και τα σχεδιάζει σε δύο σειρές (λανθανίδες και ακτίνηδες)
+    function drawFBlockSection(startY) {
+      let lanthanides = [];
+      let actinides = [];
+      // Συλλογή: για κάθε κελί σε κάθε row, εάν έχει category 'f-block', το κατηγοριοποιούμε
+      for (let row of rowsData) {
+        for (let cell of row.cells) {
+          if (cell && cell.category === 'f-block') {
+            if (cell.number < 89) lanthanides.push(cell);
+            else actinides.push(cell);
+          }
+        }
+      }
+      // Σχεδίαση των λανθανιδών
+      let xOffset = 80;
+      let y = startY;
+      noStroke();
+      for (let cell of lanthanides) {
+        cell.drawX = xOffset;
+        cell.drawY = y;
+        cell.drawW = cell.width;
+        cell.drawH = cell.height;
+        fill(CATEGORY_COLORS[cell.category]);
+        rect(xOffset, y, cell.width, cell.height);
+        fill(0);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text(String(cell.number || ''), xOffset + cell.width/2, y + cell.height/2);
+        xOffset += 42;
+      }
+      // Σχεδίαση των ακτίνιδων, κάτω από τους λανθανίδες
+      xOffset = 80;
+      y += 42; // gap μεταξύ των δύο σειρών
+      for (let cell of actinides) {
+        cell.drawX = xOffset;
+        cell.drawY = y;
+        cell.drawW = cell.width;
+        cell.drawH = cell.height;
+        fill(CATEGORY_COLORS[cell.category]);
+        rect(xOffset, y, cell.width, cell.height);
+        fill(0);
+        textSize(12);
+        textAlign(CENTER, CENTER);
+        text(String(cell.number || ''), xOffset + cell.width/2, y + cell.height/2);
+        xOffset += 42;
       }
     }
 
@@ -466,7 +525,7 @@
       redraw();
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
-      // Εναλλαγή της εμφάνισης των κελιών του f τομέα
+      // Εναλλαγή collapse των f-block στοιχείων:
       hideFBlock = !hideFBlock;
       console.log("hideFBlock =", hideFBlock);
       redraw();
