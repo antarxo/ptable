@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -84,6 +84,7 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
+      <!-- Το κουμπί εναλλάσσει το collapse του f τομέα -->
       <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
@@ -93,7 +94,7 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, στα κάθε row θα αντικατασταθούν τα κελιά με category "f-block" με null.
+    // hideFBlock: όταν true, κάθε σειρά θα εμφανίζει μόνο 14 κελιά όπως ορίζεται παρακάτω.
     let hideFBlock = false;
 
     // p5.js preload: φόρτωση του αρχείου JSON
@@ -109,13 +110,12 @@
       elementsData = null;
     }
 
-    // Συνάρτηση getCategory: ορίζει την κατηγορία κάθε στοιχείου.
+    // Συνάρτηση getCategory: ορίζει την κατηγορία κάθε στοιχείου
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (n === 1) return 'hydrogen-color';
       if (alkaliMetals.includes(n)) return 'alkali-block';
-      if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
-      // f-block για lanthanides και actinides
+      if (n === 1 || n === 2 || [4,12,20,38,56,88].includes(n)) return 's-block';
       if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
       if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
       if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
@@ -136,7 +136,7 @@
     /*
       rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, υπόλοιπα: 3..18 στο τέλος)
       rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, υπόλοιπα: 16 στοιχεία)
-      rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, υπόλοιπα για στοιχεία)
+      rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί είναι το label, υπόλοιπα είναι τα στοιχεία)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -161,7 +161,6 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          // Για τις περιόδους, το πρώτο κελί (index 0) είναι το label.
           insertionIndex: (i < 2 ? 0 : 1),
           periodLabel: null
         });
@@ -310,9 +309,11 @@
       }
     }
 
-    // Σχεδιάζει τον πίνακα.
-    // Αν hideFBlock είναι true, αντικαθιστούμε σε κάθε row τα κελιά με category "f-block" με null,
-    // και μετά παίρνουμε από τους τίτλους (row 0,1) τα πρώτα 14 κελιά και για τις περίοδους (row>=2) από index 1 μέχρι 15.
+    // Σχεδίαση του πίνακα
+    // Όταν hideFBlock είναι true, για κάθε row:
+    //   - Αν rowIndex < 2 (ομάδες): εμφανίζουμε τα κελιά από index 0-1 και από index 16 έως 27.
+    //   - Αν rowIndex >= 2 (περίοδοι): εμφανίζουμε το label (index 0) και τα κελιά από index 1 και από index 16 έως 27.
+    // Αυτό δίνει συνολικά 14 κελιά σε κάθε σειρά.
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -321,24 +322,29 @@
       const normalGap = 42;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
-        // Δημιουργούμε έναν νέο πίνακα με διατήρηση του αρχικού μήκους,
-        // αντικαθιστώντας τα f-block κελιά με null εάν hideFBlock είναι true.
-        let newCells = row.cells.map(cell => {
-          if (hideFBlock && cell !== null && cell.category === 'f-block') {
-            return null;
-          }
-          return cell;
-        });
         let xOffset = 80;
         let cellsToDraw;
-        if (rowIndex < 2) {
-          // Για τις σειρές των τίτλων, θέλουμε 14 κελιά από το index 0
-          cellsToDraw = newCells.slice(0, 14);
+        if (hideFBlock) {
+          if (rowIndex < 2) {
+            // Group rows: συνένωση των κελιών index 0-1 και index 16-27
+            let leftPart = row.cells.slice(0,2);
+            let rightPart = row.cells.slice(16,28);
+            cellsToDraw = leftPart.concat(rightPart);
+          } else {
+            // Period rows: το πρώτο κελί είναι το label, μετά παίρνουμε το κελί index 1 και μετά τα κελιά από index 16 έως 27
+            let label = row.cells.slice(0,1);
+            let firstElement = row.cells.slice(1,2);
+            let rightPart = row.cells.slice(16,28);
+            cellsToDraw = label.concat(firstElement, rightPart);
+          }
         } else {
-          // Για τις περιόδους, το πρώτο κελί είναι το label, οπότε παίρνουμε 14 κελιά από index 1 (δηλαδή 1 έως 14)
-          cellsToDraw = newCells.slice(1, 15);
+          if (rowIndex < 2) {
+            cellsToDraw = row.cells;
+          } else {
+            cellsToDraw = row.cells.slice(1); // διατηρούμε το label ως ξεχωριστό, αλλά για σχεδίαση παίρνουμε από index 1
+          }
         }
-        // Σχεδιάζουμε τα κελιά (null δεν σχεδιάζονται, αλλά το xOffset αυξάνεται)
+        // Σχεδίαση
         if (rowIndex < 2) {
           noStroke();
           for (let i = 0; i < cellsToDraw.length; i++) {
@@ -359,6 +365,7 @@
           }
           stroke(85);
         } else {
+          // Σχεδίαση του label αν υπάρχει
           if (row.periodLabel) {
             fill(0);
             textSize(12);
