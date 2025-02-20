@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -84,7 +84,6 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <!-- Το κουμπί "Εναλλαγή f-στοιχείων" αλλάζει το collapse -->
       <button id="togglePanel">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
@@ -94,7 +93,7 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, θα αναδειγματοδοτούνται οι σειρές ώστε να εμφανίζουν 18 στήλες (δηλαδή, τα f-στοιχεία αποκόπτονται)
+    // hideFBlock: όταν true, θα αναδειγματοδοτούνται οι σειρές ώστε να εμφανίζουν 18 κελιά (δηλαδή, τα f-στοιχεία αποκόπτονται)
     let hideFBlock = false;
 
     // Βοηθητική συνάρτηση resampleCells: Δέχεται έναν πίνακα κελιών και επιστρέφει έναν νέο με το newLength στοιχεία,
@@ -156,7 +155,7 @@
     /*
       rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά)
       rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά)
-      rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί είναι label)
+      rowsData[2] έως [8]: 7 περίοδοι – Τώρα οι περίοδοι ξεκινούν από index 0 χωρίς προκαθορισμένο label.
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -175,14 +174,15 @@
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
-        let cells = (i < 2) ? new Array(32).fill(null) : [null];
+        // Για τις πρώτες 2 σειρές (ομαδοποίηση) χρησιμοποιούμε 32 κελιά, ενώ για τις περίοδους ξεκινάμε με κενό πίνακα.
+        let cells = (i < 2) ? new Array(32).fill(null) : [];
         rowsData.push({
           cells: cells,
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          // Για τις περιόδους, το label είναι στο index 0.
-          insertionIndex: (i < 2 ? 0 : 1),
+          // Για τις περίοδους ξεκινάμε από index 0 (χωρίς προκαθορισμένο label)
+          insertionIndex: 0,
           periodLabel: null
         });
       }
@@ -263,7 +263,8 @@
       }
       else if (phase === 2) {
         const row = rowsData[currentRowIndex];
-        let insertIndex = (globalElementNumber === 1) ? 1 : 32;
+        // Τροποποίηση ώστε το υδρογόνο (Z=1) να τοποθετείται στο index 0 και το ήλιο (Z=2) στο index 31 (32η θέση)
+        let insertIndex = (globalElementNumber === 1) ? 0 : 31;
         while (row.cells.length <= insertIndex) row.cells.push(null);
         let cell = createCell({
           number: globalElementNumber,
@@ -331,9 +332,7 @@
     }
 
     // Σχεδίαση του πίνακα:
-    // Όταν hideFBlock είναι true:
-    //  - Για τις ομάδες (rowIndex < 2): κάνουμε resample του πλήρους πίνακα (row.cells) σε 18 κελιά.
-    //  - Για τις περιόδους (rowIndex >= 2): κρατάμε το label (index 0) και κάνουμε resample στα υπόλοιπα (με φιλτράρισμα των μη-f) σε 17 κελιά.
+    // Όταν hideFBlock είναι true, κάνουμε resample ολόκληρου του πίνακα (είτε για τις ομάδες είτε για τις περίοδους) σε 18 κελιά.
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -345,23 +344,9 @@
         let xOffset = 80;
         let cellsToDraw = [];
         if (hideFBlock) {
-          if (rowIndex < 2) {
-            // Group rows: resample ολόκληρου του πίνακα σε 18 κελιά
-            cellsToDraw = resampleCells(row.cells, 18);
-          } else {
-            // Period rows: κρατάμε το label (index 0) και από τα υπόλοιπα, φιλτράρουμε τα μη-f και resample σε 17
-            let label = row.cells[0];
-            let elems = row.cells.slice(1).filter(cell => cell === null || cell.category !== 'f-block');
-            elems = resampleCells(elems, 17);
-            cellsToDraw = [label].concat(elems);
-          }
+          cellsToDraw = resampleCells(row.cells, 18);
         } else {
-          if (rowIndex < 2) {
-            cellsToDraw = row.cells;
-          } else {
-            // Για τις περιόδους, χρησιμοποιούμε όλο το row (ή μπορούμε να ξεκινήσουμε από index 0)
-            cellsToDraw = row.cells;
-          }
+          cellsToDraw = row.cells;
         }
         if (rowIndex < 2) {
           noStroke();
@@ -453,8 +438,7 @@
       let found = false;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
-        let startIndex = (rowIndex < 2) ? 0 : 1;
-        for (let i = startIndex; i < row.cells.length; i++) {
+        for (let i = 0; i < row.cells.length; i++) {
           let cell = row.cells[i];
           if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
               y >= cell.drawY && y <= cell.drawY + cell.drawH) {
