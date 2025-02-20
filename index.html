@@ -51,9 +51,10 @@
       flex-direction: column;
       gap: 5px;
     }
+    /* Μειωμένα κουμπιά για εξοικονόμηση χώρου */
     #rightPanel button {
-      padding: 8px 16px;
-      font-size: 14px;
+      padding: 4px 8px;
+      font-size: 12px;
       cursor: pointer;
       border: 1px solid #333;
       background: #fff;
@@ -68,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -89,11 +90,10 @@
   </div>
 
   <script>
-    // Global μεταβλητές για τα δεδομένα και για τις συντεταγμένες του ποντικιού
+    // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // Global μεταβλητή για το "κλείδωμα" των πληροφοριών
-    let infoLocked = false;
+    let infoLocked = false; // Αν true, το infoPanel δεν ενημερώνεται από mouseover
 
     // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
     function preload() {
@@ -120,7 +120,6 @@
       return 'p-block';
     }
 
-    // Χρώματα κατηγοριών
     const CATEGORY_COLORS = {
       'alkali-block': '#ff9999',
       's-block': '#ffcccc',
@@ -133,9 +132,9 @@
     };
 
     /* Δομή:
-         - rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0 και 1 γεμάτα, index 2-15 κενά, index 16-31 = 3..18)
-         - rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", index 2-15 κενά, index 16-31 = 16 στοιχεία)
-         - rowsData[2] έως rowsData[8]: 7 περίοδοι (το κελί index 0 δείχνει το όνομα, τα υπόλοιπα για στοιχεία)
+         rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, τα υπόλοιπα: 3..18 στο τέλος)
+         rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, τα υπόλοιπα: 16 στοιχεία)
+         rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, τα υπόλοιπα για στοιχεία)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -154,13 +153,7 @@
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
-        let cells;
-        if (i < 2) {
-          // Για τις σειρές ομαδοποίησης δημιουργούμε πίνακα 32 κελιών.
-          cells = new Array(32).fill(null);
-        } else {
-          cells = [null];
-        }
+        let cells = (i < 2) ? new Array(32).fill(null) : [null];
         rowsData.push({
           cells: cells,
           shiftedColumns: 0,
@@ -173,17 +166,14 @@
       globalElementNumber = 3;
       currentRowIndex = 3;
       phase = 1;
-      // Κατά την εκκίνηση ξεκλειδώνουμε τις πληροφορίες
       infoLocked = false;
     }
 
-    // Δημιουργεί ένα κελί και, αν υπάρχουν δεδομένα στο elements.json, τα αποθηκεύει στο cell.details.
     function createCell(elObj) {
       let cell = { 
         number: elObj.number, 
         category: elObj.category,
         width: 40,
-        // Μειώνουμε το ύψος για τα κελιά των ονομάτων ομάδων
         height: (elObj.category === 'group-name' ? 20 : 40),
         fixed: !!elObj.fixed
       };
@@ -194,24 +184,19 @@
     }
 
     function shiftBlockRight(rowIndex, groupRows) {
-      let currentInsertionPos = rowsData[rowIndex].insertionIndex;
       groupRows.forEach(i => {
         let row = rowsData[i];
         let insertPos = rowsData[rowIndex].insertionIndex + row.shiftedColumns;
         row.cells.splice(insertPos, 0, null);
-        row.shiftedColumns++; 
+        row.shiftedColumns++;
       });
     }
 
     function handleShiftingForRow(currentRow) {
       let groupRows = [];
-      if (currentRow === 3) {
-        groupRows = [0, 1, 2];
-      } else if (currentRow === 5) {
-        groupRows = [0, 1, 2, 3, 4];
-      } else if (currentRow === 7) {
-        groupRows = [0, 1, 2, 3, 4, 5, 6];
-      }
+      if (currentRow === 3) groupRows = [0, 1, 2];
+      else if (currentRow === 5) groupRows = [0, 1, 2, 3, 4];
+      else if (currentRow === 7) groupRows = [0, 1, 2, 3, 4, 5, 6];
       shiftBlockRight(currentRow, groupRows);
     }
 
@@ -231,15 +216,11 @@
             number: globalElementNumber,
             category: getCategory(globalElementNumber)
           });
-          if (pattern.shifting) {
-            handleShiftingForRow(currentRowIndex);
-          }
+          if (pattern.shifting) handleShiftingForRow(currentRowIndex);
           let targetIndex = row.insertionIndex;
           while (row.cells[targetIndex] != null) {
             targetIndex++;
-            if (targetIndex >= row.cells.length) { 
-              row.cells.push(null);
-            }
+            if (targetIndex >= row.cells.length) row.cells.push(null);
           }
           row.cells[targetIndex] = cell;
           globalElementNumber++;
@@ -249,10 +230,10 @@
             row.countInSegment = 0;
             row.insertionIndex = row.cells.length;
           }
-          // Εάν το τρέχον pattern έχει εξαντληθεί, προχωράμε στην επόμενη σειρά
           if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
             currentRowIndex++;
           }
+          // Εμφάνιση και "κλείδωμα" πληροφοριών για το στοιχείο
           updateInfoPanel(cell);
           infoLocked = true;
         }
@@ -261,16 +242,14 @@
       else if (phase === 2) {
         const row = rowsData[currentRowIndex];
         let insertIndex = (globalElementNumber === 1) ? 1 : 32;
-        while (row.cells.length <= insertIndex) { row.cells.push(null); }
+        while (row.cells.length <= insertIndex) row.cells.push(null);
         let cell = createCell({
           number: globalElementNumber,
           category: getCategory(globalElementNumber)
         });
         row.cells[insertIndex] = cell;
         globalElementNumber++;
-        if (globalElementNumber > 2) {
-          phase = 3;
-        }
+        if (globalElementNumber > 2) phase = 3;
         updateInfoPanel(cell);
         infoLocked = true;
         redraw();
@@ -302,8 +281,6 @@
       rowsData[8].periodLabel = "7η Q";
     }
 
-    // Νέο σύστημα ομαδοποίησης: δημιουργούμε 32 κελιά, όπου τα 2 πρώτα γεμίζονται με 1 και 2, τα επόμενα 14 κενά,
-    // και τα υπόλοιπα 16 γεμίζονται με τους αριθμούς 3 έως 18.
     function addNewGroupNumbers() {
       let row = rowsData[0];
       row.cells = new Array(32).fill(null);
@@ -316,8 +293,6 @@
       }
     }
 
-    // Παλιό σύστημα ομαδοποίησης: δημιουργούμε 32 κελιά, όπου τα 2 πρώτα γεμίζονται με "IA" και "IIA",
-    // τα 14 κενά (indices 2-15) παραμένουν, και τα 16 επόμενα γεμίζονται με τα παρακάτω 16 ονόματα.
     function addOldGroupNumbers() {
       let oldNumbers = [
         "IA", "IIA", "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
@@ -334,19 +309,17 @@
       }
     }
 
-    // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού για τα hover effects.
+    // Σχεδιάζει τον πίνακα. Ξεκινάμε το yOffset από 80 (δηλαδή κάτω από τον τίτλο).
     function drawTable() {
       background(247);
-      // Ξεκινάμε λίγο πιο κάτω ώστε να υπάρχει κενό κάτω από τον τίτλο
       let yOffset = 80;
-      const groupRowsGap = 20;  // μειωμένο gap για τις δύο πρώτες σειρές (ομάδες)
-      const normalGap    = 42;  // gap για τις υπόλοιπες σειρές
+      const groupRowsGap = 20;  // gap για σειρές 0 και 1 (ομάδες)
+      const normalGap = 42;     // για τις υπόλοιπες σειρές
 
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
         if (rowIndex < 2) {
-          // Σειρές ομαδοποίησης: χωρίς περιγράμματα/στρογγυλεμένες γωνίες.
           noStroke();
           for (let i = 0; i < row.cells.length; i++) {
             let cell = row.cells[i];
@@ -391,26 +364,27 @@
             xOffset += 42;
           }
         }
-        // Εφαρμόζουμε το gap: για τις πρώτες δύο σειρές χρησιμοποιούμε το groupRowsGap, για τις υπόλοιπες το normalGap.
-        if (rowIndex < 2) {
-          yOffset += groupRowsGap;
-        } else {
-          yOffset += normalGap;
-        }
+        yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
       }
     }
 
-    // Ενημερώνει το infoPanel με πληροφορίες για το στοιχείο (χρησιμοποιώντας τα δεδομένα από το JSON).
     function updateInfoPanel(cell) {
       if (elementsData && cell.details) {
-        document.getElementById('elementInfo').innerHTML = `<strong>${cell.details.name} (${cell.details.symbol})</strong> [Z=${cell.details.number}]`;
-        document.getElementById('subshells').innerHTML = `<em>Υποστιβάδες:</em> ${cell.details.subshells}`;
-        document.getElementById('shells').innerHTML = `<em>Στιβάδες:</em> ${cell.details.shells}`;
-        document.getElementById('outerShell').innerHTML = `<em>Εξωτερική:</em> ${cell.details.outerShell}`;
-        document.getElementById('explanation').innerHTML = `<em>Επεξήγηση:</em> ${cell.details.explanation}`;
-        document.getElementById('remarks').innerHTML = `<em>Παρατηρήσεις:</em> ${cell.details.remarks}`;
+        document.getElementById('elementInfo').innerHTML =
+          `<strong>${cell.details.name} (${cell.details.symbol})</strong> [Z=${cell.details.number}]`;
+        document.getElementById('subshells').innerHTML =
+          `<em>Υποστιβάδες:</em> ${cell.details.subshells}`;
+        document.getElementById('shells').innerHTML =
+          `<em>Στιβάδες:</em> ${cell.details.shells}`;
+        document.getElementById('outerShell').innerHTML =
+          `<em>Εξωτερική:</em> ${cell.details.outerShell}`;
+        document.getElementById('explanation').innerHTML =
+          `<em>Επεξήγηση:</em> ${cell.details.explanation}`;
+        document.getElementById('remarks').innerHTML =
+          `<em>Παρατηρήσεις:</em> ${cell.details.remarks}`;
       } else {
-        document.getElementById('elementInfo').innerHTML = "<strong>Δεν φορτώθηκαν δεδομένα (elements.json δεν βρέθηκε ή υπάρχει σφάλμα).</strong>";
+        document.getElementById('elementInfo').innerHTML =
+          "<strong>Δεν φορτώθηκαν δεδομένα (elements.json δεν βρέθηκε ή υπάρχει σφάλμα).</strong>";
         document.getElementById('subshells').innerHTML = '';
         document.getElementById('shells').innerHTML = '';
         document.getElementById('outerShell').innerHTML = '';
@@ -428,52 +402,62 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Ενημερώνει τις πληροφορίες μόνο όταν δεν είναι "κλειδωμένες"
-    function mouseMoved() {
+    // Λειτουργία για mouseover: ενημερώνει info μόνο αν δεν έχει "κλειδώσει"
+    function handleMouseOver() {
       if (infoLocked) return;
-      let x = (typeof globalMouseX !== 'undefined') ? globalMouseX : mouseX;
-      let y = (typeof globalMouseY !== 'undefined') ? globalMouseY : mouseY;
+      let x = globalMouseX || mouseX;
+      let y = globalMouseY || mouseY;
       let found = false;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let startIndex = (rowIndex < 2 ? 0 : 1);
         for (let i = startIndex; i < row.cells.length; i++) {
           let cell = row.cells[i];
-          if (cell) {
-            if (x >= cell.drawX && x <= cell.drawX + cell.drawW &&
-                y >= cell.drawY && y <= cell.drawY + cell.drawH) {
-              updateInfoPanel(cell);
-              found = true;
-              break;
-            }
+          if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
+              y >= cell.drawY && y <= cell.drawY + cell.drawH) {
+            updateInfoPanel(cell);
+            found = true;
+            break;
           }
         }
-        if(found) break;
+        if (found) break;
       }
-      if (!found) {
-        clearInfoPanel();
+      if (!found) clearInfoPanel();
+    }
+
+    // Λειτουργία για κλικ: ενημερώνει πάντα τις πληροφορίες και "κλειδώνει" το infoPanel
+    function handleMouseClick() {
+      let x = globalMouseX || mouseX;
+      let y = globalMouseY || mouseY;
+      let found = false;
+      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+        let row = rowsData[rowIndex];
+        let startIndex = (rowIndex < 2 ? 0 : 1);
+        for (let i = startIndex; i < row.cells.length; i++) {
+          let cell = row.cells[i];
+          if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
+              y >= cell.drawY && y <= cell.drawY + cell.drawH) {
+            updateInfoPanel(cell);
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
       }
-    }
-    function mouseClicked() {
-      // Με κάθε κλικ σταθεροποιούνται οι πληροφορίες
-      mouseMoved();
-      infoLocked = true;
-    }
-    function touchStarted() {
-      mouseMoved();
+      if (!found) clearInfoPanel();
       infoLocked = true;
     }
 
-    // Global event listeners για καταγραφή των κινήσεων του ποντικιού.
+    // Global event listeners χρησιμοποιώντας τις νέες συναρτήσεις
     window.addEventListener('mousemove', (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
-      mouseMoved();
+      handleMouseOver();
     });
     window.addEventListener('click', (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
-      mouseClicked();
+      handleMouseClick();
     });
 
     function setup() {
@@ -489,23 +473,22 @@
     }
 
     document.getElementById('nextElement').addEventListener('click', () => {
-      // Κάθε φορά που πατιέται "Επόμενο", εμφανίζεται το τελευταίο στοιχείο και κλειδώνεται το infoPanel
       addElementToCurrentRow();
       redraw();
     });
-
     document.getElementById('fillAll').addEventListener('click', () => {
       while (phase < 6 || (phase === 1 && globalElementNumber <= 118)) {
         addElementToCurrentRow();
       }
       redraw();
     });
-
     document.getElementById('reset').addEventListener('click', () => {
       initialize();
       redraw();
     });
-
+    document.getElementById('togglePanel').addEventListener('click', () => {
+      // Μπορείς να προσθέσεις επιπλέον λειτουργία για σύμπτυξη/ανάπτυξη του infoPanel αν το επιθυμείς.
+    });
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
       redraw();
