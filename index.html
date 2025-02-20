@@ -93,10 +93,7 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, κάθε σειρά θα εμφανίζει 18 στήλες σύμφωνα με τη λογική:
-    // - Σε group rows (row 0,1): τα κελιά στα indices 0–1 και από 16 έως 31.
-    // - Σε period rows (row ≥2): θα δημιουργείται ένα label cell (με τιμή row.periodLabel) ως πρώτο κελί,
-    //   στη συνέχεια το S στοιχείο (row.cells[1]) και μετά τα κελιά από 16 έως 31.
+    // hideFBlock: όταν true, collapse του f τομέα (διαφορετικά, πλήρης πίνακας)
     let hideFBlock = false;
 
     // p5.js preload: φόρτωση του αρχείου JSON
@@ -163,7 +160,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          // Για τις περιόδους, το αρχικό κελί είναι κενό (insertionIndex = 1) ώστε να μην γεμίζει από το 0
+          // Για τις περιόδους, θέτουμε το insertionIndex στα 1 (δηλαδή, η συμπλήρωση ξεκινά από τη δεύτερη στήλη)
           insertionIndex: (i < 2 ? 0 : 1),
           periodLabel: null
         });
@@ -174,7 +171,7 @@
     }
 
     function createCell(elObj) {
-      let cell = { 
+      let cell = {
         number: elObj.number,
         category: elObj.category,
         width: 40,
@@ -187,23 +184,8 @@
       return cell;
     }
 
-    function shiftBlockRight(rowIndex, groupRows) {
-      groupRows.forEach(i => {
-        let row = rowsData[i];
-        let insertPos = rowsData[rowIndex].insertionIndex + row.shiftedColumns;
-        row.cells.splice(insertPos, 0, null);
-        row.shiftedColumns++;
-      });
-    }
-
-    function handleShiftingForRow(currentRow) {
-      let groupRows = [];
-      if (currentRow === 3) groupRows = [0, 1, 2];
-      else if (currentRow === 5) groupRows = [0, 1, 2, 3, 4];
-      else if (currentRow === 7) groupRows = [0, 1, 2, 3, 4, 5, 6];
-      shiftBlockRight(currentRow, groupRows);
-    }
-
+    // Στη συνάρτηση addElementToCurrentRow, για τις περιόδους (rowIndex >= 3) δεν κάνουμε την αναζήτηση για το πρώτο κενό κελί,
+    // αλλά απλώς τοποθετούμε το στοιχείο στη θέση που δείχνει το insertionIndex και μετά αυξάνουμε αυτό το index.
     function addElementToCurrentRow() {
       if (phase === 1) {
         if (globalElementNumber > 118) {
@@ -214,13 +196,15 @@
           return;
         }
         const row = rowsData[currentRowIndex];
-        if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
+        if (currentRowIndex < 3) {
+          // Για τις ομάδες, χρησιμοποιούμε την υπάρχουσα λογική
           let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
           let cell = createCell({
             number: globalElementNumber,
             category: getCategory(globalElementNumber)
           });
           if (pattern.shifting) {
+            // Για τις ομάδες αν χρειάζεται να γίνει shifting (αν και συνήθως δεν ισχύει εδώ)
             handleShiftingForRow(currentRowIndex);
           }
           let targetIndex = row.insertionIndex;
@@ -239,6 +223,16 @@
           if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
             currentRowIndex++;
           }
+          updateInfoPanel(cell);
+        } else {
+          // Για τις περιόδους: απλή συμπλήρωση από τη δεύτερη στήλη (insertionIndex)
+          let cell = createCell({
+            number: globalElementNumber,
+            category: getCategory(globalElementNumber)
+          });
+          row.cells[row.insertionIndex] = cell;
+          globalElementNumber++;
+          row.insertionIndex++;  // Απλή αύξηση
           updateInfoPanel(cell);
         }
         redraw();
@@ -313,10 +307,6 @@
     }
 
     // Σχεδίαση του πίνακα
-    // Όταν hideFBlock είναι true:
-    //   - Σε group rows (row 0,1): κρατάμε τα κελιά από index 0–1 και από index 16 έως 31 (18 κελιά συνολικά).
-    //   - Σε period rows (row ≥ 2): δημιουργούμε ένα νέο label κελί χρησιμοποιώντας row.periodLabel (το οποίο θα εμφανίζεται στην πρώτη στήλη),
-    //     και μετά χρησιμοποιούμε το S στοιχείο (row.cells[1]) και τα κελιά από index 16 έως 31 (δηλαδή, 1 + 1 + 16 = 18 κελιά συνολικά).
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -329,23 +319,19 @@
         let cellsToDraw = [];
         if (hideFBlock) {
           if (rowIndex < 2) {
-            // Group rows: πάρε τα κελιά από index 0-1 και 16-32 (16 κελιά)
+            // Group rows: κρατάμε τα κελιά από index 0-1 και 16-32
             let leftPart = row.cells.slice(0, 2);
             let rightPart = row.cells.slice(16, 32);
             cellsToDraw = leftPart.concat(rightPart);
           } else {
-            // Period rows: δημιουργούμε ένα νέο label κελί
+            // Period rows: δημιουργούμε ένα νέο label κελί και μετά κρατάμε το S στοιχείο (row.cells[1]) και τα κελιά 16-32
             let labelCell = { number: row.periodLabel, category: 'period-label', width: 40, height: 40 };
-            let sCell = row.cells.slice(1, 2); // το S στοιχείο
+            let sCell = row.cells.slice(1, 2);
             let rightPart = row.cells.slice(16, 32);
             cellsToDraw = [labelCell].concat(sCell, rightPart);
           }
         } else {
-          if (rowIndex < 2) {
-            cellsToDraw = row.cells;
-          } else {
-            cellsToDraw = row.cells;
-          }
+          cellsToDraw = row.cells;
         }
         if (rowIndex < 2) {
           noStroke();
