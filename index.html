@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα /div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -92,7 +92,6 @@
   <script>
     // Global μεταβλητές
     let elementsData = [];
-    // Δεν χρησιμοποιούμε πλέον globalMouseX/MouseY για mouseover, μόνο για κλικ
     let globalMouseX = 0, globalMouseY = 0;
 
     // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
@@ -132,8 +131,8 @@
     };
 
     /* Δομή:
-         rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, τα υπόλοιπα: 3..18 στο τέλος)
-         rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, τα υπόλοιπα: 16 στοιχεία)
+         rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, υπόλοιπα: 3..18 στο τέλος)
+         rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, υπόλοιπα: 16 στοιχεία)
          rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, τα υπόλοιπα για στοιχεία)
     */
     let rowsData = [];
@@ -234,7 +233,6 @@
           if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
             currentRowIndex++;
           }
-          // Εμφάνιση πληροφοριών για το νέο στοιχείο
           updateInfoPanel(cell);
         }
         redraw();
@@ -424,7 +422,7 @@
       if (!found) clearInfoPanel();
     }
 
-    // Εγγραφή του event listener για το κλικ (mouse click)
+    // Εγγραφή του event listener για κλικ
     window.addEventListener('click', (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
@@ -432,7 +430,9 @@
     });
 
     function setup() {
-      createCanvas(windowWidth, windowHeight);
+      // Δημιουργούμε το canvas και το τοποθετούμε πίσω από τα HTML στοιχεία
+      let canvas = createCanvas(windowWidth, windowHeight);
+      canvas.style('z-index', '-1');
       textFont('Roboto');
       noLoop();
       initialize();
@@ -459,7 +459,7 @@
       redraw();
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
-      // Επιλογή λειτουργίας για σύμπτυξη/ανάπτυξη του infoPanel, αν το επιθυμείς.
+      // Προαιρετική λειτουργία για σύμπτυξη/ανάπτυξη του infoPanel
     });
 
     function windowResized() {
