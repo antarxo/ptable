@@ -249,7 +249,11 @@
             row.countInSegment = 0;
             row.insertionIndex = row.cells.length;
           }
-          // Με κάθε κλικ στο "Επόμενο" εμφανίζεται το τελευταίο στοιχείο και το infoPanel "κλειδώνει"
+          // Προσθέτουμε τον έλεγχο ώστε αν δεν υπάρχει πλέον pattern για τη σειρά, προχωράμε στην επόμενη σειρά.
+          if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
+            currentRowIndex++;
+          }
+          // Με κάθε κλικ στο "Επόμενο", ενημερώνεται το infoPanel και κλειδώνεται
           updateInfoPanel(cell);
           infoLocked = true;
         }
@@ -334,9 +338,9 @@
     // Σχεδιάζει τον πίνακα και αποθηκεύει τις συντεταγμένες κάθε κελιού για τα hover effects.
     function drawTable() {
       background(247);
-      // Ξεκινάμε το drawing λίγο πιο κάτω ώστε να υπάρχει κενό κάτω από τον τίτλο
+      // Ξεκινάμε λίγο πιο κάτω ώστε να υπάρχει κενό κάτω από τον τίτλο
       let yOffset = 100;
-      const gap = 42; // Ομοιόμορφο gap για όλες τις σειρές
+      const gap = 42; // ομοιόμορφο gap για όλες τις σειρές
 
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
@@ -480,7 +484,7 @@
     }
 
     document.getElementById('nextElement').addEventListener('click', () => {
-      // Κάθε φορά που πατιέται "Επόμενο", εμφανίζεται το τελευταίο στοιχείο και "κλειδώνεται" το infoPanel
+      // Κάθε φορά που πατιέται "Επόμενο", εμφανίζεται το τελευταίο στοιχείο και κλειδώνεται το infoPanel
       addElementToCurrentRow();
       redraw();
     });
