@@ -342,7 +342,8 @@
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
-              text(cell.number, xOffset + cell.width / 2, yOffset + cell.height / 2);
+              text(cell.number || '', xOffset + cell.width / 2, yOffset + cell.height / 2);
+
             }
             xOffset += 42;
           }
@@ -368,7 +369,8 @@
               fill(0);
               textSize(12);
               textAlign(CENTER, CENTER);
-              text(cell.number, xOffset + cell.width / 2, yOffset + cell.height / 2);
+              text(cell.number || '', xOffset + cell.width / 2, yOffset + cell.height / 2);
+
             }
             xOffset += 42;
           }
