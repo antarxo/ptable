@@ -68,7 +68,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -95,7 +95,6 @@
 
     // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
     function preload() {
-      // Χρήση callbacks για έλεγχο φόρτωσης
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
     }
     function dataLoaded(data) {
@@ -180,7 +179,7 @@
         number: elObj.number, 
         category: elObj.category,
         width: 40,
-        // Για τα κελιά που περιέχουν ονόματα ομάδων μειώνουμε το ύψος
+        // Μειώνουμε το ύψος για τα κελιά των ονομάτων ομάδων
         height: (elObj.category === 'group-name' ? 20 : 40),
         fixed: !!elObj.fixed
       };
@@ -293,7 +292,7 @@
       rowsData[8].periodLabel = "7η Q";
     }
 
-    // Νέο σύστημα ομαδοποίησης: δημιουργούμε 32 κελιά, όπου τα 2 πρώτα γεμίζονται με 1 και 2, τα επόμενα 14 παραμένουν κενά,
+    // Νέο σύστημα ομαδοποίησης: δημιουργούμε 32 κελιά, όπου τα 2 πρώτα γεμίζονται με 1 και 2, τα επόμενα 14 κενά,
     // και τα υπόλοιπα 16 γεμίζονται με τους αριθμούς 3 έως 18.
     function addNewGroupNumbers() {
       let row = rowsData[0];
@@ -378,7 +377,12 @@
             xOffset += 42;
           }
         }
-        yOffset += 42;
+        // Χρησιμοποιούμε μικρότερο gap για τις πρώτες 3 σειρές (ομάδες + 1η περίοδο)
+        if (rowIndex < 2 || rowIndex === 2) {
+          yOffset += 25;
+        } else {
+          yOffset += 42;
+        }
       }
     }
 
@@ -410,7 +414,7 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Τροποποίηση της mouseMoved ώστε να χρησιμοποιεί τις συντεταγμένες που αποθηκεύουμε μέσω των globalMouseX/Y.
+    // Τροποποιημένη mouseMoved ώστε να χρησιμοποιεί τις συντεταγμένες που αποθηκεύονται μέσω globalMouseX/Y.
     function mouseMoved() {
       let x = (typeof globalMouseX !== 'undefined') ? globalMouseX : mouseX;
       let y = (typeof globalMouseY !== 'undefined') ? globalMouseY : mouseY;
@@ -442,7 +446,7 @@
       mouseMoved();
     }
 
-    // Προσθήκη global event listeners ώστε τα events να καταγράφονται ανεξάρτητα από το πού βρίσκεται ο δείκτης.
+    // Global event listeners για καταγραφή των κινήσεων του ποντικιού.
     window.addEventListener('mousemove', (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
