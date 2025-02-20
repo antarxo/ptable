@@ -93,7 +93,7 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, κάθε σειρά θα εμφανίζει μόνο τις 18 στήλες (2 από S και 16 από το τέλος)
+    // hideFBlock: όταν true, κάθε σειρά θα εμφανίζει 18 στήλες σύμφωνα με τη νέα λογική.
     let hideFBlock = false;
 
     // p5.js preload: φόρτωση του αρχείου JSON
@@ -160,7 +160,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          // Για τις περιόδους, το label είναι στο index 0.
+          // Για τις περιόδους, το label θα εμφανίζεται ως ξεχωριστό κελί (δεν βασίζεται στο row.cells[0])
           insertionIndex: (i < 2 ? 0 : 1),
           periodLabel: null
         });
@@ -195,9 +195,9 @@
 
     function handleShiftingForRow(currentRow) {
       let groupRows = [];
-      if (currentRow === 3) groupRows = [0,1,2];
-      else if (currentRow === 5) groupRows = [0,1,2,3,4];
-      else if (currentRow === 7) groupRows = [0,1,2,3,4,5,6];
+      if (currentRow === 3) groupRows = [0, 1, 2];
+      else if (currentRow === 5) groupRows = [0, 1, 2, 3, 4];
+      else if (currentRow === 7) groupRows = [0, 1, 2, 3, 4, 5, 6];
       shiftBlockRight(currentRow, groupRows);
     }
 
@@ -309,11 +309,10 @@
       }
     }
 
-    // Σχεδίαση του πίνακα:
+    // Σχεδίαση του πίνακα
     // Όταν hideFBlock είναι true:
-    //  - Για group rows (rowIndex 0,1): κρατάμε τα κελιά από index 0-1 (τα S) και τα κελιά από index 16 έως 31 (16 κελιά) → συνολικά 18.
-    //  - Για period rows (rowIndex ≥ 2): κρατάμε το label (index 0), το S (index 1) και τα κελιά από index 16 έως 31 → συνολικά 18.
-    // Όταν hideFBlock είναι false, εμφανίζεται ο πλήρης πίνακας.
+    //  - Για τις ομάδες (rowIndex 0,1): κρατάμε τα κελιά από index 0–1 και από index 16 έως 31 (18 κελιά συνολικά).
+    //  - Για τις περιόδους (rowIndex ≥ 2): δημιουργούμε ένα νέο label κελί με το row.periodLabel και, μετά, κρατάμε το στοιχείο S (row.cells[1]) και τα κελιά από index 16 έως 31 (16 κελιά), ώστε συνολικά να έχουμε 1+1+16 = 18 στήλες.
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -326,16 +325,16 @@
         let cellsToDraw = [];
         if (hideFBlock) {
           if (rowIndex < 2) {
-            // Group rows: πέρνουμε τα κελιά από index 0-1 και από index 16 έως 31
+            // Group rows: κρατάμε τα στοιχεία στα indices 0-1 και 16-31
             let leftPart = row.cells.slice(0, 2);
-            let rightPart = row.cells.slice(16, 32); // 16 κελιά
+            let rightPart = row.cells.slice(16, 32);
             cellsToDraw = leftPart.concat(rightPart);
           } else {
-            // Period rows: κρατάμε το label (index 0) και το S (index 1), και από index 16 έως 31
-            let label = row.cells.slice(0, 1);
+            // Period rows: δημιουργούμε ένα label κελί και κρατάμε τα στοιχεία στα indices 1 και 16-31
+            let labelCell = { number: row.periodLabel, category: 'period-label', width: 40, height: 40 };
             let sBlock = row.cells.slice(1, 2);
             let rightPart = row.cells.slice(16, 32);
-            cellsToDraw = label.concat(sBlock, rightPart);
+            cellsToDraw = [labelCell].concat(sBlock, rightPart);
           }
         } else {
           if (rowIndex < 2) {
