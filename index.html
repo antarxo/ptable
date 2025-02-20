@@ -31,7 +31,7 @@
       width: 90%;
       max-width: 1200px;
       padding: 20px;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
@@ -93,8 +93,9 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
+    // hideFBlock: όταν true, ο πίνακας συμπιέζεται ώστε για τις περιόδους να ξεκινούν τα στοιχεία από τη δεύτερη στήλη.
+    let hideFBlock = false;
 
-    // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
     }
@@ -107,13 +108,12 @@
       elementsData = null;
     }
 
-    // Ορισμός της getCategory στο global scope
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (n === 1) return 'hydrogen-color';
       if (alkaliMetals.includes(n)) return 'alkali-block';
-      if (n === 1 || n === 2 || [4, 12, 20, 38, 56, 88].includes(n)) return 's-block';
-      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 31 && n <= 36) || (n >= 49 && n <= 54) || (n >= 81 && n <= 86)) return 'p-block';
+      if (n === 1 || n === 2 || [4,12,20,38,56,88].includes(n)) return 's-block';
+      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
       if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
       if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
       return 'p-block';
@@ -130,11 +130,6 @@
       'hydrogen-color': '#ffff99'
     };
 
-    /*
-      rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, υπόλοιπα: 3..18 στο τέλος)
-      rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, υπόλοιπα: 16 στοιχεία)
-      rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, υπόλοιπα για στοιχεία)
-    */
     let rowsData = [];
     let globalElementNumber = 3;
     let currentRowIndex = 3;
@@ -158,6 +153,7 @@
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
+          // Για τις περιόδους θέτουμε το insertionIndex στα 1 (δηλαδή, η συμπλήρωση ξεκινά από τη δεύτερη στήλη)
           insertionIndex: (i < 2 ? 0 : 1),
           periodLabel: null
         });
@@ -169,7 +165,7 @@
 
     function createCell(elObj) {
       let cell = { 
-        number: elObj.number, 
+        number: elObj.number,
         category: elObj.category,
         width: 40,
         height: (elObj.category === 'group-name' ? 20 : 40),
@@ -208,7 +204,8 @@
           return;
         }
         const row = rowsData[currentRowIndex];
-        if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
+        if (currentRowIndex < 3) {
+          // Για τις ομάδες χρησιμοποιούμε την υπάρχουσα λογική
           let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
           let cell = createCell({
             number: globalElementNumber,
@@ -233,6 +230,16 @@
           if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
             currentRowIndex++;
           }
+          updateInfoPanel(cell);
+        } else {
+          // Για τις περιόδους: απλή συμπλήρωση από το insertionIndex που έχει οριστεί στα 1
+          let cell = createCell({
+            number: globalElementNumber,
+            category: getCategory(globalElementNumber)
+          });
+          row.cells[row.insertionIndex] = cell;
+          globalElementNumber++;
+          row.insertionIndex++; // Απλή αύξηση ώστε η συμπλήρωση να συνεχίζεται από την δεύτερη στήλη
           updateInfoPanel(cell);
         }
         redraw();
@@ -309,15 +316,32 @@
     function drawTable() {
       background(247);
       let yOffset = 80;
+      const colGap = 42;
       const groupRowsGap = 20;
       const normalGap = 42;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
+        let cellsToDraw;
+        if (hideFBlock) {
+          if (rowIndex < 2) {
+            let leftPart = row.cells.slice(0, 2);
+            let rightPart = row.cells.slice(16, 32);
+            cellsToDraw = leftPart.concat(rightPart);
+          } else {
+            // Για τις περιόδους: δημιουργούμε νέο label κελί και τα στοιχεία από index 1 και από 16 έως 31
+            let labelCell = { number: row.periodLabel, category: 'period-label', width: 40, height: 40 };
+            let sCell = row.cells.slice(1, 2);
+            let rightPart = row.cells.slice(16, 32);
+            cellsToDraw = [labelCell].concat(sCell, rightPart);
+          }
+        } else {
+          cellsToDraw = row.cells;
+        }
         if (rowIndex < 2) {
           noStroke();
-          for (let i = 0; i < row.cells.length; i++) {
-            let cell = row.cells[i];
+          for (let i = 0; i < cellsToDraw.length; i++) {
+            let cell = cellsToDraw[i];
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -330,7 +354,7 @@
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
-            xOffset += 42;
+            xOffset += colGap;
           }
           stroke(85);
         } else {
@@ -338,11 +362,12 @@
             fill(0);
             textSize(12);
             textAlign(CENTER, CENTER);
-            text(row.periodLabel, 45, yOffset+20);
+            text(row.periodLabel, 45, yOffset + 20);
           }
-          xOffset = 80;
-          for (let i = 1; i < row.cells.length; i++) {
-            let cell = row.cells[i];
+          // Διόρθωση: για τις περιόδους, ξεκινάμε την εμφάνιση από xOffset = 122 (δηλαδή, η πρώτη στήλη για το label παραμένει, και τα στοιχεία ξεκινούν από τη δεύτερη)
+          xOffset = 122;
+          for (let i = 1; i < cellsToDraw.length; i++) {
+            let cell = cellsToDraw[i];
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -356,7 +381,7 @@
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
-            xOffset += 42;
+            xOffset += colGap;
           }
         }
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
@@ -397,14 +422,13 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Ενημέρωση πληροφοριών με κλικ πάνω σε κελί
     function handleMouseClick() {
       let x = globalMouseX || mouseX;
       let y = globalMouseY || mouseY;
       let found = false;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
-        let startIndex = (rowIndex < 2 ? 0 : 1);
+        let startIndex = (rowIndex < 2) ? 0 : 1;
         for (let i = startIndex; i < row.cells.length; i++) {
           let cell = row.cells[i];
           if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
@@ -438,7 +462,6 @@
       drawTable();
     }
 
-    // Κουμπιά
     document.getElementById('nextElement').addEventListener('click', (e) => {
       e.stopPropagation();
       addElementToCurrentRow();
@@ -455,7 +478,9 @@
       redraw();
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
-      // Προαιρετική λειτουργία για σύμπτυξη/ανάπτυξη του infoPanel
+      hideFBlock = !hideFBlock;
+      console.log("hideFBlock =", hideFBlock);
+      redraw();
     });
 
     function windowResized() {
