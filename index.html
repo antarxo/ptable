@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Shifting με Μετατόπιση Block</title>
+  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Με Νέες Διατάξεις</title>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -61,15 +61,16 @@
       background: #333;
       color: #fff;
     }
-    /* Αλλαγή: Μέγεθος γραμματοσειράς για τους τίτλους των ομάδων */
-    .group-name {
+    /* Διατηρούμε το ύφος των τίτλων – ομαδοποίησης και περιόδων */
+    .group-name, .period-label {
       font-size: 8px;
+      background: #f0f0f0;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -90,6 +91,7 @@
   </div>
 
   <script>
+    // Χρώματα για τις κατηγορίες
     const CATEGORY_COLORS = {
       'alkali-block': '#ff9999',
       's-block': '#ffcccc',
@@ -101,21 +103,31 @@
       'period-label': '#f0f0f0'
     };
 
-    // rowsData: κάθε γραμμή του πίνακα
+    /*  
+      Δομή πίνακα – 9 σειρές (με «ανθρώπινη αρίθμηση» 1 έως 9):
+      • Σειρά 1 (rowsData[0]): Νέο σύστημα ομαδοποίησης (ομάδες 1–18).
+      • Σειρά 2 (rowsData[1]): Παλαιό σύστημα ομαδοποίησης (π.χ. "IA", "IIA", κ.λπ.).
+      • Σειρές 3 έως 9 (rowsData[2] έως rowsData[8]): Οι 7 περίοδοι του πίνακα.
+         Σε αυτές τις σειρές το πρώτο κελί (index 0) κρατά το όνομα της περιόδου,
+         ενώ τα υπόλοιπα 32 κελιά χρησιμοποιούνται για τα στοιχεία.
+    */
     let rowsData = [];
-    // Ξεκινάμε με τα στοιχεία 3 έως 118
     let globalElementNumber = 3;
-    let currentRowIndex = 3;
+    // Για τη συμπλήρωση των στοιχείων 3–118 (περίοδοι 2 έως 7) ξεκινάμε στη σειρά 4 (δηλαδή rowsData[3]).
+    // Όταν ολοκληρωθεί, στη φάση 2 θα εισαχθούν τα στοιχεία 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1).
+    let currentRowIndex = 3; 
     let groupNumbersAdded = false;
-    // Καθορισμός φάσεων:
-    // Phase 1: Εισαγωγή στοιχείων 3-118
-    // Phase 2: Εισαγωγή στοιχείων 1 και 2 στην 1η περίοδο (row index 2)
-    // Phase 3: Εμφάνιση ονομάτων περιόδων
-    // Phase 4: Εμφάνιση παλαιού συστήματος ομάδων (Ι, ΙΙ κλπ.)
-    // Phase 5: Εμφάνιση νέου συστήματος ομάδων (ομάδες 1-18)
-    // Phase 6: Διαδικασία ολοκληρώθηκε
+    /* Ορισμός φάσεων:
+         Phase 1: Εισαγωγή στοιχείων 3–118 (στις σειρές 4–9, δηλαδή rowsData[3] έως rowsData[8]).
+         Phase 2: Εισαγωγή στοιχείων 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1).
+         Phase 3: Εμφάνιση ονομάτων περιόδων στις σειρές 3–9 (στο πρώτο κελί κάθε σειράς, rowsData[2] έως rowsData[8]).
+         Phase 4: Εμφάνιση του παλιού συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 2 (rowsData[1]).
+         Phase 5: Εμφάνιση του νέου συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 1 (rowsData[0]).
+         Phase 6: Διαδικασία ολοκληρώθηκε.
+    */
     let phase = 1;
 
+    // Τα fillingPatterns παραμένουν όπως στον αρχικό κώδικα για τα στοιχεία 3–118.
     const fillingPatterns = [
       [{ count: 8, shifting: true }],
       [{ count: 8, shifting: false }],
@@ -127,16 +139,27 @@
 
     function initialize() {
       rowsData = [];
+      // Δημιουργούμε 9 σειρές (index 0 έως 8)
       for (let i = 0; i < 9; i++) {
+        let cells = [];
+        if(i < 2) { 
+          // Σειρές 1 και 2 (rowsData[0] και rowsData[1]) για ομαδοποίηση.
+          cells = [];
+        } else {
+          // Σειρές 3 έως 9 (rowsData[2] έως rowsData[8]) – το κελί index 0 θα κρατήσει το όνομα περίοδου.
+          cells = [null];
+        }
         rowsData.push({
-          cells: Array(2).fill(null),
+          cells: cells,
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          insertionIndex: 1
+          insertionIndex: (i < 2 ? 0 : 1),
+          periodLabel: null
         });
       }
       globalElementNumber = 3;
+      // Phase 1: τα στοιχεία 3–118 τοποθετούνται στις σειρές 4–9, δηλαδή ξεκινάμε από rowsData[3].
       currentRowIndex = 3;
       groupNumbersAdded = false;
       phase = 1;
@@ -184,35 +207,20 @@
     }
 
     function addElementToCurrentRow() {
-      // Phase 1: Συμπλήρωση στοιχείων 3 έως 118
+      // Phase 1: Εισαγωγή στοιχείων 3–118 στις σειρές 4–9 (rowsData[3] έως rowsData[8])
       if (phase === 1) {
         if (globalElementNumber > 118) {
-          // Όταν τελειώσει η φάση 1, μεταβαίνουμε στη φάση 2:
+          // Όταν τελειώσει η συμπλήρωση των στοιχείων 3–118,
+          // μεταβαίνουμε στη Phase 2 για εισαγωγή των στοιχείων 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1)
+          currentRowIndex = 2;
+          globalElementNumber = 1;
           phase = 2;
-          currentRowIndex = 2; 
-          globalElementNumber = 1; 
           redraw();
           return;
         }
-        
-        // Για τη σειρά 2 (προηγούμενη χρήση για f-block, εδώ απλώς διατηρούμε την εισαγωγή)
-        if (currentRowIndex === 2) {
-          let insertIndex = (globalElementNumber === 1) ? 1 : 32;
-          while (rowsData[currentRowIndex].cells.length <= insertIndex) { 
-            rowsData[currentRowIndex].cells.push(null); 
-          }
-          rowsData[currentRowIndex].cells[insertIndex] = createCell({
-            number: globalElementNumber,
-            category: getCategory(globalElementNumber)
-          });
-          globalElementNumber++;
-          redraw();
-          return;
-        }
-        
-        // Για τις σειρές 3 έως 8
+        const row = rowsData[currentRowIndex];
         if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
-          let pattern = fillingPatterns[currentRowIndex - 3][rowsData[currentRowIndex].currentSegment];
+          let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
           let cell = createCell({
             number: globalElementNumber,
             category: getCategory(globalElementNumber)
@@ -220,30 +228,30 @@
           if (pattern.shifting) {
             handleShiftingForRow(currentRowIndex);
           }
-          let targetIndex = rowsData[currentRowIndex].insertionIndex;
-          while (rowsData[currentRowIndex].cells[targetIndex] != null) {
+          let targetIndex = row.insertionIndex;
+          while (row.cells[targetIndex] != null) {
             targetIndex++;
-            if (targetIndex >= rowsData[currentRowIndex].cells.length) { 
-              rowsData[currentRowIndex].cells.push(null); 
+            if (targetIndex >= row.cells.length) { 
+              row.cells.push(null); 
             }
           }
-          rowsData[currentRowIndex].cells[targetIndex] = cell;
+          row.cells[targetIndex] = cell;
           globalElementNumber++;
-          rowsData[currentRowIndex].countInSegment++;
-          if (rowsData[currentRowIndex].countInSegment === pattern.count) {
-            rowsData[currentRowIndex].currentSegment++;
-            rowsData[currentRowIndex].countInSegment = 0;
-            rowsData[currentRowIndex].insertionIndex = rowsData[currentRowIndex].cells.length;
+          row.countInSegment++;
+          if (row.countInSegment === pattern.count) {
+            row.currentSegment++;
+            row.countInSegment = 0;
+            row.insertionIndex = row.cells.length;
           }
-          if (rowsData[currentRowIndex].currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
+          if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
             currentRowIndex++;
           }
         }
         redraw();
       }
-      // Phase 2: Εισαγωγή στοιχείων 1 και 2 στην πρώτη περίοδο (row index 2)
+      // Phase 2: Εισαγωγή στοιχείων 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1)
       else if (phase === 2) {
-        const row = rowsData[currentRowIndex];
+        const row = rowsData[currentRowIndex]; // currentRowIndex === 2
         let insertIndex = (globalElementNumber === 1) ? 1 : 32;
         while (row.cells.length <= insertIndex) { row.cells.push(null); }
         row.cells[insertIndex] = createCell({
@@ -252,92 +260,126 @@
         });
         globalElementNumber++;
         if (globalElementNumber > 2) {
-          phase = 3; // Μετάβαση στην εμφάνιση ονομάτων περιόδων
+          phase = 3;
         }
         redraw();
-        return;
       }
-      // Phase 3: Εμφάνιση ονομάτων περιόδων
+      // Phase 3: Εμφάνιση ονομάτων περιόδων στις σειρές 3–9 (rowsData[2] έως rowsData[8])
       else if (phase === 3) {
-        showPeriodNames();
+        addPeriodNames();
         phase = 4;
         redraw();
-        return;
       }
-      // Phase 4: Εμφάνιση παλαιού συστήματος ομαδοποίησης (Ι, ΙΙ κλπ.)
+      // Phase 4: Εμφάνιση του παλιού συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 2 (rowsData[1])
       else if (phase === 4) {
-        addOldGroupNames();
+        addGroupNumbers();
         phase = 5;
         redraw();
-        return;
       }
-      // Phase 5: Εμφάνιση νέου συστήματος ομαδοποίησης (ομάδες 1-18)
+      // Phase 5: Εμφάνιση του νέου συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 1 (rowsData[0])
       else if (phase === 5) {
         addNewGroupNumbers();
         phase = 6; // Διαδικασία ολοκληρώθηκε
         redraw();
-        return;
       }
     }
 
-    // Εμφάνιση παλαιού συστήματος ομάδων
-    function addOldGroupNames() {
+    // Phase 3: Τοποθέτηση ονομάτων περιόδων στις σειρές 3–9 (δηλαδή στα rowsData[2] έως rowsData[8])
+    function addPeriodNames() {
+      rowsData[2].periodLabel = "1η Κ";  // Περίοδος 1 (στοιχεία 1 και 2)
+      rowsData[3].periodLabel = "2η L";  // Περίοδος 2 (στοιχεία 3–10, κ.λπ.)
+      rowsData[4].periodLabel = "3η M";  // Περίοδος 3
+      rowsData[5].periodLabel = "4η N";  // Περίοδος 4
+      rowsData[6].periodLabel = "5η O";  // Περίοδος 5
+      rowsData[7].periodLabel = "6η P";  // Περίοδος 6
+      rowsData[8].periodLabel = "7η Q";  // Περίοδος 7
+    }
+
+    // Phase 4: Τοποθέτηση του παλιού συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 2 (rowsData[1])
+    function addGroupNumbers() {
       let oldNumbers = [
-        "IA", "IIA", 
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null, // 14 κενά
-        "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", 
-        "VIIIB", "VIIIB", "IB", "IIB", 
+        "IA", "IIA",
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
+        "VIIIB", "VIIIB", "IB", "IIB",
         "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
       ];
-
-      rowsData[1].cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
-      rowsData[1].cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
-      
+      let row = rowsData[1];
+      while (row.cells.length < 33) { row.cells.push(null); }
+      row.cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
+      row.cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
       let idx = 2;
       for (let i = 17; i <= 32; i++) {
-        rowsData[1].cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
+        row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
         idx++;
       }
     }
 
-    // Εμφάνιση νέου συστήματος ομάδων (ομάδες 1-18)
+    // Phase 5: Τοποθέτηση του νέου συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 1 (rowsData[0])
     function addNewGroupNumbers() {
-      for (let i = 1; i <= 18; i++) {
-        rowsData[1].cells[i] = createCell({ number: i, category: 'group-name' });
+      let row = rowsData[0];
+      while (row.cells.length < 33) { row.cells.push(null); }
+      row.cells[1] = createCell({ number: 1, category: 'group-name' });
+      row.cells[2] = createCell({ number: 2, category: 'group-name' });
+      let num = 3;
+      for (let i = 17; i <= 32; i++) {
+        row.cells[i] = createCell({ number: num, category: 'group-name' });
+        num++;
       }
-    }
-
-    // Εμφάνιση ονομάτων περιόδων στη σειρά 0
-    function showPeriodNames() {
-      const periodNames = ["1η Περίοδος", "2η Περίοδος", "3η Περίοδος", "4η Περίοδος", "5η Περίοδος", "6η Περίοδος", "7η Περίοδος"];
-      rowsData[0].cells = []; // Καθαρίζουμε τη σειρά
-      periodNames.forEach(name => {
-        rowsData[0].cells.push(createCell({
-          number: name,
-          category: 'period-label'
-        }));
-      });
     }
 
     function drawTable() {
       background(247);
       let yOffset = 50;
-      rowsData.forEach((row) => {
-        let xOffset = 80;
-        row.cells.forEach((cell) => {
-          if (cell) {
-            fill(CATEGORY_COLORS[cell.category]);
-            stroke(85);
-            rect(xOffset, yOffset, cell.width, cell.height);
+      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+        let row = rowsData[rowIndex];
+        let xOffset;
+        // Για τις σειρές 1 και 2 (rowsData[0] και rowsData[1]) σχεδιάζουμε όλα τα κελιά (ομαδοποίηση)
+        if (rowIndex < 2) {
+          xOffset = 80;
+          for (let i = 0; i < row.cells.length; i++) {
+            let cell = row.cells[i];
+            if (cell) {
+              fill(CATEGORY_COLORS[cell.category]);
+              stroke(85);
+              rect(xOffset, yOffset, cell.width, cell.height);
+              fill(0);
+              textSize(12);
+              textAlign(CENTER, CENTER);
+              text(cell.number, xOffset + cell.width/2, yOffset + cell.height/2);
+            }
+            xOffset += 42;
+          }
+        } else {
+          // Για τις σειρές των περιόδων (rowsData[2] έως rowsData[8])
+          // Σχεδιάζουμε πρώτα το κελί με το όνομα περιόδου (το index 0)
+          if (row.periodLabel) {
+            fill(CATEGORY_COLORS['period-label']);
+            noStroke();
+            rect(20, yOffset, 50, 40);
             fill(0);
             textSize(12);
             textAlign(CENTER, CENTER);
-            text(cell.number, xOffset + cell.width/2, yOffset + cell.height/2);
+            text(row.periodLabel, 20 + 25, yOffset + 20);
           }
-          xOffset += 42;
-        });
+          // Ξεκινάμε από το index 1 για τα στοιχεία
+          xOffset = 80;
+          for (let i = 1; i < row.cells.length; i++) {
+            let cell = row.cells[i];
+            if (cell) {
+              fill(CATEGORY_COLORS[cell.category]);
+              stroke(85);
+              rect(xOffset, yOffset, cell.width, cell.height);
+              fill(0);
+              textSize(12);
+              textAlign(CENTER, CENTER);
+              text(cell.number, xOffset + cell.width/2, yOffset + cell.height/2);
+            }
+            xOffset += 42;
+          }
+        }
         yOffset += 42;
-      });
+      }
     }
 
     function setup() {
@@ -357,7 +399,7 @@
     });
 
     document.getElementById('fillAll').addEventListener('click', () => {
-      while (phase < 6) { // Όσο δεν έχει ολοκληρωθεί η διαδικασία
+      while (phase < 6 || (phase === 1 && globalElementNumber <= 118)) {
         addElementToCurrentRow();
       }
       redraw();
