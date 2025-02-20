@@ -297,13 +297,13 @@
       });
     }
 
-    function setup() {
-      createCanvas(windowWidth, windowHeight);
-      textFont('Times New Roman');
-      noLoop();
-      initialize();
-      redraw(); // Προσθήκη για να ξεκινήσει η εμφάνιση
-    }
+ function setup() {
+  createCanvas(windowWidth, windowHeight);
+  textFont('Times New Roman');
+  initialize();  // Βεβαιωνόμαστε ότι η αρχικοποίηση γίνεται πριν από οποιαδήποτε σχεδίαση
+  redraw();
+}
+
 
     function draw() {
       drawTable();
