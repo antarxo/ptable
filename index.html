@@ -69,7 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -92,6 +92,7 @@
   <script>
     // Global μεταβλητές
     let elementsData = [];
+    // Δεν χρησιμοποιούμε πλέον globalMouseX/MouseY για mouseover, μόνο για κλικ
     let globalMouseX = 0, globalMouseY = 0;
 
     // p5.js preload: φόρτωση του αρχείου JSON πριν το setup
@@ -131,9 +132,9 @@
     };
 
     /* Δομή:
-         - rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, τα υπόλοιπα: 3..18 στο τέλος)
-         - rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, τα υπόλοιπα: 16 στοιχεία)
-         - rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, τα υπόλοιπα για στοιχεία)
+         rowsData[0]: Νέο σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα, τα υπόλοιπα: 3..18 στο τέλος)
+         rowsData[1]: Παλιό σύστημα ομαδοποίησης (32 κελιά: index 0,1 γεμάτα με "IA","IIA", κενά στα 2-15, τα υπόλοιπα: 16 στοιχεία)
+         rowsData[2] έως [8]: 7 περίοδοι (το πρώτο κελί δείχνει το όνομα, τα υπόλοιπα για στοιχεία)
     */
     let rowsData = [];
     let globalElementNumber = 3;
@@ -401,29 +402,7 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Ενημέρωση πληροφοριών στο mouseover: κάθε φορά που το ποντίκι κινείται, εάν είναι πάνω σε κελί ενημερώνουμε το infoPanel.
-    function handleMouseOver() {
-      let x = globalMouseX || mouseX;
-      let y = globalMouseY || mouseY;
-      let found = false;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
-        let row = rowsData[rowIndex];
-        let startIndex = (rowIndex < 2 ? 0 : 1);
-        for (let i = startIndex; i < row.cells.length; i++) {
-          let cell = row.cells[i];
-          if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
-              y >= cell.drawY && y <= cell.drawY + cell.drawH) {
-            updateInfoPanel(cell);
-            found = true;
-            break;
-          }
-        }
-        if (found) break;
-      }
-      if (!found) clearInfoPanel();
-    }
-
-    // Ενημέρωση πληροφοριών στο click: όταν κάνετε κλικ πάνω σε κελί, εμφανίζονται οι πληροφορίες του.
+    // Ενημέρωση πληροφοριών με κλικ πάνω σε κελί
     function handleMouseClick() {
       let x = globalMouseX || mouseX;
       let y = globalMouseY || mouseY;
@@ -445,12 +424,7 @@
       if (!found) clearInfoPanel();
     }
 
-    // Global event listeners για mouseover και click
-    window.addEventListener('mousemove', (e) => {
-      globalMouseX = e.clientX;
-      globalMouseY = e.clientY;
-      handleMouseOver();
-    });
+    // Εγγραφή του event listener για το κλικ (mouse click)
     window.addEventListener('click', (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
@@ -469,7 +443,7 @@
       drawTable();
     }
 
-    // Κουμπιά: το "Επόμενο" καλεί την προσθήκη του επόμενου στοιχείου.
+    // Κουμπιά
     document.getElementById('nextElement').addEventListener('click', () => {
       addElementToCurrentRow();
       redraw();
@@ -485,7 +459,7 @@
       redraw();
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
-      // Προαιρετική λειτουργία για σύμπτυξη/ανάπτυξη του infoPanel
+      // Επιλογή λειτουργίας για σύμπτυξη/ανάπτυξη του infoPanel, αν το επιθυμείς.
     });
 
     function windowResized() {
