@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Με Νέες Διατάξεις</title>
+  <title>Δυναμική Δημιουργία Περιοδικού Πίνακα - Νέες Διατάξεις</title>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -61,16 +61,12 @@
       background: #333;
       color: #fff;
     }
-    /* Διατηρούμε το ύφος των τίτλων – ομαδοποίησης και περιόδων */
-    .group-name, .period-label {
-      font-size: 8px;
-      background: #f0f0f0;
-    }
+    /* Οι τίτλοι ομάδων και οι περίοδοι θα εμφανίζονται με textSize(12) και Times New Roman */
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
+  <div id="title">Δημιουργία Περιοδικού Πίνακα Βήμα-βήμα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -91,7 +87,7 @@
   </div>
 
   <script>
-    // Χρώματα για τις κατηγορίες
+    // Χρώματα κατηγοριών
     const CATEGORY_COLORS = {
       'alkali-block': '#ff9999',
       's-block': '#ffcccc',
@@ -103,31 +99,29 @@
       'period-label': '#f0f0f0'
     };
 
-    /*  
-      Δομή πίνακα – 9 σειρές (με «ανθρώπινη αρίθμηση» 1 έως 9):
-      • Σειρά 1 (rowsData[0]): Νέο σύστημα ομαδοποίησης (ομάδες 1–18).
-      • Σειρά 2 (rowsData[1]): Παλαιό σύστημα ομαδοποίησης (π.χ. "IA", "IIA", κ.λπ.).
-      • Σειρές 3 έως 9 (rowsData[2] έως rowsData[8]): Οι 7 περίοδοι του πίνακα.
-         Σε αυτές τις σειρές το πρώτο κελί (index 0) κρατά το όνομα της περιόδου,
-         ενώ τα υπόλοιπα 32 κελιά χρησιμοποιούνται για τα στοιχεία.
+    /* Δομή:
+       - rowsData[0]: Σειρά 1 -> Νέο σύστημα ομαδοποίησης (ομάδες 1–18)
+       - rowsData[1]: Σειρά 2 -> Παλιό σύστημα ομαδοποίησης (π.χ. "IA", "IIA", κλπ.)
+       - rowsData[2] έως rowsData[8]: Σειρές 3–9 -> Οι 7 περίοδοι.
+          Σε κάθε μία από αυτές, το κελί index 0 θα δείχνει το όνομα της περιόδου, 
+          ενώ τα υπόλοιπα (32 κελιά) είναι για τα στοιχεία.
     */
     let rowsData = [];
     let globalElementNumber = 3;
-    // Για τη συμπλήρωση των στοιχείων 3–118 (περίοδοι 2 έως 7) ξεκινάμε στη σειρά 4 (δηλαδή rowsData[3]).
-    // Όταν ολοκληρωθεί, στη φάση 2 θα εισαχθούν τα στοιχεία 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1).
-    let currentRowIndex = 3; 
+    // Τα στοιχεία 3–118 θα τοποθετούνται στις σειρές 4–9 (δηλαδή rowsData[3] έως rowsData[8]).
+    // Όταν ολοκληρωθούν, στη Phase 2, στη σειρά 3 (rowsData[2]) θα τοποθετηθούν τα στοιχεία 1 και 2.
+    let currentRowIndex = 3;
     let groupNumbersAdded = false;
     /* Ορισμός φάσεων:
-         Phase 1: Εισαγωγή στοιχείων 3–118 (στις σειρές 4–9, δηλαδή rowsData[3] έως rowsData[8]).
+         Phase 1: Εισαγωγή στοιχείων 3–118 (στις σειρές 4–9, rowsData[3] έως rowsData[8]).
          Phase 2: Εισαγωγή στοιχείων 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1).
-         Phase 3: Εμφάνιση ονομάτων περιόδων στις σειρές 3–9 (στο πρώτο κελί κάθε σειράς, rowsData[2] έως rowsData[8]).
+         Phase 3: Εμφάνιση ονομάτων περιόδων στις σειρές 3–9 (στο πρώτο κελί κάθε σειράς).
          Phase 4: Εμφάνιση του παλιού συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 2 (rowsData[1]).
          Phase 5: Εμφάνιση του νέου συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 1 (rowsData[0]).
          Phase 6: Διαδικασία ολοκληρώθηκε.
     */
     let phase = 1;
 
-    // Τα fillingPatterns παραμένουν όπως στον αρχικό κώδικα για τα στοιχεία 3–118.
     const fillingPatterns = [
       [{ count: 8, shifting: true }],
       [{ count: 8, shifting: false }],
@@ -141,12 +135,12 @@
       rowsData = [];
       // Δημιουργούμε 9 σειρές (index 0 έως 8)
       for (let i = 0; i < 9; i++) {
-        let cells = [];
+        let cells;
         if(i < 2) { 
-          // Σειρές 1 και 2 (rowsData[0] και rowsData[1]) για ομαδοποίηση.
+          // Σειρές 1 και 2 για ομαδοποίηση: αρχικά κενός πίνακας
           cells = [];
         } else {
-          // Σειρές 3 έως 9 (rowsData[2] έως rowsData[8]) – το κελί index 0 θα κρατήσει το όνομα περίοδου.
+          // Σειρές 3 έως 9: το κελί 0 για όνομα περίοδου, τα υπόλοιπα για στοιχεία
           cells = [null];
         }
         rowsData.push({
@@ -159,7 +153,6 @@
         });
       }
       globalElementNumber = 3;
-      // Phase 1: τα στοιχεία 3–118 τοποθετούνται στις σειρές 4–9, δηλαδή ξεκινάμε από rowsData[3].
       currentRowIndex = 3;
       groupNumbersAdded = false;
       phase = 1;
@@ -210,8 +203,7 @@
       // Phase 1: Εισαγωγή στοιχείων 3–118 στις σειρές 4–9 (rowsData[3] έως rowsData[8])
       if (phase === 1) {
         if (globalElementNumber > 118) {
-          // Όταν τελειώσει η συμπλήρωση των στοιχείων 3–118,
-          // μεταβαίνουμε στη Phase 2 για εισαγωγή των στοιχείων 1 και 2 στη σειρά 3 (rowsData[2], περίοδος 1)
+          // Μετά την εισαγωγή των στοιχείων 3–118, στη Phase 2 θα τοποθετηθούν τα στοιχεία 1 και 2
           currentRowIndex = 2;
           globalElementNumber = 1;
           phase = 2;
@@ -264,38 +256,39 @@
         }
         redraw();
       }
-      // Phase 3: Εμφάνιση ονομάτων περιόδων στις σειρές 3–9 (rowsData[2] έως rowsData[8])
+      // Phase 3: Εμφάνιση ονομάτων περιόδων στις σειρές 3–9 (στο πρώτο κελί κάθε σειράς)
       else if (phase === 3) {
         addPeriodNames();
         phase = 4;
         redraw();
       }
-      // Phase 4: Εμφάνιση του παλιού συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 2 (rowsData[1])
+      // Phase 4: Εμφάνιση του παλιού συστήματος ομαδοποίησης στη σειρά 2 (rowsData[1])
       else if (phase === 4) {
         addGroupNumbers();
         phase = 5;
         redraw();
       }
-      // Phase 5: Εμφάνιση του νέου συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 1 (rowsData[0])
+      // Phase 5: Εμφάνιση του νέου συστήματος ομαδοποίησης στη σειρά 1 (rowsData[0])
       else if (phase === 5) {
         addNewGroupNumbers();
-        phase = 6; // Διαδικασία ολοκληρώθηκε
+        phase = 6;
         redraw();
       }
     }
 
-    // Phase 3: Τοποθέτηση ονομάτων περιόδων στις σειρές 3–9 (δηλαδή στα rowsData[2] έως rowsData[8])
+    // Phase 3: Τοποθέτηση ονομάτων περιόδων στις σειρές 3–9 (rowsData[2] έως rowsData[8])
     function addPeriodNames() {
-      rowsData[2].periodLabel = "1η Κ";  // Περίοδος 1 (στοιχεία 1 και 2)
-      rowsData[3].periodLabel = "2η L";  // Περίοδος 2 (στοιχεία 3–10, κ.λπ.)
-      rowsData[4].periodLabel = "3η M";  // Περίοδος 3
-      rowsData[5].periodLabel = "4η N";  // Περίοδος 4
-      rowsData[6].periodLabel = "5η O";  // Περίοδος 5
-      rowsData[7].periodLabel = "6η P";  // Περίοδος 6
-      rowsData[8].periodLabel = "7η Q";  // Περίοδος 7
+      // Οι ονομασίες εμφανίζονται στο κελί index 0 κάθε σειράς και θα σχεδιαστούν με την ίδια μορφοποίηση (textSize 12, Times New Roman)
+      rowsData[2].periodLabel = "1η Κ";
+      rowsData[3].periodLabel = "2η L";
+      rowsData[4].periodLabel = "3η M";
+      rowsData[5].periodLabel = "4η N";
+      rowsData[6].periodLabel = "5η O";
+      rowsData[7].periodLabel = "6η P";
+      rowsData[8].periodLabel = "7η Q";
     }
 
-    // Phase 4: Τοποθέτηση του παλιού συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 2 (rowsData[1])
+    // Phase 4: Τοποθέτηση του παλιού συστήματος ομαδοποίησης στη σειρά 2 (rowsData[1])
     function addGroupNumbers() {
       let oldNumbers = [
         "IA", "IIA",
@@ -305,7 +298,8 @@
         "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
       ];
       let row = rowsData[1];
-      while (row.cells.length < 33) { row.cells.push(null); }
+      // Επαναφέρουμε τον πίνακα κελιών σε μήκος 33 ώστε να διατηρηθεί η σωστή στοίχιση
+      row.cells = new Array(33).fill(null);
       row.cells[1] = createCell({ number: oldNumbers[0], category: 'group-name' });
       row.cells[2] = createCell({ number: oldNumbers[1], category: 'group-name' });
       let idx = 2;
@@ -315,10 +309,11 @@
       }
     }
 
-    // Phase 5: Τοποθέτηση του νέου συστήματος ομαδοποίησης στις προκαθορισμένες θέσεις της σειράς 1 (rowsData[0])
+    // Phase 5: Τοποθέτηση του νέου συστήματος ομαδοποίησης στη σειρά 1 (rowsData[0])
     function addNewGroupNumbers() {
       let row = rowsData[0];
-      while (row.cells.length < 33) { row.cells.push(null); }
+      // Επαναφέρουμε τον πίνακα κελιών σε μήκος 33
+      row.cells = new Array(33).fill(null);
       row.cells[1] = createCell({ number: 1, category: 'group-name' });
       row.cells[2] = createCell({ number: 2, category: 'group-name' });
       let num = 3;
@@ -334,7 +329,7 @@
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset;
-        // Για τις σειρές 1 και 2 (rowsData[0] και rowsData[1]) σχεδιάζουμε όλα τα κελιά (ομαδοποίηση)
+        // Σειρές 1 και 2 (rowsData[0] και rowsData[1]) για ομαδοποίηση
         if (rowIndex < 2) {
           xOffset = 80;
           for (let i = 0; i < row.cells.length; i++) {
@@ -351,18 +346,16 @@
             xOffset += 42;
           }
         } else {
-          // Για τις σειρές των περιόδων (rowsData[2] έως rowsData[8])
-          // Σχεδιάζουμε πρώτα το κελί με το όνομα περιόδου (το index 0)
+          // Σειρές 3–9 (περίοδοι)
+          // Σχεδιάζουμε πρώτα το κελί με το όνομα περίοδου (index 0)
           if (row.periodLabel) {
-            fill(CATEGORY_COLORS['period-label']);
-            noStroke();
-            rect(20, yOffset, 50, 40);
+            // Χρησιμοποιούμε την ίδια μορφοποίηση με τα στοιχεία (textSize 12, Times New Roman)
             fill(0);
             textSize(12);
             textAlign(CENTER, CENTER);
             text(row.periodLabel, 20 + 25, yOffset + 20);
           }
-          // Ξεκινάμε από το index 1 για τα στοιχεία
+          // Σχεδιάζουμε τα υπόλοιπα κελιά (index 1 έως 32)
           xOffset = 80;
           for (let i = 1; i < row.cells.length; i++) {
             let cell = row.cells[i];
