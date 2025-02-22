@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δύο Ξεχωριστοί Καμβάδες - Πίνακας και Overlay</title>
+  <title>Πίνακας με Δύο Καμβάδες</title>
   <!-- Χρήση της γραμματοσειράς Roboto από Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
@@ -12,21 +12,22 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Δύο containers για τους καμβάδες */
+    /* Containers για τους δύο καμβάδες */
     #mainCanvasContainer {
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 1; /* κάτω επίπεδο */
+      z-index: 1; /* κύριος καμβάς */
     }
     #overlayCanvasContainer {
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 10; /* πάνω από τον κύριο */
-      pointer-events: none; /* Αν θέλεις το overlay να μην παρεμβαίνει στα clicks */
+      z-index: 10; /* overlay πάνω από τον κύριο */
+      /* Εάν θέλετε το overlay να μην παρεμβαίνει στα clicks: */
+      pointer-events: none;
     }
-    /* Πάνελ πληροφοριών (δείχνουμε τον τίτλο εδώ για λόγους επίδειξης) */
+    /* Πάνελ πληροφοριών και κουμπιά (μπορείτε να τα ενσωματώσετε όπως στο αρχικό σας layout) */
     #infoPanel {
       position: absolute;
       top: 20px;
@@ -37,29 +38,52 @@
       border: 1px solid #333;
       z-index: 20;
     }
+    /* Παραδείγματος χάριν ορισμός κουμπιών */
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+    }
+    #controls button {
+      margin: 0 5px;
+      padding: 5px 10px;
+    }
   </style>
   <!-- Φόρτωση p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="infoPanel">Παράδειγμα με δύο ξεχωριστούς καμβάδες</div>
+  <!-- Πάνελ πληροφοριών -->
+  <div id="infoPanel">Πληροφορίες στοιχείου...</div>
+  <!-- Κουμπιά ελέγχου (μπορείτε να τα προσαρμόσετε) -->
+  <div id="controls">
+    <button id="nextElement">Επόμενο</button>
+    <button id="fillAll">Συμπλήρωσε</button>
+    <button id="togglePanel">Εναλλαγή collapsed</button>
+    <button id="reset">Reset</button>
+  </div>
   <!-- Containers για τους δύο καμβάδες -->
   <div id="mainCanvasContainer"></div>
   <div id="overlayCanvasContainer"></div>
   
   <script>
-    /* Global variables και dummy data για παράδειγμα */
-    let elementsData; // Αν υπάρχει JSON, εδώ θα το φορτώσεις
+    /* --- Global Variables και Functions για τον πίνακα --- */
+    let elementsData = [];  // Αν φορτώνετε elements.json, εδώ γίνεται η φόρτωση.
     let rowsData = [];
-    const colGap = 42; // βασικό μέτρο και διάκενο
-    // hideFBlock: true για collapsed mode (μόνο s στον κύριο πίνακα, overlay για d/p και f)
-    let hideFBlock = true; 
-
-    // Dummy initialization για το παράδειγμα:
+    let globalElementNumber = 3;
+    let currentRowIndex = 3;
+    let phase = 1;
+    // hideFBlock: false = πλήρης πίνακας, true = collapsed mode (μόνο s στον κύριο, overlay για d/p και f)
+    let hideFBlock = false;
+    const colGap = 42;
+    
+    // Παράδειγμα initialize (τον προσαρμόζετε σύμφωνα με τον κώδικα σας)
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
-        // Οι πρώτες 2 σειρές (ομάδες) θα έχουν 32 κελιά (για απλό παράδειγμα)
+        // Οι πρώτες 2 σειρές (ομάδες) θα έχουν 32 κελιά (για παράδειγμα)
         let cells = (i < 2) ? new Array(32).fill(null) : [];
         rowsData.push({
           cells: cells,
@@ -70,27 +94,25 @@
           periodLabel: null
         });
       }
-      // Για τις υπόλοιπες σειρές, δημιουργούμε dummy κελιά.
-      for (let i = 2; i < 9; i++) {
-        let numCells = 18; // π.χ. 18 κελιά ανά σειρά
+      // Εδώ θα πρέπει να ενσωματώσετε τον δικό σας κώδικα δημιουργίας του πίνακα.
+      // Για παράδειγμα, για τις σειρές 3 έως 8:
+      for (let i = 3; i < 9; i++) {
+        let numCells = 18; // π.χ. 18 κελιά
         rowsData[i].cells = [];
         for (let j = 0; j < numCells; j++) {
-          // Δίνουμε ένα dummy αριθμό και κατηγορία
           let num = 3 + i * 10 + j;
-          let cat = 's-block';
-          if(j >= 2 && j < 10) cat = 'p-block';
-          else if(j >= 10 && j < 14) cat = 'd-block';
-          else if(j >= 14) cat = 'f-block';
-          // Ορίζουμε ένα dummy χρώμα ανά κατηγορία
+          // Προσαρμόστε τις κατηγορίες σύμφωνα με τον κώδικά σας:
+          let cat = (j < 2) ? 's-block' : (j < 10) ? 'p-block' : (j < 14) ? 'd-block' : 'f-block';
+          // Χρώματα από το αρχικό σας:
           let color;
-          if(cat === 's-block') color = '#ffcccc';
-          else if(cat === 'p-block') color = '#ccffcc';
-          else if(cat === 'd-block') color = '#ccccff';
-          else if(cat === 'f-block') color = '#ffe5cc';
+          if (cat === 's-block') color = '#ffcccc';
+          else if (cat === 'p-block') color = '#ccffcc';
+          else if (cat === 'd-block') color = '#ccccff';
+          else if (cat === 'f-block') color = '#ffe5cc';
           rowsData[i].cells.push({ number: num, category: cat, color: color });
         }
       }
-      // Μπορούμε να ορίσουμε dummy period labels για τις σειρές μετά τη 2η:
+      // Ορισμός period labels (προσαρμόστε όπως στον κώδικά σας)
       rowsData[2].periodLabel = "1η Κ";
       rowsData[3].periodLabel = "2η L";
       rowsData[4].periodLabel = "3η M";
@@ -99,153 +121,210 @@
       rowsData[7].periodLabel = "6η P";
       rowsData[8].periodLabel = "7η Q";
     }
-
-    // Συναρτήσεις σχεδίασης για τον κύριο πίνακα (main canvas)
+    
+    // Δείγμα updateInfoPanel – προσαρμόστε με τον κώδικά σας:
+    function updateInfoPanel(cell) {
+      let infoPanel = document.getElementById('infoPanel');
+      if(cell) {
+        infoPanel.innerHTML = `<strong>${cell.number}</strong> [${cell.category}]`;
+      } else {
+        infoPanel.innerHTML = "Πληροφορίες στοιχείου...";
+      }
+    }
+    
+    function clearInfoPanel() {
+      document.getElementById('infoPanel').innerHTML = "Πληροφορίες στοιχείου...";
+    }
+    
+    function handleMouseClick(x, y) {
+      // Ελέγχουμε όλα τα κελιά από όλους τους πίνακες (αν έχουν ενημερωθεί οι drawX/drawY)
+      let found = false;
+      for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
+        let row = rowsData[rowIndex];
+        for(let i = 0; i < row.cells.length; i++){
+          let cell = row.cells[i];
+          if(cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
+             y >= cell.drawY && y <= cell.drawY + cell.drawH) {
+            updateInfoPanel(cell);
+            found = true;
+            break;
+          }
+        }
+        if(found) break;
+      }
+      if(!found) clearInfoPanel();
+    }
+    
+    /* --- Συναρτήσεις Σχεδίασης --- */
+    
+    // Σχεδιάζει ολόκληρο τον πίνακα (full view)
     function drawFullTableMain(p) {
       p.background(247);
       let yOffset = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+      for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
         let xOffset = 80;
         let cellsToDraw = row.cells;
-        if (rowIndex < 2) {
+        if(rowIndex < 2){
           p.noStroke();
-          for (let i = 0; i < cellsToDraw.length; i++) {
+          for(let i = 0; i < cellsToDraw.length; i++){
             let cell = cellsToDraw[i];
-            if (cell) {
+            if(cell){
               p.fill(cell.color);
-              p.rect(xOffset, yOffset, 40, (cell.category === 'group-name' ? 20 : 40));
+              p.rect(xOffset, yOffset, 40, (cell.category==='group-name'?20:40));
               p.fill(0);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
-              p.text(cell.number, xOffset + 20, yOffset + (cell.category === 'group-name' ? 10 : 20));
+              p.text(cell.number, xOffset+20, yOffset+(cell.category==='group-name'?10:20));
+              // Αποθήκευση συντεταγμένων για interactivity
+              cell.drawX = xOffset;
+              cell.drawY = yOffset;
+              cell.drawW = 40;
+              cell.drawH = (cell.category==='group-name'?20:40);
             }
             xOffset += colGap;
           }
           p.stroke(85);
         } else {
-          if (row.periodLabel) {
+          if(row.periodLabel){
             p.fill(0);
             p.textSize(12);
             p.textAlign(p.CENTER, p.CENTER);
-            p.text(row.periodLabel, 45, yOffset + 20);
+            p.text(row.periodLabel, 45, yOffset+20);
           }
           xOffset = 80;
-          for (let i = 0; i < cellsToDraw.length; i++) {
+          for(let i = 0; i < cellsToDraw.length; i++){
             let cell = cellsToDraw[i];
-            if (cell) {
+            if(cell){
               p.fill(cell.color);
               p.stroke(85);
-              p.rect(xOffset, yOffset, 40, (cell.category === 'group-name' ? 20 : 40), 5);
+              p.rect(xOffset, yOffset, 40, (cell.category==='group-name'?20:40),5);
               p.fill(0);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
-              p.text(cell.number, xOffset + 20, yOffset + (cell.category === 'group-name' ? 10 : 20));
+              p.text(cell.number, xOffset+20, yOffset+(cell.category==='group-name'?10:20));
+              cell.drawX = xOffset;
+              cell.drawY = yOffset;
+              cell.drawW = 40;
+              cell.drawH = (cell.category==='group-name'?20:40);
             }
             xOffset += colGap;
           }
         }
-        yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
+        yOffset += (rowIndex<2?groupRowsGap:normalGap);
       }
     }
-
+    
+    // Σχεδιάζει τον πίνακα collapsed: μόνο τα 2 πρώτα κελιά (s τομέας)
     function drawCollapsedTableMain(p) {
-      // Σχεδιάζει μόνο τα 2 πρώτα κελιά (τον s τομέα)
       p.background(247);
       let yOffset = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+      for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
         let xOffset = 80;
-        let cellsToDraw = row.cells.slice(0, 2);
-        if (rowIndex < 2) {
+        let cellsToDraw = row.cells.slice(0,2);
+        if(rowIndex < 2){
           p.noStroke();
-          for (let i = 0; i < cellsToDraw.length; i++) {
+          for(let i = 0; i < cellsToDraw.length; i++){
             let cell = cellsToDraw[i];
-            if (cell) {
+            if(cell){
               p.fill(cell.color);
-              p.rect(xOffset, yOffset, 40, (cell.category === 'group-name' ? 20 : 40));
+              p.rect(xOffset, yOffset, 40, (cell.category==='group-name'?20:40));
               p.fill(0);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
-              p.text(cell.number, xOffset + 20, yOffset + (cell.category === 'group-name' ? 10 : 20));
+              p.text(cell.number, xOffset+20, yOffset+(cell.category==='group-name'?10:20));
+              cell.drawX = xOffset;
+              cell.drawY = yOffset;
+              cell.drawW = 40;
+              cell.drawH = (cell.category==='group-name'?20:40);
             }
             xOffset += colGap;
           }
           p.stroke(85);
         } else {
-          if (row.periodLabel) {
+          if(row.periodLabel){
             p.fill(0);
             p.textSize(12);
             p.textAlign(p.CENTER, p.CENTER);
-            p.text(row.periodLabel, 45, yOffset + 20);
+            p.text(row.periodLabel, 45, yOffset+20);
           }
           xOffset = 80;
-          for (let i = 0; i < cellsToDraw.length; i++) {
+          for(let i = 0; i < cellsToDraw.length; i++){
             let cell = cellsToDraw[i];
-            if (cell) {
+            if(cell){
               p.fill(cell.color);
               p.stroke(85);
-              p.rect(xOffset, yOffset, 40, (cell.category === 'group-name' ? 20 : 40), 5);
+              p.rect(xOffset, yOffset, 40, (cell.category==='group-name'?20:40),5);
               p.fill(0);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
-              p.text(cell.number, xOffset + 20, yOffset + (cell.category === 'group-name' ? 10 : 20));
+              p.text(cell.number, xOffset+20, yOffset+(cell.category==='group-name'?10:20));
+              cell.drawX = xOffset;
+              cell.drawY = yOffset;
+              cell.drawW = 40;
+              cell.drawH = (cell.category==='group-name'?20:40);
             }
             xOffset += colGap;
           }
         }
-        yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
+        yOffset += (rowIndex<2?groupRowsGap:normalGap);
       }
     }
-
-    // Συναρτήσεις σχεδίασης για το overlay (overlay canvas)
-    function drawCollapsedOverlay(p) {
-      // Overlay για τους τομείς d και p: σχεδιάζει όλα τα κελιά από index 2, ξεκινώντας δίπλα από τον s με διάκενο 5px.
+    
+    // Σχεδιάζει το overlay για τους τομείς d και p (και τον μετατοπισμένο f) – θα καλείται μόνο σε collapsed mode
+    function drawOverlay(p) {
+      // Overlay για τους τομείς d και p: σχεδιάζονται όλα τα κελιά από index 2
       let yOverlay = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+      for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
-        if (row.cells.length > 2) {
+        if(row.cells.length > 2){
           let dpCells = row.cells.slice(2);
-          for (let i = 0; i < dpCells.length; i++) {
+          for(let i = 0; i < dpCells.length; i++){
             let cell = dpCells[i];
-            if (cell) {
-              let x = 80 + (i + 2) * colGap + 5; // πρόσθετο 5px διάκενο
+            if(cell){
+              // Ξεκινάμε μετά τον s τομέα: 80 + 2*colGap + 5px διάκενο
+              let x = 80 + (i+2)*colGap + 5;
               let y = yOverlay;
               p.fill(cell.color);
               p.stroke(85);
-              p.rect(x, y, 40, (cell.category === 'group-name' ? 20 : 40), 5);
+              p.rect(x, y, 40, (cell.category==='group-name'?20:40),5);
               p.fill(0);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
-              p.text(cell.number, x + 20, y + (cell.category === 'group-name' ? 10 : 20));
+              p.text(cell.number, x+20, y+(cell.category==='group-name'?10:20));
+              cell.drawX = x;
+              cell.drawY = y;
+              cell.drawW = 40;
+              cell.drawH = (cell.category==='group-name'?20:40);
             }
           }
         }
-        yOverlay += (rowIndex < 2 ? groupRowsGap : normalGap);
+        yOverlay += (rowIndex<2?groupRowsGap:normalGap);
       }
       // Overlay για τον f τομέα: μετατοπισμένος προς τα κάτω (π.χ. +42px)
       let fCells = [];
-      for (let r = 0; r < rowsData.length; r++) {
-        for (let i = 0; i < rowsData[r].cells.length; i++) {
+      for(let r = 0; r < rowsData.length; r++){
+        for(let i = 0; i < rowsData[r].cells.length; i++){
           let cell = rowsData[r].cells[i];
-          if (cell && cell.category === 'f-block') {
+          if(cell && cell.category === 'f-block'){
             fCells.push(cell);
           }
         }
       }
-      // Ταξινόμηση με βάση τον αριθμό (dummy)
+      // Απλή ταξινόμηση με βάση τον αριθμό
       fCells.sort((a, b) => a.number - b.number);
       let lanthanides = fCells.filter(cell => cell.number >= 57 && cell.number <= 70);
       let actinides = fCells.filter(cell => cell.number >= 89 && cell.number <= 102);
-      let startX = 80 + 84;
-      let startY = 450 + 42; // μετατόπιση όταν collapsed
-      for (let i = 0; i < lanthanides.length; i++) {
+      let startX = 80 + 84; 
+      let startY = 450 + 42; // μετατόπιση collapsed
+      for(let i = 0; i < lanthanides.length; i++){
         let cell = lanthanides[i];
         let x = startX + i * colGap;
         let y = startY;
@@ -255,11 +334,15 @@
         p.fill(0);
         p.textSize(12);
         p.textAlign(p.CENTER, p.CENTER);
-        p.text(cell.number, x + 20, y + 20);
+        p.text(cell.number, x+20, y+20);
+        cell.drawX = x;
+        cell.drawY = y;
+        cell.drawW = 40;
+        cell.drawH = 40;
       }
-      let fHeight = lanthanides.length > 0 ? 40 : 40;
+      let fHeight = 40;
       let actinidesY = startY + fHeight + 2;
-      for (let i = 0; i < actinides.length; i++) {
+      for(let i = 0; i < actinides.length; i++){
         let cell = actinides[i];
         let x = startX + i * colGap;
         let y = actinidesY;
@@ -269,11 +352,17 @@
         p.fill(0);
         p.textSize(12);
         p.textAlign(p.CENTER, p.CENTER);
-        p.text(cell.number, x + 20, y + 20);
+        p.text(cell.number, x+20, y+20);
+        cell.drawX = x;
+        cell.drawY = y;
+        cell.drawW = 40;
+        cell.drawH = 40;
       }
     }
-
-    // Δημιουργούμε δύο p5 sketches, ο ένας για τον κύριο πίνακα και ο άλλος για το overlay.
+    
+    /* --- Δύο ξεχωριστοί p5 sketches --- */
+    
+    // Sketch για τον κύριο πίνακα (base)
     let mainSketch = function(p) {
       p.setup = function() {
         p.createCanvas(p.windowWidth, p.windowHeight);
@@ -286,12 +375,17 @@
           drawFullTableMain(p);
         }
       };
+      p.mouseClicked = function() {
+        // Μεταβιβάζουμε τα events στο handleMouseClick
+        handleMouseClick(p.mouseX, p.mouseY);
+      };
       p.windowResized = function() {
         p.resizeCanvas(p.windowWidth, p.windowHeight);
         p.redraw();
       };
     };
-
+    
+    // Sketch για το overlay
     let overlaySketch = function(p) {
       p.setup = function() {
         p.createCanvas(p.windowWidth, p.windowHeight);
@@ -300,7 +394,7 @@
       };
       p.draw = function() {
         if (hideFBlock) {
-          drawCollapsedOverlay(p);
+          drawOverlay(p);
         } else {
           p.clear();
         }
@@ -310,16 +404,39 @@
         p.redraw();
       };
     };
-
-    // Αρχικοποίηση των δεδομένων
+    
+    // Αρχικοποίηση δεδομένων
     initialize();
-    // Γέμισε τα rowsData με dummy δεδομένα για παράδειγμα
-    // (σε πραγματική περίπτωση θα φορτωθούν τα στοιχεία από το elements.json και θα δημιουργηθεί ο πίνακας)
-    // Για το παράδειγμα χρησιμοποιούμε την dummyFill μέσα στην initialize() παραπάνω.
-
+    
     // Δημιουργούμε τα δύο sketches στα αντίστοιχα containers
-    new p5(mainSketch, 'mainCanvasContainer');
-    new p5(overlaySketch, 'overlayCanvasContainer');
+    let mainP5 = new p5(mainSketch, 'mainCanvasContainer');
+    let overlayP5 = new p5(overlaySketch, 'overlayCanvasContainer');
+    
+    // Παράδειγμα χειρισμού κουμπιών:
+    document.getElementById('nextElement').addEventListener('click', function(e) {
+      // Εδώ θα καλέσετε τη λειτουργία που προσθέτει το επόμενο στοιχείο στον πίνακα
+      // addElementToCurrentRow();
+      // Μετά ανανεώνουμε και τα δύο sketches:
+      mainP5.redraw();
+      overlayP5.redraw();
+    });
+    document.getElementById('fillAll').addEventListener('click', function(e) {
+      // Εδώ θα καλείται μια λειτουργία που συμπληρώνει όλο τον πίνακα
+      // while(phase < 6 || (phase === 1 && globalElementNumber <= 118)) { addElementToCurrentRow(); }
+      mainP5.redraw();
+      overlayP5.redraw();
+    });
+    document.getElementById('reset').addEventListener('click', function(e) {
+      initialize();
+      mainP5.redraw();
+      overlayP5.redraw();
+    });
+    document.getElementById('togglePanel').addEventListener('click', function(e) {
+      hideFBlock = !hideFBlock;
+      // Ενημέρωση διαστάσεων αν χρειάζεται
+      mainP5.redraw();
+      overlayP5.redraw();
+    });
   </script>
 </body>
 </html>
