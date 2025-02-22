@@ -118,7 +118,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -137,15 +137,13 @@
       <button id="reset">Reset</button>
     </div>
   </div>
-  
+
   <script>
-    // Ο υπόλοιπος κώδικας του Π.Π. παραμένει όπως ήταν στην τελευταία λειτουργική έκδοση.
-    
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
     // false: horizontal mode, true: vertical mode
     let hideFBlock = false;
-    const colGap = 42; // 42px ως μέτρο και περιθώριο
+    const colGap = 42;
 
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
@@ -261,7 +259,8 @@
             category: getCategory(globalElementNumber)
           });
           if (pattern.shifting) {
-            handleShiftingForRow(currentRow);
+            // Διόρθωση: αντικαταστήστε "currentRow" με "currentRowIndex"
+            handleShiftingForRow(currentRowIndex);
           }
           let targetIndex = row.insertionIndex;
           while (row.cells[targetIndex] != null) {
@@ -367,18 +366,17 @@
       const infoPanel = document.getElementById("infoPanel");
       if (!hideFBlock) {
         // --- Horizontal mode ---
-        // Σύνολο πλάτους = 33 * 42 = 1386px, μειώνουμε κατά 42px ώστε να χωράει: 1386 - 42 = 1344px
-        let finalWidthH = 1386 - 42;
+        let finalWidthH = 1386 - 42; // 1344px
         infoPanel.style.width = finalWidthH + "px";
         const tableBottom = getTableBottom();
-        infoPanel.style.top = (tableBottom + 12) + "px"; // 12px κάτω από το κάτω σημείο του πίνακα
+        infoPanel.style.top = (tableBottom + 12) + "px";
         infoPanel.style.height = (windowHeight - tableBottom - 12 - 42) + "px";
         let leftPos = (windowWidth - finalWidthH) / 2;
         if (leftPos < 42) leftPos = 42;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
-        // Επανακαθορισμός συνολικού πλάτους των τμημάτων: θέτουμε leftPanel 240px, middlePanel 750px, rightPanel 180px (240+750+180 = 1170px)
-        finalWidthH = 1170;
+        // Κατανομή τμημάτων: leftPanel: 240px, middlePanel: 750px, rightPanel: 180px.
+        finalWidthH = 240 + 750 + 180;
         infoPanel.style.width = finalWidthH + "px";
         leftPos = (windowWidth - finalWidthH) / 2;
         if (leftPos < 42) leftPos = 42;
@@ -386,7 +384,6 @@
         document.getElementById("leftPanel").style.width = "240px";
         document.getElementById("middlePanel").style.width = "750px";
         document.getElementById("rightPanel").style.width = "180px";
-        // Επαναφορά ύψους των τμημάτων (αφαιρούμε vertical inline styles)
         document.getElementById("leftPanel").style.height = "";
         document.getElementById("middlePanel").style.height = "";
         document.getElementById("rightPanel").style.height = "";
@@ -394,11 +391,9 @@
         // --- Vertical mode ---
         infoPanel.style.width = "500px";
         infoPanel.style.height = "440px";
-        // Το infoPanel τοποθετείται ώστε το δεξί του περιθώριο να είναι 42px από τον πίνακα στοιχείων.
         infoPanel.style.left = (windowWidth - 500 - 42) + "px";
         infoPanel.style.top = "120px";
         infoPanel.style.transform = "none";
-        // Κατανομή τμημάτων στο vertical mode: leftPanel 140px, middlePanel 220px, rightPanel 80px.
         document.getElementById("leftPanel").style.height = "140px";
         document.getElementById("middlePanel").style.height = "220px";
         document.getElementById("rightPanel").style.height = "80px";
@@ -419,7 +414,6 @@
         let cellsToDraw = [];
         if (hideFBlock) {
           if (row.cells.length === 32) {
-            // Χωρίζουμε τις πρώτες 2 στήλες από τις υπόλοιπες με offset 5px
             cellsToDraw = row.cells.slice(0, 2).concat([null]).concat(row.cells.slice(16, 32));
           } else {
             cellsToDraw = row.cells;
@@ -507,7 +501,6 @@
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 89 && num <= 102;
       });
-      // Δεν αλλάζουμε το startY (παραμένει στο 450px όπως ήταν στην αρχική εκδοχή)
       let startX = 80 + 84; 
       let startY = 450;
       for (let i = 0; i < lanthanides.length; i++) {
@@ -523,8 +516,7 @@
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
       let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
-      // Μειώνουμε το gap μεταξύ των δύο σειρών του f τομέα από 10 σε 5px
-      let actinidesY = startY + fHeight + 5;
+      let actinidesY = startY + fHeight + 5; // gap 5px
       for (let i = 0; i < actinides.length; i++) {
         let cell = actinides[i];
         let x = startX + i * colGap;
@@ -551,7 +543,6 @@
           `<em>Εξωτερική:</em> ${cell.details.outerShell}`;
         document.getElementById('explanation').innerHTML =
           `<em>Επεξήγηση:</em> ${cell.details.explanation}`;
-        // Στον vertical mode εμφανίζουμε "Οδηγίες:" αντί για "Παρατηρήσεις:"
         document.getElementById('remarks').innerHTML =
           `<em>Οδηγίες:</em> ${cell.details.remarks}`;
       } else {
