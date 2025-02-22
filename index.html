@@ -40,10 +40,14 @@
     .full #canvasD { top: 100px; left: 760px; width: 418px; height: 336px; z-index: 2; }
     .full #canvasP { top: 100px; left: 1178px; width: 250px; height: 336px; z-index: 2; }
     
-    /* Collapsed mode: S, D, P παραμένουν όπως είναι, ενώ ο F μετακινείται 100px προς τα κάτω και έχει χαμηλότερο z-index */
+    /* Collapsed mode:
+       - Οι καμβάδες S, D και P συγχωνεύονται στην πρώτη σειρά, τοποθετημένοι "σφιχτά": 
+           S: left 50px, D: left 176px (50 + 124 + 2), P: left 596px (176 + 418 + 2)
+       - Ο καμβάς F μετακινείται 100px προς τα κάτω (top: 200px) και παραμένει με τις ίδιες διαστάσεις όπως σε full mode (left: 174px) αλλά με χαμηλότερο z-index.
+    */
     .collapsed #canvasS { top: 100px; left: 50px; width: 124px; height: 336px; z-index: 2; }
-    .collapsed #canvasD { top: 100px; left: 174px; width: 418px; height: 336px; z-index: 2; }
-    .collapsed #canvasP { top: 100px; left: 1178px; width: 250px; height: 336px; z-index: 2; }
+    .collapsed #canvasD { top: 100px; left: 176px; width: 418px; height: 336px; z-index: 2; }
+    .collapsed #canvasP { top: 100px; left: 596px; width: 250px; height: 336px; z-index: 2; }
     .collapsed #canvasF { top: 200px; left: 174px; width: 586px; height: 336px; z-index: 1; }
     
     /* Βασικές ρυθμίσεις για όλους τους καμβάδες */
@@ -71,9 +75,9 @@
   
   <script>
     /* 
-      Σε αυτό το demo χρησιμοποιούμε dummy δεδομένα για κάθε τομέα:
+      Δεδομένα:
       - S block: 3 στήλες → 124px πλάτος
-      - F block: 14 στήλες → 586px πλάτος (σε full mode) και σε collapsed mode ο F καμβάς εμφανίζεται πλήρως (14 στήλες) αλλά μετακινείται 100px κάτω.
+      - F block: 14 στήλες → 586px πλάτος (σε full mode), και στο collapsed mode ο F μετακινείται 100px προς τα κάτω
       - D block: 10 στήλες → 418px πλάτος
       - P block: 6 στήλες → 250px πλάτος
       Το ύψος όλων των καμβάδων είναι 336px (9 σειρές: 2×20 + 7×40 + 8×2).
@@ -106,13 +110,13 @@
         let x = 0;
         for (let col = 0; col < columns; col++) {
           let cell = dataArray[index] || { symbol: "" };
-          p.fill(200, 220, 240);
+          p.fill(200,220,240);
           p.stroke(150);
           p.rect(x, y, cellW, cellH);
           p.fill(0);
           p.textSize(12);
           p.textAlign(p.CENTER, p.CENTER);
-          p.text(cell.symbol, x + cellW / 2, y + cellH / 2);
+          p.text(cell.symbol, x + cellW/2, y + cellH/2);
           index++;
           x += cellW + gap;
         }
@@ -156,12 +160,11 @@
     // Sketch για τον F τομέα
     let sketchF = function(p) {
       p.setup = function() {
-        // Σε full mode: πλάτος 586, σε collapsed mode: πλάτος παραμένει 586 αλλά θα μετακινηθεί το canvas μέσω CSS.
+        // Σε full mode: πλάτος = 586, σε collapsed mode: παραμένει 586 (για πλήρες grid) αλλά ο καμβάς μετακινείται μέσω CSS
         p.createCanvas(586, 336);
         p.noLoop();
       };
       p.draw = function() {
-        // Σε κάθε περίπτωση σχεδιάζουμε το πλήρες grid 14 στηλών για τον F τομέα.
         drawGrid(p, 14, fData);
       };
     };
@@ -176,25 +179,22 @@
     document.getElementById('toggleMode').addEventListener('click', function() {
       mode = (mode === "full") ? "collapsed" : "full";
       document.body.className = mode; // Εφαρμογή CSS κλάσης
-      // Επαναδημιουργούμε τους καμβάδες ώστε να χρησιμοποιήσουν το νέο mode.
+      // Ανανεώνουμε όλους τους καμβάδες
       sP5.redraw();
       dP5.redraw();
       pP5.redraw();
       fP5.redraw();
-      // Σ collapsed mode, ο F καμβάς μετακινείται 100px προς τα κάτω και έχει z-index 1 (οι άλλοι z-index 2).
+      // Σε collapsed mode ο F καμβάς μετακινείται 100px προς τα κάτω και έχει χαμηλότερο z-index
       if (mode === "collapsed") {
         document.getElementById('canvasF').style.top = "200px";
         document.getElementById('canvasF').style.zIndex = "1";
-        document.getElementById('canvasS').style.zIndex = "2";
-        document.getElementById('canvasD').style.zIndex = "2";
-        document.getElementById('canvasP').style.zIndex = "2";
       } else {
         document.getElementById('canvasF').style.top = "";
         document.getElementById('canvasF').style.zIndex = "";
       }
     });
     
-    // Dummy λειτουργίες για τα κουμπιά "Επόμενο", "Συμπλήρωσε" και "Reset"
+    // Dummy λειτουργίες για τα κουμπιά "Επόμενο", "Συμπλήρωσε", "Reset"
     document.getElementById('nextElement').addEventListener('click', function() {
       alert("Επόμενο στοιχείο (δείγμα)");
     });
