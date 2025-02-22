@@ -35,12 +35,12 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
-    /* Διαχωριστικά στα τμήματα στην οριζόντια διάταξη */
+    /* Διαχωριστικά μεταξύ των κελιών στην οριζόντια διάταξη */
     #infoPanel:not(.vertical) #leftPanel,
     #infoPanel:not(.vertical) #middlePanel {
       border-right: 1px solid #333;
     }
-    /* Το rightPanel στο horizontal mode κεντράρει τα κουμπιά (στοιχιζόμενα κάθετα) */
+    /* Στο horizontal mode, το rightPanel κεντράρει τα κουμπιά σε vertical διάταξη */
     #infoPanel:not(.vertical) #rightPanel {
       display: flex;
       flex-direction: column;
@@ -58,7 +58,7 @@
     #infoPanel.vertical #middlePanel {
       border-bottom: 1px solid #333;
     }
-    /* Vertical mode: 3 τμήματα με ύψη 140px, 220px και 80px αντίστοιχα */
+    /* Ρυθμίσεις για τα τρία τμήματα στο vertical mode */
     #infoPanel.vertical #leftPanel {
       flex: 0 0 140px;
       display: flex;
@@ -139,15 +139,12 @@
   </div>
   
   <script>
-    // Βασικές μεταβλητές και ρυθμίσεις
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // false: horizontal mode (expanded), true: vertical mode (collapsed)
+    // false: horizontal mode, true: vertical mode
     let hideFBlock = false;
-    // Ο "νόμος" του πλάτους: κάθε κελί έχει 40px και το gap μεταξύ τους είναι 2px, οπότε το συνολικό colGap = 42px.
-    const colGap = 42;
-    
-    // Φόρτωση του elements.json
+    const colGap = 42;  // Κάθε κελί έχει πλάτος 40px και το gap 2px
+
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
     }
@@ -160,7 +157,6 @@
       elementsData = null;
     }
     
-    // Συνάρτηση getCategory (όπως στο last.html)
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
       if (n === 1) return 'hydrogen-color';
@@ -183,7 +179,6 @@
       'hydrogen-color': '#ffff99'
     };
     
-    // Δομή δεδομένων για τον πίνακα (όπως στο last.html)
     let rowsData = [];
     let globalElementNumber = 3;
     let currentRowIndex = 3;
@@ -220,7 +215,7 @@
       let cell = { 
         number: elObj.number,
         category: elObj.category,
-        width: 40, // Σταθερό πλάτος 40px
+        width: 40,
         height: (elObj.category === 'group-name' ? 20 : 40),
         fixed: !!elObj.fixed
       };
@@ -264,7 +259,6 @@
             category: getCategory(globalElementNumber)
           });
           if (pattern.shifting) {
-            // Χρησιμοποιούμε currentRowIndex αντί για currentRow
             handleShiftingForRow(currentRowIndex);
           }
           let targetIndex = row.insertionIndex;
@@ -366,11 +360,9 @@
       return yOffset;
     }
     
-    // Διαστάσεις του infoPanel
     function updateInfoPanelDimensions() {
       const infoPanel = document.getElementById("infoPanel");
       if (!hideFBlock) {
-        // Horizontal mode:
         let finalWidthH = 1386 - 42; // 1344px
         infoPanel.style.width = finalWidthH + "px";
         const tableBottom = getTableBottom();
@@ -380,7 +372,6 @@
         if (leftPos < 42) leftPos = 42;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
-        // Κατανομή: leftPanel 240px, middlePanel 750px, rightPanel 180px.
         finalWidthH = 240 + 750 + 180;
         infoPanel.style.width = finalWidthH + "px";
         leftPos = (windowWidth - finalWidthH) / 2;
@@ -393,7 +384,6 @@
         document.getElementById("middlePanel").style.height = "";
         document.getElementById("rightPanel").style.height = "";
       } else {
-        // Vertical mode:
         infoPanel.style.width = "500px";
         infoPanel.style.height = "440px";
         infoPanel.style.left = (windowWidth - 500 - 42) + "px";
@@ -419,7 +409,6 @@
         let cellsToDraw = [];
         if (hideFBlock) {
           if (row.cells.length === 32) {
-            // Στον collapsed mode, σχεδιάζουμε τις πρώτες 2 στήλες και μετά τις 16 (με offset 2px)
             cellsToDraw = row.cells.slice(0, 2).concat([null]).concat(row.cells.slice(16, 32));
           } else {
             cellsToDraw = row.cells;
