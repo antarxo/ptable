@@ -106,7 +106,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -448,8 +448,8 @@
       }
     }
 
-    // drawDPOverlay: Σχεδιάζει τα κελιά των τομέων d και p (όλα τα κελιά από index 2) ως overlay,
-    // με το overlay να ξεκινά ακριβώς δίπλα από τον s τομέα με διάκενο 5px.
+    // drawDPOverlay: Σχεδιάζει τα κελιά των τομέων d και p (από index 2) ως overlay,
+    // ξεκινώντας ακριβώς δίπλα από τον s τομέα με διάκενο 5px.
     function drawDPOverlay(){
       let yOverlay = 80;
       const groupRowsGap = 20;
@@ -461,7 +461,6 @@
           for(let i=0; i<dpCells.length; i++){
             let cell = dpCells[i];
             if(cell){
-              // Το overlay ξεκινά μετά τα 2 κελιά s (δηλαδή 80 + 2*colGap) με επιπλέον διάκενο 5px.
               let x = 80 + (i+2)*colGap + 5;
               let y = yOverlay;
               stroke(85);
@@ -471,7 +470,6 @@
               textSize(12);
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
-              // Ενημέρωση συντεταγμένων για interactivity
               cell.drawX = x;
               cell.drawY = y;
               cell.drawW = cell.width;
@@ -483,7 +481,7 @@
       }
     }
 
-    // drawFBlockRegion: Σχεδιάζει τον f τομέα με offset όταν hideFBlock είναι true.
+    // drawFBlockRegion: Σχεδιάζει τον f τομέα με μετατόπιση όταν hideFBlock είναι true.
     function drawFBlockRegion(){
       let fCells = [];
       for(let r = 0; r < rowsData.length; r++){
@@ -508,7 +506,7 @@
         return num >= 89 && num <= 102;
       });
       let startX = 80 + 84; 
-      let startY = hideFBlock ? 450 + 42 : 450; // μετατόπιση όταν collapsed
+      let startY = hideFBlock ? 450 + 42 : 450;
       for(let i = 0; i < lanthanides.length; i++){
         let cell = lanthanides[i];
         let x = startX + i * colGap;
@@ -607,7 +605,8 @@
 
     function setup(){
       let canvas = createCanvas(windowWidth, windowHeight);
-      canvas.style('z-index', '-1');
+      // Αλλάζουμε το z-index σε 2 ώστε ο καμβάς (και το overlay) να είναι πάνω από άλλα στοιχεία
+      canvas.style('z-index', '2');
       textFont('Roboto');
       noLoop();
       initialize();
@@ -618,7 +617,6 @@
     function draw(){
       drawTable();
       if(hideFBlock){
-        // Σε collapsed mode, σχεδιάζουμε το overlay για τα d/p και μετατοπισμένο τον f τομέα.
         drawDPOverlay();
         drawFBlockRegion();
       } else {
