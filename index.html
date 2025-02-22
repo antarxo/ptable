@@ -21,7 +21,7 @@
       font-weight: bold;
       z-index: 10;
     }
-    /* Βασικό στυλ για το infoPanel */
+    /* Βασικό στυλ για το infoPanel (Horizontal mode) */
     #infoPanel {
       display: flex;
       justify-content: space-between;
@@ -32,46 +32,51 @@
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
-      /* Οριζόντια διάταξη: τα 3 τμήματα στοιχίζονται οριζόντια */
+      /* Οριζόντια διάταξη: τρία κελία σε σειρά */
       flex-direction: row;
     }
-    /* Διαχωριστικά ενδιάμεσα στην οριζόντια διάταξη */
+    /* Διαχωριστικά στην οριζόντια διάταξη: στα leftPanel και middlePanel */
     #infoPanel:not(.vertical) #leftPanel,
     #infoPanel:not(.vertical) #middlePanel {
       border-right: 1px solid #333;
     }
-    /* Στο horizontal mode, τα περιεχόμενα του rightPanel κεντράρονται */
+    /* Στο horizontal mode, το rightPanel κεντράρει τα κουμπιά */
     #rightPanel {
       display: flex;
       justify-content: center;
       align-items: center;
     }
-    /* Στυλ για το infoPanel σε κατακόρυφη διάταξη */
+    /* Στυλ για το infoPanel σε Vertical mode */
     #infoPanel.vertical {
       flex-direction: column;
       transform: none;
     }
-    /* Στην κατακόρυφη διάταξη, τα δύο πρώτα τμήματα έχουν κάτω περίγραμμα */
+    /* Στην κατακόρυφη διάταξη, τα δύο πρώτα κελιά έχουν κάτω περίγραμμα */
     #infoPanel.vertical #leftPanel,
     #infoPanel.vertical #middlePanel {
       border-bottom: 1px solid #333;
     }
-    /* Ορισμός των κελιών του infoPanel σε vertical διάταξη */
+    /* Ορισμός των κελιών στο Vertical mode */
     #infoPanel.vertical #leftPanel {
-      flex: 0 0 140px; /* αύξηση από 100px σε 140px */
+      /* Μειώνουμε το ύψος του πάνω κελιού κατά 80 (από 140 σε 60) */
+      flex: 0 0 60px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start; /* στοιχίση αριστερή */
       justify-content: center;
+      padding-left: 10px;
     }
     #infoPanel.vertical #middlePanel {
-      flex: 0 0 250px; /* 440 - 140 - 50 = 250px */
+      flex: 0 0 300px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     #infoPanel.vertical #rightPanel {
-      flex: 0 0 50px;
+      /* Αυξάνουμε το ύψος για δύο σειρές κουμπιών */
+      flex: 0 0 80px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
     }
@@ -90,17 +95,18 @@
       white-space: nowrap;
       cursor: pointer;
       transition: background 0.3s, color 0.3s;
+      margin: 2px;
     }
     #rightPanel button:hover {
       background: #333;
       color: #fff;
     }
-    /* Κουμπιά στην οριζόντια διάταξη: μεγαλύτερο padding & font-size */
+    /* Κουμπιά στην οριζόντια διάταξη */
     #infoPanel:not(.vertical) #rightPanel button {
       padding: 8px 6px;
       font-size: 16px;
     }
-    /* Κουμπιά στην κατακόρυφη διάταξη: μικρότερο padding & font-size */
+    /* Κουμπιά στην κατακόρυφη διάταξη */
     #infoPanel.vertical #rightPanel button {
       padding: 4px 6px;
       font-size: 14px;
@@ -135,7 +141,7 @@
     let globalMouseX = 0, globalMouseY = 0;
     // Όταν true, ο πίνακας συμπτύσσεται (compact mode)
     let hideFBlock = false;
-    const colGap = 42; // χρησιμοποιείται ως μέτρο και για τα περιθώρια
+    const colGap = 42; // Χρησιμοποιείται και ως περιθώριο
 
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
@@ -352,28 +358,28 @@
       return yOffset;
     }
 
-    // Ενημέρωση διαστάσεων infoPanel ανάλογα με το mode
+    // Ρυθμίζει δυναμικά τις διαστάσεις και τη θέση του infoPanel
     function updateInfoPanelDimensions() {
       const infoPanel = document.getElementById("infoPanel");
       if (!hideFBlock) {
         // Horizontal mode:
         const desiredWidth = 32 * colGap; // 1344px
         const availableWidth = windowWidth - 2 * colGap;
-        let finalWidthH = Math.min(desiredWidth, availableWidth) - 42; // μειώνουμε κατά 42
+        let finalWidthH = Math.min(desiredWidth, availableWidth) - 42; // μείωση κατά 42px
         infoPanel.style.width = finalWidthH + "px";
         infoPanel.style.height = "158px"; // 200 - 42
         const tableBottom = getTableBottom();
-        infoPanel.style.top = (tableBottom + colGap - 60) + "px"; // όπως προηγουμένως, 60px πιο πάνω
+        infoPanel.style.top = (tableBottom + colGap - 60) + "px"; // 60px πιο πάνω
         let leftPos = (windowWidth - finalWidthH) / 2;
         if (leftPos < colGap) leftPos = colGap;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
-        // Ρυθμίζουμε σταθερά τα πλάτη των κελιών
+        // Ορισμός σταθερού πλάτους για τα κελία
         const leftPanel = document.getElementById("leftPanel");
         const middlePanel = document.getElementById("middlePanel");
         const rightPanel = document.getElementById("rightPanel");
-        leftPanel.style.width = "240px";  // το πρώτο 240px (160px μικρότερο από μια βασική τιμή)
-        rightPanel.style.width = "350px"; // το τρίτο (κουμπιά) στα 350px
+        leftPanel.style.width = "240px";  // το πρώτο κελί
+        rightPanel.style.width = "350px"; // το τρίτο κελί
         middlePanel.style.width = (finalWidthH - 240 - 350) + "px";
       } else {
         // Vertical mode:
@@ -383,14 +389,17 @@
         infoPanel.style.left = (windowWidth - 500 - colGap - 42) + "px";
         infoPanel.style.top = (120 + colGap) + "px";
         infoPanel.style.transform = "none";
-        // Ρυθμίζουμε τα ύψη των κελιών:
+        // Ορισμός ύψους κελιών:
         const leftPanel = document.getElementById("leftPanel");
         const middlePanel = document.getElementById("middlePanel");
         const rightPanel = document.getElementById("rightPanel");
-        leftPanel.style.height = "140px";  // αυξημένο από 100px σε 140px
-        rightPanel.style.height = "50px";    // τα κουμπιά στο κάτω κελί
-        middlePanel.style.height = (440 - 140 - 50) + "px"; // 250px
-        // Ορίζουμε πλάτος 100% για όλα τα κελιά σε vertical mode
+        // Μειώνουμε το ύψος του πάνω κελιού κατά 80: (πρώτα είχε 140, τώρα 60)
+        leftPanel.style.height = "60px";
+        // Αντίστοιχα, το μεσαίο παίρνει το υπόλοιπο: 440 - 60 - 80 = 300px
+        middlePanel.style.height = "300px";
+        // Το κάτω (κουμπιά) θα έχει 80px για δύο σειρές
+        rightPanel.style.height = "80px";
+        // Στο vertical mode θέτουμε πλάτος 100% για κάθε κελί
         leftPanel.style.width = "100%";
         middlePanel.style.width = "100%";
         rightPanel.style.width = "100%";
