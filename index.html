@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Πίνακας με 4 Καμβάδες - Full & Collapsed Mode</title>
+  <title>Πίνακας με 4 Καμβάδες - Λογική Συμπλήρωσης</title>
   <!-- Χρήση της γραμματοσειράς Roboto -->
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
@@ -12,7 +12,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Πάνελ πληροφοριών και controls */
+    /* Πάνελ πληροφοριών και κουμπιά ελέγχου */
     #infoPanel {
       position: absolute;
       top: 20px;
@@ -69,13 +69,13 @@
   
   <script>
     (function() {
-      // Global μεταβλητές για τη συμπλήρωση του πίνακα
-      let elementsData = []; // Αν υπάρχει, φορτώνονται δεδομένα από elements.json
+      // Global μεταβλητές για τη λογική του πίνακα
+      let elementsData = []; // Δεδομένα από elements.json (αν υπάρχουν)
       let rowsData = [];
       let globalElementNumber = 3;
       let currentRowIndex = 3; // 4η σειρά (index 3)
       let phase = 1;
-      // Χρησιμοποιούμε το mode για να ελέγχουμε τη διάταξη: "full" ή "collapsed"
+      // mode: "full" ή "collapsed"
       let mode = "full";
       const colGap = 42;
       const fillingPatterns = [
@@ -87,7 +87,7 @@
         [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
       ];
       
-      // Δοκιμαστικά dummy δεδομένα (μπορείτε να τα αντικαταστήσετε με τα πραγματικά)
+      // Dummy δεδομένα για κάθε τομέα
       function generateData(columns, prefix) {
         const total = 9 * columns;
         let arr = [];
@@ -101,7 +101,7 @@
       let dData = generateData(10, "D");
       let pData = generateData(6, "P");
       
-      // Συνάρτηση σχεδίασης grid: 9 σειρές, όπου οι 2 πρώτες έχουν ύψος 20 και οι υπόλοιπες 40, με gap 2px.
+      // Συνάρτηση σχεδίασης grid: 9 σειρές (2 σειρές 20px, 7 σειρές 40px, gap 2px)
       function drawGrid(p, columns, dataArray) {
         let cellW = 40, gap = 2;
         let y = 0;
@@ -125,8 +125,7 @@
         }
       }
       
-      // P5 sketches για κάθε τομέα:
-      
+      // P5 sketches για κάθε τομέα
       let sketchS = function(p) {
         p.setup = function() {
           p.createCanvas(124, 336);
@@ -167,7 +166,7 @@
         };
       };
       
-      // Λογική συμπλήρωσης: η συμπλήρωση ξεκινάει από τη δεύτερη στήλη της 4ης σειράς (row index 3, insertionIndex = 1)
+      // Λογική συμπλήρωσης: Ξεκινάμε από τη δεύτερη στήλη της 4ης σειράς (row index 3, insertionIndex = 1)
       function initializeRows() {
         rowsData = [];
         for (let i = 0; i < 9; i++) {
@@ -233,8 +232,6 @@
             document.getElementById('infoPanel').innerHTML = `Προστέθηκε: ${cell.number}`;
           }
           redrawAll();
-        } else {
-          // Επεκτάσιμες φάσεις (δείγμα)
         }
       }
       
@@ -245,13 +242,13 @@
         fP5.redraw();
       }
       
-      // Δημιουργία των 4 p5 instances για τους καμβάδες S, D, P, F
+      // Δημιουργία των 4 p5 instances
       let sP5 = new p5(sketchS, 'canvasS');
       let dP5 = new p5(sketchD, 'canvasD');
       let pP5 = new p5(sketchP, 'canvasP');
       let fP5 = new p5(sketchF, 'canvasF');
       
-      // Event Listeners για τα κουμπιά
+      // Event listeners για τα κουμπιά
       document.getElementById('nextElement').addEventListener('click', function() {
         addElementToCurrentRow();
       });
@@ -278,7 +275,7 @@
         redrawAll();
       });
       
-      // Εκτέλεση αρχικοποίησης
+      // Εκτέλεση αρχικής αρχικοποίησης
       initializeRows();
     })();
   </script>
