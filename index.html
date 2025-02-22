@@ -117,7 +117,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -425,6 +425,10 @@
         if (rowIndex < 2) {
           noStroke();
           for (let i = 0; i < cellsToDraw.length; i++) {
+            // Εισαγωγή επιπλέον κενού 5px μετά τα 2 κελιά του s τομέα
+            if (hideFBlock && i === 2) {
+              xOffset += 5;
+            }
             let cell = cellsToDraw[i];
             if (cell) {
               cell.drawX = xOffset;
@@ -450,6 +454,10 @@
           }
           xOffset = 80;
           for (let i = 0; i < cellsToDraw.length; i++) {
+            // Εισαγωγή επιπλέον κενού 5px μετά τα 2 κελιά του s τομέα
+            if (hideFBlock && i === 2) {
+              xOffset += 5;
+            }
             let cell = cellsToDraw[i];
             if (cell) {
               cell.drawX = xOffset;
@@ -509,8 +517,7 @@
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
       let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
-      // Μείωση του κενού μεταξύ των σειρών από 10px σε 2px
-      let actinidesY = startY + fHeight + 2;
+      let actinidesY = startY + fHeight + 2; // 2px μεταξύ των σειρών του f τομέα
       for (let i = 0; i < actinides.length; i++) {
         let cell = actinides[i];
         let x = startX + i * colGap;
