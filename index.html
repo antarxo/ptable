@@ -47,7 +47,6 @@
       justify-content: center;
       align-items: center;
     }
-    
     /* --- Vertical mode --- */
     #infoPanel.vertical {
       flex-direction: column;
@@ -60,35 +59,33 @@
     }
     /* Ρυθμίσεις για τα τρία τμήματα στο vertical mode */
     #infoPanel.vertical #leftPanel {
-      flex: 0 0 110px; /* ύψος 110px */
+      flex: 0 0 110px;
       display: flex;
-      flex-direction: column; /* πληροφορίες οργανώνονται σε σειρές */
-      align-items: flex-start;  /* στοιχίση αριστερά */
+      flex-direction: column;
+      align-items: flex-start;
       justify-content: center;
       padding-left: 10px;
     }
     #infoPanel.vertical #middlePanel {
-      flex: 0 0 250px; /* ύψος 250px */
+      flex: 0 0 250px;
       display: flex;
       align-items: center;
       justify-content: flex-start;
       padding-left: 10px;
     }
     #infoPanel.vertical #rightPanel {
-      flex: 0 0 80px; /* ύψος 80px για 4 κουμπιά σε μία σειρά */
+      flex: 0 0 80px;
       display: flex;
       justify-content: center;
       align-items: center;
     }
-    
-    /* Στυλ για το middlePanel (σε κάθε mode) */
+    /* Στυλ για το middlePanel */
     #middlePanel {
       flex: 2;
       font-style: italic;
       color: #666;
       padding: 0 20px;
     }
-    
     /* --- Κουμπιά --- */
     #rightPanel button {
       border: 1px solid #333;
@@ -117,7 +114,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -138,16 +135,13 @@
   </div>
 
   <script>
-    /* Το υπόλοιπο του κώδικα του Περιοδικού Πίνακα παραμένει αμετάβλητο, με τις παρακάτω τροποποιήσεις: 
-       1. Στο collapsed (hideFBlock = true) το drawTable() σχεδιάζει μόνο τα 2 πρώτα κελιά κάθε σειράς (s τομέας).
-       2. Προστίθεται η συνάρτηση drawDPOverlay() που σχεδιάζει τα κελιά του d και p (θέσεις 2 έως 15) ως overlay πάνω από τον πίνακα.
-    */
-    
+    /* Ο κώδικας του Περιοδικού Πίνακα με τροποποιήσεις για overlay για τα στοιχεία d και p */
+
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // false: horizontal mode, true: collapsed mode (με overlay d & p)
+    // false: horizontal mode, true: collapsed mode (overlay για d & p)
     let hideFBlock = false;
-    const colGap = 42; // χρησιμοποιείται ως μέτρο και ως περιθώριο
+    const colGap = 42; // μέτρο και περιθώριο
 
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
@@ -160,18 +154,18 @@
       console.error("Error loading elements.json", err);
       elementsData = null;
     }
-    
+
     function getCategory(n) {
       const alkaliMetals = [3, 11, 19, 37, 55, 87];
-      if (n === 1) return 'hydrogen-color';
-      if (alkaliMetals.includes(n)) return 'alkali-block';
-      if (n === 1 || n === 2 || [4,12,20,38,56,88].includes(n)) return 's-block';
-      if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
-      if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
-      if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
+      if(n === 1) return 'hydrogen-color';
+      if(alkaliMetals.includes(n)) return 'alkali-block';
+      if(n === 1 || n === 2 || [4,12,20,38,56,88].includes(n)) return 's-block';
+      if((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
+      if((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
+      if((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
       return 'p-block';
     }
-    
+
     const CATEGORY_COLORS = {
       'alkali-block': '#ff9999',
       's-block': '#ffcccc',
@@ -182,24 +176,24 @@
       'period-label': '#f0f0f0',
       'hydrogen-color': '#ffff99'
     };
-    
+
     let rowsData = [];
     let globalElementNumber = 3;
     let currentRowIndex = 3;
     let phase = 1;
-    
+
     const fillingPatterns = [
-      [{ count: 8, shifting: true }],
-      [{ count: 8, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
+      [{count: 8, shifting: true}],
+      [{count: 8, shifting: false}],
+      [{count: 2, shifting: false}, {count: 10, shifting: true}, {count: 6, shifting: false}],
+      [{count: 2, shifting: false}, {count: 10, shifting: false}, {count: 6, shifting: false}],
+      [{count: 2, shifting: false}, {count: 14, shifting: true}, {count: 10, shifting: false}, {count: 6, shifting: false}],
+      [{count: 2, shifting: false}, {count: 14, shifting: false}, {count: 10, shifting: false}, {count: 6, shifting: false}]
     ];
-    
+
     function initialize() {
       rowsData = [];
-      for (let i = 0; i < 9; i++) {
+      for(let i = 0; i < 9; i++){
         let cells = (i < 2) ? new Array(32).fill(null) : [];
         rowsData.push({
           cells: cells,
@@ -214,21 +208,21 @@
       currentRowIndex = 3;
       phase = 1;
     }
-    
+
     function createCell(elObj) {
-      let cell = { 
+      let cell = {
         number: elObj.number,
         category: elObj.category,
         width: 40,
         height: (elObj.category === 'group-name' ? 20 : 40),
         fixed: !!elObj.fixed
       };
-      if (elementsData && elementsData.length >= elObj.number) {
+      if(elementsData && elementsData.length >= elObj.number){
         cell.details = elementsData[elObj.number - 1];
       }
       return cell;
     }
-    
+
     function shiftBlockRight(rowIndex, groupRows) {
       groupRows.forEach(i => {
         let row = rowsData[i];
@@ -237,18 +231,18 @@
         row.shiftedColumns++;
       });
     }
-    
+
     function handleShiftingForRow(currentRow) {
       let groupRows = [];
-      if (currentRow === 3) groupRows = [0,1,2];
-      else if (currentRow === 5) groupRows = [0,1,2,3,4];
-      else if (currentRow === 7) groupRows = [0,1,2,3,4,5,6];
+      if(currentRow === 3) groupRows = [0,1,2];
+      else if(currentRow === 5) groupRows = [0,1,2,3,4];
+      else if(currentRow === 7) groupRows = [0,1,2,3,4,5,6];
       shiftBlockRight(currentRow, groupRows);
     }
-    
+
     function addElementToCurrentRow() {
-      if (phase === 1) {
-        if (globalElementNumber > 118) {
+      if(phase === 1){
+        if(globalElementNumber > 118){
           currentRowIndex = 2;
           globalElementNumber = 1;
           phase = 2;
@@ -256,68 +250,67 @@
           return;
         }
         const row = rowsData[currentRowIndex];
-        if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
+        if(currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118){
           let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
           let cell = createCell({
             number: globalElementNumber,
             category: getCategory(globalElementNumber)
           });
-          if (pattern.shifting) {
-            // Διόρθωση: αντικατάσταση currentRow με currentRowIndex
+          if(pattern.shifting){
             handleShiftingForRow(currentRowIndex);
           }
           let targetIndex = row.insertionIndex;
-          while (row.cells[targetIndex] != null) {
+          while(row.cells[targetIndex] != null){
             targetIndex++;
-            if (targetIndex >= row.cells.length) row.cells.push(null);
+            if(targetIndex >= row.cells.length) row.cells.push(null);
           }
           row.cells[targetIndex] = cell;
           globalElementNumber++;
           row.countInSegment++;
-          if (row.countInSegment === pattern.count) {
+          if(row.countInSegment === pattern.count){
             row.currentSegment++;
             row.countInSegment = 0;
             row.insertionIndex = row.cells.length;
           }
-          if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
+          if(row.currentSegment >= fillingPatterns[currentRowIndex - 3].length){
             currentRowIndex++;
           }
           updateInfoPanel(cell);
         }
         redraw();
       }
-      else if (phase === 2) {
+      else if(phase === 2){
         const row = rowsData[currentRowIndex];
-        let insertIndex = (globalElementNumber === 1) ? 0 : 31;
-        while (row.cells.length <= insertIndex) row.cells.push(null);
+        let insertIndex = (globalElementNumber===1) ? 0 : 31;
+        while(row.cells.length <= insertIndex) row.cells.push(null);
         let cell = createCell({
           number: globalElementNumber,
           category: getCategory(globalElementNumber)
         });
         row.cells[insertIndex] = cell;
         globalElementNumber++;
-        if (globalElementNumber > 2) phase = 3;
+        if(globalElementNumber > 2) phase = 3;
         updateInfoPanel(cell);
         redraw();
       }
-      else if (phase === 3) {
+      else if(phase === 3){
         addPeriodNames();
         phase = 4;
         redraw();
       }
-      else if (phase === 4) {
+      else if(phase === 4){
         addOldGroupNumbers();
         phase = 5;
         redraw();
       }
-      else if (phase === 5) {
+      else if(phase === 5){
         addNewGroupNumbers();
         phase = 6;
         redraw();
       }
     }
-    
-    function addPeriodNames() {
+
+    function addPeriodNames(){
       rowsData[2].periodLabel = "1η Κ";
       rowsData[3].periodLabel = "2η L";
       rowsData[4].periodLabel = "3η M";
@@ -326,108 +319,99 @@
       rowsData[7].periodLabel = "6η P";
       rowsData[8].periodLabel = "7η Q";
     }
-    
-    function addNewGroupNumbers() {
+
+    function addNewGroupNumbers(){
       let row = rowsData[0];
       row.cells = new Array(32).fill(null);
-      row.cells[0] = createCell({ number: 1, category: 'group-name' });
-      row.cells[1] = createCell({ number: 2, category: 'group-name' });
+      row.cells[0] = createCell({number: 1, category:'group-name'});
+      row.cells[1] = createCell({number: 2, category:'group-name'});
       let num = 3;
-      for (let i = 16; i < 32; i++) {
-        row.cells[i] = createCell({ number: num, category: 'group-name' });
+      for(let i=16; i<32; i++){
+        row.cells[i] = createCell({number: num, category:'group-name'});
         num++;
       }
     }
-    
-    function addOldGroupNumbers() {
+
+    function addOldGroupNumbers(){
       let oldNumbers = [
-        "IA", "IIA", "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
-        "VIIIB", "VIIIB", "IB", "IIB", "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
+        "IA","IIA","IIIB","IVB","VB","VIB","VIIB","VIIIB",
+        "VIIIB","VIIIB","IB","IIB","IIIA","IVA","VA","VIA","VIIA","VIIIA"
       ];
       let row = rowsData[1];
       row.cells = new Array(32).fill(null);
-      row.cells[0] = createCell({ number: oldNumbers[0], category: 'group-name' });
-      row.cells[1] = createCell({ number: oldNumbers[1], category: 'group-name' });
+      row.cells[0] = createCell({number: oldNumbers[0], category:'group-name'});
+      row.cells[1] = createCell({number: oldNumbers[1], category:'group-name'});
       let idx = 2;
-      for (let i = 16; i < 32; i++) {
-        row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
+      for(let i=16; i<32; i++){
+        row.cells[i] = createCell({number: oldNumbers[idx], category:'group-name'});
         idx++;
       }
     }
-    
-    function getTableBottom() {
+
+    function getTableBottom(){
       let yOffset = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+      for(let rowIndex=0; rowIndex<rowsData.length; rowIndex++){
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
       }
       return yOffset;
     }
-    
-    // Ενημέρωση διαστάσεων του infoPanel ανάλογα με το mode
-    function updateInfoPanelDimensions() {
+
+    function updateInfoPanelDimensions(){
       const infoPanel = document.getElementById("infoPanel");
-      if (!hideFBlock) {
-        // --- Horizontal mode ---
-        const desiredWidth = 33 * colGap; // 1386px
+      if(!hideFBlock){
+        const desiredWidth = 33 * colGap;
         let finalWidthH = desiredWidth;
         infoPanel.style.width = finalWidthH + "px";
         const tableBottom = getTableBottom();
-        infoPanel.style.top = (tableBottom + 12) + "px"; // 12px κάτω από το κάτω σημείο του πίνακα
-        infoPanel.style.height = (windowHeight - tableBottom - 12 - 42) + "px"; // ώστε το κάτω να απέχει 42px από το κάτω της σελίδας
+        infoPanel.style.top = (tableBottom + 12) + "px";
+        infoPanel.style.height = (windowHeight - tableBottom - 12 - 42) + "px";
         let leftPos = (windowWidth - finalWidthH) / 2;
-        if (leftPos < 42) leftPos = 42;
+        if(leftPos < 42) leftPos = 42;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
-        // Κατανομή τμημάτων: leftPanel: 400px, middlePanel: 750px, rightPanel: 1386 - 400 - 750 = 236px
         document.getElementById("leftPanel").style.width = "400px";
         document.getElementById("middlePanel").style.width = "750px";
         document.getElementById("rightPanel").style.width = "236px";
-        // Σε horizontal mode, επαναφέρουμε τα ύψη (αφαιρούμε τυχόν vertical inline styles)
         document.getElementById("leftPanel").style.height = "";
         document.getElementById("middlePanel").style.height = "";
         document.getElementById("rightPanel").style.height = "";
       } else {
-        // --- Collapsed mode ---
         infoPanel.style.width = "500px";
         infoPanel.style.height = "440px";
-        // Το infoPanel τοποθετείται έτσι ώστε το δεξί του περιθώριο να είναι 42px από τον πίνακα στοιχείων.
         infoPanel.style.left = (windowWidth - 500 - 42) + "px";
-        infoPanel.style.top = "120px"; // σύμφωνα με τις οδηγίες
+        infoPanel.style.top = "120px";
         infoPanel.style.transform = "none";
-        // Κατανομή τμημάτων στο vertical mode:
         document.getElementById("leftPanel").style.height = "110px";
         document.getElementById("middlePanel").style.height = "250px";
         document.getElementById("rightPanel").style.height = "80px";
-        // Σε vertical mode, όλα τα τμήματα παίρνουν πλάτος 100%
         document.getElementById("leftPanel").style.width = "100%";
         document.getElementById("middlePanel").style.width = "100%";
         document.getElementById("rightPanel").style.width = "100%";
       }
     }
-    
-    // Σχεδίαση του κύριου πίνακα: σε collapsed mode εμφανίζονται μόνο τα κελιά του s τομέα
-    function drawTable() {
+
+    // drawTable: Σε collapsed mode εμφανίζονται μόνο τα κελιά του s τομέα (θέσεις 0-1)
+    function drawTable(){
       background(247);
       let yOffset = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+      for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
         let xOffset = 80;
         let cellsToDraw;
-        if (hideFBlock && row.cells.length === 32) {
-          // Σ collapsed mode, δείχνουμε μόνο τα 2 πρώτα κελιά (s τομέας)
-          cellsToDraw = row.cells.slice(0, 2);
+        if(hideFBlock && row.cells.length >= 16){
+          cellsToDraw = row.cells.slice(0,2); // μόνο s τομέας
         } else {
           cellsToDraw = row.cells;
         }
-        if (rowIndex < 2) {
+        if(rowIndex < 2){
           noStroke();
-          for (let i = 0; i < cellsToDraw.length; i++) {
+          for(let i=0; i<cellsToDraw.length; i++){
             let cell = cellsToDraw[i];
-            if (cell) {
+            if(cell){
               cell.drawX = xOffset;
               cell.drawY = yOffset;
               cell.drawW = cell.width;
@@ -443,16 +427,16 @@
           }
           stroke(85);
         } else {
-          if (row.periodLabel) {
+          if(row.periodLabel){
             fill(0);
             textSize(12);
             textAlign(CENTER, CENTER);
             text(row.periodLabel, 45, yOffset + 20);
           }
           xOffset = 80;
-          for (let i = 0; i < cellsToDraw.length; i++) {
+          for(let i=0; i<cellsToDraw.length; i++){
             let cell = cellsToDraw[i];
-            if (cell) {
+            if(cell){
               cell.drawX = xOffset;
               cell.drawY = yOffset;
               cell.drawW = cell.width;
@@ -471,27 +455,23 @@
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
       }
     }
-    
-    // Νέα συνάρτηση: σχεδίαση του overlay για τα κελιά του d και p τομέα.
-    // Εδώ, για κάθε σειρά που έχει 32 κελιά, τα κελιά από τις θέσεις 2 έως 15 σχεδιάζονται πάνω από τον κύριο πίνακα.
-    function drawDPOverlay() {
+
+    // drawDPOverlay: Σχεδιάζει το overlay για τα κελιά του d και p (θέσεις 2 έως 15)
+    function drawDPOverlay(){
       let yOverlay = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+      for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
-        // Εφαρμόζουμε το overlay μόνο για σειρές με πλήρη διάταξη (32 κελιά)
-        if (row.cells.length === 32) {
-          let dpCells = row.cells.slice(2, 16); // θέσεις 2 έως 15
-          for (let i = 0; i < dpCells.length; i++) {
+        if(row.cells.length >= 16){
+          let dpCells = row.cells.slice(2,16);
+          for(let i=0; i<dpCells.length; i++){
             let cell = dpCells[i];
-            if (cell) {
-              // Ο υπολογισμός της x θέση γίνεται όπως αρχικά (με βάση το index)
-              let x = 80 + (i + 2) * colGap;
+            if(cell){
+              let x = 80 + (i+2)*colGap;
               let y = yOverlay;
               stroke(85);
               fill(CATEGORY_COLORS[cell.category]);
-              // Σχεδίαση με στρογγυλεμένες γωνίες (όπως και στο κύριο σχέδιο)
               rect(x, y, cell.width, cell.height, 5);
               fill(0);
               textSize(12);
@@ -503,13 +483,13 @@
         yOverlay += (rowIndex < 2 ? groupRowsGap : normalGap);
       }
     }
-    
-    function drawFBlockRegion() {
+
+    function drawFBlockRegion(){
       let fCells = [];
-      for (let r = 0; r < rowsData.length; r++) {
-        for (let i = 0; i < rowsData[r].cells.length; i++) {
+      for(let r = 0; r < rowsData.length; r++){
+        for(let i = 0; i < rowsData[r].cells.length; i++){
           let cell = rowsData[r].cells[i];
-          if (cell && cell.category === 'f-block') {
+          if(cell && cell.category === 'f-block'){
             fCells.push(cell);
           }
         }
@@ -529,7 +509,7 @@
       });
       let startX = 80 + 84; 
       let startY = 450;
-      for (let i = 0; i < lanthanides.length; i++) {
+      for(let i = 0; i < lanthanides.length; i++){
         let cell = lanthanides[i];
         let x = startX + i * colGap;
         let y = startY;
@@ -542,8 +522,8 @@
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
       let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
-      let actinidesY = startY + fHeight + 2; // 2px μεταξύ των σειρών του f τομέα
-      for (let i = 0; i < actinides.length; i++) {
+      let actinidesY = startY + fHeight + 2;
+      for(let i = 0; i < actinides.length; i++){
         let cell = actinides[i];
         let x = startX + i * colGap;
         let y = actinidesY;
@@ -556,9 +536,9 @@
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
     }
-    
-    function updateInfoPanel(cell) {
-      if (elementsData && cell.details) {
+
+    function updateInfoPanel(cell){
+      if(elementsData && cell.details){
         document.getElementById('elementInfo').innerHTML =
           `<strong>${cell.details.name} (${cell.details.symbol})</strong> [Z=${cell.details.number}]`;
         document.getElementById('subshells').innerHTML =
@@ -569,7 +549,6 @@
           `<em>Εξωτερική:</em> ${cell.details.outerShell}`;
         document.getElementById('explanation').innerHTML =
           `<em>Επεξήγηση:</em> ${cell.details.explanation}`;
-        // Σε vertical mode εμφανίζουμε "Οδηγίες:" αντί για "Παρατηρήσεις:"
         document.getElementById('remarks').innerHTML =
           `<em>Οδηγίες:</em> ${cell.details.remarks}`;
       } else {
@@ -582,8 +561,8 @@
         document.getElementById('remarks').innerHTML = '';
       }
     }
-    
-    function clearInfoPanel() {
+
+    function clearInfoPanel(){
       document.getElementById('elementInfo').innerHTML = '';
       document.getElementById('subshells').innerHTML = '';
       document.getElementById('shells').innerHTML = '';
@@ -591,34 +570,34 @@
       document.getElementById('explanation').innerHTML = '';
       document.getElementById('remarks').innerHTML = '';
     }
-    
-    function handleMouseClick() {
+
+    function handleMouseClick(){
       let x = globalMouseX || mouseX;
       let y = globalMouseY || mouseY;
       let found = false;
-      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+      for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
-        for (let i = 0; i < row.cells.length; i++) {
+        for(let i = 0; i < row.cells.length; i++){
           let cell = row.cells[i];
-          if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
-              y >= cell.drawY && y <= cell.drawY + cell.drawH) {
+          if(cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
+             y >= cell.drawY && y <= cell.drawY + cell.drawH){
             updateInfoPanel(cell);
             found = true;
             break;
           }
         }
-        if (found) break;
+        if(found) break;
       }
-      if (!found) clearInfoPanel();
+      if(!found) clearInfoPanel();
     }
-    
+
     window.addEventListener('click', (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
       handleMouseClick();
     });
-    
-    function setup() {
+
+    function setup(){
       let canvas = createCanvas(windowWidth, windowHeight);
       canvas.style('z-index', '-1');
       textFont('Roboto');
@@ -627,26 +606,24 @@
       updateInfoPanelDimensions();
       redraw();
     }
-    
-    function draw() {
+
+    function draw(){
       drawTable();
-      // Σε collapsed mode, σχεδιάζουμε το overlay για τα κελιά του d και p
-      if (hideFBlock) {
+      // Σε collapsed mode σχεδιάζουμε το overlay για τα d και p (θέσεις 2-15)
+      if(hideFBlock){
         drawDPOverlay();
-      }
-      // Αν δεν είναι collapsed, μπορούμε να σχεδιάσουμε κανονικά και τον f τομέα
-      else {
+      } else {
         drawFBlockRegion();
       }
     }
-    
+
     document.getElementById('nextElement').addEventListener('click', (e) => {
       e.stopPropagation();
       addElementToCurrentRow();
       redraw();
     });
     document.getElementById('fillAll').addEventListener('click', () => {
-      while (phase < 6 || (phase === 1 && globalElementNumber <= 118)) {
+      while(phase < 6 || (phase === 1 && globalElementNumber <= 118)){
         addElementToCurrentRow();
       }
       redraw();
@@ -662,8 +639,8 @@
       console.log("hideFBlock =", hideFBlock);
       redraw();
     });
-    
-    function windowResized() {
+
+    function windowResized(){
       resizeCanvas(windowWidth, windowHeight);
       updateInfoPanelDimensions();
       redraw();
