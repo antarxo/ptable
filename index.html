@@ -12,19 +12,10 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Πάνελ πληροφοριών και τίτλος */
-    #title {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 50;
-    }
+    /* Πάνελ πληροφοριών και κουμπιά */
     #infoPanel {
       position: absolute;
-      top: 60px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
       padding: 10px;
@@ -32,7 +23,6 @@
       border: 1px solid #333;
       z-index: 50;
     }
-    /* Κουμπιά ελέγχου */
     #controls {
       position: absolute;
       bottom: 20px;
@@ -45,454 +35,204 @@
       padding: 5px 10px;
     }
     /* Containers για τους 4 καμβάδες */
-    /* Μπορείτε να ορίσετε τις θέσεις όπως επιθυμείτε – παρακάτω δίνεται ένα παράδειγμα */
-    #canvasS, #canvasD, #canvasP, #canvasF {
+    /* Οι διαστάσεις ορίζονται ώστε να "καθίσουν" τα κελιά όπως περιγράφτηκαν */
+    #canvasS {
       position: absolute;
+      top: 100px;
+      left: 20px;
+      width: 124px;
+      height: 336px;
       border: 1px solid #ccc;
+      z-index: 10;
     }
-    #canvasS { top: 100px; left: 50px; }
-    #canvasD { top: 100px; left: 300px; }
-    #canvasP { top: 100px; left: 600px; }
-    #canvasF { top: 400px; left: 50px; }
+    #canvasD {
+      position: absolute;
+      top: 100px;
+      left: 160px;
+      width: 418px;
+      height: 336px;
+      border: 1px solid #ccc;
+      z-index: 10;
+    }
+    #canvasP {
+      position: absolute;
+      top: 100px;
+      left: 600px;
+      width: 250px;
+      height: 336px;
+      border: 1px solid #ccc;
+      z-index: 10;
+    }
+    #canvasF {
+      position: absolute;
+      top: 450px;
+      left: 20px;
+      width: 586px;
+      height: 336px;
+      border: 1px solid #ccc;
+      z-index: 10;
+    }
   </style>
+  <!-- Φόρτωση p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Πίνακας με 4 Καμβάδες</div>
   <div id="infoPanel">Πληροφορίες στοιχείου...</div>
   <div id="controls">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="reset">Reset</button>
-    <button id="togglePanel">Εναλλαγή collapsed</button>
+    <button id="toggleCollapsed">Εναλλαγή collapsed</button>
   </div>
-  <!-- Containers για τους καμβάδες ανά τομέα -->
+  <!-- Containers για τους καμβάδες -->
   <div id="canvasS"></div>
   <div id="canvasD"></div>
   <div id="canvasP"></div>
   <div id="canvasF"></div>
   
   <script>
-    /* 
-    Σημαντική σημείωση:  
-    Σε αυτήν την εκδοχή υποθέτουμε ότι το rowsData και οι συναρτήσεις προσθήκης στοιχείων (π.χ. addElementToCurrentRow) 
-    λειτουργούν όπως στον αρχικό σας κώδικα. Εδώ χρησιμοποιούμε ένα κοινό rowsData, το οποίο περιέχει όλα τα κελιά με την ιδιότητα "category".
-    Ο κάθε καμβάς (sketch) θα φιλτράρει τα κελιά για να σχεδιάσει μόνο αυτό που ανήκει στο αντίστοιχο μπλοκ.
-    */
+    // Για αυτό το παράδειγμα, θα δημιουργήσουμε dummy grids για κάθε τομέα.
+    // Οι τιμές θα είναι αριθμημένες σειρές με τις διαστάσεις που καθορίσαμε.
     
-    (function() {
-      /* --- Global Variables --- */
-      let elementsData = [];  // Εάν υπάρχει elements.json, φορτώστε το
-      let rowsData = [];
-      let globalElementNumber = 3;
-      let currentRowIndex = 3;
-      let phase = 1;
-      // hideFBlock: false = full mode, true = collapsed mode 
-      // (collapsed: ο κύριος πίνακας εμφανίζει μόνο τον s τομέα και οι υπόλοιποι τομείς σχεδιάζονται ξεχωριστά)
-      let hideFBlock = false;
-      const colGap = 42;
-      const fillingPatterns = [
-        [{ count: 8, shifting: true }],
-        [{ count: 8, shifting: false }],
-        [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
-        [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
-        [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
-        [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
-      ];
-      
-      /* --- Data Loading --- */
-      function preload() {
-        elementsData = loadJSON('elements.json', dataLoaded, dataError);
+    // Κοινές ρυθμίσεις για όλα τα blocks:
+    const cellWidth = 40;
+    const gap = 2;
+    const numRows = 9;
+    // Λειτουργία: collapsed (αν collapsed, εμφανίζεται μόνο ο s τομέας)
+    let collapsed = false; // μπορείτε να το εναλλάσσετε μέσω του κουμπιού toggle
+    
+    // Υπολογισμός canvas height: 2 rows με ύψος 20 + 7 rows με ύψος 40 + (numRows-1)*gap
+    const canvasHeight = 2 * 20 + 7 * 40 + (numRows - 1) * gap; // 40 + 280 + 8*2 = 40+280+16 = 336
+    
+    // Συναρτήσεις σχεδίασης grid με δεδομένα
+    // drawGrid: δέχεται το p5 instance, αριθμό στηλών και ένα array δεδομένων με μήκος = columns * 9.
+    // Για κάθε σειρά: αν row index < 2, cell height = 20, αλλιώς 40.
+    function drawGrid(p, columns, dataArray) {
+      p.background(240);
+      let index = 0;
+      let y = 0;
+      for (let row = 0; row < numRows; row++) {
+        let cellH = (row < 2) ? 20 : 40;
+        let x = 0;
+        for (let col = 0; col < columns; col++) {
+          let cellData = dataArray[index] || { number: 0, symbol: "" };
+          p.fill(200 + col*3, 200, 220);
+          p.stroke(150);
+          p.rect(x, y, cellWidth, cellH);
+          p.fill(0);
+          p.textSize(12);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(cellData.symbol, x + cellWidth / 2, y + cellH / 2);
+          index++;
+          x += cellWidth + gap;
+        }
+        y += cellH + gap;
       }
-      function dataLoaded(data) {
-        elementsData = data;
-        console.log("elements.json loaded successfully.");
+    }
+    
+    // Dummy data generators για κάθε block
+    function generateBlockData(columns, prefix) {
+      const total = numRows * columns;
+      let arr = [];
+      for (let i = 0; i < total; i++) {
+        arr.push({ number: i+1, symbol: prefix + (i+1) });
       }
-      function dataError(err) {
-        console.error("Error loading elements.json", err);
-        elementsData = null;
-      }
-      
-      /* --- Utility Functions --- */
-      function getCategory(n) {
-        const alkaliMetals = [3, 11, 19, 37, 55, 87];
-        if(n === 1) return 'hydrogen-color';
-        if(alkaliMetals.includes(n)) return 'alkali-block';
-        if(n === 1 || n === 2 || [4,12,20,38,56,88].includes(n)) return 's-block';
-        if((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
-        if((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
-        if((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
-        return 'p-block';
-      }
-      
-      const CATEGORY_COLORS = {
-        'alkali-block': '#ff9999',
-        's-block': '#ffcccc',
-        'p-block': '#ccffcc',
-        'd-block': '#ccccff',
-        'f-block': '#ffe5cc',
-        'group-name': '#f0f0f0',
-        'period-label': '#f0f0f0',
-        'hydrogen-color': '#ffff99'
+      return arr;
+    }
+    
+    let sData = generateBlockData(3, "S");
+    let fData = generateBlockData(14, "F");
+    let dData = generateBlockData(10, "D");
+    let pData = generateBlockData(6, "P");
+    
+    // p5 sketches για κάθε τομέα:
+    
+    let sketchS = function(p) {
+      p.setup = function() {
+        p.createCanvas( 3 * cellWidth + 2 * gap, canvasHeight );
+        p.noLoop();
       };
-      
-      /* --- Initialization --- */
-      function initialize() {
-        rowsData = [];
-        for (let i = 0; i < 9; i++) {
-          let cells = (i < 2) ? new Array(32).fill(null) : [];
-          rowsData.push({
-            cells: cells,
-            shiftedColumns: 0,
-            currentSegment: 0,
-            countInSegment: 0,
-            insertionIndex: 0,
-            periodLabel: null
-          });
-        }
-        globalElementNumber = 3;
-        currentRowIndex = 3;
-        phase = 1;
-      }
-      
-      function createCell(elObj) {
-        let cell = {
-          number: elObj.number,
-          category: elObj.category,
-          width: 40,
-          height: (elObj.category === 'group-name' ? 20 : 40),
-          fixed: !!elObj.fixed
-        };
-        if(elementsData && elementsData.length >= elObj.number) {
-          cell.details = elementsData[elObj.number - 1];
-        }
-        return cell;
-      }
-      
-      function shiftBlockRight(rowIndex, groupRows) {
-        groupRows.forEach(i => {
-          let row = rowsData[i];
-          let insertPos = rowsData[rowIndex].insertionIndex + row.shiftedColumns;
-          row.cells.splice(insertPos, 0, null);
-          row.shiftedColumns++;
-        });
-      }
-      
-      function handleShiftingForRow(currentRowIndex) {
-        let groupRows = [];
-        if(currentRowIndex === 3) groupRows = [0,1,2];
-        else if(currentRowIndex === 5) groupRows = [0,1,2,3,4];
-        else if(currentRowIndex === 7) groupRows = [0,1,2,3,4,5,6];
-        shiftBlockRight(currentRowIndex, groupRows);
-      }
-      
-      function addElementToCurrentRow() {
-        if(phase === 1) {
-          if(globalElementNumber > 118) {
-            currentRowIndex = 2;
-            globalElementNumber = 1;
-            phase = 2;
-            redrawAll();
-            return;
-          }
-          const row = rowsData[currentRowIndex];
-          if(currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
-            let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
-            let cell = createCell({
-              number: globalElementNumber,
-              category: getCategory(globalElementNumber)
-            });
-            if(pattern.shifting) {
-              handleShiftingForRow(currentRowIndex);
-            }
-            let targetIndex = row.insertionIndex;
-            while(row.cells[targetIndex] != null) {
-              targetIndex++;
-              if(targetIndex >= row.cells.length) row.cells.push(null);
-            }
-            row.cells[targetIndex] = cell;
-            globalElementNumber++;
-            row.countInSegment++;
-            if(row.countInSegment === pattern.count) {
-              row.currentSegment++;
-              row.countInSegment = 0;
-              row.insertionIndex = row.cells.length;
-            }
-            if(row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
-              currentRowIndex++;
-            }
-            updateInfoPanel(cell);
-          }
-          redrawAll();
-        } else if(phase === 2) {
-          const row = rowsData[currentRowIndex];
-          let insertIndex = (globalElementNumber === 1) ? 0 : 31;
-          while(row.cells.length <= insertIndex) row.cells.push(null);
-          let cell = createCell({
-            number: globalElementNumber,
-            category: getCategory(globalElementNumber)
-          });
-          row.cells[insertIndex] = cell;
-          globalElementNumber++;
-          if(globalElementNumber > 2) phase = 3;
-          updateInfoPanel(cell);
-          redrawAll();
-        } else if(phase === 3) {
-          addPeriodNames();
-          phase = 4;
-          redrawAll();
-        } else if(phase === 4) {
-          addOldGroupNumbers();
-          phase = 5;
-          redrawAll();
-        } else if(phase === 5) {
-          addNewGroupNumbers();
-          phase = 6;
-          redrawAll();
-        }
-      }
-      
-      function addPeriodNames() {
-        rowsData[2].periodLabel = "1η Κ";
-        rowsData[3].periodLabel = "2η L";
-        rowsData[4].periodLabel = "3η M";
-        rowsData[5].periodLabel = "4η N";
-        rowsData[6].periodLabel = "5η O";
-        rowsData[7].periodLabel = "6η P";
-        rowsData[8].periodLabel = "7η Q";
-      }
-      
-      function addNewGroupNumbers() {
-        let row = rowsData[0];
-        row.cells = new Array(32).fill(null);
-        row.cells[0] = createCell({ number: 1, category: 'group-name' });
-        row.cells[1] = createCell({ number: 2, category: 'group-name' });
-        let num = 3;
-        for(let i = 16; i < 32; i++) {
-          row.cells[i] = createCell({ number: num, category: 'group-name' });
-          num++;
-        }
-      }
-      
-      function addOldGroupNumbers() {
-        let oldNumbers = [
-          "IA", "IIA", "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB",
-          "VIIIB", "VIIIB", "IB", "IIB", "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
-        ];
-        let row = rowsData[1];
-        row.cells = new Array(32).fill(null);
-        row.cells[0] = createCell({ number: oldNumbers[0], category: 'group-name' });
-        row.cells[1] = createCell({ number: oldNumbers[1], category: 'group-name' });
-        let idx = 2;
-        for(let i = 16; i < 32; i++) {
-          row.cells[i] = createCell({ number: oldNumbers[idx], category: 'group-name' });
-          idx++;
-        }
-      }
-      
-      function getTableBottom() {
-        let yOffset = 80;
-        const groupRowsGap = 20;
-        const normalGap = 42;
-        for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
-          yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
-        }
-        return yOffset;
-      }
-      
-      function updateInfoPanelDimensions() {
-        const infoPanel = document.getElementById("infoPanel");
-        if (!hideFBlock) {
-          const desiredWidth = 33 * colGap;
-          let finalWidthH = desiredWidth;
-          infoPanel.style.width = finalWidthH + "px";
-          const tableBottom = getTableBottom();
-          infoPanel.style.top = (tableBottom + 12) + "px";
-          infoPanel.style.height = (window.innerHeight - tableBottom - 12 - 42) + "px";
-          let leftPos = (window.innerWidth - finalWidthH) / 2;
-          if (leftPos < 42) leftPos = 42;
-          infoPanel.style.left = leftPos + "px";
-          infoPanel.style.transform = "none";
+      p.draw = function() {
+        // Σε collapsed mode, εμφανίζεται ο s block πάντα
+        drawGrid(p, 3, sData);
+      };
+    };
+    
+    let sketchD = function(p) {
+      p.setup = function() {
+        p.createCanvas( 10 * cellWidth + 9 * gap, canvasHeight );
+        p.noLoop();
+      };
+      p.draw = function() {
+        // Εμφανίζουμε τον d block μόνο σε full mode, αλλιώς αν collapsed, κρύβουμε
+        if (!collapsed) {
+          drawGrid(p, 10, dData);
         } else {
-          infoPanel.style.width = "500px";
-          infoPanel.style.height = "440px";
-          infoPanel.style.left = (window.innerWidth - 500 - 42) + "px";
-          infoPanel.style.top = "120px";
-          infoPanel.style.transform = "none";
+          p.clear();
         }
-      }
-      
-      function updateInfoPanel(cell) {
-        const infoPanel = document.getElementById('infoPanel');
-        if (elementsData && cell && cell.details) {
-          infoPanel.innerHTML = `<strong>${cell.details.name} (${cell.details.symbol})</strong> [Z=${cell.details.number}]`;
-        } else if (cell) {
-          infoPanel.innerHTML = `<strong>${cell.number}</strong> [${cell.category}]`;
+      };
+    };
+    
+    let sketchP = function(p) {
+      p.setup = function() {
+        p.createCanvas( 6 * cellWidth + 5 * gap, canvasHeight );
+        p.noLoop();
+      };
+      p.draw = function() {
+        if (!collapsed) {
+          drawGrid(p, 6, pData);
         } else {
-          infoPanel.innerHTML = "Πληροφορίες στοιχείου...";
+          p.clear();
         }
-      }
-      
-      function clearInfoPanel() {
-        document.getElementById('infoPanel').innerHTML = "Πληροφορίες στοιχείου...";
-      }
-      
-      function handleMouseClick(x, y) {
-        let found = false;
-        for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
-          let row = rowsData[rowIndex];
-          for (let i = 0; i < row.cells.length; i++) {
-            let cell = row.cells[i];
-            if (cell && x >= cell.drawX && x <= cell.drawX + cell.drawW &&
-                y >= cell.drawY && y <= cell.drawY + cell.drawH) {
-              updateInfoPanel(cell);
-              found = true;
-              break;
-            }
-          }
-          if (found) break;
+      };
+    };
+    
+    let sketchF = function(p) {
+      p.setup = function() {
+        p.createCanvas( 14 * cellWidth + 13 * gap, canvasHeight );
+        p.noLoop();
+      };
+      p.draw = function() {
+        // Για τον f block μετατοπίζουμε τις σειρές προς τα κάτω (π.χ. + gap*?) αν collapsed, διαφορετικά εμφανίζεται κανονικά.
+        if (!collapsed) {
+          drawGrid(p, 14, fData);
+        } else {
+          // Σε collapsed mode, μετατοπίζουμε τον f block 42px προς τα κάτω (δηλαδή το ύψος της πρώτης σειράς collapsed)
+          p.push();
+          p.translate(0, 42); // μετατόπιση
+          drawGrid(p, 14, fData);
+          p.pop();
         }
-        if (!found) clearInfoPanel();
-      }
-      
-      function redrawAll() {
-        sketchSP5.redraw();
-        sketchDP5.redraw();
-        sketchPP5.redraw();
-        sketchFP5.redraw();
-      }
-      
-      /* --- Λογική σχεδίασης ανά τομέα (φίλτρο με βάση την κατηγορία) --- */
-      // Η συνάρτηση drawBlock φιλτράρει τα κελιά από rowsData που έχουν category ίση με blockCategory
-      // και τα σχεδιάζει σε ένα grid με αρχικό offset (offsetX, offsetY).
-      function drawBlock(p, blockCategory, offsetX, offsetY) {
-        p.background(247);
-        let y = offsetY;
-        for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
-          let row = rowsData[rowIndex];
-          let x = offsetX;
-          for (let j = 0; j < row.cells.length; j++) {
-            let cell = row.cells[j];
-            if (cell && cell.category === blockCategory) {
-              p.fill(CATEGORY_COLORS[cell.category] || cell.color);
-              p.stroke(85);
-              p.rect(x, y, 40, (cell.category === 'group-name' ? 20 : 40), 5);
-              p.fill(0);
-              p.textSize(12);
-              p.textAlign(p.CENTER, p.CENTER);
-              p.text(String(cell.number || ''), x + 20, y + (cell.category === 'group-name' ? 10 : 20));
-              // Μπορείτε να αποθηκεύσετε τις συντεταγμένες αν χρειάζεται για interactivity
-              cell.drawX = x;
-              cell.drawY = y;
-              cell.drawW = 40;
-              cell.drawH = (cell.category === 'group-name' ? 20 : 40);
-            }
-            x += colGap;
-          }
-          y += 42;
-        }
-      }
-      
-      /* --- 4 p5 Sketches για 4 τομείς --- */
-      
-      // Sketch για τον s τομέα
-      let sketchS = function(p) {
-        p.setup = function() {
-          p.createCanvas(150, 300);
-          p.noLoop();
-        };
-        p.draw = function() {
-          // Στον s τομέα εμφανίζουμε μόνο τα κελιά με category "s-block"
-          drawBlock(p, "s-block", 0, 0);
-        };
-        p.windowResized = function() {
-          p.resizeCanvas(150, 300);
-          p.redraw();
-        };
       };
-      
-      // Sketch για τον d τομέα
-      let sketchD = function(p) {
-        p.setup = function() {
-          p.createCanvas(400, 300);
-          p.noLoop();
-        };
-        p.draw = function() {
-          drawBlock(p, "d-block", 0, 0);
-        };
-        p.windowResized = function() {
-          p.resizeCanvas(400, 300);
-          p.redraw();
-        };
-      };
-      
-      // Sketch για τον p τομέα
-      let sketchP = function(p) {
-        p.setup = function() {
-          p.createCanvas(250, 300);
-          p.noLoop();
-        };
-        p.draw = function() {
-          drawBlock(p, "p-block", 0, 0);
-        };
-        p.windowResized = function() {
-          p.resizeCanvas(250, 300);
-          p.redraw();
-        };
-      };
-      
-      // Sketch για τον f τομέα
-      let sketchF = function(p) {
-        p.setup = function() {
-          p.createCanvas(400, 150);
-          p.noLoop();
-        };
-        p.draw = function() {
-          // Εδώ μπορούμε να μετατοπίσουμε τον f τομέα, π.χ., να ξεκινάει 42px πιο κάτω
-          drawBlock(p, "f-block", 0, 42);
-        };
-        p.windowResized = function() {
-          p.resizeCanvas(400, 150);
-          p.redraw();
-        };
-      };
-      
-      // Δημιουργία των 4 p5 instances στους αντίστοιχους καμβάδες
-      let sketchSP5 = new p5(sketchS, 'canvasS');
-      let sketchDP5 = new p5(sketchD, 'canvasD');
-      let sketchPP5 = new p5(sketchP, 'canvasP');
-      let sketchFP5 = new p5(sketchF, 'canvasF');
-      
-      /* --- Event Listeners για τα κουμπιά --- */
-      document.getElementById('nextElement').addEventListener('click', function(e) {
-        addElementToCurrentRow();
-        redrawAll();
-      });
-      document.getElementById('fillAll').addEventListener('click', function(e) {
-        while (phase < 6 || (phase === 1 && globalElementNumber <= 118)) {
-          addElementToCurrentRow();
-        }
-        redrawAll();
-      });
-      document.getElementById('reset').addEventListener('click', function(e) {
-        initialize();
-        redrawAll();
-      });
-      document.getElementById('togglePanel').addEventListener('click', function(e) {
-        hideFBlock = !hideFBlock;
-        updateInfoPanelDimensions();
-        redrawAll();
-        console.log("hideFBlock =", hideFBlock);
-      });
-      
-      window.addEventListener('resize', function() {
-        redrawAll();
-      });
-      
-      // Αρχική εκτέλεση
-      initialize();
-      updateInfoPanelDimensions();
-    })();
+    };
+    
+    // Δημιουργία των 4 p5 instances στους αντίστοιχους καμβάδες
+    new p5(sketchS, 'canvasS');
+    new p5(sketchD, 'canvasD');
+    new p5(sketchP, 'canvasP');
+    new p5(sketchF, 'canvasF');
+    
+    // Κουμπιά ελέγχου για παράδειγμα
+    document.getElementById('nextElement').addEventListener('click', function() {
+      // Εδώ θα υλοποιήσετε τη λογική προσθήκης στοιχείων στον πίνακα
+      alert("Next element (δεν έχει υλοποιηθεί πλήρως στο παράδειγμα)");
+    });
+    document.getElementById('fillAll').addEventListener('click', function() {
+      alert("Fill all (δεν έχει υλοποιηθεί πλήρως στο παράδειγμα)");
+    });
+    document.getElementById('reset').addEventListener('click', function() {
+      // Επαναφορά dummy δεδομένων
+      sData = generateBlockData(3, "S");
+      dData = generateBlockData(10, "D");
+      pData = generateBlockData(6, "P");
+      fData = generateBlockData(14, "F");
+      window.location.reload(); // Απλό reset για το demo
+    });
+    document.getElementById('toggleCollapsed').addEventListener('click', function() {
+      collapsed = !collapsed;
+      // Ενημέρωση όλων των καμβάδων
+      window.location.reload(); // Για το demo, κάνουμε reload για να αλλάξουν τα περιεχόμενα
+    });
   </script>
 </body>
 </html>
