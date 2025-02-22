@@ -21,6 +21,7 @@
       font-weight: bold;
       z-index: 10;
     }
+    /* Ορισμός σταθερών διαστάσεων για τον πίνακα πληροφοριών */
     #infoPanel {
       display: flex;
       justify-content: space-between;
@@ -28,23 +29,23 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 90%;
-      max-width: 1200px;
+      width: 600px;      /* Σταθερό πλάτος */
+      height: 200px;     /* Σταθερό ύψος */
       padding: 20px;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
-    /* Νέα διάταξη: infoPanel σε κατακόρυφη διάταξη στη δεξιά πλευρά όταν ενεργοποιείται η σύμπτυξη */
+    /* Σε κατακόρυφη διάταξη, διατηρούνται οι ίδιες σταθερές διαστάσεις */
     #infoPanel.vertical {
       flex-direction: column;
       top: 80px;
       right: 20px;
       left: auto;
       transform: none;
-      width: auto;
-      max-width: none;
+      width: 600px;
+      height: 200px;
     }
     #leftPanel, #middlePanel, #rightPanel {
       flex: 1;
