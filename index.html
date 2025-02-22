@@ -58,7 +58,7 @@
     #infoPanel.vertical #middlePanel {
       border-bottom: 1px solid #333;
     }
-    /* Vertical mode: 3 τμήματα με ύψη 140px, 220px και 80px αντίστοιχα */
+    /* Ρυθμίσεις για τα τρία τμήματα στο vertical mode */
     #infoPanel.vertical #leftPanel {
       flex: 0 0 140px;
       display: flex;
@@ -82,7 +82,7 @@
       flex-direction: row;
     }
     
-    /* Middle panel (σε κάθε mode) */
+    /* Στυλ για το middlePanel (σε κάθε mode) */
     #middlePanel {
       flex: 2;
       font-style: italic;
@@ -118,7 +118,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -139,7 +139,7 @@
   </div>
   
   <script>
-    // --- Ο υπόλοιπος κώδικας του Περιοδικού Πίνακα παραμένει --- 
+    // Ο υπόλοιπος κώδικας του Π.Π. παραμένει όπως ήταν στην τελευταία λειτουργική έκδοση.
     
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
@@ -261,7 +261,7 @@
             category: getCategory(globalElementNumber)
           });
           if (pattern.shifting) {
-            handleShiftingForRow(currentRowIndex);
+            handleShiftingForRow(currentRow);
           }
           let targetIndex = row.insertionIndex;
           while (row.cells[targetIndex] != null) {
@@ -367,19 +367,17 @@
       const infoPanel = document.getElementById("infoPanel");
       if (!hideFBlock) {
         // --- Horizontal mode ---
-        // Σύνολο πλάτους = 33 * 42 = 1386px, αλλά μειώνουμε κατά 42 για να χωράει: 1386 - 42 = 1344px
+        // Σύνολο πλάτους = 33 * 42 = 1386px, μειώνουμε κατά 42px ώστε να χωράει: 1386 - 42 = 1344px
         let finalWidthH = 1386 - 42;
         infoPanel.style.width = finalWidthH + "px";
         const tableBottom = getTableBottom();
         infoPanel.style.top = (tableBottom + 12) + "px"; // 12px κάτω από το κάτω σημείο του πίνακα
-        // Το ύψος ορίζεται ώστε το κάτω του infoPanel να απέχει 42px από το κάτω της σελίδας.
         infoPanel.style.height = (windowHeight - tableBottom - 12 - 42) + "px";
         let leftPos = (windowWidth - finalWidthH) / 2;
         if (leftPos < 42) leftPos = 42;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
-        // Κατανομή τμημάτων: θέτουμε leftPanel 240px, middlePanel 750px, rightPanel 180px (240+750+180 = 1170px)
-        // Επαναπροσδιορίζουμε το finalWidthH ως 1170px.
+        // Επανακαθορισμός συνολικού πλάτους των τμημάτων: θέτουμε leftPanel 240px, middlePanel 750px, rightPanel 180px (240+750+180 = 1170px)
         finalWidthH = 1170;
         infoPanel.style.width = finalWidthH + "px";
         leftPos = (windowWidth - finalWidthH) / 2;
@@ -400,7 +398,7 @@
         infoPanel.style.left = (windowWidth - 500 - 42) + "px";
         infoPanel.style.top = "120px";
         infoPanel.style.transform = "none";
-        // Κατανομή τμημάτων στο vertical mode: leftPanel: 140px, middlePanel: 220px, rightPanel: 80px
+        // Κατανομή τμημάτων στο vertical mode: leftPanel 140px, middlePanel 220px, rightPanel 80px.
         document.getElementById("leftPanel").style.height = "140px";
         document.getElementById("middlePanel").style.height = "220px";
         document.getElementById("rightPanel").style.height = "80px";
@@ -418,11 +416,25 @@
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
         let row = rowsData[rowIndex];
         let xOffset = 80;
-        if (hideFBlock && row.cells.length === 32) {
-          // Στον collapsed mode, σχεδιάζουμε πρώτα τις πρώτες 2 στήλες...
-          let part1 = row.cells.slice(0, 2);
-          for (let i = 0; i < part1.length; i++) {
-            let cell = part1[i];
+        let cellsToDraw = [];
+        if (hideFBlock) {
+          if (row.cells.length === 32) {
+            // Χωρίζουμε τις πρώτες 2 στήλες από τις υπόλοιπες με offset 5px
+            cellsToDraw = row.cells.slice(0, 2).concat([null]).concat(row.cells.slice(16, 32));
+          } else {
+            cellsToDraw = row.cells;
+          }
+        } else {
+          cellsToDraw = row.cells;
+        }
+        if (rowIndex < 2) {
+          noStroke();
+          for (let i = 0; i < cellsToDraw.length; i++) {
+            let cell = cellsToDraw[i];
+            if (cell === null) {
+              xOffset += 5;
+              continue;
+            }
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -437,11 +449,21 @@
             }
             xOffset += colGap;
           }
-          // ...και προσθέτουμε ένα offset 5px πριν σχεδιάσουμε τις υπόλοιπες 16 στήλες
-          xOffset += 5;
-          let part2 = row.cells.slice(16, 32);
-          for (let i = 0; i < part2.length; i++) {
-            let cell = part2[i];
+          stroke(85);
+        } else {
+          if (row.periodLabel) {
+            fill(0);
+            textSize(12);
+            textAlign(CENTER, CENTER);
+            text(row.periodLabel, 45, yOffset + 20);
+          }
+          xOffset = 80;
+          for (let i = 0; i < cellsToDraw.length; i++) {
+            let cell = cellsToDraw[i];
+            if (cell === null) {
+              xOffset += 5;
+              continue;
+            }
             if (cell) {
               cell.drawX = xOffset;
               cell.drawY = yOffset;
@@ -456,54 +478,6 @@
               text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
             }
             xOffset += colGap;
-          }
-        } else {
-          // Στον expanded mode, σχεδιάζουμε όλα τα κελιά κανονικά
-          let cellsToDraw = row.cells;
-          if (rowIndex < 2) {
-            noStroke();
-            for (let i = 0; i < cellsToDraw.length; i++) {
-              let cell = cellsToDraw[i];
-              if (cell) {
-                cell.drawX = xOffset;
-                cell.drawY = yOffset;
-                cell.drawW = cell.width;
-                cell.drawH = cell.height;
-                fill(CATEGORY_COLORS[cell.category]);
-                rect(xOffset, yOffset, cell.width, cell.height);
-                fill(0);
-                textSize(12);
-                textAlign(CENTER, CENTER);
-                text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
-              }
-              xOffset += colGap;
-            }
-            stroke(85);
-          } else {
-            if (row.periodLabel) {
-              fill(0);
-              textSize(12);
-              textAlign(CENTER, CENTER);
-              text(row.periodLabel, 45, yOffset + 20);
-            }
-            xOffset = 80;
-            for (let i = 0; i < cellsToDraw.length; i++) {
-              let cell = cellsToDraw[i];
-              if (cell) {
-                cell.drawX = xOffset;
-                cell.drawY = yOffset;
-                cell.drawW = cell.width;
-                cell.drawH = cell.height;
-                fill(CATEGORY_COLORS[cell.category]);
-                stroke(85);
-                rect(xOffset, yOffset, cell.width, cell.height, 5);
-                fill(0);
-                textSize(12);
-                textAlign(CENTER, CENTER);
-                text(String(cell.number || ''), xOffset + cell.width/2, yOffset + cell.height/2);
-              }
-              xOffset += colGap;
-            }
           }
         }
         yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
@@ -533,9 +507,9 @@
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 89 && num <= 102;
       });
-      // Αλλαγή startY ώστε ο f τομέας να εμφανίζεται ψηλότερα (π.χ. 380px)
+      // Δεν αλλάζουμε το startY (παραμένει στο 450px όπως ήταν στην αρχική εκδοχή)
       let startX = 80 + 84; 
-      let startY = 380;
+      let startY = 450;
       for (let i = 0; i < lanthanides.length; i++) {
         let cell = lanthanides[i];
         let x = startX + i * colGap;
@@ -549,7 +523,8 @@
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
       let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
-      let actinidesY = startY + fHeight + 10;
+      // Μειώνουμε το gap μεταξύ των δύο σειρών του f τομέα από 10 σε 5px
+      let actinidesY = startY + fHeight + 5;
       for (let i = 0; i < actinides.length; i++) {
         let cell = actinides[i];
         let x = startX + i * colGap;
