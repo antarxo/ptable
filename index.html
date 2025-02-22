@@ -35,12 +35,12 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
-    /* Διαχωριστικά ανάμεσα στα κελία στην οριζόντια διάταξη */
+    /* Διαχωριστικά μεταξύ των κελιών στην οριζόντια διάταξη */
     #infoPanel:not(.vertical) #leftPanel,
     #infoPanel:not(.vertical) #middlePanel {
       border-right: 1px solid #333;
     }
-    /* Στο horizontal mode, το rightPanel κεντράρει τα κουμπιά σε στήλη */
+    /* Το rightPanel κεντράρει τα κουμπιά σε vertical στο horizontal mode */
     #infoPanel:not(.vertical) #rightPanel {
       display: flex;
       flex-direction: column;
@@ -53,39 +53,36 @@
       flex-direction: column;
       transform: none;
     }
-    /* Στην κατακόρυφη διάταξη, τα δύο πρώτα τμήματα έχουν κάτω περίγραμμα */
+    /* Στην vertical διάταξη, τα δύο πρώτα τμήματα έχουν κάτω περίγραμμα */
     #infoPanel.vertical #leftPanel,
     #infoPanel.vertical #middlePanel {
       border-bottom: 1px solid #333;
     }
-    /* Ορισμός τμημάτων στο vertical mode */
+    /* Ρυθμίσεις για τα τρία τμήματα στο vertical mode */
     #infoPanel.vertical #leftPanel {
-      flex: 0 0 110px; /* Ύψος ίσο με το ύψος του οριζόντιου πίνακα (προσαρμοσμένο ώστε συνολικά να δίνουν 440) */
+      flex: 0 0 110px; /* ύψος 110px */
       display: flex;
-      flex-direction: column; /* Οργανώνει τις πληροφορίες σε σειρές */
-      align-items: flex-start;  /* Στοιχίζει αριστερά */
+      flex-direction: column;
+      align-items: flex-start; /* στοιχίση αριστερά */
       justify-content: center;
       padding-left: 10px;
     }
     #infoPanel.vertical #middlePanel {
-      flex: 0 0 250px;
+      flex: 0 0 250px; /* ύψος 250px */
       display: flex;
       align-items: center;
       justify-content: flex-start;
       padding-left: 10px;
     }
     #infoPanel.vertical #rightPanel {
-      flex: 0 0 80px;
+      flex: 0 0 80px; /* ύψος 80px για 4 κουμπιά σε μία σειρά */
       display: flex;
       justify-content: center;
       align-items: center;
-      /* Τα κουμπιά θα τοποθετούνται σε μία σειρά */
-      flex-direction: row;
     }
     
-    /* Στυλ για το middlePanel (και στα δύο modes) */
+    /* Στυλ για το middlePanel (σε κάθε mode) */
     #middlePanel {
-      /* Το πλάτος του ορίζεται δυναμικά */
       flex: 2;
       font-style: italic;
       color: #666;
@@ -106,12 +103,12 @@
       background: #333;
       color: #fff;
     }
-    /* Στυλ κουμπιών στην οριζόντια διάταξη */
+    /* Στυλ κουμπιών στο horizontal mode */
     #infoPanel:not(.vertical) #rightPanel button {
       padding: 8px 6px;
       font-size: 16px;
     }
-    /* Στυλ κουμπιών στην κατακόρυφη διάταξη */
+    /* Στυλ κουμπιών στο vertical mode */
     #infoPanel.vertical #rightPanel button {
       padding: 4px 6px;
       font-size: 14px;
@@ -121,7 +118,6 @@
 </head>
 <body>
   <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
-  <!-- Το infoPanel θα τοποθετηθεί δυναμικά από τη JS -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -142,13 +138,13 @@
   </div>
 
   <script>
-    /* --- ΔΕΝ ΑΛΛΑΖΟΥΜΕ ΤΟ ΥΠΟΛΟΙΠΟ ΤΟΥ ΠΙΝΑΚΑ (ΠΕΡΙΟΔΙΚΟ) --- */
+    /* --- Το υπόλοιπο του κώδικα του Περιοδικού Πίνακα παραμένει αμετάβλητο --- */
     
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // false = horizontal mode, true = vertical mode
+    // false: horizontal mode, true: vertical mode
     let hideFBlock = false;
-    const colGap = 42; // μέτρο και περιθώριο
+    const colGap = 42; // χρησιμοποιείται ως μέτρο και ως περιθώριο
 
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
@@ -264,7 +260,7 @@
             category: getCategory(globalElementNumber)
           });
           if (pattern.shifting) {
-            handleShiftingForRow(currentRowIndex);
+            handleShiftingForRow(currentRow);
           }
           let targetIndex = row.insertionIndex;
           while (row.cells[targetIndex] != null) {
@@ -365,7 +361,7 @@
       return yOffset;
     }
     
-    // Ενημέρωση διαστάσεων του infoPanel
+    // Ενημέρωση διαστάσεων του infoPanel ανάλογα με το mode
     function updateInfoPanelDimensions() {
       const infoPanel = document.getElementById("infoPanel");
       if (!hideFBlock) {
@@ -373,36 +369,32 @@
         const desiredWidth = 33 * colGap; // 1386px
         let finalWidthH = desiredWidth;
         infoPanel.style.width = finalWidthH + "px";
-        // Το top ορίζεται 12px κάτω από το κάτω σημείο του πίνακα
         const tableBottom = getTableBottom();
-        infoPanel.style.top = (tableBottom + 12) + "px";
-        // Το ύψος ορίζεται ώστε το κάτω του infoPanel να απέχει 42px από το κάτω της σελίδας:
-        infoPanel.style.height = (windowHeight - tableBottom - 12 - 42) + "px";
-        // Κεντράρουμε οριζόντια
+        infoPanel.style.top = (tableBottom + 12) + "px"; // 12px κάτω από το κάτω σημείο του πίνακα
+        infoPanel.style.height = (windowHeight - tableBottom - 12 - 42) + "px"; // ώστε το κάτω να απέχει 42px από το κάτω της σελίδας
         let leftPos = (windowWidth - finalWidthH) / 2;
-        if (leftPos < colGap) leftPos = colGap;
+        if (leftPos < 42) leftPos = 42;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
         // Κατανομή τμημάτων: leftPanel: 400px, middlePanel: 750px, rightPanel: 1386 - 400 - 750 = 236px
         document.getElementById("leftPanel").style.width = "400px";
         document.getElementById("middlePanel").style.width = "750px";
         document.getElementById("rightPanel").style.width = "236px";
+        // Επαναφορά ύψους των τμημάτων (σε horizontal mode δεν θέλουμε τα vertical heights)
+        document.getElementById("leftPanel").style.height = "";
+        document.getElementById("middlePanel").style.height = "";
+        document.getElementById("rightPanel").style.height = "";
       } else {
         // --- Vertical mode ---
         infoPanel.style.width = "500px";
         infoPanel.style.height = "440px";
-        // Το infoPanel τοποθετείται έτσι ώστε το δεξί του περιθώριο να είναι 42px από το πίνακα των στοιχείων.
-        // Δεδομένου ότι ο πίνακας στοιχείων ξεκινά στο 80 και έχει πλάτος (π.χ.) 1386px, εδώ υποθέτουμε ότι το infoPanel θα τοποθετηθεί στα δεξιά με left = windowWidth - 500 - 42.
+        // Το infoPanel τοποθετείται έτσι ώστε το δεξί περιθώριο να είναι 42px από το πίνακα των στοιχείων.
         infoPanel.style.left = (windowWidth - 500 - 42) + "px";
-        // Το top ορίζεται στο 120px (σύμφωνο με τις οδηγίες)
-        infoPanel.style.top = "120px";
+        infoPanel.style.top = "120px";  // Ξεκινά στο 120px (σύμφωνα με τις οδηγίες)
         infoPanel.style.transform = "none";
-        // Κατανομή των τριών τμημάτων:
-        // LeftPanel: ύψος = 110px (ώστε leftPanel + middlePanel + rightPanel = 110+250+80 = 440px)
+        // Κατανομή τμημάτων στο vertical mode:
         document.getElementById("leftPanel").style.height = "110px";
-        // MiddlePanel: 250px
         document.getElementById("middlePanel").style.height = "250px";
-        // RightPanel: 80px
         document.getElementById("rightPanel").style.height = "80px";
         // Σε vertical mode, όλα τα τμήματα παίρνουν πλάτος 100%
         document.getElementById("leftPanel").style.width = "100%";
@@ -543,7 +535,7 @@
           `<em>Εξωτερική:</em> ${cell.details.outerShell}`;
         document.getElementById('explanation').innerHTML =
           `<em>Επεξήγηση:</em> ${cell.details.explanation}`;
-        // Στον vertical mode, εμφανίζουμε ως "Οδηγίες" (χωρίς τη λέξη "Παρατηρήσεις")
+        // Στον vertical mode εμφανίζουμε "Οδηγίες:" αντί για "Παρατηρήσεις:"
         document.getElementById('remarks').innerHTML =
           `<em>Οδηγίες:</em> ${cell.details.remarks}`;
       } else {
