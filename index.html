@@ -27,41 +27,30 @@
       justify-content: space-between;
       align-items: stretch;
       position: absolute;
-      /* Θα τοποθετηθεί δυναμικά μέσω JS */
-      left: 50%;
-      transform: translateX(-50%);
+      /* Η θέση και οι διαστάσεις ορίζονται δυναμικά από τη JS */
       padding: 20px;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
-      /* Στην expanded διάταξη, τα τμήματα στοιχίζονται οριζόντια */
+      /* Τα τμήματα στοιχίζονται οριζόντια */
       flex-direction: row;
     }
     /* Στυλ για το infoPanel στην κατακόρυφη διάταξη */
     #infoPanel.vertical {
-      /* Οι διαστάσεις και η θέση ρυθμίζονται δυναμικά μέσω JS */
       transform: none;
       flex-direction: column;
     }
-    /* Όπως και πριν, τα τμήματα έχουν βασική διάταξη */
+    /* Τα τμήματα (panels) του infoPanel */
     #leftPanel, #middlePanel, #rightPanel {
       flex: 1;
       margin: 0 10px;
     }
-    /* Στην κατακόρυφη διάταξη, τα τμήματα θα στοιχίζονται πάνω προς τα κάτω */
+    /* Στην κατακόρυφη διάταξη, τα τμήματα στοιχίζονται κατακόρυφα */
     #infoPanel.vertical #leftPanel,
     #infoPanel.vertical #middlePanel,
     #infoPanel.vertical #rightPanel {
       margin: 10px 0;
-    }
-    /* Στο vertical mode, ρυθμίζουμε το rightPanel ώστε τα κουμπιά να στοιχίζονται οριζόντια (με διάπλευση αν χρειαστεί) */
-    #infoPanel.vertical #rightPanel {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 5px;
     }
     #middlePanel {
       flex: 2;
@@ -69,19 +58,28 @@
       color: #666;
       padding: 0 20px;
     }
-    /* Κουμπιά */
+    /* Κουμπιά – βασικό στυλ */
     #rightPanel button {
-      padding: 4px 8px;
-      font-size: 12px;
-      cursor: pointer;
       border: 1px solid #333;
       background: #fff;
-      transition: background 0.3s, color 0.3s;
       border-radius: 5px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
     }
     #rightPanel button:hover {
       background: #333;
       color: #fff;
+    }
+    /* Στυλ για κουμπιά στην οριζόντια διάταξη: μεγαλύτερο ύψος & γραμματοσειρά */
+    #infoPanel:not(.vertical) #rightPanel button {
+      padding: 8px 6px;
+      font-size: 16px;
+    }
+    /* Στυλ για κουμπιά στην κατακόρυφη διάταξη: μικρότερο ύψος & ελαφρώς μικρότερη γραμματοσειρά */
+    #infoPanel.vertical #rightPanel button {
+      padding: 4px 6px;
+      font-size: 14px;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -111,9 +109,9 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, ο πίνακας συμπτύσσεται (compact mode)
+    // Όταν true, ο πίνακας συμπτύσσεται (compact mode)
     let hideFBlock = false;
-    const colGap = 42; // ορίζουμε τη μετατόπιση ανά στήλη
+    const colGap = 42; // Χρησιμοποιείται ως "στοιχείο μέτρησης" (και για το κενό στις άκρες)
 
     // Βοηθητική συνάρτηση resampleCells (δεν χρησιμοποιείται πλέον)
     function resampleCells(cells, newLength) {
@@ -362,29 +360,32 @@
     // Συνάρτηση που ρυθμίζει δυναμικά τις διαστάσεις και τη θέση του infoPanel
     function updateInfoPanelDimensions() {
       const infoPanel = document.getElementById("infoPanel");
-      const margin = 20;
+      // Χρησιμοποιούμε το colGap (42px) ως «κενό» από τις άκρες
       if (!hideFBlock) {
         // Expanded (οριζόντια) διάταξη:
-        // Το πλάτος του infoPanel ίσο με το πλάτος του πλήρους πίνακα (32 στήλες)
-        const tableWidth = 32 * colGap; // 32*42 = 1344px
+        const tableWidth = 32 * colGap; // 1344px
         const tableBottom = getTableBottom();
         infoPanel.style.width = tableWidth + "px";
-        infoPanel.style.top = (tableBottom + margin) + "px";
-        infoPanel.style.left = "50%";
-        infoPanel.style.transform = "translateX(-50%)";
-        // Το ύψος ίσο με το διαθέσιμο ύψος από το κάτω του πίνακα μέχρι το κάτω της σελίδας
-        infoPanel.style.height = (windowHeight - tableBottom - 2 * margin) + "px";
+        // Το infoPanel θα τοποθετηθεί κάτω από τον πίνακα, με περιθώριο ίσο με colGap
+        infoPanel.style.top = (tableBottom + colGap) + "px";
+        // Κεντράρουμε οριζόντια, αλλά διασφαλίζουμε ότι υπάρχει τουλάχιστον colGap από τις άκρες
+        let leftPos = (windowWidth - tableWidth) / 2;
+        if (leftPos < colGap) leftPos = colGap;
+        infoPanel.style.left = leftPos + "px";
+        infoPanel.style.transform = "none";
+        infoPanel.style.height = (windowHeight - tableBottom - 2 * colGap) + "px";
       } else {
         // Compact (κατακόρυφη) διάταξη:
-        // Ο συνεπτυγμένος πίνακας εμφανίζει 18 στήλες: ξεκινά από x = 80, άρα το δεξί του σημείο είναι:
-        const compactTableRight = 80 + 18 * colGap; // 80 + 18*42 = 836px
-        // Η 1η περίοδος ξεκινά στο y = 120 (80 + 2×20)
+        // Ο συνεπτυγμένος πίνακας εμφανίζει 18 στήλες, ξεκινά από x = 80, άρα το δεξί του σημείο:
+        const compactTableRight = 80 + 18 * colGap; // 80 + 756 = 836px
+        // Η 1η περίοδος ξεκινά περίπου στο y = 120px
         const firstPeriodTop = 120;
-        const availableWidth = windowWidth - (compactTableRight + margin);
+        // Εξασφαλίζουμε περιθώριο (colGap) και στα δύο άκρα:
+        const availableWidth = windowWidth - (compactTableRight + 2 * colGap);
         infoPanel.style.width = availableWidth + "px";
-        infoPanel.style.height = (windowHeight - firstPeriodTop - 2 * margin) + "px";
-        infoPanel.style.left = (compactTableRight + margin) + "px";
-        infoPanel.style.top = (firstPeriodTop + margin) + "px";
+        infoPanel.style.height = (windowHeight - firstPeriodTop - 2 * colGap) + "px";
+        infoPanel.style.left = (compactTableRight + colGap) + "px";
+        infoPanel.style.top = (firstPeriodTop + colGap) + "px";
         infoPanel.style.transform = "none";
       }
     }
@@ -457,8 +458,7 @@
       }
     }
 
-    // Σχεδίαση του f τομέα ως ξεχωριστή περιοχή όταν ο πίνακας είναι σε compact mode.
-    // Εδώ οι χαρακτήρες και το styling ταιριάζουν με αυτά του κύριου πίνακα.
+    // Σχεδίαση του f τομέα σε compact mode, με το ίδιο styling όπως στον κύριο πίνακα
     function drawFBlockRegion() {
       let fCells = [];
       // Συλλογή όλων των κελιών f-block από όλες τις σειρές
@@ -485,10 +485,10 @@
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 89 && num <= 102;
       });
-      // Μετατόπιση του f τομέα δεξιότερα κατά 2 κελιά (2*42 = 84)
-      let startX = 80 + 84; // 164 px
+      // Μετατόπιση του f τομέα δεξιότερα κατά 2 κελιά (84px)
+      let startX = 80 + 84; 
       let startY = 450;
-      // Σχεδίαση των λανθανίων – τυπική μορφοποίηση όπως στον κύριο πίνακα
+      // Σχεδίαση των λανθανίων με παρόμοιο styling
       for (let i = 0; i < lanthanides.length; i++) {
         let cell = lanthanides[i];
         let x = startX + i * colGap;
