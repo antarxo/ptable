@@ -59,11 +59,10 @@
       pointer-events: none;
     }
   </style>
-  <!-- Φόρτωση p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">Πληροφορίες στοιχείου...</div>
   <div id="controls">
     <button id="nextElement">Επόμενο</button>
@@ -77,16 +76,14 @@
   <script>
     (function() {
       /* --- Global Variables --- */
-      let elementsData = [];  // Εδώ φορτώνετε το elements.json αν υπάρχει.
+      let elementsData = [];  // Φόρτωση JSON αν υπάρχει.
       let rowsData = [];
       let globalElementNumber = 3;
       let currentRowIndex = 3;
       let phase = 1;
-      // hideFBlock: false = full mode, true = collapsed mode 
-      // (collapsed: στον κύριο πίνακα εμφανίζεται μόνο ο s τομέας, ενώ ο overlay καμβάς σχεδιάζει τους τομείς d/p και τον μετατοπισμένο f)
+      // hideFBlock: false = πλήρης mode, true = collapsed mode (collapsed: στον κύριο πίνακα εμφανίζεται μόνο ο s τομέας, ενώ το overlay σχεδιάζει d/p και τον μετατοπισμένο f)
       let hideFBlock = false;
       const colGap = 42;
-      // Προσθέτουμε το fillingPatterns στο scope
       const fillingPatterns = [
         [{ count: 8, shifting: true }],
         [{ count: 8, shifting: false }],
@@ -356,7 +353,7 @@
         sketchOverlayP5.redraw();
       }
       
-      /* --- Λογική σχεδίασης για δύο καμβάδες --- */
+      /* --- Λογική σχεδίασης με Δύο Καμβάδες --- */
       
       // Full mode στον κύριο πίνακα
       function drawFullTableMain(p) {
@@ -476,7 +473,7 @@
         }
       }
       
-      // Overlay: σχεδιάζει τα κελιά από index 2 (d/p) και τον f τομέα μετατοπισμένο προς τα κάτω
+      // Overlay: σχεδιάζει τα κελιά από index 2 (d και p) και τον f τομέα μετατοπισμένο προς τα κάτω
       function drawOverlay(p) {
         let yOverlay = 80;
         const groupRowsGap = 20;
@@ -486,10 +483,12 @@
           let row = rowsData[rowIndex];
           if (row.cells.length > 2) {
             let dpCells = row.cells.slice(2);
+            // Ορίζουμε ξεχωριστά το αρχικό x για το overlay, μετά τον s τομέα (2 κελιά) + 5px διάκενο
+            let overlayStartX = 80 + 2 * colGap + 5;
             for (let i = 0; i < dpCells.length; i++) {
               let cell = dpCells[i];
               if (cell) {
-                let x = 80 + (i + 2) * colGap + 5;
+                let x = overlayStartX + i * colGap;
                 let y = yOverlay;
                 p.fill(CATEGORY_COLORS[cell.category] || cell.color);
                 p.stroke(85);
@@ -560,7 +559,6 @@
       
       /* --- Δύο p5 Sketches --- */
       
-      // Sketch για τον κύριο πίνακα
       let sketchMain = function(p) {
         p.setup = function() {
           p.createCanvas(window.innerWidth, window.innerHeight);
@@ -583,7 +581,6 @@
         };
       };
       
-      // Sketch για το overlay
       let sketchOverlay = function(p) {
         p.setup = function() {
           p.createCanvas(window.innerWidth, window.innerHeight);
@@ -603,11 +600,10 @@
         };
       };
       
-      // Δημιουργία των δύο sketches στα αντίστοιχα containers
       let sketchMainP5 = new p5(sketchMain, 'mainCanvasContainer');
       let sketchOverlayP5 = new p5(sketchOverlay, 'overlayCanvasContainer');
       
-      // Event Listeners για τα κουμπιά
+      /* --- Event Listeners --- */
       document.getElementById('nextElement').addEventListener('click', function(e) {
         addElementToCurrentRow();
         redrawAll();
