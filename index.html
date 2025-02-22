@@ -21,41 +21,53 @@
       font-weight: bold;
       z-index: 10;
     }
-    /* Αρχικό CSS για infoPanel (οριζόντια διάταξη) – εδώ το πλάτος διατηρείται όπως πριν */
+    /* Στυλ για το infoPanel στην οριζόντια διάταξη */
     #infoPanel {
       display: flex;
       justify-content: space-between;
+      align-items: stretch;
       position: absolute;
-      /* Θα τοποθετηθεί δυναμικά (top) */
+      /* Θα τοποθετηθεί δυναμικά μέσω JS */
       left: 50%;
       transform: translateX(-50%);
-      width: 90%;
-      max-width: 1200px;
       padding: 20px;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
+      /* Στην expanded διάταξη, τα τμήματα στοιχίζονται οριζόντια */
+      flex-direction: row;
     }
-    /* Στυλ για την κατακόρυφη διάταξη του infoPanel (σε συνεπτυγμένη μορφή) */
+    /* Στυλ για το infoPanel στην κατακόρυφη διάταξη */
     #infoPanel.vertical {
-      /* Σε αυτή τη διάταξη, οι διαστάσεις και η θέση ορίζονται δυναμικά από την JS */
+      /* Οι διαστάσεις και η θέση ρυθμίζονται δυναμικά μέσω JS */
       transform: none;
+      flex-direction: column;
     }
+    /* Όπως και πριν, τα τμήματα έχουν βασική διάταξη */
     #leftPanel, #middlePanel, #rightPanel {
       flex: 1;
       margin: 0 10px;
+    }
+    /* Στην κατακόρυφη διάταξη, τα τμήματα θα στοιχίζονται πάνω προς τα κάτω */
+    #infoPanel.vertical #leftPanel,
+    #infoPanel.vertical #middlePanel,
+    #infoPanel.vertical #rightPanel {
+      margin: 10px 0;
+    }
+    /* Στο vertical mode, ρυθμίζουμε το rightPanel ώστε τα κουμπιά να στοιχίζονται οριζόντια (με διάπλευση αν χρειαστεί) */
+    #infoPanel.vertical #rightPanel {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
     }
     #middlePanel {
       flex: 2;
       font-style: italic;
       color: #666;
       padding: 0 20px;
-    }
-    #rightPanel {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
     }
     /* Κουμπιά */
     #rightPanel button {
@@ -99,8 +111,9 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, γίνεται σύμπτυξη (compact) του πίνακα
+    // hideFBlock: όταν true, ο πίνακας συμπτύσσεται (compact mode)
     let hideFBlock = false;
+    const colGap = 42; // ορίζουμε τη μετατόπιση ανά στήλη
 
     // Βοηθητική συνάρτηση resampleCells (δεν χρησιμοποιείται πλέον)
     function resampleCells(cells, newLength) {
@@ -335,7 +348,7 @@
       }
     }
 
-    // Βοηθητική συνάρτηση για τον υπολογισμό του κάτω σημείου του πίνακα (expanded)
+    // Βοηθητική συνάρτηση για τον υπολογισμό του κάτω σημείου του πλήρους πίνακα (expanded mode)
     function getTableBottom() {
       let yOffset = 80;
       const groupRowsGap = 20;
@@ -351,28 +364,28 @@
       const infoPanel = document.getElementById("infoPanel");
       const margin = 20;
       if (!hideFBlock) {
-        // Οριζόντια διάταξη (expanded): 
-        // Το infoPanel τοποθετείται κάτω από τον Περιοδικό Πίνακα
-        let tableBottom = getTableBottom();
+        // Expanded (οριζόντια) διάταξη:
+        // Το πλάτος του infoPanel ίσο με το πλάτος του πλήρους πίνακα (32 στήλες)
+        const tableWidth = 32 * colGap; // 32*42 = 1344px
+        const tableBottom = getTableBottom();
+        infoPanel.style.width = tableWidth + "px";
         infoPanel.style.top = (tableBottom + margin) + "px";
         infoPanel.style.left = "50%";
         infoPanel.style.transform = "translateX(-50%)";
-        // Διαστάσεις: πλάτος όπως στο αρχικό CSS, ύψος = διαθέσιμο ύψος από tableBottom μέχρι το κάτω μέρος
-        let computedWidth = getComputedStyle(infoPanel).width;
-        infoPanel.style.width = computedWidth; // διατηρούμε το ίδιο πλάτος
+        // Το ύψος ίσο με το διαθέσιμο ύψος από το κάτω του πίνακα μέχρι το κάτω της σελίδας
         infoPanel.style.height = (windowHeight - tableBottom - 2 * margin) + "px";
       } else {
-        // Κατακόρυφη διάταξη (compact):
-        // Ο συνεπτυγμένος πίνακας έχει πλάτος περίπου μέχρι x = 836px (80 + 18*42)
-        const compactTableRight = 836;
-        // Η πρώτη περίοδος ξεκινά περίπου στο y = 120px
+        // Compact (κατακόρυφη) διάταξη:
+        // Ο συνεπτυγμένος πίνακας εμφανίζει 18 στήλες: ξεκινά από x = 80, άρα το δεξί του σημείο είναι:
+        const compactTableRight = 80 + 18 * colGap; // 80 + 18*42 = 836px
+        // Η 1η περίοδος ξεκινά στο y = 120 (80 + 2×20)
         const firstPeriodTop = 120;
+        const availableWidth = windowWidth - (compactTableRight + margin);
+        infoPanel.style.width = availableWidth + "px";
+        infoPanel.style.height = (windowHeight - firstPeriodTop - 2 * margin) + "px";
         infoPanel.style.left = (compactTableRight + margin) + "px";
         infoPanel.style.top = (firstPeriodTop + margin) + "px";
         infoPanel.style.transform = "none";
-        // Πλάτος = υπολοιπόμενο πλάτος από το δεξί του πίνακα
-        infoPanel.style.width = (windowWidth - compactTableRight - 2 * margin) + "px";
-        infoPanel.style.height = (windowHeight - firstPeriodTop - 2 * margin) + "px";
       }
     }
 
@@ -380,7 +393,6 @@
     function drawTable() {
       background(247);
       let yOffset = 80;
-      const colGap = 42;
       const groupRowsGap = 20;
       const normalGap = 42;
       for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
@@ -389,7 +401,7 @@
         let cellsToDraw = [];
         if (hideFBlock) {
           if (row.cells.length === 32) {
-            cellsToDraw = row.cells.slice(0, 2).concat( row.cells.slice(16, 32) );
+            cellsToDraw = row.cells.slice(0, 2).concat(row.cells.slice(16, 32));
           } else {
             cellsToDraw = row.cells;
           }
@@ -445,7 +457,8 @@
       }
     }
 
-    // Σχεδίαση του f τομέα ως ξεχωριστή περιοχή όταν είναι συνεπτυγμένος.
+    // Σχεδίαση του f τομέα ως ξεχωριστή περιοχή όταν ο πίνακας είναι σε compact mode.
+    // Εδώ οι χαρακτήρες και το styling ταιριάζουν με αυτά του κύριου πίνακα.
     function drawFBlockRegion() {
       let fCells = [];
       // Συλλογή όλων των κελιών f-block από όλες τις σειρές
@@ -463,7 +476,7 @@
         let bn = b.details ? b.details.number : b.number;
         return an - bn;
       });
-      // Διαχωρισμός σε λανθάνιοι (57-70) και ακτινίδια (89-102)
+      // Διαχωρισμός: λανθάνιοι (57-70) και ακτινίδια (89-102)
       let lanthanides = fCells.filter(cell => {
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 57 && num <= 70;
@@ -475,8 +488,7 @@
       // Μετατόπιση του f τομέα δεξιότερα κατά 2 κελιά (2*42 = 84)
       let startX = 80 + 84; // 164 px
       let startY = 450;
-      let colGap = 42;
-      // Σχεδίαση των λανθανίων – χρησιμοποιούμε stroke(85) και γωνίες με radius 5, όπως στον κύριο πίνακα
+      // Σχεδίαση των λανθανίων – τυπική μορφοποίηση όπως στον κύριο πίνακα
       for (let i = 0; i < lanthanides.length; i++) {
         let cell = lanthanides[i];
         let x = startX + i * colGap;
@@ -579,7 +591,7 @@
 
     function draw() {
       drawTable();
-      // Εάν η σύμπτυξη είναι ενεργή, σχεδιάζουμε και τον f τομέα
+      // Σχεδίαση του f τομέα μόνο σε compact mode
       if (hideFBlock) {
         drawFBlockRegion();
       }
