@@ -106,7 +106,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -130,7 +130,7 @@
     /* --- Κώδικας Περιοδικού Πίνακα --- */
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock = true: collapsed mode (μόνο s στον κύριο πίνακα, d/p και f ως overlay)
+    // hideFBlock = true: collapsed mode (κύριος πίνακας δείχνει μόνο τον s τομέα)
     let hideFBlock = false;
     const colGap = 42; // μέτρο και περιθώριο
 
@@ -384,7 +384,7 @@
       }
     }
 
-    // drawTable: Αν hideFBlock είναι true, σχεδιάζει μόνο τα 2 πρώτα κελιά κάθε σειράς (τον s τομέα)
+    // drawTable: Σε collapsed mode εμφανίζονται μόνο τα 2 πρώτα κελιά (s τομέας)
     function drawTable(){
       background(247);
       let yOffset = 80;
@@ -448,7 +448,8 @@
       }
     }
 
-    // drawDPOverlay: Σχεδιάζει τα κελιά των τομέων d και p (όλα τα κελιά από index 2 και μετά) ως overlay και ενημερώνει τις συντεταγμένες τους για interactivity
+    // drawDPOverlay: Σχεδιάζει τα κελιά των τομέων d και p (όλα τα κελιά από index 2) ως overlay,
+    // με το overlay να ξεκινά ακριβώς δίπλα από τον s τομέα με διάκενο 5px.
     function drawDPOverlay(){
       let yOverlay = 80;
       const groupRowsGap = 20;
@@ -460,7 +461,8 @@
           for(let i=0; i<dpCells.length; i++){
             let cell = dpCells[i];
             if(cell){
-              let x = 80 + (i+2)*colGap;
+              // Το overlay ξεκινά μετά τα 2 κελιά s (δηλαδή 80 + 2*colGap) με επιπλέον διάκενο 5px.
+              let x = 80 + (i+2)*colGap + 5;
               let y = yOverlay;
               stroke(85);
               fill(CATEGORY_COLORS[cell.category]);
@@ -469,7 +471,7 @@
               textSize(12);
               textAlign(CENTER, CENTER);
               text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
-              // Ενημέρωση για mouse events
+              // Ενημέρωση συντεταγμένων για interactivity
               cell.drawX = x;
               cell.drawY = y;
               cell.drawW = cell.width;
@@ -481,7 +483,7 @@
       }
     }
 
-    // drawFBlockRegion: Σχεδιάζει τον f τομέα με offset (π.χ. 42px) όταν hideFBlock είναι true
+    // drawFBlockRegion: Σχεδιάζει τον f τομέα με offset όταν hideFBlock είναι true.
     function drawFBlockRegion(){
       let fCells = [];
       for(let r = 0; r < rowsData.length; r++){
@@ -581,7 +583,6 @@
       let x = globalMouseX || mouseX;
       let y = globalMouseY || mouseY;
       let found = false;
-      // Ελέγχουμε όλα τα κελιά (είτε από το κύριο table είτε τα overlay, αφού ενημερώνονται οι drawX/drawY)
       for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
         for(let i = 0; i < row.cells.length; i++){
@@ -615,14 +616,12 @@
     }
 
     function draw(){
-      // Πάντα σχεδιάζουμε το κύριο table (που σε collapsed mode δείχνει μόνο τον s τομέα)
       drawTable();
       if(hideFBlock){
-        // Σε collapsed mode, σχεδιάζουμε ως overlay τα κελιά των d/p και τον f τομέα μετατοπισμένο
+        // Σε collapsed mode, σχεδιάζουμε το overlay για τα d/p και μετατοπισμένο τον f τομέα.
         drawDPOverlay();
         drawFBlockRegion();
       } else {
-        // Κανονική λειτουργία: όλα τα κελιά σχεδιάζονται μέσα στο table
         drawFBlockRegion();
       }
     }
