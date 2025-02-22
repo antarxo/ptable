@@ -76,14 +76,14 @@
   <script>
     (function() {
       /* --- Global Variables --- */
-      let elementsData = [];  // Εάν υπάρχει elements.json, φορτώστε το εδώ.
+      let elementsData = [];  // Αν υπάρχει elements.json, φορτώστε το εδώ.
       let rowsData = [];
       let globalElementNumber = 3;
       let currentRowIndex = 3;
       let phase = 1;
       // hideFBlock: false = full mode, true = collapsed mode
-      // Σ collapsed mode ο κύριος πίνακας θα εμφανίζει μόνο τον s τομέα,
-      // ενώ ο overlay θα εμφανίζει τα κελιά με index >= 2 (δηλαδή d, p και f) με μετατόπιση.
+      // Σε collapsed mode, ο κύριος πίνακας θα εμφανίζει μόνο τον s τομέα,
+      // ενώ ο overlay θα εμφανίζει τα κελιά με index >= 2 (δηλαδή d, p και ο μετατοπισμένος f)
       let hideFBlock = false;
       const colGap = 42;
       const fillingPatterns = [
@@ -135,7 +135,6 @@
       function initialize() {
         rowsData = [];
         for (let i = 0; i < 9; i++) {
-          // Οι πρώτες 2 σειρές έχουν 32 κελιά (για τους αριθμούς ομάδας), οι υπόλοιπες ξεκινούν ως κενές λίστες.
           let cells = (i < 2) ? new Array(32).fill(null) : [];
           rowsData.push({
             cells: cells,
@@ -174,12 +173,12 @@
         });
       }
       
-      function handleShiftingForRow(currentRow) {
+      function handleShiftingForRow(currentRowIndex) {
         let groupRows = [];
-        if(currentRow === 3) groupRows = [0,1,2];
-        else if(currentRow === 5) groupRows = [0,1,2,3,4];
-        else if(currentRow === 7) groupRows = [0,1,2,3,4,5,6];
-        shiftBlockRight(currentRow, groupRows);
+        if(currentRowIndex === 3) groupRows = [0,1,2];
+        else if(currentRowIndex === 5) groupRows = [0,1,2,3,4];
+        else if(currentRowIndex === 7) groupRows = [0,1,2,3,4,5,6];
+        shiftBlockRight(currentRowIndex, groupRows);
       }
       
       function addElementToCurrentRow() {
@@ -199,7 +198,7 @@
               category: getCategory(globalElementNumber)
             });
             if(pattern.shifting) {
-              handleShiftingForRow(currentRow);
+              handleShiftingForRow(currentRowIndex);
             }
             let targetIndex = row.insertionIndex;
             while(row.cells[targetIndex] != null) {
@@ -358,7 +357,7 @@
       
       /* --- Λογική σχεδίασης με Δύο Καμβάδες --- */
       
-      // Σχεδιάζει τον πίνακα σε full mode (κύριος πίνακας)
+      // Full mode στον κύριο πίνακα
       function drawFullTableMain(p) {
         p.background(247);
         let yOffset = 80;
@@ -417,7 +416,7 @@
         }
       }
       
-      // Σχεδιάζει collapsed mode στον κύριο πίνακα: μόνο ο s τομέας (2 πρώτα κελιά)
+      // Collapsed mode στον κύριο πίνακα: μόνο ο s τομέας (2 πρώτα κελιά)
       function drawCollapsedTableMain(p) {
         p.background(247);
         let yOffset = 80;
@@ -476,8 +475,7 @@
         }
       }
       
-      // Σχεδιάζει το overlay για collapsed mode:
-      // Τα overlay κελιά προκύπτουν από όλα τα κελιά με index >= 2 (δηλαδή d/p) και τον f τομέα μετατοπισμένο προς τα κάτω.
+      // Overlay: σχεδιάζει τα κελιά με index >= 2 (δηλαδή τους τομείς d/p) και τον μετατοπισμένο f
       function drawOverlay(p) {
         let yOverlay = 80;
         const groupRowsGap = 20;
@@ -487,7 +485,7 @@
           let row = rowsData[rowIndex];
           if (row.cells.length > 2) {
             let dpCells = row.cells.slice(2);
-            // Ορίζουμε την αρχική θέση overlay ώστε να ξεκινά μετά τον s τομέα (80 + 2*colGap + 5)
+            // Ορισμός της αρχικής θέσης overlay: μετά τα 2 κελιά του s με 5px διάκενο
             let overlayStartX = 80 + 2 * colGap + 5;
             for (let i = 0; i < dpCells.length; i++) {
               let cell = dpCells[i];
@@ -524,7 +522,7 @@
         let lanthanides = fCells.filter(cell => cell.number >= 57 && cell.number <= 70);
         let actinides = fCells.filter(cell => cell.number >= 89 && cell.number <= 102);
         let startX = 80 + 84;
-        let startY = 450 + 42; // μετατόπιση collapsed για τον f τομέα
+        let startY = 450 + 42; // μετατόπιση για τον f τομέα
         for (let i = 0; i < lanthanides.length; i++) {
           let cell = lanthanides[i];
           let x = startX + i * colGap;
