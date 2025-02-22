@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Πίνακας με 4 Καμβάδες - Full & Collapsed Mode με Έναρξη Συμπλήρωσης 2ης Στήλης 4ης Σειράς</title>
+  <title>Πίνακας με 4 Καμβάδες - Full & Collapsed Mode</title>
   <!-- Χρήση της γραμματοσειράς Roboto -->
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
@@ -39,13 +39,11 @@
     .full #canvasF { top: 100px; left: 174px; width: 586px; height: 336px; z-index: 2; }
     .full #canvasD { top: 100px; left: 760px; width: 418px; height: 336px; z-index: 2; }
     .full #canvasP { top: 100px; left: 1178px; width: 250px; height: 336px; z-index: 2; }
-    
-    /* Collapsed mode: S, D, P παραμένουν στη σειρά, ενώ ο F μετακινείται 100px προς τα κάτω */
+    /* Collapsed mode: S, D, P παραμένουν στην πρώτη σειρά, ο F μετακινείται 100px προς τα κάτω */
     .collapsed #canvasS { top: 100px; left: 50px; width: 124px; height: 336px; z-index: 2; }
     .collapsed #canvasD { top: 100px; left: 174px; width: 418px; height: 336px; z-index: 2; }
     .collapsed #canvasP { top: 100px; left: 592px; width: 250px; height: 336px; z-index: 2; }
     .collapsed #canvasF { top: 200px; left: 174px; width: 586px; height: 336px; z-index: 1; }
-    
     /* Βασικές ρυθμίσεις για όλους τους καμβάδες */
     #canvasS, #canvasF, #canvasD, #canvasP {
       position: absolute;
@@ -70,222 +68,219 @@
   <div id="canvasP"></div>
   
   <script>
-    /* 
-      Σε αυτό το demo ενσωματώνουμε τη λογική συμπλήρωσης του last.html σε 4 καμβάδες.
-      Ο πίνακας έχει 9 σειρές, όπου οι 2 πρώτες έχουν ύψος 20px και οι υπόλοιπες 7 40px, με gap 2px (συνολικό ύψος 336px).
-      Οι διαστάσεις των καμβάδων ορίζονται ως:
-      - S block: 3 στήλες → 124px πλάτος
-      - F block: 14 στήλες → 586px πλάτος (σε full mode), και στο collapsed mode ο F μετακινείται 100px προς τα κάτω.
-      - D block: 10 στήλες → 418px πλάτος
-      - P block: 6 στήλες → 250px πλάτος
+    (function() {
+      // Global μεταβλητές για τη συμπλήρωση του πίνακα
+      let elementsData = []; // Αν υπάρχει, φορτώνονται δεδομένα από elements.json
+      let rowsData = [];
+      let globalElementNumber = 3;
+      let currentRowIndex = 3; // 4η σειρά (index 3)
+      let phase = 1;
+      // Χρησιμοποιούμε το mode για να ελέγχουμε τη διάταξη: "full" ή "collapsed"
+      let mode = "full";
+      const colGap = 42;
+      const fillingPatterns = [
+        [{ count: 8, shifting: true }],
+        [{ count: 8, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
+      ];
       
-      Επίσης, η συμπλήρωση του πίνακα ξεκινάει από τη δεύτερη στήλη της 4ης σειράς (δηλαδή, για row index 3, insertionIndex = 1).
-    */
-    
-    let mode = "full"; // "full" ή "collapsed"
-    
-    // Dummy δεδομένα για κάθε τομέα
-    function generateData(columns, prefix) {
-      const total = 9 * columns;
-      let arr = [];
-      for (let i = 0; i < total; i++) {
-        arr.push({ number: i + 1, symbol: prefix + (i + 1) });
-      }
-      return arr;
-    }
-    let sData = generateData(3, "S");
-    let fData = generateData(14, "F");
-    let dData = generateData(10, "D");
-    let pData = generateData(6, "P");
-    
-    // Συνάρτηση σχεδίασης grid: 9 σειρές, 2 πρώτες με ύψος 20, υπόλοιπες 40, gap 2px.
-    function drawGrid(p, columns, dataArray) {
-      let cellW = 40, gap = 2;
-      let y = 0;
-      let index = 0;
-      for (let row = 0; row < 9; row++) {
-        let cellH = (row < 2) ? 20 : 40;
-        let x = 0;
-        for (let col = 0; col < columns; col++) {
-          let cell = dataArray[index] || { symbol: "" };
-          p.fill(200, 220, 240);
-          p.stroke(150);
-          p.rect(x, y, cellW, cellH);
-          p.fill(0);
-          p.textSize(12);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(cell.symbol, x + cellW / 2, y + cellH / 2);
-          index++;
-          x += cellW + gap;
+      // Δοκιμαστικά dummy δεδομένα (μπορείτε να τα αντικαταστήσετε με τα πραγματικά)
+      function generateData(columns, prefix) {
+        const total = 9 * columns;
+        let arr = [];
+        for (let i = 0; i < total; i++) {
+          arr.push({ number: i+1, symbol: prefix + (i+1) });
         }
-        y += cellH + gap;
+        return arr;
       }
-    }
-    
-    // p5 sketches για κάθε τομέα:
-    
-    let sketchS = function(p) {
-      p.setup = function() {
-        p.createCanvas(124, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        drawGrid(p, 3, sData);
-      };
-    };
-    
-    let sketchD = function(p) {
-      p.setup = function() {
-        p.createCanvas(418, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        drawGrid(p, 10, dData);
-      };
-    };
-    
-    let sketchP = function(p) {
-      p.setup = function() {
-        p.createCanvas(250, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        drawGrid(p, 6, pData);
-      };
-    };
-    
-    let sketchF = function(p) {
-      p.setup = function() {
-        p.createCanvas(586, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        drawGrid(p, 14, fData);
-      };
-    };
-    
-    // Λογική συμπλήρωσης: χρησιμοποιούμε κοινές μεταβλητές όπως rowsData, globalElementNumber κλπ.
-    // Εδώ παρέχεται ένα απλό demo; στην πλήρη υλοποίηση θα ενσωματώσετε όλες τις λειτουργίες του last.html.
-    
-    let rowsData = [];
-    let globalElementNumber = 3;
-    let currentRowIndex = 3; // 4η σειρά (index 3)
-    let phase = 1;
-    
-    function initialize() {
-      rowsData = [];
-      for (let i = 0; i < 9; i++) {
-        let cells = (i < 2) ? new Array(32).fill(null) : [];
-        // Αν είναι η 4η σειρά (index 3), ξεκινάμε από τη δεύτερη στήλη (insertionIndex = 1)
-        let insertionIndex = (i === 3) ? 1 : 0;
-        rowsData.push({
-          cells: cells,
-          shiftedColumns: 0,
-          currentSegment: 0,
-          countInSegment: 0,
-          insertionIndex: insertionIndex,
-          periodLabel: null
-        });
+      let sData = generateData(3, "S");
+      let fData = generateData(14, "F");
+      let dData = generateData(10, "D");
+      let pData = generateData(6, "P");
+      
+      // Συνάρτηση σχεδίασης grid: 9 σειρές, όπου οι 2 πρώτες έχουν ύψος 20 και οι υπόλοιπες 40, με gap 2px.
+      function drawGrid(p, columns, dataArray) {
+        let cellW = 40, gap = 2;
+        let y = 0;
+        let index = 0;
+        for (let row = 0; row < 9; row++) {
+          let cellH = (row < 2) ? 20 : 40;
+          let x = 0;
+          for (let col = 0; col < columns; col++) {
+            let cell = dataArray[index] || { symbol: "" };
+            p.fill(200,220,240);
+            p.stroke(150);
+            p.rect(x, y, cellW, cellH);
+            p.fill(0);
+            p.textSize(12);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(cell.symbol, x + cellW/2, y + cellH/2);
+            index++;
+            x += cellW + gap;
+          }
+          y += cellH + gap;
+        }
       }
-      globalElementNumber = 3;
-      currentRowIndex = 3;
-      phase = 1;
-    }
-    
-    function createCell(elObj) {
-      let cell = {
-        number: elObj.number,
-        category: getCategory(elObj.number),
-        width: 40,
-        height: (getCategory(elObj.number) === 'group-name' ? 20 : 40),
-        fixed: false
+      
+      // P5 sketches για κάθε τομέα:
+      
+      let sketchS = function(p) {
+        p.setup = function() {
+          p.createCanvas(124, 336);
+          p.noLoop();
+        };
+        p.draw = function() {
+          drawGrid(p, 3, sData);
+        };
       };
-      if (elementsData && elementsData.length >= elObj.number) {
-        cell.details = elementsData[elObj.number - 1];
+      
+      let sketchD = function(p) {
+        p.setup = function() {
+          p.createCanvas(418, 336);
+          p.noLoop();
+        };
+        p.draw = function() {
+          drawGrid(p, 10, dData);
+        };
+      };
+      
+      let sketchP = function(p) {
+        p.setup = function() {
+          p.createCanvas(250, 336);
+          p.noLoop();
+        };
+        p.draw = function() {
+          drawGrid(p, 6, pData);
+        };
+      };
+      
+      let sketchF = function(p) {
+        p.setup = function() {
+          p.createCanvas(586, 336);
+          p.noLoop();
+        };
+        p.draw = function() {
+          drawGrid(p, 14, fData);
+        };
+      };
+      
+      // Λογική συμπλήρωσης: η συμπλήρωση ξεκινάει από τη δεύτερη στήλη της 4ης σειράς (row index 3, insertionIndex = 1)
+      function initializeRows() {
+        rowsData = [];
+        for (let i = 0; i < 9; i++) {
+          let cells = (i < 2) ? new Array(32).fill(null) : [];
+          let insertionIndex = (i === 3) ? 1 : 0;
+          rowsData.push({
+            cells: cells,
+            shiftedColumns: 0,
+            currentSegment: 0,
+            countInSegment: 0,
+            insertionIndex: insertionIndex,
+            periodLabel: null
+          });
+        }
+        globalElementNumber = 3;
+        currentRowIndex = 3;
+        phase = 1;
       }
-      return cell;
-    }
-    
-    function addElementToCurrentRow() {
-      if (phase === 1) {
-        if (globalElementNumber > 118) {
-          currentRowIndex = 2;
-          globalElementNumber = 1;
-          phase = 2;
+      
+      function createCell(elObj) {
+        let cell = {
+          number: elObj.number,
+          category: getCategory(elObj.number),
+          width: 40,
+          height: (getCategory(elObj.number) === 'group-name' ? 20 : 40),
+          fixed: false
+        };
+        if (elementsData && elementsData.length >= elObj.number) {
+          cell.details = elementsData[elObj.number - 1];
+        }
+        return cell;
+      }
+      
+      function addElementToCurrentRow() {
+        if (phase === 1) {
+          if (globalElementNumber > 118) {
+            currentRowIndex = 2;
+            globalElementNumber = 1;
+            phase = 2;
+            redrawAll();
+            return;
+          }
+          let row = rowsData[currentRowIndex];
+          if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
+            let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
+            let cell = createCell({ number: globalElementNumber });
+            let targetIndex = row.insertionIndex;
+            while (row.cells[targetIndex] != null) {
+              targetIndex++;
+              if (targetIndex >= row.cells.length) row.cells.push(null);
+            }
+            row.cells[targetIndex] = cell;
+            globalElementNumber++;
+            row.countInSegment++;
+            if (row.countInSegment === pattern.count) {
+              row.currentSegment++;
+              row.countInSegment = 0;
+              row.insertionIndex = row.cells.length;
+            }
+            if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
+              currentRowIndex++;
+            }
+            document.getElementById('infoPanel').innerHTML = `Προστέθηκε: ${cell.number}`;
+          }
           redrawAll();
-          return;
+        } else {
+          // Επεκτάσιμες φάσεις (δείγμα)
         }
-        let row = rowsData[currentRowIndex];
-        if (currentRowIndex >= 3 && currentRowIndex <= 8 && globalElementNumber <= 118) {
-          let pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
-          let cell = createCell({ number: globalElementNumber });
-          // Αν χρειάζεται shifting, καλούμε τη συνάρτηση
-          // (η λογική μπορεί να τροποποιηθεί ανάλογα με το αρχικό σας last.html)
-          let targetIndex = row.insertionIndex;
-          while (row.cells[targetIndex] != null) {
-            targetIndex++;
-            if (targetIndex >= row.cells.length) row.cells.push(null);
-          }
-          row.cells[targetIndex] = cell;
-          globalElementNumber++;
-          row.countInSegment++;
-          if (row.countInSegment === pattern.count) {
-            row.currentSegment++;
-            row.countInSegment = 0;
-            row.insertionIndex = row.cells.length;
-          }
-          if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
-            currentRowIndex++;
-          }
-          // Ενημέρωση πληροφοριών (dummy)
-          document.getElementById('infoPanel').innerHTML = `Προστέθηκε: ${cell.number}`;
+      }
+      
+      function redrawAll() {
+        sP5.redraw();
+        dP5.redraw();
+        pP5.redraw();
+        fP5.redraw();
+      }
+      
+      // Δημιουργία των 4 p5 instances για τους καμβάδες S, D, P, F
+      let sP5 = new p5(sketchS, 'canvasS');
+      let dP5 = new p5(sketchD, 'canvasD');
+      let pP5 = new p5(sketchP, 'canvasP');
+      let fP5 = new p5(sketchF, 'canvasF');
+      
+      // Event Listeners για τα κουμπιά
+      document.getElementById('nextElement').addEventListener('click', function() {
+        addElementToCurrentRow();
+      });
+      document.getElementById('fillAll').addEventListener('click', function() {
+        alert("Συμπλήρωση (δείγμα)");
+      });
+      document.getElementById('reset').addEventListener('click', function() {
+        window.location.reload();
+      });
+      document.getElementById('toggleMode').addEventListener('click', function() {
+        mode = (mode === "full") ? "collapsed" : "full";
+        document.body.className = mode;
+        if (mode === "collapsed") {
+          document.getElementById('canvasF').style.top = "200px";
+          document.getElementById('canvasF').style.zIndex = "1";
+        } else {
+          document.getElementById('canvasF').style.top = "";
+          document.getElementById('canvasF').style.zIndex = "";
         }
         redrawAll();
-      } else {
-        // Άλλες φάσεις...
-      }
-    }
-    
-    function redrawAll() {
-      sP5.redraw();
-      dP5.redraw();
-      pP5.redraw();
-      fP5.redraw();
-    }
-    
-    // Δημιουργία των 4 p5 instances για τους καμβάδες S, D, P, F (με τα παραπάνω δεδομένα)
-    let sP5 = new p5(sketchS, 'canvasS');
-    let dP5 = new p5(sketchD, 'canvasD');
-    let pP5 = new p5(sketchP, 'canvasP');
-    let fP5 = new p5(sketchF, 'canvasF');
-    
-    // Κουμπιά ελέγχου
-    document.getElementById('nextElement').addEventListener('click', function() {
-      addElementToCurrentRow();
-    });
-    document.getElementById('fillAll').addEventListener('click', function() {
-      alert("Συμπλήρωση (δείγμα)");
-    });
-    document.getElementById('reset').addEventListener('click', function() {
-      window.location.reload();
-    });
-    document.getElementById('toggleMode').addEventListener('click', function() {
-      mode = (mode === "full") ? "collapsed" : "full";
-      document.body.className = mode;
-      // Στο collapsed mode, ο F μετακινείται 100px κάτω
-      if (mode === "collapsed") {
-        document.getElementById('canvasF').style.top = "200px";
-        document.getElementById('canvasF').style.zIndex = "1";
-      } else {
-        document.getElementById('canvasF').style.top = "";
-        document.getElementById('canvasF').style.zIndex = "";
-      }
-      redrawAll();
-    });
-    
-    // Αρχική εκτέλεση
-    initialize();
-  })();
-</script>
+      });
+      
+      window.addEventListener('resize', function() {
+        redrawAll();
+      });
+      
+      // Εκτέλεση αρχικοποίησης
+      initializeRows();
+    })();
+  </script>
 </body>
 </html>
