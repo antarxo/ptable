@@ -21,31 +21,26 @@
       font-weight: bold;
       z-index: 10;
     }
-    /* Ορισμός σταθερών διαστάσεων για τον πίνακα πληροφοριών */
+    /* Αρχικό CSS για infoPanel (οριζόντια διάταξη) – εδώ το πλάτος διατηρείται όπως πριν */
     #infoPanel {
       display: flex;
       justify-content: space-between;
       position: absolute;
-      bottom: 20px;
+      /* Θα τοποθετηθεί δυναμικά (top) */
       left: 50%;
       transform: translateX(-50%);
-      width: 600px;      /* Σταθερό πλάτος */
-      height: 200px;     /* Σταθερό ύψος */
+      width: 90%;
+      max-width: 1200px;
       padding: 20px;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
-    /* Σε κατακόρυφη διάταξη, διατηρούνται οι ίδιες σταθερές διαστάσεις */
+    /* Στυλ για την κατακόρυφη διάταξη του infoPanel (σε συνεπτυγμένη μορφή) */
     #infoPanel.vertical {
-      flex-direction: column;
-      top: 80px;
-      right: 20px;
-      left: auto;
+      /* Σε αυτή τη διάταξη, οι διαστάσεις και η θέση ορίζονται δυναμικά από την JS */
       transform: none;
-      width: 600px;
-      height: 200px;
     }
     #leftPanel, #middlePanel, #rightPanel {
       flex: 1;
@@ -62,7 +57,7 @@
       flex-direction: column;
       gap: 5px;
     }
-    /* Μειωμένα κουμπιά για εξοικονόμηση χώρου */
+    /* Κουμπιά */
     #rightPanel button {
       padding: 4px 8px;
       font-size: 12px;
@@ -104,13 +99,10 @@
     // Global μεταβλητές
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // hideFBlock: όταν true, γίνεται σύμπτυξη των 32 στηλών,
-    // δηλαδή εμφανίζονται μόνο οι στήλες 0-1 και 16-31 στον κύριο πίνακα.
-    // Επιπλέον, ο f τομέας (οι κελιά που κρύβονται, δηλαδή indices 2-15)
-    // θα εμφανίζεται ξεχωριστά κάτω από τον πίνακα.
+    // hideFBlock: όταν true, γίνεται σύμπτυξη (compact) του πίνακα
     let hideFBlock = false;
 
-    // Βοηθητική συνάρτηση resampleCells (δεν χρησιμοποιείται πλέον για τη σύμπτυξη)
+    // Βοηθητική συνάρτηση resampleCells (δεν χρησιμοποιείται πλέον)
     function resampleCells(cells, newLength) {
       let result = [];
       if(cells.length === 0) return result;
@@ -187,15 +179,14 @@
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
-        // Για τις πρώτες 2 σειρές (ομαδοποίηση) χρησιμοποιούμε 32 κελιά, ενώ για τις περίοδους ξεκινάμε με κενό πίνακα.
+        // Για τις πρώτες 2 σειρές (ομαδοποίηση) χρησιμοποιούμε 32 κελιά, για τις περίοδους ξεκινάμε με κενό πίνακα.
         let cells = (i < 2) ? new Array(32).fill(null) : [];
         rowsData.push({
           cells: cells,
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          // Οι περίοδοι ξεκινάνε από index 0
-          insertionIndex: 0,
+          insertionIndex: 0,  // Οι περίοδοι ξεκινάνε από index 0
           periodLabel: null
         });
       }
@@ -344,9 +335,48 @@
       }
     }
 
-    // Σχεδίαση του πίνακα.
-    // Όταν η σύμπτυξη είναι ενεργή (hideFBlock === true),
-    // εμφανίζονται μόνο οι στήλες 0-1 και 16-31.
+    // Βοηθητική συνάρτηση για τον υπολογισμό του κάτω σημείου του πίνακα (expanded)
+    function getTableBottom() {
+      let yOffset = 80;
+      const groupRowsGap = 20;
+      const normalGap = 42;
+      for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
+        yOffset += (rowIndex < 2 ? groupRowsGap : normalGap);
+      }
+      return yOffset;
+    }
+
+    // Συνάρτηση που ρυθμίζει δυναμικά τις διαστάσεις και τη θέση του infoPanel
+    function updateInfoPanelDimensions() {
+      const infoPanel = document.getElementById("infoPanel");
+      const margin = 20;
+      if (!hideFBlock) {
+        // Οριζόντια διάταξη (expanded): 
+        // Το infoPanel τοποθετείται κάτω από τον Περιοδικό Πίνακα
+        let tableBottom = getTableBottom();
+        infoPanel.style.top = (tableBottom + margin) + "px";
+        infoPanel.style.left = "50%";
+        infoPanel.style.transform = "translateX(-50%)";
+        // Διαστάσεις: πλάτος όπως στο αρχικό CSS, ύψος = διαθέσιμο ύψος από tableBottom μέχρι το κάτω μέρος
+        let computedWidth = getComputedStyle(infoPanel).width;
+        infoPanel.style.width = computedWidth; // διατηρούμε το ίδιο πλάτος
+        infoPanel.style.height = (windowHeight - tableBottom - 2 * margin) + "px";
+      } else {
+        // Κατακόρυφη διάταξη (compact):
+        // Ο συνεπτυγμένος πίνακας έχει πλάτος περίπου μέχρι x = 836px (80 + 18*42)
+        const compactTableRight = 836;
+        // Η πρώτη περίοδος ξεκινά περίπου στο y = 120px
+        const firstPeriodTop = 120;
+        infoPanel.style.left = (compactTableRight + margin) + "px";
+        infoPanel.style.top = (firstPeriodTop + margin) + "px";
+        infoPanel.style.transform = "none";
+        // Πλάτος = υπολοιπόμενο πλάτος από το δεξί του πίνακα
+        infoPanel.style.width = (windowWidth - compactTableRight - 2 * margin) + "px";
+        infoPanel.style.height = (windowHeight - firstPeriodTop - 2 * margin) + "px";
+      }
+    }
+
+    // Σχεδίαση του κύριου πίνακα
     function drawTable() {
       background(247);
       let yOffset = 80;
@@ -415,11 +445,10 @@
       }
     }
 
-    // Σχεδίαση του f τομέα ως ξεχωριστή περιοχή κάτω από τον πίνακα.
-    // Μετατόπιση του f τομέα δεξιότερα κατά 2 κελιά (2*42 = 84)
+    // Σχεδίαση του f τομέα ως ξεχωριστή περιοχή όταν είναι συνεπτυγμένος.
     function drawFBlockRegion() {
       let fCells = [];
-      // Συλλογή από όλους τους πίνακες (rowsData)
+      // Συλλογή όλων των κελιών f-block από όλες τις σειρές
       for (let r = 0; r < rowsData.length; r++) {
         for (let i = 0; i < rowsData[r].cells.length; i++) {
           let cell = rowsData[r].cells[i];
@@ -428,13 +457,13 @@
           }
         }
       }
-      // Ταξινόμηση με βάση το Z (αν υπάρχουν λεπτομέρειες)
+      // Ταξινόμηση με βάση τον αριθμό του στοιχείου
       fCells.sort((a, b) => {
         let an = a.details ? a.details.number : a.number;
         let bn = b.details ? b.details.number : b.number;
         return an - bn;
       });
-      // Διαχωρισμός σε δύο ομάδες: λανθάνιοι (57-70) και ακτινίδια (89-102)
+      // Διαχωρισμός σε λανθάνιοι (57-70) και ακτινίδια (89-102)
       let lanthanides = fCells.filter(cell => {
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 57 && num <= 70;
@@ -443,18 +472,18 @@
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 89 && num <= 102;
       });
-      // Θέτουμε τις αρχικές συντεταγμένες για την περιοχή του f τομέα, μετατοπισμένο δεξιότερα κατά 2 κελιά
-      let startX = 80 + 84; // 80 + (2 * 42) = 164
+      // Μετατόπιση του f τομέα δεξιότερα κατά 2 κελιά (2*42 = 84)
+      let startX = 80 + 84; // 164 px
       let startY = 450;
       let colGap = 42;
-      // Σχεδίαση των λανθανίων
+      // Σχεδίαση των λανθανίων – χρησιμοποιούμε stroke(85) και γωνίες με radius 5, όπως στον κύριο πίνακα
       for (let i = 0; i < lanthanides.length; i++) {
         let cell = lanthanides[i];
         let x = startX + i * colGap;
         let y = startY;
+        stroke(85);
         fill(CATEGORY_COLORS[cell.category]);
-        noStroke();
-        rect(x, y, cell.width, cell.height);
+        rect(x, y, cell.width, cell.height, 5);
         fill(0);
         textSize(12);
         textAlign(CENTER, CENTER);
@@ -467,9 +496,9 @@
         let cell = actinides[i];
         let x = startX + i * colGap;
         let y = actinidesY;
+        stroke(85);
         fill(CATEGORY_COLORS[cell.category]);
-        noStroke();
-        rect(x, y, cell.width, cell.height);
+        rect(x, y, cell.width, cell.height, 5);
         fill(0);
         textSize(12);
         textAlign(CENTER, CENTER);
@@ -544,12 +573,13 @@
       textFont('Roboto');
       noLoop();
       initialize();
+      updateInfoPanelDimensions();
       redraw();
     }
 
     function draw() {
       drawTable();
-      // Εάν η σύμπτυξη είναι ενεργή, σχεδιάζουμε και τον f τομέα κάτω από τον πίνακα.
+      // Εάν η σύμπτυξη είναι ενεργή, σχεδιάζουμε και τον f τομέα
       if (hideFBlock) {
         drawFBlockRegion();
       }
@@ -573,14 +603,16 @@
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
       hideFBlock = !hideFBlock;
-      // Εναλλαγή της κατακόρυφης διάταξης για το infoPanel όταν ενεργοποιείται η σύμπτυξη
+      // Εναλλαγή διάταξης infoPanel και ενημέρωση διαστάσεων
       document.getElementById('infoPanel').classList.toggle('vertical', hideFBlock);
+      updateInfoPanelDimensions();
       console.log("hideFBlock =", hideFBlock);
       redraw();
     });
 
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
+      updateInfoPanelDimensions();
       redraw();
     }
   </script>
