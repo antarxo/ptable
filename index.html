@@ -21,32 +21,43 @@
       font-weight: bold;
       z-index: 10;
     }
-    /* Στυλ για το infoPanel στην οριζόντια διάταξη */
+    /* Στυλ για το infoPanel */
     #infoPanel {
       display: flex;
       justify-content: space-between;
       align-items: stretch;
       position: absolute;
-      /* Η θέση και οι διαστάσεις ορίζονται δυναμικά από τη JS */
+      /* Οι διαστάσεις και η θέση ρυθμίζονται δυναμικά από τη JS */
       padding: 20px;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
-      /* Τα τμήματα στοιχίζονται οριζόντια */
+      /* Οριζόντια διάταξη: τα τρία τμήματα στοιχίζονται οριζόντια */
       flex-direction: row;
     }
-    /* Στυλ για το infoPanel στην κατακόρυφη διάταξη */
+    /* Για την κατακόρυφη διάταξη */
     #infoPanel.vertical {
       transform: none;
       flex-direction: column;
     }
-    /* Τα τμήματα (panels) του infoPanel */
+    /* Εσωτερικά περιγράμματα στα τμήματα */
+    /* Στην οριζόντια διάταξη, τα αριστερό και κεντρικό τμήμα έχουν δεξί περίγραμμα */
+    #infoPanel:not(.vertical) #leftPanel,
+    #infoPanel:not(.vertical) #middlePanel {
+      border-right: 1px solid #333;
+    }
+    /* Στην κατακόρυφη διάταξη, τα πρώτα δύο τμήματα έχουν κάτω περίγραμμα */
+    #infoPanel.vertical #leftPanel,
+    #infoPanel.vertical #middlePanel {
+      border-bottom: 1px solid #333;
+    }
+    /* Βασικά στυλ για τα τμήματα του infoPanel */
     #leftPanel, #middlePanel, #rightPanel {
       flex: 1;
       margin: 0 10px;
     }
-    /* Στην κατακόρυφη διάταξη, τα τμήματα στοιχίζονται κατακόρυφα */
+    /* Στην κατακόρυφη διάταξη, τα τμήματα στοιχίζονται κατακόρυφα με μικρό κάθετο διάστημα */
     #infoPanel.vertical #leftPanel,
     #infoPanel.vertical #middlePanel,
     #infoPanel.vertical #rightPanel {
@@ -71,12 +82,12 @@
       background: #333;
       color: #fff;
     }
-    /* Στυλ για κουμπιά στην οριζόντια διάταξη: μεγαλύτερο ύψος & γραμματοσειρά */
+    /* Στυλ για κουμπιά στην οριζόντια διάταξη */
     #infoPanel:not(.vertical) #rightPanel button {
       padding: 8px 6px;
       font-size: 16px;
     }
-    /* Στυλ για κουμπιά στην κατακόρυφη διάταξη: μικρότερο ύψος & ελαφρώς μικρότερη γραμματοσειρά */
+    /* Στυλ για κουμπιά στην κατακόρυφη διάταξη */
     #infoPanel.vertical #rightPanel button {
       padding: 4px 6px;
       font-size: 14px;
@@ -111,26 +122,7 @@
     let globalMouseX = 0, globalMouseY = 0;
     // Όταν true, ο πίνακας συμπτύσσεται (compact mode)
     let hideFBlock = false;
-    const colGap = 42; // Χρησιμοποιείται ως "στοιχείο μέτρησης" (και για το κενό στις άκρες)
-
-    // Βοηθητική συνάρτηση resampleCells (δεν χρησιμοποιείται πλέον)
-    function resampleCells(cells, newLength) {
-      let result = [];
-      if(cells.length === 0) return result;
-      if(cells.length <= newLength) {
-        result = cells.slice();
-        while(result.length < newLength) {
-          result.push(null);
-        }
-        return result;
-      }
-      let factor = (cells.length - 1) / (newLength - 1);
-      for (let i = 0; i < newLength; i++) {
-        let index = Math.round(i * factor);
-        result.push(cells[index]);
-      }
-      return result;
-    }
+    const colGap = 42; // Χρησιμοποιείται και ως περιθώριο
 
     // p5.js preload: φόρτωση του αρχείου JSON
     function preload() {
@@ -190,14 +182,13 @@
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
-        // Για τις πρώτες 2 σειρές (ομαδοποίηση) χρησιμοποιούμε 32 κελιά, για τις περίοδους ξεκινάμε με κενό πίνακα.
         let cells = (i < 2) ? new Array(32).fill(null) : [];
         rowsData.push({
           cells: cells,
           shiftedColumns: 0,
           currentSegment: 0,
           countInSegment: 0,
-          insertionIndex: 0,  // Οι περίοδοι ξεκινάνε από index 0
+          insertionIndex: 0,
           periodLabel: null
         });
       }
@@ -278,7 +269,6 @@
       }
       else if (phase === 2) {
         const row = rowsData[currentRowIndex];
-        // Τοποθέτηση υδρογόνου (Z=1) στο index 0 και ήλιου (Z=2) στη θέση 31 (32η θέση)
         let insertIndex = (globalElementNumber === 1) ? 0 : 31;
         while (row.cells.length <= insertIndex) row.cells.push(null);
         let cell = createCell({
@@ -357,30 +347,28 @@
       return yOffset;
     }
 
-    // Συνάρτηση που ρυθμίζει δυναμικά τις διαστάσεις και τη θέση του infoPanel
+    // Ρυθμίζει δυναμικά τις διαστάσεις και τη θέση του infoPanel ώστε να μην αγγίζει τις άκρες (με περιθώριο ίσο με colGap)
     function updateInfoPanelDimensions() {
       const infoPanel = document.getElementById("infoPanel");
-      // Χρησιμοποιούμε το colGap (42px) ως «κενό» από τις άκρες
       if (!hideFBlock) {
         // Expanded (οριζόντια) διάταξη:
-        const tableWidth = 32 * colGap; // 1344px
+        const desiredWidth = 32 * colGap; // 1344px
+        const availableWidth = windowWidth - 2 * colGap;
+        // Επιλέγουμε το μικρότερο ανάμεσα στα δύο ώστε να διατηρηθεί το περιθώριο
+        const finalWidth = Math.min(desiredWidth, availableWidth);
+        infoPanel.style.width = finalWidth + "px";
         const tableBottom = getTableBottom();
-        infoPanel.style.width = tableWidth + "px";
-        // Το infoPanel θα τοποθετηθεί κάτω από τον πίνακα, με περιθώριο ίσο με colGap
         infoPanel.style.top = (tableBottom + colGap) + "px";
-        // Κεντράρουμε οριζόντια, αλλά διασφαλίζουμε ότι υπάρχει τουλάχιστον colGap από τις άκρες
-        let leftPos = (windowWidth - tableWidth) / 2;
+        // Κεντράρουμε οριζόντια, αλλά διασφαλίζουμε περιθώριο από τις άκρες
+        let leftPos = (windowWidth - finalWidth) / 2;
         if (leftPos < colGap) leftPos = colGap;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
         infoPanel.style.height = (windowHeight - tableBottom - 2 * colGap) + "px";
       } else {
         // Compact (κατακόρυφη) διάταξη:
-        // Ο συνεπτυγμένος πίνακας εμφανίζει 18 στήλες, ξεκινά από x = 80, άρα το δεξί του σημείο:
-        const compactTableRight = 80 + 18 * colGap; // 80 + 756 = 836px
-        // Η 1η περίοδος ξεκινά περίπου στο y = 120px
+        const compactTableRight = 80 + 18 * colGap; // περίπου 836px
         const firstPeriodTop = 120;
-        // Εξασφαλίζουμε περιθώριο (colGap) και στα δύο άκρα:
         const availableWidth = windowWidth - (compactTableRight + 2 * colGap);
         infoPanel.style.width = availableWidth + "px";
         infoPanel.style.height = (windowHeight - firstPeriodTop - 2 * colGap) + "px";
@@ -458,10 +446,9 @@
       }
     }
 
-    // Σχεδίαση του f τομέα σε compact mode, με το ίδιο styling όπως στον κύριο πίνακα
+    // Σχεδίαση του f τομέα σε compact mode (με το ίδιο styling όπως στον κύριο πίνακα)
     function drawFBlockRegion() {
       let fCells = [];
-      // Συλλογή όλων των κελιών f-block από όλες τις σειρές
       for (let r = 0; r < rowsData.length; r++) {
         for (let i = 0; i < rowsData[r].cells.length; i++) {
           let cell = rowsData[r].cells[i];
@@ -470,13 +457,11 @@
           }
         }
       }
-      // Ταξινόμηση με βάση τον αριθμό του στοιχείου
       fCells.sort((a, b) => {
         let an = a.details ? a.details.number : a.number;
         let bn = b.details ? b.details.number : b.number;
         return an - bn;
       });
-      // Διαχωρισμός: λανθάνιοι (57-70) και ακτινίδια (89-102)
       let lanthanides = fCells.filter(cell => {
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 57 && num <= 70;
@@ -485,10 +470,8 @@
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 89 && num <= 102;
       });
-      // Μετατόπιση του f τομέα δεξιότερα κατά 2 κελιά (84px)
       let startX = 80 + 84; 
       let startY = 450;
-      // Σχεδίαση των λανθανίων με παρόμοιο styling
       for (let i = 0; i < lanthanides.length; i++) {
         let cell = lanthanides[i];
         let x = startX + i * colGap;
@@ -501,7 +484,6 @@
         textAlign(CENTER, CENTER);
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
-      // Σχεδίαση των ακτινιδίων κάτω από τους λανθάνιους
       let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
       let actinidesY = startY + fHeight + 10;
       for (let i = 0; i < actinides.length; i++) {
@@ -552,7 +534,6 @@
       document.getElementById('remarks').innerHTML = '';
     }
 
-    // Ενημέρωση πληροφοριών με κλικ πάνω σε κελί
     function handleMouseClick() {
       let x = globalMouseX || mouseX;
       let y = globalMouseY || mouseY;
@@ -591,13 +572,11 @@
 
     function draw() {
       drawTable();
-      // Σχεδίαση του f τομέα μόνο σε compact mode
       if (hideFBlock) {
         drawFBlockRegion();
       }
     }
 
-    // Κουμπιά
     document.getElementById('nextElement').addEventListener('click', (e) => {
       e.stopPropagation();
       addElementToCurrentRow();
@@ -615,7 +594,6 @@
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
       hideFBlock = !hideFBlock;
-      // Εναλλαγή διάταξης infoPanel και ενημέρωση διαστάσεων
       document.getElementById('infoPanel').classList.toggle('vertical', hideFBlock);
       updateInfoPanelDimensions();
       console.log("hideFBlock =", hideFBlock);
