@@ -1,210 +1,24 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-  <meta charset="UTF-8">
-  <title>Πίνακας με 4 Καμβάδες - Full & Collapsed Mode</title>
-  <!-- Χρήση της γραμματοσειράς Roboto -->
-  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Roboto', Arial, sans-serif;
-      margin: 0;
-      overflow: hidden;
-      background: #f7f7f7;
-    }
-    /* Πάνελ πληροφοριών & controls */
-    #infoPanel {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px;
-      background: rgba(255,255,255,0.95);
-      border: 1px solid #333;
-      z-index: 50;
-    }
-    #controls {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 50;
-    }
-    #controls button {
-      margin: 0 5px;
-      padding: 5px 10px;
-    }
-    /* Containers για τους 4 καμβάδες */
-    /* Οι διαστάσεις σε full mode */
-    #canvasS, #canvasF, #canvasD, #canvasP {
-      position: absolute;
-      border: 1px solid #ccc;
-      background: #fff;
-    }
-    /* Full mode: τοποθέτηση οριζόντια στη σειρά */
-    .full #canvasS { top: 100px; left: 50px; width: 124px; height: 336px; }
-    .full #canvasF { top: 100px; left: 174px; width: 586px; height: 336px; }
-    .full #canvasD { top: 100px; left: 760px; width: 418px; height: 336px; }
-    .full #canvasP { top: 100px; left: 1178px; width: 250px; height: 336px; }
-    
-    /* Collapsed mode: S, D, P σε μία σειρά και F σε δεύτερη γραμμή με περιορισμένο width */
-    .collapsed #canvasS { top: 100px; left: 50px; width: 124px; height: 336px; }
-    .collapsed #canvasD { top: 100px; left: 174px; width: 418px; height: 336px; }
-    .collapsed #canvasP { top: 100px; left: 174 + 418; /* 592px */ width: 250px; height: 336px; }
-    /* F block collapsed: μικρότερος width (82px) και τοποθετημένος κάτω, με ένα gap (20px) */
-    .collapsed #canvasF { top: 456px; left: 174 + (586 - 82); /* 174+504=678px */ width: 82px; height: 336px; }
-  </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-</head>
-<body>
-  <div id="infoPanel">Πληροφορίες στοιχείου...</div>
-  <div id="controls">
-    <button id="nextElement">Επόμενο</button>
-    <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleMode">Εναλλαγή Mode</button>
-    <button id="reset">Reset</button>
-  </div>
-  <!-- Containers για τους 4 καμβάδες -->
-  <div id="canvasS"></div>
-  <div id="canvasF"></div>
-  <div id="canvasD"></div>
-  <div id="canvasP"></div>
-  
-  <script>
-    // Ο κώδικας αυτός χρησιμοποιεί dummy grids για κάθε τομέα.
-    // Οι διαστάσεις και οι θέσεις ορίζονται μέσω CSS, με την κλάση "full" για full mode και "collapsed" για collapsed mode.
-    
-    // Αρχική κατάσταση: full mode
-    let mode = "full"; // "full" ή "collapsed"
-    
-    // Dummy δεδομένα: για κάθε τομέα, δημιουργούμε ένα array με δεδομένα για 9 σειρές
-    // Χρησιμοποιούμε απλώς αριθμούς για επίδειξη
-    function generateData(columns, prefix) {
-      const total = 9 * columns;
-      let arr = [];
-      for (let i = 0; i < total; i++) {
-        arr.push({ number: i+1, symbol: prefix + (i+1) });
-      }
-      return arr;
-    }
-    
-    let sData = generateData(3, "S");
-    let fData = generateData(14, "F");
-    let dData = generateData(10, "D");
-    let pData = generateData(6, "P");
-    
-    // Δείγμα συνάρτησης σχεδίασης grid
-    function drawGrid(p, columns, dataArray) {
-      p.background(240);
-      let cellW = 40, gap = 2;
-      let y = 0;
-      let index = 0;
-      for (let row = 0; row < 9; row++) {
-        let cellH = (row < 2) ? 20 : 40;
-        let x = 0;
-        for (let col = 0; col < columns; col++) {
-          let cell = dataArray[index] || { symbol: "" };
-          p.fill(200, 220, 240);
-          p.stroke(150);
-          p.rect(x, y, cellW, cellH);
-          p.fill(0);
-          p.textSize(12);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(cell.symbol, x + cellW/2, y + cellH/2);
-          index++;
-          x += cellW + gap;
-        }
-        y += cellH + gap;
-      }
-    }
-    
-    // p5 sketch για τον S τομέα
-    let sketchS = function(p) {
-      p.setup = function() {
-        p.createCanvas(124, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        drawGrid(p, 3, sData);
-      };
-    };
-    
-    // p5 sketch για τον F τομέα
-    let sketchF = function(p) {
-      p.setup = function() {
-        // Σε full mode, το πλάτος είναι 586, σε collapsed mode μόνο 82
-        let w = (mode === "full") ? 586 : 82;
-        p.createCanvas(w, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        if (mode === "full") {
-          drawGrid(p, 14, fData);
-        } else {
-          // Σε collapsed mode, δείχνουμε μόνο τις 2 τελευταίες στήλες της F σειράς.
-          // Δηλαδή, δημιουργούμε ένα grid με 2 στήλες
-          drawGrid(p, 2, fData.slice(12*9)); // υποθέτουμε ότι οι τελευταίες 2 στήλες αντιστοιχούν στα τελευταία 2*9 στοιχεία
-        }
-      };
-    };
-    
-    // p5 sketch για τον D τομέα
-    let sketchD = function(p) {
-      p.setup = function() {
-        p.createCanvas(418, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        // Σε full mode, D εμφανίζεται. Σε collapsed mode, D εμφανίζεται πάντα (χωρίς αλλαγή)
-        drawGrid(p, 10, dData);
-      };
-    };
-    
-    // p5 sketch για τον P τομέα
-    let sketchP = function(p) {
-      p.setup = function() {
-        p.createCanvas(250, 336);
-        p.noLoop();
-      };
-      p.draw = function() {
-        // Σε full mode, P εμφανίζεται. Σε collapsed mode, P εμφανίζεται πάντα
-        drawGrid(p, 6, pData);
-      };
-    };
-    
-    // Δημιουργία των 4 p5 instances στους αντίστοιχους καμβάδες
-    let sP5 = new p5(sketchS, 'canvasS');
-    let fP5, dP5, pP5;
-    let createOtherSketches = function() {
-      fP5 = new p5(sketchF, 'canvasF');
-      dP5 = new p5(sketchD, 'canvasD');
-      pP5 = new p5(sketchP, 'canvasP');
-    };
-    createOtherSketches();
-    
-    // Λειτουργία εναλλαγής mode: ενημέρωση των containers μέσω αλλαγής κλάσης στο body
-    document.getElementById('toggleCollapsed').addEventListener('click', function() {
-      mode = (mode === "full") ? "collapsed" : "full";
-      // Ενημερώνουμε τη διάταξη με βάση το mode, προσθέτοντας κλάση στο body
-      document.body.className = mode;
-      // Για το demo, κάνουμε ανανέωση των sketches
-      sP5.redraw();
-      fP5.remove();
-      dP5.remove();
-      pP5.remove();
-      createOtherSketches();
-    });
-    
-    // Κουμπιά ελέγχου (δείγμα, χωρίς πλήρη λειτουργία προσθήκης στοιχείων)
-    document.getElementById('nextElement').addEventListener('click', function() {
-      alert("Επόμενο στοιχείο (δείγμα)");
-    });
-    document.getElementById('fillAll').addEventListener('click', function() {
-      alert("Συμπλήρωση (δείγμα)");
-    });
-    document.getElementById('reset').addEventListener('click', function() {
-      window.location.reload();
-    });
-  </script>
-</body>
-</html>
+document.getElementById('nextElement').addEventListener('click', function() {
+  addElementToCurrentRow();
+  redrawAll();
+});
+document.getElementById('fillAll').addEventListener('click', function() {
+  while (phase < 6 || (phase === 1 && globalElementNumber <= 118)) {
+    addElementToCurrentRow();
+  }
+  redrawAll();
+});
+document.getElementById('reset').addEventListener('click', function() {
+  initialize();
+  redrawAll();
+});
+document.getElementById('toggleMode').addEventListener('click', function() {
+  mode = (mode === "full") ? "collapsed" : "full";
+  document.body.className = mode;
+  // Για το demo, αναδημιουργούμε τους καμβάδες
+  sP5.redraw();
+  fP5.remove();
+  dP5.remove();
+  pP5.remove();
+  createOtherSketches();
+});
