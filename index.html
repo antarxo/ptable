@@ -22,7 +22,7 @@
       font-weight: bold;
       z-index: 10;
     }
-    /* --- Horizontal mode --- */
+    /* --- Panels --- */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -35,29 +35,24 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
-    /* Διαχωριστικά μεταξύ των κελιών στην οριζόντια διάταξη */
     #infoPanel:not(.vertical) #leftPanel,
     #infoPanel:not(.vertical) #middlePanel {
       border-right: 1px solid #333;
     }
-    /* Στο horizontal mode, το rightPanel κεντράρει τα κουμπιά σε vertical διάταξη */
     #infoPanel:not(.vertical) #rightPanel {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
     }
-    /* --- Vertical mode --- */
     #infoPanel.vertical {
       flex-direction: column;
       transform: none;
     }
-    /* Στην vertical διάταξη, τα δύο πρώτα τμήματα έχουν κάτω περίγραμμα */
     #infoPanel.vertical #leftPanel,
     #infoPanel.vertical #middlePanel {
       border-bottom: 1px solid #333;
     }
-    /* Ρυθμίσεις για τα τρία τμήματα στο vertical mode */
     #infoPanel.vertical #leftPanel {
       flex: 0 0 110px;
       display: flex;
@@ -79,14 +74,13 @@
       justify-content: center;
       align-items: center;
     }
-    /* Στυλ για το middlePanel */
     #middlePanel {
       flex: 2;
       font-style: italic;
       color: #666;
       padding: 0 20px;
     }
-    /* --- Κουμπιά --- */
+    /* Κουμπιά */
     #rightPanel button {
       border: 1px solid #333;
       background: #fff;
@@ -100,12 +94,10 @@
       background: #333;
       color: #fff;
     }
-    /* Στυλ κουμπιών στο horizontal mode */
     #infoPanel:not(.vertical) #rightPanel button {
       padding: 8px 6px;
       font-size: 16px;
     }
-    /* Στυλ κουμπιών στο vertical mode */
     #infoPanel.vertical #rightPanel button {
       padding: 4px 6px;
       font-size: 14px;
@@ -114,7 +106,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -135,11 +127,10 @@
   </div>
 
   <script>
-    /* Κώδικας Περιοδικού Πίνακα με overlay για τους τομείς d και p και μετατόπιση του f τομέα */
-
+    /* --- Κώδικας Περιοδικού Πίνακα --- */
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // false: κανονική λειτουργία, true: collapsed mode (overlay για d & p, f μετατοπισμένος)
+    // hideFBlock = true: collapsed mode (μόνο s στον κύριο πίνακα, d/p και f ως overlay)
     let hideFBlock = false;
     const colGap = 42; // μέτρο και περιθώριο
 
@@ -194,6 +185,7 @@
     function initialize() {
       rowsData = [];
       for(let i = 0; i < 9; i++){
+        // Οι πρώτες 2 σειρές έχουν 32 κελιά (για τους αριθμούς ομάδας)
         let cells = (i < 2) ? new Array(32).fill(null) : [];
         rowsData.push({
           cells: cells,
@@ -392,7 +384,7 @@
       }
     }
 
-    // drawTable: Σε collapsed mode εμφανίζονται μόνο τα κελιά του s τομέα (indexes 0-1)
+    // drawTable: Αν hideFBlock είναι true, σχεδιάζει μόνο τα 2 πρώτα κελιά κάθε σειράς (τον s τομέα)
     function drawTable(){
       background(247);
       let yOffset = 80;
@@ -403,7 +395,6 @@
         let xOffset = 80;
         let cellsToDraw;
         if(hideFBlock){
-          // Σ collapsed mode, δείχνουμε μόνο τα 2 πρώτα κελιά (s τομέας)
           cellsToDraw = row.cells.slice(0,2);
         } else {
           cellsToDraw = row.cells;
@@ -457,35 +448,40 @@
       }
     }
 
-    // drawDPOverlay: Σχεδιάζει τα κελιά του d και p τομέα (από index 2 και μετά) ως overlay
+    // drawDPOverlay: Σχεδιάζει τα κελιά των τομέων d και p (όλα τα κελιά από index 2 και μετά) ως overlay και ενημερώνει τις συντεταγμένες τους για interactivity
     function drawDPOverlay(){
       let yOverlay = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
       for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
-        // Εξάγουμε όλα τα κελιά μετά το s τομέα
-        let dpCells = row.cells.slice(2);
-        for(let i=0; i<dpCells.length; i++){
-          let cell = dpCells[i];
-          if(cell){
-            let x = 80 + (i+2)*colGap;
-            let y = yOverlay;
-            stroke(85);
-            fill(CATEGORY_COLORS[cell.category]);
-            rect(x, y, cell.width, cell.height, 5);
-            fill(0);
-            textSize(12);
-            textAlign(CENTER, CENTER);
-            text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
+        if(row.cells.length > 2){
+          let dpCells = row.cells.slice(2);
+          for(let i=0; i<dpCells.length; i++){
+            let cell = dpCells[i];
+            if(cell){
+              let x = 80 + (i+2)*colGap;
+              let y = yOverlay;
+              stroke(85);
+              fill(CATEGORY_COLORS[cell.category]);
+              rect(x, y, cell.width, cell.height, 5);
+              fill(0);
+              textSize(12);
+              textAlign(CENTER, CENTER);
+              text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
+              // Ενημέρωση για mouse events
+              cell.drawX = x;
+              cell.drawY = y;
+              cell.drawW = cell.width;
+              cell.drawH = cell.height;
+            }
           }
         }
         yOverlay += (rowIndex < 2 ? groupRowsGap : normalGap);
       }
     }
 
-    // drawFBlockRegion: Σχεδιάζει τον f τομέα.
-    // Αν είμαστε σε collapsed mode, προσθέτουμε offset ώστε να μετακινηθεί πιο κάτω.
+    // drawFBlockRegion: Σχεδιάζει τον f τομέα με offset (π.χ. 42px) όταν hideFBlock είναι true
     function drawFBlockRegion(){
       let fCells = [];
       for(let r = 0; r < rowsData.length; r++){
@@ -510,8 +506,7 @@
         return num >= 89 && num <= 102;
       });
       let startX = 80 + 84; 
-      // Αν collapsed mode είναι ενεργό, μετακινούμε τον f τομέα κάτω (προσθέτουμε offset 42px)
-      let startY = hideFBlock ? 450 + 42 : 450;
+      let startY = hideFBlock ? 450 + 42 : 450; // μετατόπιση όταν collapsed
       for(let i = 0; i < lanthanides.length; i++){
         let cell = lanthanides[i];
         let x = startX + i * colGap;
@@ -523,6 +518,10 @@
         textSize(12);
         textAlign(CENTER, CENTER);
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
+        cell.drawX = x;
+        cell.drawY = y;
+        cell.drawW = cell.width;
+        cell.drawH = cell.height;
       }
       let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
       let actinidesY = startY + fHeight + 2;
@@ -537,6 +536,10 @@
         textSize(12);
         textAlign(CENTER, CENTER);
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
+        cell.drawX = x;
+        cell.drawY = y;
+        cell.drawW = cell.width;
+        cell.drawH = cell.height;
       }
     }
 
@@ -578,6 +581,7 @@
       let x = globalMouseX || mouseX;
       let y = globalMouseY || mouseY;
       let found = false;
+      // Ελέγχουμε όλα τα κελιά (είτε από το κύριο table είτε τα overlay, αφού ενημερώνονται οι drawX/drawY)
       for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
         for(let i = 0; i < row.cells.length; i++){
@@ -610,14 +614,15 @@
       redraw();
     }
 
-    // Στην draw() καλούμε το drawTable() και, αν το collapsed mode είναι ενεργό,
-    // σχεδιάζουμε το overlay για τους τομείς d και p καθώς και τον f τομέα με μετατόπιση.
     function draw(){
+      // Πάντα σχεδιάζουμε το κύριο table (που σε collapsed mode δείχνει μόνο τον s τομέα)
       drawTable();
       if(hideFBlock){
+        // Σε collapsed mode, σχεδιάζουμε ως overlay τα κελιά των d/p και τον f τομέα μετατοπισμένο
         drawDPOverlay();
         drawFBlockRegion();
       } else {
+        // Κανονική λειτουργία: όλα τα κελιά σχεδιάζονται μέσα στο table
         drawFBlockRegion();
       }
     }
