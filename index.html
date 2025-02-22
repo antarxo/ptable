@@ -139,26 +139,11 @@
   </div>
 
   <script>
-    // Ο υπόλοιπος κώδικας του Π.Π. παραμένει όπως ήταν, με την εξής τροποποίηση:
-    // Ορίζουμε το colGap = 42 (40 px πλάτος κελιού + 2 px κενό)
-    const colGap = 42;
-    
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    let hideFBlock = false; // false: horizontal mode, true: vertical mode
-    let rowsData = [];
-    let globalElementNumber = 3;
-    let currentRowIndex = 3;
-    let phase = 1;
-    
-    const fillingPatterns = [
-      [{ count: 8, shifting: true }],
-      [{ count: 8, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
-      [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
-    ];
+    // false: horizontal mode, true: vertical mode
+    let hideFBlock = false;
+    const colGap = 42;
     
     function preload() {
       elementsData = loadJSON('elements.json', dataLoaded, dataError);
@@ -194,6 +179,20 @@
       'hydrogen-color': '#ffff99'
     };
     
+    let rowsData = [];
+    let globalElementNumber = 3;
+    let currentRowIndex = 3;
+    let phase = 1;
+    
+    const fillingPatterns = [
+      [{ count: 8, shifting: true }],
+      [{ count: 8, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+      [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
+    ];
+    
     function initialize() {
       rowsData = [];
       for (let i = 0; i < 9; i++) {
@@ -216,7 +215,7 @@
       let cell = { 
         number: elObj.number,
         category: elObj.category,
-        width: 40, // ακριβές πλάτος κελιού 40px
+        width: 40,
         height: (elObj.category === 'group-name' ? 20 : 40),
         fixed: !!elObj.fixed
       };
@@ -235,12 +234,12 @@
       });
     }
     
-    function handleShiftingForRow(currentRow) {
+    function handleShiftingForRow(currentRowIndex) {
       let groupRows = [];
-      if (currentRow === 3) groupRows = [0,1,2];
-      else if (currentRow === 5) groupRows = [0,1,2,3,4];
-      else if (currentRow === 7) groupRows = [0,1,2,3,4,5,6];
-      shiftBlockRight(currentRow, groupRows);
+      if (currentRowIndex === 3) groupRows = [0,1,2];
+      else if (currentRowIndex === 5) groupRows = [0,1,2,3,4];
+      else if (currentRowIndex === 7) groupRows = [0,1,2,3,4,5,6];
+      shiftBlockRight(currentRowIndex, groupRows);
     }
     
     function addElementToCurrentRow() {
@@ -260,7 +259,8 @@
             category: getCategory(globalElementNumber)
           });
           if (pattern.shifting) {
-            handleShiftingForRow(currentRow); // τώρα χρησιμοποιούμε την ίδια μεταβλητή
+            // Διόρθωση: αντικατάσταση "currentRow" με "currentRowIndex"
+            handleShiftingForRow(currentRowIndex);
           }
           let targetIndex = row.insertionIndex;
           while (row.cells[targetIndex] != null) {
@@ -374,8 +374,8 @@
         if (leftPos < 42) leftPos = 42;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
-        // Επανακαθορισμός για το συνολικό πλάτος των τμημάτων:
-        finalWidthH = 240 + 750 + 180; // 1170px
+        // Κατανομή τμημάτων: leftPanel 240px, middlePanel 750px, rightPanel 180px (240+750+180=1170px)
+        finalWidthH = 240 + 750 + 180;
         infoPanel.style.width = finalWidthH + "px";
         leftPos = (windowWidth - finalWidthH) / 2;
         if (leftPos < 42) leftPos = 42;
@@ -413,7 +413,7 @@
         let cellsToDraw = [];
         if (hideFBlock) {
           if (row.cells.length === 32) {
-            // Χωρίζουμε τις πρώτες 2 στήλες από τις υπόλοιπες προσθέτοντας offset 2px (όχι 5px)
+            // Χωρίζουμε τις πρώτες 2 στήλες από τις υπόλοιπες προσθέτοντας offset 2px (καθώς το κελί έχει πλάτος 40 και το gap 2)
             cellsToDraw = row.cells.slice(0, 2).concat([null]).concat(row.cells.slice(16, 32));
           } else {
             cellsToDraw = row.cells;
@@ -426,7 +426,7 @@
           for (let i = 0; i < cellsToDraw.length; i++) {
             let cell = cellsToDraw[i];
             if (cell === null) {
-              xOffset += 2; // κενό 2px
+              xOffset += 2;
               continue;
             }
             if (cell) {
@@ -455,7 +455,7 @@
           for (let i = 0; i < cellsToDraw.length; i++) {
             let cell = cellsToDraw[i];
             if (cell === null) {
-              xOffset += 2; // κενό 2px
+              xOffset += 2;
               continue;
             }
             if (cell) {
@@ -516,7 +516,7 @@
         text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
       }
       let fHeight = lanthanides.length > 0 ? lanthanides[0].height : 40;
-      let actinidesY = startY + fHeight + 5; // gap 5px μεταξύ σειρών του f τομέα
+      let actinidesY = startY + fHeight + 5;
       for (let i = 0; i < actinides.length; i++) {
         let cell = actinides[i];
         let x = startX + i * colGap;
