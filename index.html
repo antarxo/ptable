@@ -40,7 +40,7 @@
     #infoPanel:not(.vertical) #middlePanel {
       border-right: 1px solid #333;
     }
-    /* Το rightPanel κεντράρει τα κουμπιά σε vertical στο horizontal mode */
+    /* Στο horizontal mode, το rightPanel κεντράρει τα κουμπιά σε vertical διάταξη */
     #infoPanel:not(.vertical) #rightPanel {
       display: flex;
       flex-direction: column;
@@ -62,8 +62,8 @@
     #infoPanel.vertical #leftPanel {
       flex: 0 0 110px; /* ύψος 110px */
       display: flex;
-      flex-direction: column;
-      align-items: flex-start; /* στοιχίση αριστερά */
+      flex-direction: column; /* πληροφορίες οργανώνονται σε σειρές */
+      align-items: flex-start;  /* στοιχίση αριστερά */
       justify-content: center;
       padding-left: 10px;
     }
@@ -138,7 +138,7 @@
   </div>
 
   <script>
-    /* --- Το υπόλοιπο του κώδικα του Περιοδικού Πίνακα παραμένει αμετάβλητο --- */
+    /* Το υπόλοιπο του κώδικα του Περιοδικού Πίνακα παραμένει αμετάβλητο */
     
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
@@ -260,7 +260,8 @@
             category: getCategory(globalElementNumber)
           });
           if (pattern.shifting) {
-            handleShiftingForRow(currentRow);
+            // Διόρθωση: αντικατάσταση currentRow με currentRowIndex
+            handleShiftingForRow(currentRowIndex);
           }
           let targetIndex = row.insertionIndex;
           while (row.cells[targetIndex] != null) {
@@ -380,7 +381,7 @@
         document.getElementById("leftPanel").style.width = "400px";
         document.getElementById("middlePanel").style.width = "750px";
         document.getElementById("rightPanel").style.width = "236px";
-        // Επαναφορά ύψους των τμημάτων (σε horizontal mode δεν θέλουμε τα vertical heights)
+        // Σε horizontal mode, επαναφέρουμε τα ύψη (αφαιρούμε τυχόν vertical inline styles)
         document.getElementById("leftPanel").style.height = "";
         document.getElementById("middlePanel").style.height = "";
         document.getElementById("rightPanel").style.height = "";
@@ -388,9 +389,9 @@
         // --- Vertical mode ---
         infoPanel.style.width = "500px";
         infoPanel.style.height = "440px";
-        // Το infoPanel τοποθετείται έτσι ώστε το δεξί περιθώριο να είναι 42px από το πίνακα των στοιχείων.
+        // Το infoPanel τοποθετείται έτσι ώστε το δεξί του περιθώριο να είναι 42px από τον πίνακα στοιχείων.
         infoPanel.style.left = (windowWidth - 500 - 42) + "px";
-        infoPanel.style.top = "120px";  // Ξεκινά στο 120px (σύμφωνα με τις οδηγίες)
+        infoPanel.style.top = "120px"; // σύμφωνα με τις οδηγίες
         infoPanel.style.transform = "none";
         // Κατανομή τμημάτων στο vertical mode:
         document.getElementById("leftPanel").style.height = "110px";
@@ -535,7 +536,7 @@
           `<em>Εξωτερική:</em> ${cell.details.outerShell}`;
         document.getElementById('explanation').innerHTML =
           `<em>Επεξήγηση:</em> ${cell.details.explanation}`;
-        // Στον vertical mode εμφανίζουμε "Οδηγίες:" αντί για "Παρατηρήσεις:"
+        // Σε vertical mode εμφανίζουμε "Οδηγίες:" αντί για "Παρατηρήσεις:"
         document.getElementById('remarks').innerHTML =
           `<em>Οδηγίες:</em> ${cell.details.remarks}`;
       } else {
