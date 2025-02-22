@@ -36,6 +36,16 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
     }
+    /* Νέα διάταξη: infoPanel σε κατακόρυφη διάταξη στη δεξιά πλευρά όταν ενεργοποιείται η σύμπτυξη */
+    #infoPanel.vertical {
+      flex-direction: column;
+      top: 80px;
+      right: 20px;
+      left: auto;
+      transform: none;
+      width: auto;
+      max-width: none;
+    }
     #leftPanel, #middlePanel, #rightPanel {
       flex: 1;
       margin: 0 10px;
@@ -405,8 +415,7 @@
     }
 
     // Σχεδίαση του f τομέα ως ξεχωριστή περιοχή κάτω από τον πίνακα.
-    // Συλλέγουμε όλα τα κελιά με κατηγορία 'f-block', ταξινομούμε κατά αύξουσα τιμή Z,
-    // και τα εμφανίζουμε ως δύο σειρές (λανθάνιοι και ακτινίδια).
+    // Μετατόπιση του f τομέα δεξιότερα κατά 2 κελιά (2*42 = 84)
     function drawFBlockRegion() {
       let fCells = [];
       // Συλλογή από όλους τους πίνακες (rowsData)
@@ -433,9 +442,8 @@
         let num = cell.details ? cell.details.number : cell.number;
         return num >= 89 && num <= 102;
       });
-      // Θέτουμε τις αρχικές συντεταγμένες για την περιοχή του f τομέα
-      let startX = 80;
-      // Το yOffset ξεκινάει λίγο κάτω από τον κύριο πίνακα (περίπου στο 450)
+      // Θέτουμε τις αρχικές συντεταγμένες για την περιοχή του f τομέα, μετατοπισμένο δεξιότερα κατά 2 κελιά
+      let startX = 80 + 84; // 80 + (2 * 42) = 164
       let startY = 450;
       let colGap = 42;
       // Σχεδίαση των λανθανίων
@@ -564,6 +572,8 @@
     });
     document.getElementById('togglePanel').addEventListener('click', () => {
       hideFBlock = !hideFBlock;
+      // Εναλλαγή της κατακόρυφης διάταξης για το infoPanel όταν ενεργοποιείται η σύμπτυξη
+      document.getElementById('infoPanel').classList.toggle('vertical', hideFBlock);
       console.log("hideFBlock =", hideFBlock);
       redraw();
     });
