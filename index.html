@@ -53,7 +53,7 @@
 </head>
 <body class="full">
   <div id="infoPanel">
-    <div id="elementInfo"></div>
+    <div id="elementInfo">Επιλέξτε στοιχείο</div>
     <div id="subshells"></div>
     <div id="shells"></div>
     <div id="outerShell"></div>
@@ -87,20 +87,42 @@
       let phase = 1;
       let mode = "full";
       const colGap = 42;
-      const fillingPatterns = [ /* ...unchanged... */ ];
+      const fillingPatterns = [
+        [{ count: 8, shifting: true }],
+        [{ count: 8, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
+      ];
 
-      function preload() {
-        elementsData = loadJSON('elements.json', dataLoaded, dataError);
+      // Διορθωμένη φόρτωση JSON μέσα σε p5 instance
+      const loadData = async (p) => {
+        try {
+          const response = await fetch('elements.json');
+          elementsData = await response.json();
+          p.redraw();
+        } catch (err) {
+          console.error('Σφάλμα φόρτωσης:', err);
+        }
+      };
+
+      function getCategory(n) {
+        const alkaliMetals = [3, 11, 19, 37, 55, 87];
+        if (n === 1) return 'hydrogen-color';
+        if (alkaliMetals.includes(n)) return 'alkali-block';
+        if (n === 2 || [4,12,20,38,56,88].includes(n)) return 's-block';
+        if ((n >= 57 && n <= 70) || (n >= 89 && n <= 102)) return 'f-block';
+        if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
+        if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
+        return 'p-block';
       }
-
-      function getCategory(n) { /* ...unchanged... */ }
 
       function initializeRows() {
         rowsData = [];
         for (let i = 0; i < 9; i++) {
-          let cells = (i < 2) ? new Array(32).fill(null) : [];
           rowsData.push({
-            cells: cells,
+            cells: (i < 2) ? new Array(32).fill(null) : [],
             shiftedColumns: 0,
             currentSegment: 0,
             countInSegment: 0,
@@ -113,84 +135,152 @@
         phase = 1;
       }
 
-      function createCell(elObj) {
+      function createCell(number) {
         return {
-          number: elObj.number,
-          category: getCategory(elObj.number),
+          number: number,
+          category: getCategory(number),
           width: 40,
-          height: (getCategory(elObj.number) === 'group-name' ? 20 : 40),
-          details: elementsData[elObj.number - 1]
+          height: (getCategory(number) === 'group-name' ? 20 : 40),
+          details: elementsData[number - 1]
         };
       }
 
-      function drawBlock(p, blockType) {
+      // Βελτιωμένη σχεδίαση ανά καμβά
+      const drawBlock = (p, blockType) => {
         p.background(255);
         p.stroke(150);
         let y = 0;
         for (let row = 0; row < 9; row++) {
-          let cellH = row < 2 ? 20 : 40;
+          const cellH = row < 2 ? 20 : 40;
           let x = 0;
-          for (let col = 0; col < (blockType === 's' ? 2 : blockType === 'd' ? 10 : blockType === 'p' ? 6 : 14); col++) {
+          const cols = {
+            's': 2, 'f': 14, 'd': 10, 'p': 6
+          }[blockType];
+          
+          for (let col = 0; col < cols; col++) {
             const cell = findCell(blockType, row, col);
             if (cell) {
-              p.fill(CATEGORY_COLORS[cell.category]);
+              p.fill(CATEGORY_COLORS[cell.category] || '#fff');
               p.rect(x, y, 40, cellH, 5);
               p.fill(0);
-              p.text(cell.details?.symbol || '', x + 20, y + cellH/2);
+              p.textSize(12);
+              p.textAlign(p.CENTER, p.CENTER);
+              p.text(cell.details?.symbol || cell.number, x + 20, y + cellH/2);
             }
             x += 42;
           }
           y += cellH + 2;
         }
-      }
+      };
 
       function findCell(blockType, row, col) {
         const rowData = rowsData[row];
-        switch(blockType) {
-          case 's': return row === 0 ? rowData.cells[0] : rowData.cells[1];
-          case 'd': return rowData.cells[col + 2];
-          case 'p': return rowData.cells[col + 16];
-          case 'f': return rowData.cells[col + 2];
-        }
+        const indexMap = {
+          's': col < 2 ? col : null,
+          'f': col + 2,
+          'd': col + 2,
+          'p': col + 16
+        };
+        const idx = indexMap[blockType];
+        return (idx !== null && rowData.cells[idx]) ? rowData.cells[idx] : null;
       }
 
-      function addElementToCurrentRow() { /* ...adapted logic... */ }
+      // Διορθωμένη λογική συμπλήρωσης
+      function addElementToCurrentRow() {
+        if (phase !== 1 || globalElementNumber > 118) return;
+        
+        const row = rowsData[currentRowIndex];
+        if (currentRowIndex < 3 || currentRowIndex > 8) return;
+
+        const pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
+        if (!pattern) return;
+
+        const cell = createCell(globalElementNumber);
+        let targetIndex = row.insertionIndex;
+        
+        while (row.cells[targetIndex] !== null && targetIndex < row.cells.length) {
+          targetIndex++;
+        }
+        
+        if (targetIndex >= row.cells.length) row.cells.push(null);
+        row.cells[targetIndex] = cell;
+        
+        globalElementNumber++;
+        row.countInSegment++;
+        
+        if (row.countInSegment >= pattern.count) {
+          row.currentSegment++;
+          row.countInSegment = 0;
+          row.insertionIndex = row.cells.length;
+        }
+        
+        if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
+          currentRowIndex++;
+        }
+        
+        updateInfoPanel(cell);
+        redrawAll();
+      }
 
       function updateInfoPanel(cell) {
-        if (cell.details) {
-          document.getElementById('elementInfo').innerHTML = `${cell.details.name} (${cell.details.symbol})`;
-          document.getElementById('subshells').innerHTML = `Υποστιβάδες: ${cell.details.subshells}`;
-          document.getElementById('shells').innerHTML = `Στιβάδες: ${cell.details.shells}`;
-          document.getElementById('outerShell').innerHTML = `Εξωτερική: ${cell.details.outerShell}`;
-        }
+        if (!cell.details) return;
+        document.getElementById('elementInfo').innerHTML = 
+          `<strong>${cell.details.name} (${cell.details.symbol})</strong>`;
+        document.getElementById('subshells').textContent = 
+          `Υποστιβάδες: ${cell.details.subshells || 'N/A'}`;
+        document.getElementById('shells').textContent = 
+          `Στιβάδες: ${cell.details.shells || 'N/A'}`;
+        document.getElementById('outerShell').textContent = 
+          `Εξωτερική: ${cell.details.outerShell || 'N/A'}`;
       }
 
-      // P5 sketches για κάθε τομέα
-      const sketches = {
-        s: function(p) { /* ...drawing logic... */ },
-        d: function(p) { /* ...drawing logic... */ },
-        p: function(p) { /* ...drawing logic... */ },
-        f: function(p) { /* ...drawing logic... */ }
+      // Δημιουργία sketches με σωστό scope
+      const createSketch = (blockType) => (p) => {
+        p.preload = () => loadData(p);
+        
+        p.setup = () => {
+          const dims = {
+            's': [124, 336], 'f': [586, 336], 
+            'd': [418, 336], 'p': [250, 336]
+          }[blockType];
+          p.createCanvas(...dims);
+          p.noLoop();
+        };
+
+        p.draw = () => drawBlock(p, blockType);
       };
 
-      // Δημιουργία instances και event listeners
-      let sP5 = new p5(sketches.s, 'canvasS');
-      let dP5 = new p5(sketches.d, 'canvasD');
-      let pP5 = new p5(sketches.p, 'canvasP');
-      let fP5 = new p5(sketches.f, 'canvasF');
+      // Αρχικοποίηση sketches
+      let sSketch = createSketch('s');
+      let fSketch = createSketch('f');
+      let dSketch = createSketch('d');
+      let pSketch = createSketch('p');
 
+      const sP5 = new p5(sSketch, 'canvasS');
+      const fP5 = new p5(fSketch, 'canvasF');
+      const dP5 = new p5(dSketch, 'canvasD');
+      const pP5 = new p5(pSketch, 'canvasP');
+
+      function redrawAll() {
+        [sP5, fP5, dP5, pP5].forEach(sketch => sketch.redraw());
+      }
+
+      // Event listeners
       document.getElementById('nextElement').addEventListener('click', addElementToCurrentRow);
       document.getElementById('fillAll').addEventListener('click', () => {
         while(phase === 1 && globalElementNumber <= 118) addElementToCurrentRow();
       });
-      document.getElementById('reset').addEventListener('click', initializeRows);
+      document.getElementById('reset').addEventListener('click', () => {
+        initializeRows();
+        redrawAll();
+      });
       document.getElementById('toggleMode').addEventListener('click', () => {
         mode = mode === "full" ? "collapsed" : "full";
         document.body.className = mode;
       });
 
+      // Αρχική ρύθμιση
       initializeRows();
-      preload();
     })();
   </script>
 </body>
