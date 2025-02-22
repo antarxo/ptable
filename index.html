@@ -86,10 +86,18 @@
       // (collapsed: στον κύριο πίνακα εμφανίζεται μόνο ο s τομέας, ενώ ο overlay καμβάς σχεδιάζει τους τομείς d/p και τον μετατοπισμένο f)
       let hideFBlock = false;
       const colGap = 42;
+      // Προσθέτουμε το fillingPatterns στο scope
+      const fillingPatterns = [
+        [{ count: 8, shifting: true }],
+        [{ count: 8, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 10, shifting: true }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 14, shifting: true }, { count: 10, shifting: false }, { count: 6, shifting: false }],
+        [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
+      ];
       
       /* --- Data Loading --- */
       function preload() {
-        // Εάν υπάρχει αρχείο JSON:
         elementsData = loadJSON('elements.json', dataLoaded, dataError);
       }
       function dataLoaded(data) {
@@ -128,7 +136,6 @@
       function initialize() {
         rowsData = [];
         for (let i = 0; i < 9; i++) {
-          // Οι πρώτες 2 σειρές έχουν 32 κελιά (για τους αριθμούς ομάδας)
           let cells = (i < 2) ? new Array(32).fill(null) : [];
           rowsData.push({
             cells: cells,
@@ -351,7 +358,7 @@
       
       /* --- Λογική σχεδίασης για δύο καμβάδες --- */
       
-      // Σχεδιάζει τον πίνακα σε full mode
+      // Full mode στον κύριο πίνακα
       function drawFullTableMain(p) {
         p.background(247);
         let yOffset = 80;
@@ -410,7 +417,7 @@
         }
       }
       
-      // Σχεδιάζει collapsed mode στον κύριο καμβά: μόνο ο s τομέας (2 πρώτα κελιά)
+      // Collapsed mode στον κύριο πίνακα: μόνο ο s τομέας (2 πρώτα κελιά)
       function drawCollapsedTableMain(p) {
         p.background(247);
         let yOffset = 80;
@@ -469,12 +476,12 @@
         }
       }
       
-      // Σχεδιάζει το overlay (για τους τομείς d/p και τον μετατοπισμένο f) όταν collapsed mode είναι ενεργό
+      // Overlay: σχεδιάζει τα κελιά από index 2 (d/p) και τον f τομέα μετατοπισμένο προς τα κάτω
       function drawOverlay(p) {
         let yOverlay = 80;
         const groupRowsGap = 20;
         const normalGap = 42;
-        // Overlay για τους τομείς d και p: σχεδιάζει όλα τα κελιά από index 2
+        // Overlay για τους τομείς d και p:
         for (let rowIndex = 0; rowIndex < rowsData.length; rowIndex++) {
           let row = rowsData[rowIndex];
           if (row.cells.length > 2) {
@@ -482,7 +489,7 @@
             for (let i = 0; i < dpCells.length; i++) {
               let cell = dpCells[i];
               if (cell) {
-                let x = 80 + (i + 2) * colGap + 5; // Ξεκινά μετά τον s τομέα + 5px διάκενο
+                let x = 80 + (i + 2) * colGap + 5;
                 let y = yOverlay;
                 p.fill(CATEGORY_COLORS[cell.category] || cell.color);
                 p.stroke(85);
@@ -490,7 +497,7 @@
                 p.fill(0);
                 p.textSize(12);
                 p.textAlign(p.CENTER, p.CENTER);
-                p.text(String(cell.number || ''), x + 20, y + (cell.category==='group-name'?10:20));
+                p.text(String(cell.number || ''), x+20, y+(cell.category==='group-name'?10:20));
                 cell.drawX = x;
                 cell.drawY = y;
                 cell.drawW = 40;
@@ -500,7 +507,7 @@
           }
           yOverlay += (rowIndex < 2 ? groupRowsGap : normalGap);
         }
-        // Overlay για τον f τομέα: μετατοπισμένος προς τα κάτω (π.χ. +42px)
+        // Overlay για τον f τομέα:
         let fCells = [];
         for (let r = 0; r < rowsData.length; r++) {
           for (let i = 0; i < rowsData[r].cells.length; i++) {
@@ -525,7 +532,7 @@
           p.fill(0);
           p.textSize(12);
           p.textAlign(p.CENTER, p.CENTER);
-          p.text(String(cell.number || ''), x + 20, y + 20);
+          p.text(String(cell.number || ''), x+20, y+20);
           cell.drawX = x;
           cell.drawY = y;
           cell.drawW = 40;
@@ -543,7 +550,7 @@
           p.fill(0);
           p.textSize(12);
           p.textAlign(p.CENTER, p.CENTER);
-          p.text(String(cell.number || ''), x + 20, y + 20);
+          p.text(String(cell.number || ''), x+20, y+20);
           cell.drawX = x;
           cell.drawY = y;
           cell.drawW = 40;
@@ -551,7 +558,7 @@
         }
       }
       
-      /***** Δύο p5 Sketches *****/
+      /* --- Δύο p5 Sketches --- */
       
       // Sketch για τον κύριο πίνακα
       let sketchMain = function(p) {
