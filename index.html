@@ -21,55 +21,72 @@
       font-weight: bold;
       z-index: 10;
     }
-    /* Στυλ για το infoPanel */
+    /* Βασικό στυλ για το infoPanel */
     #infoPanel {
       display: flex;
       justify-content: space-between;
       align-items: stretch;
       position: absolute;
-      /* Οι διαστάσεις και η θέση ρυθμίζονται δυναμικά από τη JS */
       padding: 20px;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 10;
-      /* Οριζόντια διάταξη: τα τρία τμήματα στοιχίζονται οριζόντια */
+      /* Οριζόντια διάταξη: τα 3 τμήματα στοιχίζονται οριζόντια */
       flex-direction: row;
     }
-    /* Για την κατακόρυφη διάταξη */
-    #infoPanel.vertical {
-      transform: none;
-      flex-direction: column;
-    }
-    /* Εσωτερικά περιγράμματα στα τμήματα */
-    /* Στην οριζόντια διάταξη, τα αριστερό και κεντρικό τμήμα έχουν δεξί περίγραμμα */
+    /* Σε οριζόντια διάταξη, διαχωριστικά ενδιάμεσα */
     #infoPanel:not(.vertical) #leftPanel,
     #infoPanel:not(.vertical) #middlePanel {
       border-right: 1px solid #333;
     }
-    /* Στην κατακόρυφη διάταξη, τα πρώτα δύο τμήματα έχουν κάτω περίγραμμα */
+    /* Στο horizontal mode, κεντράρουμε τα περιεχόμενα του rightPanel */
+    #rightPanel {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    /* Στυλ για το infoPanel σε κατακόρυφη διάταξη */
+    #infoPanel.vertical {
+      flex-direction: column;
+      transform: none;
+    }
+    /* Σε κατακόρυφη διάταξη, προστίθενται τα εσωτερικά περιγράμματα */
     #infoPanel.vertical #leftPanel,
     #infoPanel.vertical #middlePanel {
       border-bottom: 1px solid #333;
     }
-    /* Βασικά στυλ για τα τμήματα του infoPanel */
-    #leftPanel, #middlePanel, #rightPanel {
+    /* Ορισμός των τριών κελιών σε vertical διάταξη:
+       - Το πάνω κελί (leftPanel) έχει σταθερό ύψος 100px.
+       - Το κάτω κελί (rightPanel, με κουμπιά) έχει ύψος 50px.
+       - Το μεσαίο (middlePanel) γεμίζει το υπόλοιπο.
+    */
+    #infoPanel.vertical #leftPanel {
+      flex: 0 0 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #infoPanel.vertical #middlePanel {
       flex: 1;
-      margin: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    /* Στην κατακόρυφη διάταξη, τα τμήματα στοιχίζονται κατακόρυφα με μικρό κάθετο διάστημα */
-    #infoPanel.vertical #leftPanel,
-    #infoPanel.vertical #middlePanel,
     #infoPanel.vertical #rightPanel {
-      margin: 10px 0;
+      flex: 0 0 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+    /* Στυλ για τα περιεχόμενα του middlePanel */
     #middlePanel {
       flex: 2;
       font-style: italic;
       color: #666;
       padding: 0 20px;
     }
-    /* Κουμπιά – βασικό στυλ */
+    /* Κουμπιά - βασικό στυλ */
     #rightPanel button {
       border: 1px solid #333;
       background: #fff;
@@ -82,12 +99,12 @@
       background: #333;
       color: #fff;
     }
-    /* Στυλ για κουμπιά στην οριζόντια διάταξη */
+    /* Κουμπιά στην οριζόντια διάταξη: μεγαλύτερο ύψος & font-size */
     #infoPanel:not(.vertical) #rightPanel button {
       padding: 8px 6px;
       font-size: 16px;
     }
-    /* Στυλ για κουμπιά στην κατακόρυφη διάταξη */
+    /* Κουμπιά στην κατακόρυφη διάταξη: μικρότερο ύψος & font-size */
     #infoPanel.vertical #rightPanel button {
       padding: 4px 6px;
       font-size: 14px;
@@ -347,33 +364,35 @@
       return yOffset;
     }
 
-    // Ρυθμίζει δυναμικά τις διαστάσεις και τη θέση του infoPanel ώστε να μην αγγίζει τις άκρες (με περιθώριο ίσο με colGap)
+    // Ρυθμίζει τις διαστάσεις και τη θέση του infoPanel σύμφωνα με το mode
     function updateInfoPanelDimensions() {
       const infoPanel = document.getElementById("infoPanel");
       if (!hideFBlock) {
-        // Expanded (οριζόντια) διάταξη:
-        const desiredWidth = 32 * colGap; // 1344px
+        // Horizontal mode:
+        const desiredWidth = 32 * colGap; // ~1344px
         const availableWidth = windowWidth - 2 * colGap;
-        // Επιλέγουμε το μικρότερο ανάμεσα στα δύο ώστε να διατηρηθεί το περιθώριο
         const finalWidth = Math.min(desiredWidth, availableWidth);
         infoPanel.style.width = finalWidth + "px";
+        // Ύψος 200px
+        infoPanel.style.height = "200px";
         const tableBottom = getTableBottom();
-        infoPanel.style.top = (tableBottom + colGap) + "px";
-        // Κεντράρουμε οριζόντια, αλλά διασφαλίζουμε περιθώριο από τις άκρες
+        // Μετατοπίστε το 60px πιο πάνω από την προηγούμενη θέση
+        infoPanel.style.top = (tableBottom + colGap - 60) + "px";
+        // Κεντράρουμε οριζόντια με περιθώριο
         let leftPos = (windowWidth - finalWidth) / 2;
         if (leftPos < colGap) leftPos = colGap;
         infoPanel.style.left = leftPos + "px";
         infoPanel.style.transform = "none";
-        infoPanel.style.height = (windowHeight - tableBottom - 2 * colGap) + "px";
       } else {
-        // Compact (κατακόρυφη) διάταξη:
-        const compactTableRight = 80 + 18 * colGap; // περίπου 836px
-        const firstPeriodTop = 120;
-        const availableWidth = windowWidth - (compactTableRight + 2 * colGap);
-        infoPanel.style.width = availableWidth + "px";
-        infoPanel.style.height = (windowHeight - firstPeriodTop - 2 * colGap) + "px";
-        infoPanel.style.left = (compactTableRight + colGap) + "px";
-        infoPanel.style.top = (firstPeriodTop + colGap) + "px";
+        // Vertical mode:
+        infoPanel.style.width = "500px";
+        infoPanel.style.height = "440px";
+        // Τοποθετούμε το infoPanel στα δεξιά του συνεπτυγμένου πίνακα (ο συνεπτυγμένος πίνακας εμφανίζει 18 στήλες)
+        const compactTableRight = 80 + 18 * colGap; // ~836px
+        // Τοποθετούμε με περιθώριο στο δεξί: (windowWidth - 500 - colGap)
+        infoPanel.style.left = (windowWidth - 500 - colGap) + "px";
+        // Η τοποθέτηση από την κορυφή βάσει της 1ης περιόδου (π.χ. 120px + colGap)
+        infoPanel.style.top = (120 + colGap) + "px";
         infoPanel.style.transform = "none";
       }
     }
@@ -446,7 +465,7 @@
       }
     }
 
-    // Σχεδίαση του f τομέα σε compact mode (με το ίδιο styling όπως στον κύριο πίνακα)
+    // Σχεδίαση του f τομέα σε compact mode, με το ίδιο styling όπως στον κύριο πίνακα
     function drawFBlockRegion() {
       let fCells = [];
       for (let r = 0; r < rowsData.length; r++) {
