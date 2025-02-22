@@ -114,7 +114,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body>
-  <div id="title">Δημιουργία Περιοδικού Πίνακα</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα - Τελική Εκδοχή</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -135,11 +135,11 @@
   </div>
 
   <script>
-    /* Ο κώδικας του Περιοδικού Πίνακα με τροποποιήσεις για overlay για τα στοιχεία d και p */
+    /* Κώδικας Περιοδικού Πίνακα με overlay για τους τομείς d και p και μετατόπιση του f τομέα */
 
     let elementsData = [];
     let globalMouseX = 0, globalMouseY = 0;
-    // false: horizontal mode, true: collapsed mode (overlay για d & p)
+    // false: κανονική λειτουργία, true: collapsed mode (overlay για d & p, f μετατοπισμένος)
     let hideFBlock = false;
     const colGap = 42; // μέτρο και περιθώριο
 
@@ -392,7 +392,7 @@
       }
     }
 
-    // drawTable: Σε collapsed mode εμφανίζονται μόνο τα κελιά του s τομέα (θέσεις 0-1)
+    // drawTable: Σε collapsed mode εμφανίζονται μόνο τα κελιά του s τομέα (indexes 0-1)
     function drawTable(){
       background(247);
       let yOffset = 80;
@@ -402,8 +402,9 @@
         let row = rowsData[rowIndex];
         let xOffset = 80;
         let cellsToDraw;
-        if(hideFBlock && row.cells.length >= 16){
-          cellsToDraw = row.cells.slice(0,2); // μόνο s τομέας
+        if(hideFBlock){
+          // Σ collapsed mode, δείχνουμε μόνο τα 2 πρώτα κελιά (s τομέας)
+          cellsToDraw = row.cells.slice(0,2);
         } else {
           cellsToDraw = row.cells;
         }
@@ -456,34 +457,35 @@
       }
     }
 
-    // drawDPOverlay: Σχεδιάζει το overlay για τα κελιά του d και p (θέσεις 2 έως 15)
+    // drawDPOverlay: Σχεδιάζει τα κελιά του d και p τομέα (από index 2 και μετά) ως overlay
     function drawDPOverlay(){
       let yOverlay = 80;
       const groupRowsGap = 20;
       const normalGap = 42;
       for(let rowIndex = 0; rowIndex < rowsData.length; rowIndex++){
         let row = rowsData[rowIndex];
-        if(row.cells.length >= 16){
-          let dpCells = row.cells.slice(2,16);
-          for(let i=0; i<dpCells.length; i++){
-            let cell = dpCells[i];
-            if(cell){
-              let x = 80 + (i+2)*colGap;
-              let y = yOverlay;
-              stroke(85);
-              fill(CATEGORY_COLORS[cell.category]);
-              rect(x, y, cell.width, cell.height, 5);
-              fill(0);
-              textSize(12);
-              textAlign(CENTER, CENTER);
-              text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
-            }
+        // Εξάγουμε όλα τα κελιά μετά το s τομέα
+        let dpCells = row.cells.slice(2);
+        for(let i=0; i<dpCells.length; i++){
+          let cell = dpCells[i];
+          if(cell){
+            let x = 80 + (i+2)*colGap;
+            let y = yOverlay;
+            stroke(85);
+            fill(CATEGORY_COLORS[cell.category]);
+            rect(x, y, cell.width, cell.height, 5);
+            fill(0);
+            textSize(12);
+            textAlign(CENTER, CENTER);
+            text(String(cell.number || ''), x + cell.width/2, y + cell.height/2);
           }
         }
         yOverlay += (rowIndex < 2 ? groupRowsGap : normalGap);
       }
     }
 
+    // drawFBlockRegion: Σχεδιάζει τον f τομέα.
+    // Αν είμαστε σε collapsed mode, προσθέτουμε offset ώστε να μετακινηθεί πιο κάτω.
     function drawFBlockRegion(){
       let fCells = [];
       for(let r = 0; r < rowsData.length; r++){
@@ -508,7 +510,8 @@
         return num >= 89 && num <= 102;
       });
       let startX = 80 + 84; 
-      let startY = 450;
+      // Αν collapsed mode είναι ενεργό, μετακινούμε τον f τομέα κάτω (προσθέτουμε offset 42px)
+      let startY = hideFBlock ? 450 + 42 : 450;
       for(let i = 0; i < lanthanides.length; i++){
         let cell = lanthanides[i];
         let x = startX + i * colGap;
@@ -607,11 +610,13 @@
       redraw();
     }
 
+    // Στην draw() καλούμε το drawTable() και, αν το collapsed mode είναι ενεργό,
+    // σχεδιάζουμε το overlay για τους τομείς d και p καθώς και τον f τομέα με μετατόπιση.
     function draw(){
       drawTable();
-      // Σε collapsed mode σχεδιάζουμε το overlay για τα d και p (θέσεις 2-15)
       if(hideFBlock){
         drawDPOverlay();
+        drawFBlockRegion();
       } else {
         drawFBlockRegion();
       }
