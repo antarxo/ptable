@@ -105,6 +105,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
 
+
   <script>
     (function() {
       const CATEGORY_COLORS = {
@@ -135,6 +136,17 @@
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
+          elements.forEach(e => {
+            // Εξασφάλιση ότι όλα τα απαραίτητα πεδία υπάρχουν
+            e.symbol = e.symbol || '';
+            e.name = e.name || 'Άγνωστο';
+            e.subshells = e.subshells || '';
+            e.shells = e.shells || '';
+            e.explanation = e.explanation || '';
+            e.block = e.block || 's';
+            e.row = e.row || 0;
+            e.col = e.col || 0;
+          });
           initializeCanvases();
         } catch (err) {
           console.error('Σφάλμα φόρτωσης:', err);
@@ -169,7 +181,7 @@
             p.fill(CATEGORY_COLORS.period);
             p.rect(0, row*42, 40, 40);
             p.fill(0);
-            p.text(PERIOD_LABELS[row], 20, row*42 + 20);
+            p.text(PERIOD_LABELS[row] || '', 20, row*42 + 20); // Εξασφάλιση ότι η τιμή δεν είναι undefined
           }
         }
 
@@ -178,14 +190,14 @@
           p.fill(CATEGORY_COLORS.group);
           p.rect((i+1)*42, 0, 40, 40);
           p.fill(0);
-          p.text(group, (i+1)*42 + 20, 20);
+          p.text(group || '', (i+1)*42 + 20, 20); // Εξασφάλιση ότι η τιμή δεν είναι undefined
         });
 
         CLASSIC_GROUPS.forEach((group, i) => {
           p.fill(CATEGORY_COLORS.group);
           p.rect((i+1)*42, 42, 40, 40);
           p.fill(0);
-          p.text(group, (i+1)*42 + 20, 62);
+          p.text(group || '', (i+1)*42 + 20, 62); // Εξασφάλιση ότι η τιμή δεν είναι undefined
         });
       }
 
@@ -196,7 +208,7 @@
           p.fill(CATEGORY_COLORS[`${block}-block`]);
           p.rect(x, y, 40, 40);
           p.fill(0);
-          p.text(e.symbol, x + 20, y + 20);
+          p.text(e.symbol || '', x + 20, y + 20); // Εξασφάλιση ότι η τιμή δεν είναι undefined
         });
       }
 
@@ -253,5 +265,6 @@
       loadElements();
     })();
   </script>
+
 </body>
 </html>
