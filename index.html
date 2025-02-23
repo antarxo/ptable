@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμικός Περιοδικός Πίνακας - Ολοκληρωμένη Έκδοση</title>
+  <title>Απλοποιημένος Περιοδικός Πίνακας</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -31,7 +31,6 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
       min-width: 800px;
-      max-height: 200px;
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
@@ -39,14 +38,9 @@
       z-index: 10;
     }
 
-    #leftPanel, #middlePanel {
-      border-right: 1px solid #333;
-      padding-right: 20px;
+    .panelSection {
+      padding: 0 15px;
     }
-
-    #leftPanel { flex: 0 0 30%; }
-    #middlePanel { flex: 0 0 50%; color: #666; }
-    #rightPanel { flex: 0 0 20%; }
 
     #rightPanel button {
       border: 1px solid #333;
@@ -69,36 +63,27 @@
       z-index: 1;
     }
 
-    .full #canvasS { top: 100px; left: 50px; width: 126px; height: 378px; }
-    .full #canvasF { top: 100px; left: 176px; width: 588px; height: 378px; }
-    .full #canvasD { top: 100px; left: 764px; width: 420px; height: 378px; }
-    .full #canvasP { top: 100px; left: 1184px; width: 252px; height: 378px; }
-
-    .collapsed #canvasS { top: 100px; left: 50px; width: 126px; height: 378px; }
-    .collapsed #canvasD { top: 100px; left: 176px; width: 420px; height: 378px; }
-    .collapsed #canvasP { top: 100px; left: 596px; width: 252px; height: 378px; }
-    .collapsed #canvasF { top: 200px; left: 176px; width: 588px; height: 378px; }
+    #canvasS { top: 100px; left: 50px; width: 84px; }
+    #canvasF { top: 100px; left: 150px; width: 588px; }
+    #canvasD { top: 100px; left: 750px; width: 420px; }
+    #canvasP { top: 100px; left: 1180px; width: 252px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
-<body class="full">
-  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
+<body>
+  <div id="title">Απλοποιημένος Περιοδικός Πίνακας</div>
   <div id="infoPanel">
-    <div id="leftPanel">
+    <div class="panelSection" id="leftPanel">
       <div id="elementInfo">Επιλέξτε στοιχείο</div>
       <div id="subshells"></div>
+    </div>
+    <div class="panelSection" id="middlePanel">
       <div id="shells"></div>
       <div id="outerShell"></div>
     </div>
-    <div id="middlePanel">
-      <div id="explanation"></div>
-      <div id="remarks"></div>
-    </div>
-    <div id="rightPanel">
+    <div class="panelSection" id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <button id="toggleMode">Εναλλαγή</button>
-      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
   </div>
@@ -110,36 +95,27 @@
 
   <script>
     (function() {
-      const CATEGORY_COLORS = {
+      const BLOCK_COLORS = {
         's': '#ffcccc',
         'p': '#ccffcc',
         'd': '#ccccff',
-        'f': '#ffe5cc',
-        'group': '#f0f0f0',
-        'period': '#e0e0e0'
+        'f': '#ffe5cc'
       };
 
-      const BLOCKS = {
+      const BLOCKS_CONFIG = {
         s: { cols: 2, rows: 7 },
         p: { cols: 6, rows: 7 },
-        d: { cols: 10, rows: 4 },
-        f: { cols: 14, rows: 2 }
+        d: { cols: 10, rows: 7 },
+        f: { cols: 14, rows: 7 }
       };
 
       let elements = [];
       let currentZ = 1;
-      let mode = 'full';
-      let hideFBlock = false;
 
       async function loadElements() {
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
-          elements.forEach(e => {
-            e.block = e.block.toLowerCase();
-            e.row = parseInt(e.row);
-            e.col = parseInt(e.col);
-          });
           initializeCanvases();
         } catch (err) {
           console.error('Σφάλμα φόρτωσης:', err);
@@ -147,52 +123,34 @@
       }
 
       function initializeCanvases() {
-        Object.keys(BLOCKS).forEach(block => {
+        Object.keys(BLOCKS_CONFIG).forEach(block => {
           new p5(p => {
             p.setup = () => {
-              const config = BLOCKS[block];
-              p.createCanvas(config.cols * 42, config.rows * 42)
-               .parent(`canvas${block.toUpperCase()}`);
-              p.textFont('Roboto');
-              p.textSize(12);
-              p.textAlign(p.CENTER, p.CENTER);
-              drawGrid(p, block);
+              const config = BLOCKS_CONFIG[block];
+              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+              canvas.parent(`canvas${block.toUpperCase()}`);
+              canvas.elt.style.height = `${config.rows * 42}px`;
+              p.noStroke();
               drawElements(p, block);
             };
           });
         });
       }
 
-      function drawGrid(p, block) {
-        // Σχεδίαση περιοδών
-        for(let row = 0; row < BLOCKS[block].rows; row++) {
-          p.fill(CATEGORY_COLORS.period);
-          p.rect(0, row*42, 40, 40);
-          p.fill(0);
-          p.text(row + 1, 20, row*42 + 20);
-        }
-
-        // Σχεδίαση ομάδων
-        for(let col = 0; col < BLOCKS[block].cols; col++) {
-          p.fill(CATEGORY_COLORS.group);
-          p.rect(col*42, 0, 40, 40);
-          p.fill(0);
-          p.text(col + 1, col*42 + 20, 20);
-        }
-      }
-
       function drawElements(p, block) {
         elements.filter(e => 
           e.block === block && 
           e.number <= currentZ &&
-          e.row <= BLOCKS[block].rows &&
-          e.col <= BLOCKS[block].cols
+          e.row <= BLOCKS_CONFIG[block].rows &&
+          e.col <= BLOCKS_CONFIG[block].cols
         ).forEach(e => {
           const x = (e.col - 1) * 42;
           const y = (e.row - 1) * 42;
-          p.fill(CATEGORY_COLORS[block]);
+          p.fill(BLOCK_COLORS[block]);
           p.rect(x, y, 40, 40, 5);
           p.fill(0);
+          p.textSize(12);
+          p.textAlign(p.CENTER, p.CENTER);
           p.text(e.symbol, x + 20, y + 20);
         });
       }
@@ -209,10 +167,6 @@
           `Στιβάδες: ${element.shells}`;
         document.getElementById('outerShell').textContent = 
           `Εξωτερική: ${element.outerShell}`;
-        document.getElementById('explanation').textContent = 
-          `Επεξήγηση: ${element.explanation}`;
-        document.getElementById('remarks').textContent = 
-          `Παρατηρήσεις: ${element.remarks}`;
       }
 
       // Event Listeners
@@ -231,42 +185,27 @@
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 1;
         redrawAll();
-        clearInfo();
-      });
-
-      document.getElementById('toggleMode').addEventListener('click', () => {
-        mode = mode === 'full' ? 'collapsed' : 'full';
-        document.body.className = mode;
-      });
-
-      document.getElementById('toggleFBlock').addEventListener('click', () => {
-        hideFBlock = !hideFBlock;
-        document.getElementById('canvasF').style.display = hideFBlock ? 'none' : 'block';
+        document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
+        document.getElementById('subshells').textContent = "";
+        document.getElementById('shells').textContent = "";
+        document.getElementById('outerShell').textContent = "";
       });
 
       function redrawAll() {
-        Object.keys(BLOCKS).forEach(block => {
+        Object.keys(BLOCKS_CONFIG).forEach(block => {
           const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
           canvasDiv.innerHTML = '';
           new p5(p => {
             p.setup = () => {
-              const config = BLOCKS[block];
-              p.createCanvas(config.cols * 42, config.rows * 42)
-               .parent(`canvas${block.toUpperCase()}`);
-              p.textFont('Roboto');
-              drawGrid(p, block);
+              const config = BLOCKS_CONFIG[block];
+              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+              canvas.parent(`canvas${block.toUpperCase()}`);
+              canvas.elt.style.height = `${config.rows * 42}px`;
+              p.noStroke();
               drawElements(p, block);
             };
           });
         });
-      }
-
-      function clearInfo() {
-        document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
-        document.getElementById('subshells').textContent = "";
-        document.getElementById('shells').textContent = "";
-        document.getElementById('explanation').textContent = "";
-        document.getElementById('remarks').textContent = "";
       }
 
       loadElements();
