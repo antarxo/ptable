@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δυναμικός Περιοδικός Πίνακας - Έκδοση Δοκιμής</title>
+  <title>Δυναμικός Περιοδικός Πίνακας - Βελτιωμένη Έκδοση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -88,14 +88,17 @@
       <div id="elementInfo">Επιλέξτε στοιχείο</div>
       <div id="subshells"></div>
       <div id="shells"></div>
+      <div id="outerShell"></div>
     </div>
     <div id="middlePanel">
       <div id="explanation"></div>
+      <div id="remarks"></div>
     </div>
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
       <button id="toggleMode">Εναλλαγή</button>
+      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
   </div>
@@ -104,7 +107,6 @@
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
-
 
   <script>
     (function() {
@@ -131,13 +133,13 @@
       let elements = [];
       let currentZ = 3;
       let mode = 'full';
+      let hideFBlock = false;
 
       async function loadElements() {
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
           elements.forEach(e => {
-            // Εξασφάλιση ότι όλα τα απαραίτητα πεδία υπάρχουν
             e.symbol = e.symbol || '';
             e.name = e.name || 'Άγνωστο';
             e.subshells = e.subshells || '';
@@ -175,29 +177,27 @@
       }
 
       function drawGrid(p, block) {
-        // Σχεδίαση περιόδων
         if(block === 's') {
           for(let row = 2; row < 9; row++) {
             p.fill(CATEGORY_COLORS.period);
             p.rect(0, row*42, 40, 40);
             p.fill(0);
-            p.text(PERIOD_LABELS[row] || '', 20, row*42 + 20); // Εξασφάλιση ότι η τιμή δεν είναι undefined
+            p.text(PERIOD_LABELS[row] || '', 20, row*42 + 20);
           }
         }
 
-        // Σχεδίαση ομάδων
         MODERN_GROUPS.forEach((group, i) => {
           p.fill(CATEGORY_COLORS.group);
           p.rect((i+1)*42, 0, 40, 40);
           p.fill(0);
-          p.text(group || '', (i+1)*42 + 20, 20); // Εξασφάλιση ότι η τιμή δεν είναι undefined
+          p.text(group || '', (i+1)*42 + 20, 20);
         });
 
         CLASSIC_GROUPS.forEach((group, i) => {
           p.fill(CATEGORY_COLORS.group);
           p.rect((i+1)*42, 42, 40, 40);
           p.fill(0);
-          p.text(group || '', (i+1)*42 + 20, 62); // Εξασφάλιση ότι η τιμή δεν είναι undefined
+          p.text(group || '', (i+1)*42 + 20, 62);
         });
       }
 
@@ -208,7 +208,7 @@
           p.fill(CATEGORY_COLORS[`${block}-block`]);
           p.rect(x, y, 40, 40);
           p.fill(0);
-          p.text(e.symbol || '', x + 20, y + 20); // Εξασφάλιση ότι η τιμή δεν είναι undefined
+          p.text(e.symbol || '', x + 20, y + 20);
         });
       }
 
@@ -222,11 +222,14 @@
           `Υποστιβάδες: ${element.subshells}`;
         document.getElementById('shells').textContent = 
           `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').textContent = 
+          `Εξωτερική: ${element.outerShell}`;
         document.getElementById('explanation').textContent = 
           `Επεξήγηση: ${element.explanation}`;
+        document.getElementById('remarks').textContent = 
+          `Παρατηρήσεις: ${element.remarks}`;
       }
 
-      // Event listeners
       document.getElementById('nextElement').addEventListener('click', () => {
         if(currentZ > 118) return;
         currentZ++;
@@ -246,6 +249,7 @@
         document.getElementById('subshells').textContent = "";
         document.getElementById('shells').textContent = "";
         document.getElementById('explanation').textContent = "";
+        document.getElementById('remarks').textContent = "";
       });
 
       document.getElementById('toggleMode').addEventListener('click', () => {
@@ -253,18 +257,21 @@
         document.body.className = mode;
       });
 
+      document.getElementById('toggleFBlock').addEventListener('click', () => {
+        hideFBlock = !hideFBlock;
+        redrawAll();
+      });
+
       function redrawAll() {
         Object.keys(BLOCKS).forEach(block => {
           const canvas = document.querySelector(`#canvas${block.toUpperCase()} canvas`);
           if(canvas) canvas.remove();
-          new p5(p => {}); // Επαναδημιουργία καμβά
+          new p5(p => {});
         });
       }
 
-      // Αρχικοποίηση
       loadElements();
     })();
   </script>
-
 </body>
 </html>
