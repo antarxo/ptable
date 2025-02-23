@@ -63,17 +63,15 @@
       color: #fff;
     }
 
-    /* Full mode */
-    .full #canvasS { top: 100px; left: 50px; width: 124px; height: 376px; }
-    .full #canvasF { top: 100px; left: 174px; width: 586px; height: 376px; }
-    .full #canvasD { top: 100px; left: 760px; width: 418px; height: 376px; }
-    .full #canvasP { top: 100px; left: 1178px; width: 250px; height: 376px; }
+    .full #canvasS { top: 100px; left: 50px; width: 126px; height: 378px; }
+    .full #canvasF { top: 100px; left: 176px; width: 588px; height: 378px; }
+    .full #canvasD { top: 100px; left: 764px; width: 420px; height: 378px; }
+    .full #canvasP { top: 100px; left: 1184px; width: 252px; height: 378px; }
 
-    /* Collapsed mode */
-    .collapsed #canvasS { top: 100px; left: 50px; width: 124px; height: 376px; }
-    .collapsed #canvasD { top: 100px; left: 174px; width: 418px; height: 376px; }
-    .collapsed #canvasP { top: 100px; left: 592px; width: 250px; height: 376px; }
-    .collapsed #canvasF { top: 200px; left: 174px; width: 586px; height: 376px; }
+    .collapsed #canvasS { top: 100px; left: 50px; width: 126px; height: 378px; }
+    .collapsed #canvasD { top: 100px; left: 176px; width: 420px; height: 378px; }
+    .collapsed #canvasP { top: 100px; left: 596px; width: 252px; height: 378px; }
+    .collapsed #canvasF { top: 200px; left: 176px; width: 588px; height: 378px; }
 
     .canvas {
       position: absolute;
@@ -113,41 +111,51 @@
         's-block': '#ffcccc',
         'p-block': '#ccffcc',
         'd-block': '#ccccff',
-        'f-block': '#ffe5cc'
+        'f-block': '#ffe5cc',
+        'group': '#f0f0f0',
+        'period': '#e0e0e0'
       };
 
-      const BLOCK_CONFIG = {
-        s: { cols: 3, rows: 9, elements: [], canvas: null },
-        p: { cols: 6, rows: 9, elements: [], canvas: null },
-        d: { cols: 10, rows: 9, elements: [], canvas: null },
-        f: { cols: 14, rows: 9, elements: [], canvas: null }
+      const BLOCKS = {
+        s: { cols: 3, rows: 9, startRow: 2, startCol: 1 },
+        p: { cols: 6, rows: 9, startRow: 2, startCol: 1 },
+        d: { cols: 10, rows: 9, startRow: 2, startCol: 1 },
+        f: { cols: 14, rows: 9, startRow: 2, startCol: 1 }
       };
 
-      const PERIOD_LABELS = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+      const PERIOD_LABELS = ["", "", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+      const MODERN_GROUPS = ["1", "2", "3-12", "13", "14", "15", "16", "17", "18"];
+      const CLASSIC_GROUPS = ["IA","IIA","IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIA"];
+
       let elements = [];
-      let currentZ = 1;
+      let currentZ = 3;
       let mode = 'full';
 
-      async function loadElements() {
-        try {
-          const response = await fetch('elements.json');
-          elements = await response.json();
-          initializeCanvases();
-        } catch (err) {
-          console.error('Σφάλμα φόρτωσης:', err);
+      // Δεδομένα δοκιμής
+      const sampleElements = [
+        {
+          z: 3, symbol: 'Li', name: 'Λίθιο',
+          subshells: '1s² 2s¹', shells: '2',
+          block: 's', row: 2, col: 1
+        },
+        {
+          z: 4, symbol: 'Be', name: 'Βηρύλλιο',
+          subshells: '1s² 2s²', shells: '2',
+          block: 's', row: 2, col: 2
         }
-      }
+      ];
 
-      function initializeCanvases() {
-        Object.keys(BLOCK_CONFIG).forEach(block => {
-          const config = BLOCK_CONFIG[block];
-          config.canvas = new p5(p => {
+      function initialize() {
+        // Δημιουργία καμβάδων
+        Object.keys(BLOCKS).forEach(block => {
+          new p5(p => {
             p.setup = () => {
-              const width = config.cols * 42 - 2;
-              const height = config.rows * 42 - 2;
-              p.createCanvas(width, height).parent(`canvas${block.toUpperCase()}`);
+              const config = BLOCKS[block];
+              p.createCanvas(config.cols * 42, config.rows * 42)
+               .parent(`canvas${block.toUpperCase()}`);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
+              drawGrid(p, block);
             };
 
             p.draw = () => {
@@ -160,70 +168,47 @@
       }
 
       function drawGrid(p, block) {
-        p.stroke(200);
-        // Σχεδίαση ονομάτων περιόδων για s-block
+        // Σχεδίαση περιόδων
         if(block === 's') {
-          for(let row = 0; row < 7; row++) {
-            p.fill(230);
+          for(let row = 2; row < 9; row++) {
+            p.fill(CATEGORY_COLORS.period);
             p.rect(0, row*42, 40, 40);
             p.fill(0);
             p.text(PERIOD_LABELS[row], 20, row*42 + 20);
           }
         }
-        
-        // Σχεδίαση πλέγματος
-        for(let x = 0; x <= p.width; x += 42) p.line(x, 0, x, p.height);
-        for(let y = 0; y <= p.height; y += 42) p.line(0, y, p.width, y);
-      }
 
-      function drawElements(p, blockType) {
-        BLOCK_CONFIG[blockType].elements.forEach(element => {
-          const x = element.col * 42;
-          const y = element.row * 42;
-          p.fill(CATEGORY_COLORS[element.category]);
-          p.noStroke();
-          p.rect(x, y, 40, 40);
+        // Σχεδίαση ομάδων
+        MODERN_GROUPS.forEach((group, i) => {
+          p.fill(CATEGORY_COLORS.group);
+          p.rect((i+1)*42, 0, 40, 40);
           p.fill(0);
-          p.text(element.number, x + 20, y + 20);
+          p.text(group, (i+1)*42 + 20, 20);
+        });
+
+        CLASSIC_GROUPS.forEach((group, i) => {
+          p.fill(CATEGORY_COLORS.group);
+          p.rect((i+1)*42, 42, 40, 40);
+          p.fill(0);
+          p.text(group, (i+1)*42 + 20, 62);
         });
       }
 
-      function addElement(z) {
-        const element = elements.find(e => e.number === z);
-        if(!element) return;
-
-        const block = getBlockType(z);
-        const position = calculatePosition(z, block);
-        
-        if(position) {
-          BLOCK_CONFIG[block].elements.push({
-            ...position,
-            number: z,
-            category: block + '-block'
-          });
-          redrawAll();
-        }
-      }
-
-      function getBlockType(z) {
-        if(z === 1 || z === 2 || (z >= 3 && z <= 4)) return 's';
-        if(z >= 21 && z <= 30) return 'd';
-        if(z >= 39 && z <= 48) return 'd';
-        if(z >= 5 && z <= 10) return 'p';
-        if(z >= 13 && z <= 18) return 'p';
-        if(z >= 58 && z <= 71) return 'f';
-        if(z >= 90 && z <= 103) return 'f';
-        return 's';
-      }
-
-      function calculatePosition(z, block) {
-        // Λογική υπολογισμού θέσης για κάθε block
-        // (Απαιτείται προσαρμογή με βάση το elements.json)
-        return { row: 0, col: z-1 }; // Προσωρινή υλοποίηση
+      function drawElements(p, block) {
+        sampleElements.filter(e => e.block === block).forEach(e => {
+          if(e.z > currentZ) return;
+          
+          const x = (e.col - 1) * 42;
+          const y = (e.row - 1) * 42;
+          p.fill(CATEGORY_COLORS[`${block}-block`]);
+          p.rect(x, y, 40, 40);
+          p.fill(0);
+          p.text(e.symbol, x + 20, y + 20);
+        });
       }
 
       function updateInfo(z) {
-        const element = elements.find(e => e.number === z);
+        const element = sampleElements.find(e => e.z === z);
         if(!element) return;
         
         document.getElementById('elementInfo').innerHTML = 
@@ -232,34 +217,27 @@
           `Υποστιβάδες: ${element.subshells}`;
         document.getElementById('shells').textContent = 
           `Στιβάδες: ${element.shells}`;
-        document.getElementById('explanation').textContent = 
-          `Επεξήγηση: ${element.explanation}`;
       }
 
-      function redrawAll() {
-        Object.values(BLOCK_CONFIG).forEach(config => config.canvas.redraw());
-      }
-
-      // Event Listeners
+      // Event listeners
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ > 118) return;
-        addElement(currentZ);
-        updateInfo(currentZ);
+        if(currentZ > 4) return;
         currentZ++;
+        updateInfo(currentZ);
+        redrawAll();
       });
 
       document.getElementById('fillAll').addEventListener('click', () => {
-        while(currentZ <= 118) addElement(currentZ++);
+        currentZ = 118;
+        redrawAll();
       });
 
       document.getElementById('reset').addEventListener('click', () => {
-        currentZ = 1;
-        Object.values(BLOCK_CONFIG).forEach(config => config.elements = []);
+        currentZ = 3;
         redrawAll();
         document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
         document.getElementById('subshells').textContent = "";
         document.getElementById('shells').textContent = "";
-        document.getElementById('explanation').textContent = "";
       });
 
       document.getElementById('toggleMode').addEventListener('click', () => {
@@ -267,8 +245,16 @@
         document.body.className = mode;
       });
 
+      function redrawAll() {
+        Object.keys(BLOCKS).forEach(block => {
+          const canvas = document.querySelector(`#canvas${block.toUpperCase()} canvas`);
+          if(canvas) canvas.remove();
+          new p5(p => {}); // Επαναδημιουργία καμβά
+        });
+      }
+
       // Αρχικοποίηση
-      loadElements();
+      initialize();
     })();
   </script>
 </body>
