@@ -5,18 +5,65 @@
   <title>Στατικός Περιοδικός Πίνακας</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
-    /* ... όλα τα styles όπως στο προηγούμενο παράδειγμα ... */
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      margin: 0;
+      overflow: hidden;
+      background: #f7f7f7;
+    }
+
+    #title {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    #infoPanel {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.95);
+      border: 2px solid #333;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 10;
+      padding: 20px;
+      min-width: 800px;
+      max-height: 200px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 500px;
+    }
+
+    /* ... υπόλοιπο CSS όπως προηγουμένως ... */
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body class="full">
   <div id="title">Στατικός Περιοδικός Πίνακας</div>
   <div id="infoPanel">
-    <!-- ... ίδια δομή πληροφοριών ... -->
+    <div id="leftPanel">
+      <div id="elementInfo">Επιλέξτε στοιχείο</div>
+      <div id="subshells"></div>
+      <div id="shells"></div>
+      <div id="outerShell"></div>
+      <div id="explanation"></div>
+    </div>
+    <div id="middlePanel">
+      <div id="remarks"></div>
+    </div>
+    <div id="rightPanel">
+      <button id="nextElement">Επόμενο</button>
+      <button id="fillAll">Συμπλήρωσε</button>
+      <button id="toggleMode">Εναλλαγή Mode</button>
+      <button id="reset">Reset</button>
+    </div>
   </div>
-  <div id="controls">
-    <!-- ... ίδια κουμπιά ελέγχου ... -->
-  </div>
+
   <div id="canvasS"></div>
   <div id="canvasF"></div>
   <div id="canvasD"></div>
@@ -24,19 +71,20 @@
 
   <script>
     (function() {
+      // Δήλωση σταθερών και μεταβλητών
       const BLOCK_STRUCTURE = {
-        's': { cols: 2, start: 1, rows: [ [1,2], [3,4], [11,12], [19,20], [37,38], [55,56], [87,88] ] },
-        'f': { cols: 14, start: 58, rows: [ 
-          Array.from({length:14}, (_,i) => 58 + i), // Λανθανίδες
-          Array.from({length:14}, (_,i) => 90 + i)  // Ακτινίδες
+        's': { cols: 2, rows: [ [1,2], [3,4], [11,12], [19,20], [37,38], [55,56], [87,88] ] },
+        'f': { cols: 14, rows: [ 
+          Array.from({length:14}, (_,i) => 58 + i),
+          Array.from({length:14}, (_,i) => 90 + i)
         ]},
-        'd': { cols: 10, start: 21, rows: [
+        'd': { cols: 10, rows: [
           Array.from({length:10}, (_,i) => 21 + i),
           Array.from({length:10}, (_,i) => 39 + i),
           Array.from({length:10}, (_,i) => 71 + i),
           Array.from({length:10}, (_,i) => 103 + i)
         ]},
-        'p': { cols: 6, start: 5, rows: [
+        'p': { cols: 6, rows: [
           [5,6,7,8,9,10],
           [13,14,15,16,17,18],
           [31,32,33,34,35,36],
@@ -51,6 +99,7 @@
       let currentElement = 3;
       let mode = "full";
 
+      // Φόρτωση δεδομένων
       async function loadData() {
         try {
           const response = await fetch('elements.json');
@@ -58,6 +107,54 @@
         } catch (err) {
           console.error('Σφάλμα φόρτωσης:', err);
         }
+      }
+
+      // Επισύναψη event listeners μετά από DOMContentLoaded
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('nextElement').addEventListener('click', addNextElement);
+        document.getElementById('fillAll').addEventListener('click', fillAll);
+        document.getElementById('reset').addEventListener('click', reset);
+        document.getElementById('toggleMode').addEventListener('click', toggleMode);
+      });
+
+      // Λειτουργίες συμπλήρωσης
+      function addNextElement() {
+        if(currentElement > 118) return;
+        
+        const pos = findPosition(currentElement);
+        if(pos) {
+          filledElements.add(currentElement);
+          updateInfoPanel(currentElement);
+          redrawAll();
+        }
+        currentElement++;
+      }
+
+      function fillAll() {
+        while(currentElement <= 118) addNextElement();
+      }
+
+      function reset() {
+        filledElements.clear();
+        currentElement = 3;
+        redrawAll();
+        clearInfoPanel();
+      }
+
+      function toggleMode() {
+        mode = mode === "full" ? "collapsed" : "full";
+        document.body.className = mode;
+      }
+
+      // Βοηθητικές συναρτήσεις
+      function findPosition(number) {
+        const blockType = getBlockType(number);
+        const block = BLOCK_STRUCTURE[blockType];
+        for(let rowIdx = 0; rowIdx < block.rows.length; rowIdx++) {
+          const colIdx = block.rows[rowIdx].indexOf(number);
+          if(colIdx > -1) return { blockType, row: rowIdx, col: colIdx };
+        }
+        return null;
       }
 
       function getBlockType(number) {
@@ -71,15 +168,34 @@
         return 's';
       }
 
-      function findPosition(number) {
-        const block = BLOCK_STRUCTURE[getBlockType(number)];
-        for(let rowIdx = 0; rowIdx < block.rows.length; rowIdx++) {
-          const colIdx = block.rows[rowIdx].indexOf(number);
-          if(colIdx > -1) return { block, row: rowIdx, col: colIdx };
-        }
-        return null;
+      function updateInfoPanel(number) {
+        const element = elementsData.find(e => e.number === number);
+        if(!element) return;
+        
+        document.getElementById('elementInfo').innerHTML = 
+          `<strong>${element.name} (${element.symbol}) [Z=${number}]</strong>`;
+        document.getElementById('subshells').textContent = 
+          `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').textContent = 
+          `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').textContent = 
+          `Εξωτερική: ${element.outerShell}`;
+        document.getElementById('explanation').textContent = 
+          `Επεξήγηση: ${element.explanation}`;
+        document.getElementById('remarks').textContent = 
+          `Παρατηρήσεις: ${element.remarks}`;
       }
 
+      function clearInfoPanel() {
+        document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
+        document.getElementById('subshells').textContent = "";
+        document.getElementById('shells').textContent = "";
+        document.getElementById('outerShell').textContent = "";
+        document.getElementById('explanation').textContent = "";
+        document.getElementById('remarks').textContent = "";
+      }
+
+      // Σχεδίαση καμβάδων
       function drawBlock(p, blockType) {
         p.background(255);
         p.stroke(150);
@@ -103,49 +219,31 @@
         }
       }
 
-      function addNextElement() {
-        if(currentElement > 118) return;
-        
-        const pos = findPosition(currentElement);
-        if(pos) {
-          filledElements.add(currentElement);
-          updateInfoPanel(currentElement);
-          redrawAll();
-        }
-        currentElement++;
-      }
-
-      function updateInfoPanel(number) {
-        const element = elementsData.find(e => e.number === number);
-        if(!element) return;
-        
-        document.getElementById('elementInfo').innerHTML = 
-          `<strong>${element.name} (${element.symbol}) [Z=${number}]</strong>`;
-        // ... ενημέρωση υπολοίπων πεδίων ...
-      }
-
-      // Δημιουργία sketches και event listeners
+      // Δημιουργία sketches
       const sketches = {
-        s: new p5(p => { p.setup = () => p.createCanvas(124, 336); p.draw = () => drawBlock(p, 's') }, 'canvasS'),
-        f: new p5(p => { p.setup = () => p.createCanvas(586, 336); p.draw = () => drawBlock(p, 'f') }, 'canvasF'),
-        d: new p5(p => { p.setup = () => p.createCanvas(418, 336); p.draw = () => drawBlock(p, 'd') }, 'canvasD'),
-        p: new p5(p => { p.setup = () => p.createCanvas(250, 336); p.draw = () => drawBlock(p, 'p') }, 'canvasP')
+        s: new p5(p => { 
+          p.setup = () => p.createCanvas(124, 336); 
+          p.draw = () => drawBlock(p, 's') 
+        }, 'canvasS'),
+        f: new p5(p => { 
+          p.setup = () => p.createCanvas(586, 336); 
+          p.draw = () => drawBlock(p, 'f') 
+        }, 'canvasF'),
+        d: new p5(p => { 
+          p.setup = () => p.createCanvas(418, 336); 
+          p.draw = () => drawBlock(p, 'd') 
+        }, 'canvasD'),
+        p: new p5(p => { 
+          p.setup = () => p.createCanvas(250, 336); 
+          p.draw = () => drawBlock(p, 'p') 
+        }, 'canvasP')
       };
 
       function redrawAll() {
         Object.values(sketches).forEach(s => s.redraw());
       }
 
-      document.getElementById('nextElement').addEventListener('click', addNextElement);
-      document.getElementById('fillAll').addEventListener('click', () => {
-        while(currentElement <= 118) addNextElement();
-      });
-      document.getElementById('reset').addEventListener('click', () => {
-        filledElements.clear();
-        currentElement = 3;
-        redrawAll();
-      });
-
+      // Αρχικοποίηση
       loadData();
     })();
   </script>
