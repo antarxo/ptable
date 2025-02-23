@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Roboto', Arial, sans-serif;
+      font-family: 'Roboto', sans-serif;
       margin: 0;
       overflow: hidden;
       background: #f7f7f7;
@@ -64,16 +64,16 @@
     }
 
     /* Full mode */
-    .full #canvasS { top: 100px; left: 50px; width: 84px; height: 336px; }
-    .full #canvasF { top: 100px; left: 134px; width: 588px; height: 336px; }
-    .full #canvasD { top: 100px; left: 722px; width: 420px; height: 336px; }
-    .full #canvasP { top: 100px; left: 1142px; width: 252px; height: 336px; }
+    .full #canvasS { top: 100px; left: 50px; width: 124px; height: 376px; }
+    .full #canvasF { top: 100px; left: 174px; width: 586px; height: 376px; }
+    .full #canvasD { top: 100px; left: 760px; width: 418px; height: 376px; }
+    .full #canvasP { top: 100px; left: 1178px; width: 250px; height: 376px; }
 
     /* Collapsed mode */
-    .collapsed #canvasS { top: 100px; left: 50px; width: 84px; height: 336px; }
-    .collapsed #canvasD { top: 100px; left: 134px; width: 420px; height: 336px; }
-    .collapsed #canvasP { top: 100px; left: 554px; width: 252px; height: 336px; }
-    .collapsed #canvasF { top: 200px; left: 134px; width: 588px; height: 336px; }
+    .collapsed #canvasS { top: 100px; left: 50px; width: 124px; height: 376px; }
+    .collapsed #canvasD { top: 100px; left: 174px; width: 418px; height: 376px; }
+    .collapsed #canvasP { top: 100px; left: 592px; width: 250px; height: 376px; }
+    .collapsed #canvasF { top: 200px; left: 174px; width: 586px; height: 376px; }
 
     .canvas {
       position: absolute;
@@ -113,68 +113,115 @@
         's-block': '#ffcccc',
         'p-block': '#ccffcc',
         'd-block': '#ccccff',
-        'f-block': '#ffe5cc',
-        'group': '#f0f0f0',
-        'period': '#e0e0e0'
+        'f-block': '#ffe5cc'
+      };
+
+      const BLOCK_CONFIG = {
+        s: { cols: 3, rows: 9, elements: [], canvas: null },
+        p: { cols: 6, rows: 9, elements: [], canvas: null },
+        d: { cols: 10, rows: 9, elements: [], canvas: null },
+        f: { cols: 14, rows: 9, elements: [], canvas: null }
       };
 
       const PERIOD_LABELS = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
-      const MODERN_GROUPS = Array.from({length: 18}, (_,i) => i+1);
-      const CLASSIC_GROUPS = ["IA","IIA","IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB","IIIA","IVA","VA","VIA","VIIA","VIIIA"];
-      
       let elements = [];
-      let currentZ = 3;
+      let currentZ = 1;
       let mode = 'full';
 
-      // Αρχικοποίηση καμβάδων
-      const blocks = {
-        s: { cols: 2, rows: 7, canvas: null, elements: [] },
-        d: { cols: 10, rows: 4, canvas: null, elements: [] },
-        p: { cols: 6, rows: 6, canvas: null, elements: [] },
-        f: { cols: 14, rows: 2, canvas: null, elements: [] }
-      };
-
-      // Φόρτωση δεδομένων
       async function loadElements() {
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
+          initializeCanvases();
         } catch (err) {
           console.error('Σφάλμα φόρτωσης:', err);
         }
       }
 
-      // Σχεδίαση πλέγματος
-      function drawGrid(p, blockType) {
-        p.background(255);
-        const {cols, rows} = blocks[blockType];
-        
-        // Σχεδίαση ονομάτων περιόδων (s-block)
-        if(blockType === 's') {
-          for(let row=0; row<rows; row++) {
-            p.fill(CATEGORY_COLORS.period);
+      function initializeCanvases() {
+        Object.keys(BLOCK_CONFIG).forEach(block => {
+          const config = BLOCK_CONFIG[block];
+          config.canvas = new p5(p => {
+            p.setup = () => {
+              const width = config.cols * 42 - 2;
+              const height = config.rows * 42 - 2;
+              p.createCanvas(width, height).parent(`canvas${block.toUpperCase()}`);
+              p.textSize(12);
+              p.textAlign(p.CENTER, p.CENTER);
+            };
+
+            p.draw = () => {
+              p.background(247);
+              drawGrid(p, block);
+              drawElements(p, block);
+            };
+          });
+        });
+      }
+
+      function drawGrid(p, block) {
+        p.stroke(200);
+        // Σχεδίαση ονομάτων περιόδων για s-block
+        if(block === 's') {
+          for(let row = 0; row < 7; row++) {
+            p.fill(230);
             p.rect(0, row*42, 40, 40);
             p.fill(0);
-            p.textAlign(p.CENTER, p.CENTER);
             p.text(PERIOD_LABELS[row], 20, row*42 + 20);
           }
         }
+        
+        // Σχεδίαση πλέγματος
+        for(let x = 0; x <= p.width; x += 42) p.line(x, 0, x, p.height);
+        for(let y = 0; y <= p.height; y += 42) p.line(0, y, p.width, y);
       }
 
-      // Δημιουργία καμβάδων
-      Object.keys(blocks).forEach(block => {
-        blocks[block].canvas = new p5(p => {
-          p.setup = () => {
-            const width = block === 's' ? 84 : block === 'f' ? 588 : block === 'd' ? 420 : 252;
-            p.createCanvas(width, 336);
-            p.textSize(12);
-            p.textFont('Roboto');
-          };
-          p.draw = () => drawGrid(p, block);
-        }, `canvas${block.toUpperCase()}`);
-      });
+      function drawElements(p, blockType) {
+        BLOCK_CONFIG[blockType].elements.forEach(element => {
+          const x = element.col * 42;
+          const y = element.row * 42;
+          p.fill(CATEGORY_COLORS[element.category]);
+          p.noStroke();
+          p.rect(x, y, 40, 40);
+          p.fill(0);
+          p.text(element.number, x + 20, y + 20);
+        });
+      }
 
-      // Ενημέρωση πληροφοριών
+      function addElement(z) {
+        const element = elements.find(e => e.number === z);
+        if(!element) return;
+
+        const block = getBlockType(z);
+        const position = calculatePosition(z, block);
+        
+        if(position) {
+          BLOCK_CONFIG[block].elements.push({
+            ...position,
+            number: z,
+            category: block + '-block'
+          });
+          redrawAll();
+        }
+      }
+
+      function getBlockType(z) {
+        if(z === 1 || z === 2 || (z >= 3 && z <= 4)) return 's';
+        if(z >= 21 && z <= 30) return 'd';
+        if(z >= 39 && z <= 48) return 'd';
+        if(z >= 5 && z <= 10) return 'p';
+        if(z >= 13 && z <= 18) return 'p';
+        if(z >= 58 && z <= 71) return 'f';
+        if(z >= 90 && z <= 103) return 'f';
+        return 's';
+      }
+
+      function calculatePosition(z, block) {
+        // Λογική υπολογισμού θέσης για κάθε block
+        // (Απαιτείται προσαρμογή με βάση το elements.json)
+        return { row: 0, col: z-1 }; // Προσωρινή υλοποίηση
+      }
+
       function updateInfo(z) {
         const element = elements.find(e => e.number === z);
         if(!element) return;
@@ -189,16 +236,35 @@
           `Επεξήγηση: ${element.explanation}`;
       }
 
-      // Επικοινωνία με χρήστη
+      function redrawAll() {
+        Object.values(BLOCK_CONFIG).forEach(config => config.canvas.redraw());
+      }
+
+      // Event Listeners
       document.getElementById('nextElement').addEventListener('click', () => {
         if(currentZ > 118) return;
+        addElement(currentZ);
         updateInfo(currentZ);
         currentZ++;
       });
 
+      document.getElementById('fillAll').addEventListener('click', () => {
+        while(currentZ <= 118) addElement(currentZ++);
+      });
+
       document.getElementById('reset').addEventListener('click', () => {
-        currentZ = 3;
-        updateInfo(0);
+        currentZ = 1;
+        Object.values(BLOCK_CONFIG).forEach(config => config.elements = []);
+        redrawAll();
+        document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
+        document.getElementById('subshells').textContent = "";
+        document.getElementById('shells').textContent = "";
+        document.getElementById('explanation').textContent = "";
+      });
+
+      document.getElementById('toggleMode').addEventListener('click', () => {
+        mode = mode === 'full' ? 'collapsed' : 'full';
+        document.body.className = mode;
       });
 
       // Αρχικοποίηση
