@@ -22,7 +22,6 @@
       z-index: 10;
     }
 
-    /* Πίνακας Πληροφοριών όπως στο last.html */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -61,12 +60,6 @@
       z-index: 1;
     }
 
-    /* Στρογγυλεμένες γωνίες για κελιά */
-    .cell {
-      border-radius: 5px;
-      border: 1px solid rgba(0,0,0,0.1);
-    }
-
     /* Full mode */
     .full #canvasS { top: 100px; left: 50px; width: 84px; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; }
@@ -75,9 +68,9 @@
 
     /* Collapsed mode */
     .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasD { top: 100px; left: 140px; }
-    .collapsed #canvasP { top: 100px; left: 566px; }
-    .collapsed #canvasF { top: 200px; left: 140px; }
+    .collapsed #canvasD { top: 100px; left: 140px; } /* 50px + 84px + 6px */
+    .collapsed #canvasP { top: 100px; left: 566px; } /* 140px + 420px + 6px */
+    .collapsed #canvasF { top: 200px; left: 50px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -125,7 +118,6 @@
 
       let elements = [];
       let currentZ = 1;
-      let currentMode = 'full';
 
       async function loadElements() {
         try {
@@ -145,7 +137,6 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              p.noStroke();
               drawElements(p, block);
             };
           });
@@ -166,6 +157,9 @@
       }
 
       function drawElements(p, block) {
+        p.stroke(150); // Γκρι περίγραμμα
+        p.strokeWeight(1);
+        
         elements.filter(e => 
           e.block === block && 
           e.number <= currentZ
@@ -193,7 +187,6 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              p.noStroke();
               drawElements(p, block);
             };
           });
@@ -243,8 +236,8 @@
       });
 
       document.getElementById('toggleFBlock').addEventListener('click', () => {
-        const fCanvas = document.getElementById('canvasF');
-        fCanvas.style.display = fCanvas.style.display === 'none' ? 'block' : 'none';
+        document.body.classList.toggle('collapsed');
+        redrawAll();
       });
 
       loadElements();
