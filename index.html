@@ -139,6 +139,7 @@
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
+          console.log("Elements loaded:", elements); // Εκτύπωσε τα δεδομένα για έλεγχο
           elements.forEach(e => {
             e.symbol = e.symbol || '';
             e.name = e.name || 'Άγνωστο';
@@ -164,11 +165,6 @@
                .parent(`canvas${block.toUpperCase()}`);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
-              drawGrid(p, block);
-            };
-
-            p.draw = () => {
-              p.background(247);
               drawGrid(p, block);
               drawElements(p, block);
             };
@@ -203,12 +199,12 @@
 
       function drawElements(p, block) {
         elements.filter(e => e.block === block && e.number <= currentZ).forEach(e => {
-          const x = (e.col - 1) * 42;
-          const y = (e.row - 1) * 42;
+          const x = (e.col - 1) * 42; // Μετατροπή της στήλης σε pixel
+          const y = (e.row - 1) * 42; // Μετατροπή της γραμμής σε pixel
           p.fill(CATEGORY_COLORS[`${block}-block`]);
           p.rect(x, y, 40, 40);
           p.fill(0);
-          p.text(e.symbol || '', x + 20, y + 20);
+          p.text(e.symbol || '', x + 20, y + 20); // Κέντρο του κελιού
         });
       }
 
@@ -231,7 +227,7 @@
       }
 
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ > 118) return;
+        if (currentZ > 118) return;
         currentZ++;
         updateInfo(currentZ);
         redrawAll();
@@ -265,8 +261,18 @@
       function redrawAll() {
         Object.keys(BLOCKS).forEach(block => {
           const canvas = document.querySelector(`#canvas${block.toUpperCase()} canvas`);
-          if(canvas) canvas.remove();
-          new p5(p => {});
+          if (canvas) canvas.remove();
+          new p5(p => {
+            p.setup = () => {
+              const config = BLOCKS[block];
+              p.createCanvas(config.cols * 42, config.rows * 42)
+               .parent(`canvas${block.toUpperCase()}`);
+              p.textSize(12);
+              p.textAlign(p.CENTER, p.CENTER);
+              drawGrid(p, block);
+              drawElements(p, block);
+            };
+          });
         });
       }
 
