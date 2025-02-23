@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Βελτιωμένος Περιοδικός Πίνακας</title>
+  <title>Τελικός Περιοδικός Πίνακας</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -42,7 +42,7 @@
       position: absolute;
       background: transparent;
       z-index: 1;
-      border: 1px solid rgba(0,0,0,0.1); /* Αχνό περίγραμμα */
+      border: 1px solid rgba(0,0,0,0.1);
     }
 
     /* Full mode */
@@ -147,7 +147,59 @@
         });
       }
 
+      function redrawAll() {
+        Object.keys(BLOCKS_CONFIG).forEach(block => {
+          const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
+          canvasDiv.innerHTML = '';
+          new p5(p => {
+            p.setup = () => {
+              const config = BLOCKS_CONFIG[block];
+              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+              canvas.parent(`canvas${block.toUpperCase()}`);
+              canvas.elt.style.height = `${config.rows * 42}px`;
+              p.noStroke();
+              drawElements(p, block);
+            };
+          });
+        });
+        updateInfo(currentZ);
+      }
+
+      function updateInfo(z) {
+        const element = elements.find(e => e.number === z);
+        if(!element) return;
+        
+        document.getElementById('elementInfo').innerHTML = 
+          `<strong>${element.name} (${element.symbol})</strong> [Z=${z}]`;
+        document.getElementById('subshells').textContent = 
+          `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').textContent = 
+          `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').textContent = 
+          `Εξωτερική: ${element.outerShell}`;
+      }
+
       // Event Listeners
+      document.getElementById('nextElement').addEventListener('click', () => {
+        if (currentZ >= 118) return;
+        currentZ++;
+        redrawAll();
+      });
+
+      document.getElementById('fillAll').addEventListener('click', () => {
+        currentZ = 118;
+        redrawAll();
+      });
+
+      document.getElementById('reset').addEventListener('click', () => {
+        currentZ = 1;
+        redrawAll();
+        document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
+        document.getElementById('subshells').textContent = "";
+        document.getElementById('shells').textContent = "";
+        document.getElementById('outerShell').textContent = "";
+      });
+
       document.getElementById('toggleMode').addEventListener('click', () => {
         currentMode = currentMode === 'full' ? 'collapsed' : 'full';
         document.body.className = currentMode;
@@ -159,7 +211,7 @@
         fCanvas.style.display = fCanvas.style.display === 'none' ? 'block' : 'none';
       });
 
-      // ... υπόλοιπες συναρτήσεις όπως πριν ...
+      loadElements();
     })();
   </script>
 </body>
