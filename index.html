@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Στατικός Περιοδικός Πίνακας</title>
+  <title>Δυναμικός Περιοδικός Πίνακας - Τελική Έκδοση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -29,7 +29,6 @@
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 10;
       padding: 20px;
       min-width: 800px;
       max-height: 200px;
@@ -37,14 +36,70 @@
       left: 50%;
       transform: translateX(-50%);
       top: 500px;
+      z-index: 10;
     }
 
-    /* ... υπόλοιπο CSS όπως προηγουμένως ... */
+    #leftPanel, #middlePanel {
+      border-right: 1px solid #333;
+      padding-right: 20px;
+    }
+
+    #leftPanel {
+      flex: 0 0 30%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #middlePanel {
+      flex: 0 0 50%;
+      font-style: italic;
+      color: #666;
+      padding: 0 20px;
+    }
+
+    #rightPanel {
+      flex: 0 0 20%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    #rightPanel button {
+      border: 1px solid #333;
+      background: #fff;
+      border-radius: 5px;
+      padding: 8px 6px;
+      margin: 4px 0;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    #rightPanel button:hover {
+      background: #333;
+      color: #fff;
+    }
+
+    .full #canvasS { top: 100px; left: 50px; width: 84px; height: 336px; }
+    .full #canvasF { top: 100px; left: 134px; width: 588px; height: 336px; }
+    .full #canvasD { top: 100px; left: 722px; width: 420px; height: 336px; }
+    .full #canvasP { top: 100px; left: 1142px; width: 252px; height: 336px; }
+
+    .collapsed #canvasS { top: 100px; left: 50px; width: 84px; height: 336px; }
+    .collapsed #canvasD { top: 100px; left: 134px; width: 420px; height: 336px; }
+    .collapsed #canvasP { top: 100px; left: 554px; width: 252px; height: 336px; }
+    .collapsed #canvasF { top: 200px; left: 134px; width: 588px; height: 336px; }
+
+    #canvasS, #canvasF, #canvasD, #canvasP {
+      position: absolute;
+      background: #f7f7f7;
+      border: none !important;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body class="full">
-  <div id="title">Στατικός Περιοδικός Πίνακας</div>
+  <div id="title">Δυναμική Δημιουργία Περιοδικού Πίνακα</div>
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo">Επιλέξτε στοιχείο</div>
@@ -71,27 +126,12 @@
 
   <script>
     (function() {
-      // Δήλωση σταθερών και μεταβλητών
-      const BLOCK_STRUCTURE = {
-        's': { cols: 2, rows: [ [1,2], [3,4], [11,12], [19,20], [37,38], [55,56], [87,88] ] },
-        'f': { cols: 14, rows: [ 
-          Array.from({length:14}, (_,i) => 58 + i),
-          Array.from({length:14}, (_,i) => 90 + i)
-        ]},
-        'd': { cols: 10, rows: [
-          Array.from({length:10}, (_,i) => 21 + i),
-          Array.from({length:10}, (_,i) => 39 + i),
-          Array.from({length:10}, (_,i) => 71 + i),
-          Array.from({length:10}, (_,i) => 103 + i)
-        ]},
-        'p': { cols: 6, rows: [
-          [5,6,7,8,9,10],
-          [13,14,15,16,17,18],
-          [31,32,33,34,35,36],
-          [49,50,51,52,53,54],
-          [81,82,83,84,85,86],
-          [113,114,115,116,117,118]
-        ]}
+      const CATEGORY_COLORS = {
+        'alkali-block': '#ff9999',
+        's-block': '#ffcccc',
+        'p-block': '#ccffcc',
+        'd-block': '#ccccff',
+        'f-block': '#ffe5cc'
       };
 
       let elementsData = [];
@@ -99,7 +139,43 @@
       let currentElement = 3;
       let mode = "full";
 
-      // Φόρτωση δεδομένων
+      const BLOCK_STRUCTURE = {
+        's': {
+          cols: 2,
+          rows: [
+            [1,2], [3,4], [11,12], [19,20], 
+            [37,38], [55,56], [87,88]
+          ]
+        },
+        'f': {
+          cols: 14,
+          rows: [
+            Array.from({length:14}, (_,i) => 58 + i),
+            Array.from({length:14}, (_,i) => 90 + i)
+          ]
+        },
+        'd': {
+          cols: 10,
+          rows: [
+            Array.from({length:10}, (_,i) => 21 + i),
+            Array.from({length:10}, (_,i) => 39 + i),
+            Array.from({length:10}, (_,i) => 71 + i),
+            Array.from({length:10}, (_,i) => 103 + i)
+          ]
+        },
+        'p': {
+          cols: 6,
+          rows: [
+            [5,6,7,8,9,10],
+            [13,14,15,16,17,18],
+            [31,32,33,34,35,36],
+            [49,50,51,52,53,54],
+            [81,82,83,84,85,86],
+            [113,114,115,116,117,118]
+          ]
+        }
+      };
+
       async function loadData() {
         try {
           const response = await fetch('elements.json');
@@ -109,15 +185,41 @@
         }
       }
 
-      // Επισύναψη event listeners μετά από DOMContentLoaded
-      document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('nextElement').addEventListener('click', addNextElement);
-        document.getElementById('fillAll').addEventListener('click', fillAll);
-        document.getElementById('reset').addEventListener('click', reset);
-        document.getElementById('toggleMode').addEventListener('click', toggleMode);
-      });
+      function getCategory(number) {
+        const alkali = [3,11,19,37,55,87];
+        if(alkali.includes(number)) return 'alkali-block';
+        if(number <= 2) return 's-block';
+        if(number >= 21 && number <= 30) return 'd-block';
+        if(number >= 5 && number <= 10) return 'p-block';
+        if(number >= 58 && number <= 71) return 'f-block';
+        if(number >= 90 && number <= 103) return 'f-block';
+        return 's-block';
+      }
 
-      // Λειτουργίες συμπλήρωσης
+      function drawBlock(p, blockType) {
+        p.background(247);
+        const block = BLOCK_STRUCTURE[blockType];
+        
+        for(let row = 0; row < block.rows.length; row++) {
+          for(let col = 0; col < block.cols; col++) {
+            const number = block.rows[row][col];
+            const x = col * 42;
+            const y = row * 42;
+            
+            if(filledElements.has(number)) {
+              const category = getCategory(number);
+              p.fill(CATEGORY_COLORS[category]);
+              p.noStroke();
+              p.rect(x, y, 40, 40, 5);
+              p.fill(0);
+              p.textSize(14);
+              p.textAlign(p.CENTER, p.CENTER);
+              p.text(number, x + 20, y + 20);
+            }
+          }
+        }
+      }
+
       function addNextElement() {
         if(currentElement > 118) return;
         
@@ -130,23 +232,6 @@
         currentElement++;
       }
 
-      function fillAll() {
-        while(currentElement <= 118) addNextElement();
-      }
-
-      function reset() {
-        filledElements.clear();
-        currentElement = 3;
-        redrawAll();
-        clearInfoPanel();
-      }
-
-      function toggleMode() {
-        mode = mode === "full" ? "collapsed" : "full";
-        document.body.className = mode;
-      }
-
-      // Βοηθητικές συναρτήσεις
       function findPosition(number) {
         const blockType = getBlockType(number);
         const block = BLOCK_STRUCTURE[blockType];
@@ -186,7 +271,10 @@
           `Παρατηρήσεις: ${element.remarks}`;
       }
 
-      function clearInfoPanel() {
+      function reset() {
+        filledElements.clear();
+        currentElement = 3;
+        redrawAll();
         document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
         document.getElementById('subshells').textContent = "";
         document.getElementById('shells').textContent = "";
@@ -195,47 +283,27 @@
         document.getElementById('remarks').textContent = "";
       }
 
-      // Σχεδίαση καμβάδων
-      function drawBlock(p, blockType) {
-        p.background(255);
-        p.stroke(150);
-        const block = BLOCK_STRUCTURE[blockType];
-        
-        for(let row = 0; row < block.rows.length; row++) {
-          for(let col = 0; col < block.cols; col++) {
-            const number = block.rows[row][col];
-            const x = col * 42;
-            const y = row * 42;
-            
-            if(filledElements.has(number)) {
-              p.fill(200);
-              p.rect(x, y, 40, 40, 5);
-              p.fill(0);
-              p.textSize(14);
-              p.textAlign(p.CENTER, p.CENTER);
-              p.text(number, x + 20, y + 20);
-            }
-          }
-        }
+      function toggleMode() {
+        mode = mode === "full" ? "collapsed" : "full";
+        document.body.className = mode;
       }
 
-      // Δημιουργία sketches
       const sketches = {
-        s: new p5(p => { 
-          p.setup = () => p.createCanvas(124, 336); 
-          p.draw = () => drawBlock(p, 's') 
+        s: new p5(p => {
+          p.setup = () => p.createCanvas(84, 336);
+          p.draw = () => drawBlock(p, 's');
         }, 'canvasS'),
-        f: new p5(p => { 
-          p.setup = () => p.createCanvas(586, 336); 
-          p.draw = () => drawBlock(p, 'f') 
+        f: new p5(p => {
+          p.setup = () => p.createCanvas(588, 336);
+          p.draw = () => drawBlock(p, 'f');
         }, 'canvasF'),
-        d: new p5(p => { 
-          p.setup = () => p.createCanvas(418, 336); 
-          p.draw = () => drawBlock(p, 'd') 
+        d: new p5(p => {
+          p.setup = () => p.createCanvas(420, 336);
+          p.draw = () => drawBlock(p, 'd');
         }, 'canvasD'),
-        p: new p5(p => { 
-          p.setup = () => p.createCanvas(250, 336); 
-          p.draw = () => drawBlock(p, 'p') 
+        p: new p5(p => {
+          p.setup = () => p.createCanvas(252, 336);
+          p.draw = () => drawBlock(p, 'p');
         }, 'canvasP')
       };
 
@@ -243,7 +311,15 @@
         Object.values(sketches).forEach(s => s.redraw());
       }
 
-      // Αρχικοποίηση
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('nextElement').addEventListener('click', addNextElement);
+        document.getElementById('fillAll').addEventListener('click', () => {
+          while(currentElement <= 118) addNextElement();
+        });
+        document.getElementById('reset').addEventListener('click', reset);
+        document.getElementById('toggleMode').addEventListener('click', toggleMode);
+      });
+
       loadData();
     })();
   </script>
