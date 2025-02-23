@@ -131,22 +131,17 @@
       let currentZ = 3;
       let mode = 'full';
 
-      // Δεδομένα δοκιμής
-      const sampleElements = [
-        {
-          z: 3, symbol: 'Li', name: 'Λίθιο',
-          subshells: '1s² 2s¹', shells: '2',
-          block: 's', row: 2, col: 1
-        },
-        {
-          z: 4, symbol: 'Be', name: 'Βηρύλλιο',
-          subshells: '1s² 2s²', shells: '2',
-          block: 's', row: 2, col: 2
+      async function loadElements() {
+        try {
+          const response = await fetch('elements.json');
+          elements = await response.json();
+          initializeCanvases();
+        } catch (err) {
+          console.error('Σφάλμα φόρτωσης:', err);
         }
-      ];
+      }
 
-      function initialize() {
-        // Δημιουργία καμβάδων
+      function initializeCanvases() {
         Object.keys(BLOCKS).forEach(block => {
           new p5(p => {
             p.setup = () => {
@@ -195,9 +190,7 @@
       }
 
       function drawElements(p, block) {
-        sampleElements.filter(e => e.block === block).forEach(e => {
-          if(e.z > currentZ) return;
-          
+        elements.filter(e => e.block === block && e.number <= currentZ).forEach(e => {
           const x = (e.col - 1) * 42;
           const y = (e.row - 1) * 42;
           p.fill(CATEGORY_COLORS[`${block}-block`]);
@@ -208,7 +201,7 @@
       }
 
       function updateInfo(z) {
-        const element = sampleElements.find(e => e.z === z);
+        const element = elements.find(e => e.number === z);
         if(!element) return;
         
         document.getElementById('elementInfo').innerHTML = 
@@ -217,11 +210,13 @@
           `Υποστιβάδες: ${element.subshells}`;
         document.getElementById('shells').textContent = 
           `Στιβάδες: ${element.shells}`;
+        document.getElementById('explanation').textContent = 
+          `Επεξήγηση: ${element.explanation}`;
       }
 
       // Event listeners
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ > 4) return;
+        if(currentZ > 118) return;
         currentZ++;
         updateInfo(currentZ);
         redrawAll();
@@ -238,6 +233,7 @@
         document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
         document.getElementById('subshells').textContent = "";
         document.getElementById('shells').textContent = "";
+        document.getElementById('explanation').textContent = "";
       });
 
       document.getElementById('toggleMode').addEventListener('click', () => {
@@ -254,7 +250,7 @@
       }
 
       // Αρχικοποίηση
-      initialize();
+      loadElements();
     })();
   </script>
 </body>
