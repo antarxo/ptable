@@ -22,15 +22,17 @@
       z-index: 10;
     }
 
+    /* Πίνακας Πληροφοριών όπως στο last.html */
     #infoPanel {
       display: flex;
       flex-direction: row;
       justify-content: space-between;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
+      border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      min-width: 800px;
+      width: 1200px;
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
@@ -38,10 +40,31 @@
       z-index: 10;
     }
 
+    #leftPanel, #middlePanel {
+      border-right: 1px solid #ccc;
+      padding-right: 20px;
+    }
+
+    #leftPanel { width: 30%; }
+    #middlePanel { width: 50%; }
+    #rightPanel { width: 20%; }
+
+    #remarks {
+      font-style: italic;
+      color: #666;
+      margin-top: 10px;
+    }
+
     .canvas {
       position: absolute;
       background: transparent;
       z-index: 1;
+    }
+
+    /* Στρογγυλεμένες γωνίες για κελιά */
+    .cell {
+      border-radius: 5px;
+      border: 1px solid rgba(0,0,0,0.1);
     }
 
     /* Full mode */
@@ -52,28 +75,29 @@
 
     /* Collapsed mode */
     .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasD { top: 100px; left: 134px; }
-    .collapsed #canvasP { top: 100px; left: 554px; }
-    .collapsed #canvasF { top: 200px; left: 134px; }
+    .collapsed #canvasD { top: 100px; left: 140px; }
+    .collapsed #canvasP { top: 100px; left: 566px; }
+    .collapsed #canvasF { top: 200px; left: 140px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body class="full">
   <div id="title">Περιοδικός Πίνακας - Ατομικοί Αριθμοί</div>
   <div id="infoPanel">
-    <div class="panelSection" id="leftPanel">
-      <div id="elementInfo">Επιλέξτε στοιχείο</div>
+    <div id="leftPanel">
+      <div id="elementInfo"></div>
       <div id="subshells"></div>
-    </div>
-    <div class="panelSection" id="middlePanel">
       <div id="shells"></div>
       <div id="outerShell"></div>
     </div>
-    <div class="panelSection" id="rightPanel">
+    <div id="middlePanel">
+      <div id="explanation"></div>
+      <div id="remarks"></div>
+    </div>
+    <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <button id="toggleMode">Εναλλαγή</button>
-      <button id="toggleFBlock">Εμφάνιση f-στοιχείων</button>
+      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
   </div>
@@ -133,9 +157,9 @@
         
         switch(block) {
           case 's': x = (e.col - 1) * 42; break;
-          case 'f': x = (e.col - 3) * 42; break; // Μετατόπιση 2 στήλες αριστερά
-          case 'd': x = (e.col - 3) * 42; break; // Μετατόπιση 2 στήλες αριστερά
-          case 'p': x = (e.col - 13) * 42; break; // Μετατόπιση 12 στήλες αριστερά
+          case 'f': x = (e.col - 3) * 42; break;
+          case 'd': x = (e.col - 3) * 42; break;
+          case 'p': x = (e.col - 13) * 42; break;
         }
         
         return {x, y};
@@ -150,7 +174,7 @@
           
           if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
             p.fill(BLOCK_COLORS[block]);
-            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.rect(pos.x, pos.y, 40, 40, 5); // Στρογγυλεμένες γωνίες 5px
             p.fill(0);
             p.textSize(e.number > 99 ? 10 : 12);
             p.textAlign(p.CENTER, p.CENTER);
@@ -189,6 +213,10 @@
           `Στιβάδες: ${element.shells}`;
         document.getElementById('outerShell').textContent = 
           `Εξωτερική: ${element.outerShell}`;
+        document.getElementById('explanation').textContent = 
+          `Επεξήγηση: ${element.explanation}`;
+        document.getElementById('remarks').textContent = 
+          `Παρατηρήσεις: ${element.remarks}`;
       }
 
       // Event Listeners
@@ -206,16 +234,12 @@
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 1;
         redrawAll();
-        document.getElementById('elementInfo').textContent = "Επιλέξτε στοιχείο";
+        document.getElementById('elementInfo').textContent = "";
         document.getElementById('subshells').textContent = "";
         document.getElementById('shells').textContent = "";
         document.getElementById('outerShell').textContent = "";
-      });
-
-      document.getElementById('toggleMode').addEventListener('click', () => {
-        currentMode = currentMode === 'full' ? 'collapsed' : 'full';
-        document.body.className = currentMode;
-        redrawAll();
+        document.getElementById('explanation').textContent = "";
+        document.getElementById('remarks').textContent = "";
       });
 
       document.getElementById('toggleFBlock').addEventListener('click', () => {
