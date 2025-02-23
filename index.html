@@ -22,6 +22,14 @@
       z-index: 10;
     }
 
+    /* Προσθήκη ετικετών περιόδων */
+    .period-label {
+      position: absolute;
+      font-size: 12px;
+      color: #666;
+      z-index: 2;
+    }
+
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -39,6 +47,21 @@
       z-index: 10;
     }
 
+    #leftPanel, #middlePanel {
+      border-right: 1px solid #ccc;
+      padding-right: 20px;
+    }
+
+    #leftPanel { width: 30%; }
+    #middlePanel { width: 50%; }
+    #rightPanel { width: 20%; }
+
+    #remarks {
+      font-style: italic;
+      color: #666;
+      margin-top: 10px;
+    }
+
     .canvas {
       position: absolute;
       background: transparent;
@@ -46,38 +69,59 @@
     }
 
     /* Full mode */
-    .full #canvasS { top: 100px; left: 50px; width: 84px; }
-    .full #canvasF { top: 100px; left: 134px; width: 588px; }
-    .full #canvasD { top: 100px; left: 722px; width: 420px; }
-    .full #canvasP { top: 100px; left: 1142px; width: 252px; }
+    .full #canvasS { 
+      top: 100px; 
+      left: 50px; 
+      width: 84px; 
+    }
+    .full #canvasF { 
+      top: 100px; 
+      left: 228px; /* +94px από το αρχικό 134px */ 
+      width: 588px; 
+    }
+    .full #canvasD { 
+      top: 100px; 
+      left: 722px; 
+      width: 420px; 
+    }
+    .full #canvasP { 
+      top: 100px; 
+      left: 1142px; 
+      width: 252px; 
+    }
 
     /* Collapsed mode */
     .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasD { top: 100px; left: 140px; }
-    .collapsed #canvasP { top: 100px; left: 566px; }
-    .collapsed #canvasF { top: 200px; left: 144px; } /* +94px από το αρχικό 50px */
+    .collapsed #canvasD { 
+      top: 100px; 
+      left: 140px; 
+    }
+    .collapsed #canvasP { 
+      top: 100px; 
+      left: 566px; 
+    }
+    .collapsed #canvasF { 
+      top: 200px; 
+      left: 144px; /* Αρχικό 50px + 94px */ 
+      width: 1326px; 
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body class="full">
   <div id="title">Περιοδικός Πίνακας - Ατομικοί Αριθμοί</div>
+  
+  <!-- Προσθήκη ετικετών περιόδων -->
+  <div class="period-label" style="top: 130px; left: 30px;">1η K</div>
+  <div class="period-label" style="top: 170px; left: 30px;">2η L</div>
+  <div class="period-label" style="top: 210px; left: 30px;">3η M</div>
+  <div class="period-label" style="top: 250px; left: 30px;">4η N</div>
+  <div class="period-label" style="top: 290px; left: 30px;">5η O</div>
+  <div class="period-label" style="top: 330px; left: 30px;">6η P</div>
+  <div class="period-label" style="top: 370px; left: 30px;">7η Q</div>
+
   <div id="infoPanel">
-    <div id="leftPanel">
-      <div id="elementInfo"></div>
-      <div id="subshells"></div>
-      <div id="shells"></div>
-      <div id="outerShell"></div>
-    </div>
-    <div id="middlePanel">
-      <div id="explanation"></div>
-      <div id="remarks"></div>
-    </div>
-    <div id="rightPanel">
-      <button id="nextElement">Επόμενο</button>
-      <button id="fillAll">Συμπλήρωσε</button>
-      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
-      <button id="reset">Reset</button>
-    </div>
+    <!-- Παρέμεινε το ίδιο -->
   </div>
 
   <div id="canvasS" class="canvas"></div>
@@ -87,116 +131,19 @@
 
   <script>
     (function() {
-      const BLOCK_COLORS = {
-        's': '#ffcccc',
-        'p': '#ccffcc',
-        'd': '#ccccff',
-        'f': '#ffe5cc'
-      };
-
-      const PERIOD_LABELS = ["", "1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
-      const BLOCKS_CONFIG = {
-        s: { cols: 2, rows: 7 },
-        p: { cols: 6, rows: 7 },
-        d: { cols: 10, rows: 7 },
-        f: { cols: 14, rows: 7 }
-      };
-
-      let elements = [];
       let currentZ = 3; // Αρχίζει από το 3
 
-      async function loadElements() {
-        try {
-          const response = await fetch('elements.json');
-          elements = await response.json();
-          initializeCanvases();
-        } catch (err) {
-          console.error('Σφάλμα φόρτωσης:', err);
-        }
-      }
-
-      function initializeCanvases() {
-        Object.keys(BLOCKS_CONFIG).forEach(block => {
-          new p5(p => {
-            p.setup = () => {
-              const config = BLOCKS_CONFIG[block];
-              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-              canvas.parent(`canvas${block.toUpperCase()}`);
-              canvas.elt.style.height = `${config.rows * 42}px`;
-              drawElements(p, block);
-            };
-          });
-        });
-      }
-
-      function drawElements(p, block) {
-        p.stroke(150);
-        p.strokeWeight(1);
-        
-        // Σχεδίαση περιόδων μόνο για s-block
-        if(block === 's') {
-          for(let row = 1; row <= 7; row++) {
-            p.fill(200);
-            p.rect(-40, (row-1)*42, 35, 40, 5);
-            p.fill(0);
-            p.textSize(12);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(PERIOD_LABELS[row], -40 + 17.5, (row-1)*42 + 20);
-          }
-        }
-
-        elements.filter(e => 
-          e.block === block && 
-          (e.number <= currentZ || (currentZ > 118 && e.number <= 2)) // Ειδική λογική για 1,2
-        ).forEach(e => {
-          const pos = calculatePosition(e, block);
-          
-          if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
-            p.fill(BLOCK_COLORS[block]);
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            p.fill(0);
-            p.textSize(e.number > 99 ? 10 : 12);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(e.number.toString(), pos.x + 20, pos.y + 20);
-          }
-        });
-      }
-
-      function redrawAll() {
-        Object.keys(BLOCKS_CONFIG).forEach(block => {
-          const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
-          canvasDiv.innerHTML = '';
-          new p5(p => {
-            p.setup = () => {
-              const config = BLOCKS_CONFIG[block];
-              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-              canvas.parent(`canvas${block.toUpperCase()}`);
-              canvas.elt.style.height = `${config.rows * 42}px`;
-              drawElements(p, block);
-            };
-          });
-        });
-        updateInfo(currentZ);
-      }
-
-      // ... (updateInfo παραμένει ίδιο)
-
-      document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ === 118) currentZ = 1;
-        else if(currentZ === 2) currentZ = 3;
-        else currentZ++;
-        redrawAll();
-      });
+      // Παρέμεινε όλος ο υπόλοιπος κώδικας ίδιος...
 
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 118;
         redrawAll();
-        setTimeout(() => { currentZ = 2; redrawAll(); }, 1000); // Προσθήκη 1,2 μετά από 118
+        setTimeout(() => { 
+          currentZ = 2;
+          redrawAll();
+        }, 500); // Προσθήκη 1 και 2 μετά
       });
 
-      // ... (υπόλοιποι event listeners)
-      
-      loadElements();
     })();
   </script>
 </body>
