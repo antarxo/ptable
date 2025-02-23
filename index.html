@@ -23,12 +23,22 @@
     }
 
     .period-label {
+      display: none;
       position: absolute;
       font-size: 12px;
       color: #333;
       font-weight: bold;
       z-index: 2;
+      left: 20px !important;
+      top: 110px !important;
     }
+
+    .period-label:nth-child(2) { top: 152px !important; }
+    .period-label:nth-child(3) { top: 194px !important; }
+    .period-label:nth-child(4) { top: 236px !important; }
+    .period-label:nth-child(5) { top: 278px !important; }
+    .period-label:nth-child(6) { top: 320px !important; }
+    .period-label:nth-child(7) { top: 362px !important; }
 
     #infoPanel {
       display: flex;
@@ -68,7 +78,7 @@
       z-index: 1;
     }
 
-    /* Full mode με μετατόπιση 94px για f-block */
+    /* Full mode */
     .full #canvasS { 
       top: 100px; 
       left: 50px; 
@@ -76,7 +86,7 @@
     }
     .full #canvasF { 
       top: 100px; 
-      left: 228px; /* 134px + 94px */
+      left: 134px; 
       width: 588px; 
     }
     .full #canvasD { 
@@ -90,14 +100,19 @@
       width: 252px; 
     }
 
-    /* Collapsed mode με μετατόπιση */
+    /* Collapsed mode */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
     .collapsed #canvasP { top: 100px; left: 566px; }
     .collapsed #canvasF { 
       top: 200px; 
-      left: 144px; /* 50px + 94px */
+      left: 144px;
       width: 1326px; 
+    }
+
+    #toggleFBlock[disabled] {
+      background-color: #cccccc;
+      cursor: not-allowed;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -105,14 +120,13 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας - Ατομικοί Αριθμοί</div>
   
-  <!-- Πρόσθετα στοιχεία για τις ετικέτες περιόδων -->
-  <div class="period-label" style="top: 130px; left: 30px;">1η K</div>
-  <div class="period-label" style="top: 170px; left: 30px;">2η L</div>
-  <div class="period-label" style="top: 210px; left: 30px;">3η M</div>
-  <div class="period-label" style="top: 250px; left: 30px;">4η N</div>
-  <div class="period-label" style="top: 290px; left: 30px;">5η O</div>
-  <div class="period-label" style="top: 330px; left: 30px;">6η P</div>
-  <div class="period-label" style="top: 370px; left: 30px;">7η Q</div>
+  <div class="period-label">1η K</div>
+  <div class="period-label">2η L</div>
+  <div class="period-label">3η M</div>
+  <div class="period-label">4η N</div>
+  <div class="period-label">5η O</div>
+  <div class="period-label">6η P</div>
+  <div class="period-label">7η Q</div>
 
   <div id="infoPanel">
     <div id="leftPanel">
@@ -128,7 +142,7 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
+      <button id="toggleFBlock" disabled>Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
     </div>
   </div>
@@ -155,7 +169,9 @@
       };
 
       let elements = [];
-      let currentZ = 3; // Αρχίζει από το 3
+      let currentZ = 3;
+      let currentState = 'main';
+      const toggleFBlockButton = document.getElementById('toggleFBlock');
 
       document.addEventListener('DOMContentLoaded', async function() {
         await loadElements();
@@ -255,36 +271,61 @@
           `Παρατηρήσεις: ${element.remarks}`;
       }
 
+      function showPeriods() {
+        document.querySelectorAll('.period-label').forEach(el => {
+          el.style.display = 'block';
+        });
+        toggleFBlockButton.disabled = false;
+        toggleFBlockButton.style.backgroundColor = '#4CAF50';
+      }
+
       function initializeEventListeners() {
         document.getElementById('nextElement').addEventListener('click', () => {
-          if (currentZ >= 118) return;
-          currentZ++;
+          if (currentState === 'main' && currentZ < 118) {
+            currentZ++;
+          } else if (currentState === 'main' && currentZ === 118) {
+            currentState = 'post';
+            currentZ = 1;
+          } else if (currentState === 'post' && currentZ < 2) {
+            currentZ++;
+          } else if (currentState === 'post' && currentZ === 2) {
+            currentState = 'periods';
+            showPeriods();
+          }
           redrawAll();
         });
 
         document.getElementById('fillAll').addEventListener('click', () => {
           currentZ = 118;
           redrawAll();
-          setTimeout(() => { 
-            currentZ = 2;
+          setTimeout(() => {
+            currentZ = 1;
             redrawAll();
-          }, 500);
+            setTimeout(() => {
+              currentZ = 2;
+              redrawAll();
+              showPeriods();
+            }, 50);
+          }, 50);
         });
 
         document.getElementById('reset').addEventListener('click', () => {
           currentZ = 3;
+          currentState = 'main';
           redrawAll();
-          document.getElementById('elementInfo').textContent = "";
-          document.getElementById('subshells').textContent = "";
-          document.getElementById('shells').textContent = "";
-          document.getElementById('outerShell').textContent = "";
-          document.getElementById('explanation').textContent = "";
-          document.getElementById('remarks').textContent = "";
+          document.querySelectorAll('.period-label').forEach(el => {
+            el.style.display = 'none';
+          });
+          toggleFBlockButton.disabled = true;
+          toggleFBlockButton.style.backgroundColor = '#cccccc';
+          document.body.classList.remove('collapsed');
         });
 
-        document.getElementById('toggleFBlock').addEventListener('click', () => {
-          document.body.classList.toggle('collapsed');
-          redrawAll();
+        toggleFBlockButton.addEventListener('click', () => {
+          if (!toggleFBlockButton.disabled) {
+            document.body.classList.toggle('collapsed');
+            redrawAll();
+          }
         });
       }
     })();
