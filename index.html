@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Πίνακας με 4 Καμβάδες - Λογική Συμπλήρωσης</title>
+  <title>Δυναμικός Περιοδικός Πίνακας - Ατομικοί Αριθμοί</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -82,11 +82,12 @@
 
       let elementsData = [];
       let rowsData = [];
-      let globalElementNumber = 3;
-      let currentRowIndex = 3;
+      let globalElementNumber = 3; // Αρχίζουμε από το στοιχείο 3 (Li)
+      let currentRowIndex = 3;     // 4η σειρά (index 3)
       let phase = 1;
       let mode = "full";
       const colGap = 42;
+
       const fillingPatterns = [
         [{ count: 8, shifting: true }],
         [{ count: 8, shifting: false }],
@@ -96,18 +97,18 @@
         [{ count: 2, shifting: false }, { count: 14, shifting: false }, { count: 10, shifting: false }, { count: 6, shifting: false }]
       ];
 
-      // Διορθωμένη φόρτωση JSON μέσα σε p5 instance
-      const loadData = async (p) => {
+      // Φόρτωση δεδομένων με fetch
+      const loadData = async () => {
         try {
           const response = await fetch('elements.json');
           elementsData = await response.json();
-          p.redraw();
+          redrawAll();
         } catch (err) {
           console.error('Σφάλμα φόρτωσης:', err);
         }
       };
 
-      function getCategory(n) {
+      const getCategory = (n) => {
         const alkaliMetals = [3, 11, 19, 37, 55, 87];
         if (n === 1) return 'hydrogen-color';
         if (alkaliMetals.includes(n)) return 'alkali-block';
@@ -116,9 +117,9 @@
         if ((n >= 5 && n <= 10) || (n >= 13 && n <= 18) || (n >= 81 && n <= 86)) return 'p-block';
         if ((n >= 21 && n <= 30) || (n >= 39 && n <= 48) || (n >= 71 && n <= 80) || (n >= 103 && n <= 112)) return 'd-block';
         return 'p-block';
-      }
+      };
 
-      function initializeRows() {
+      const initializeRows = () => {
         rowsData = [];
         for (let i = 0; i < 9; i++) {
           rowsData.push({
@@ -126,26 +127,24 @@
             shiftedColumns: 0,
             currentSegment: 0,
             countInSegment: 0,
-            insertionIndex: 0,
+            insertionIndex: (i === 3) ? 1 : 0, // Στήλη 2 για 4η σειρά
             periodLabel: null
           });
         }
         globalElementNumber = 3;
         currentRowIndex = 3;
         phase = 1;
-      }
+      };
 
-      function createCell(number) {
-        return {
-          number: number,
-          category: getCategory(number),
-          width: 40,
-          height: (getCategory(number) === 'group-name' ? 20 : 40),
-          details: elementsData[number - 1]
-        };
-      }
+      const createCell = (number) => ({
+        number: number,
+        category: getCategory(number),
+        width: 40,
+        height: (getCategory(number) === 'group-name' ? 20 : 40),
+        details: elementsData.find(e => e.number === number)
+      });
 
-      // Βελτιωμένη σχεδίαση ανά καμβά
+      // Σχεδίαση με ατομικούς αριθμούς
       const drawBlock = (p, blockType) => {
         p.background(255);
         p.stroke(150);
@@ -153,9 +152,7 @@
         for (let row = 0; row < 9; row++) {
           const cellH = row < 2 ? 20 : 40;
           let x = 0;
-          const cols = {
-            's': 2, 'f': 14, 'd': 10, 'p': 6
-          }[blockType];
+          const cols = {s:2, f:14, d:10, p:6}[blockType];
           
           for (let col = 0; col < cols; col++) {
             const cell = findCell(blockType, row, col);
@@ -165,105 +162,85 @@
               p.fill(0);
               p.textSize(12);
               p.textAlign(p.CENTER, p.CENTER);
-              p.text(cell.details?.symbol || cell.number, x + 20, y + cellH/2);
+              p.text(cell.number, x + 20, y + cellH/2); // Εμφάνιση ατομικού αριθμού
             }
-            x += 42;
+            x += colGap;
           }
           y += cellH + 2;
         }
       };
 
-      function findCell(blockType, row, col) {
+      const findCell = (blockType, row, col) => {
         const rowData = rowsData[row];
         const indexMap = {
-          's': col < 2 ? col : null,
-          'f': col + 2,
-          'd': col + 2,
-          'p': col + 16
+          's': () => col < 2 ? col : null,
+          'f': () => col + 2,
+          'd': () => col + 2,
+          'p': () => col + 16
         };
-        const idx = indexMap[blockType];
+        const idx = indexMap[blockType]();
         return (idx !== null && rowData.cells[idx]) ? rowData.cells[idx] : null;
-      }
+      };
 
-      // Διορθωμένη λογική συμπλήρωσης
-      function addElementToCurrentRow() {
+      const addElementToCurrentRow = () => {
         if (phase !== 1 || globalElementNumber > 118) return;
-        
-        const row = rowsData[currentRowIndex];
-        if (currentRowIndex < 3 || currentRowIndex > 8) return;
 
-        const pattern = fillingPatterns[currentRowIndex - 3][row.currentSegment];
+        const row = rowsData[currentRowIndex];
+        const pattern = fillingPatterns[currentRowIndex - 3]?.[row.currentSegment];
         if (!pattern) return;
 
         const cell = createCell(globalElementNumber);
         let targetIndex = row.insertionIndex;
-        
-        while (row.cells[targetIndex] !== null && targetIndex < row.cells.length) {
-          targetIndex++;
-        }
-        
+
+        while (row.cells[targetIndex] !== null && targetIndex < row.cells.length) targetIndex++;
         if (targetIndex >= row.cells.length) row.cells.push(null);
-        row.cells[targetIndex] = cell;
         
+        row.cells[targetIndex] = cell;
         globalElementNumber++;
         row.countInSegment++;
-        
+
         if (row.countInSegment >= pattern.count) {
           row.currentSegment++;
           row.countInSegment = 0;
           row.insertionIndex = row.cells.length;
         }
-        
-        if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) {
-          currentRowIndex++;
-        }
+
+        if (row.currentSegment >= fillingPatterns[currentRowIndex - 3].length) currentRowIndex++;
         
         updateInfoPanel(cell);
         redrawAll();
-      }
+      };
 
-      function updateInfoPanel(cell) {
+      const updateInfoPanel = (cell) => {
         if (!cell.details) return;
         document.getElementById('elementInfo').innerHTML = 
-          `<strong>${cell.details.name} (${cell.details.symbol})</strong>`;
+          `<strong>${cell.details.name} (Z=${cell.number})</strong>`;
         document.getElementById('subshells').textContent = 
           `Υποστιβάδες: ${cell.details.subshells || 'N/A'}`;
         document.getElementById('shells').textContent = 
           `Στιβάδες: ${cell.details.shells || 'N/A'}`;
         document.getElementById('outerShell').textContent = 
           `Εξωτερική: ${cell.details.outerShell || 'N/A'}`;
-      }
+      };
 
-      // Δημιουργία sketches με σωστό scope
+      // Δημιουργία sketches
       const createSketch = (blockType) => (p) => {
-        p.preload = () => loadData(p);
-        
         p.setup = () => {
-          const dims = {
-            's': [124, 336], 'f': [586, 336], 
-            'd': [418, 336], 'p': [250, 336]
-          }[blockType];
+          const dims = {s:[124,336], f:[586,336], d:[418,336], p:[250,336]}[blockType];
           p.createCanvas(...dims);
           p.noLoop();
+          loadData();
         };
-
         p.draw = () => drawBlock(p, blockType);
       };
 
-      // Αρχικοποίηση sketches
-      let sSketch = createSketch('s');
-      let fSketch = createSketch('f');
-      let dSketch = createSketch('d');
-      let pSketch = createSketch('p');
-
+      const [sSketch, fSketch, dSketch, pSketch] = ['s','f','d','p'].map(createSketch);
       const sP5 = new p5(sSketch, 'canvasS');
       const fP5 = new p5(fSketch, 'canvasF');
       const dP5 = new p5(dSketch, 'canvasD');
       const pP5 = new p5(pSketch, 'canvasP');
 
-      function redrawAll() {
-        [sP5, fP5, dP5, pP5].forEach(sketch => sketch.redraw());
-      }
+      const redrawAll = () => [sP5, fP5, dP5, pP5].forEach(s => s.redraw());
 
       // Event listeners
       document.getElementById('nextElement').addEventListener('click', addElementToCurrentRow);
@@ -279,7 +256,6 @@
         document.body.className = mode;
       });
 
-      // Αρχική ρύθμιση
       initializeRows();
     })();
   </script>
