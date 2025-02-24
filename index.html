@@ -55,46 +55,59 @@
       background: transparent;
       transition: all 0.5s ease-in-out;
     }
-    /* Καμβάς περιόδων: πίνακας 1στήλης, 7 γραμμών, κάθε κελί με συνολικό μέγεθος 42×42 (με 2px διάκενο μέσα στο 42) */
+    /* Καμβάς Περιόδων: πίνακας 1 στήλης, 7 γραμμών,
+       κάθε κελί: 40x40 με 2px κενό μεταξύ (συνολικό ύψος 292px),
+       φόντο: απαλό γκρι, χωρίς περίγραμμα.
+    */
     #canvasPeriods {
       position: absolute;
       left: 10px;
       top: 100px;
-      width: 42px;
-      height: 42 * 7 + "px"; /* 294px */
+      width: 40px;
+      height: 292px;
       background: #ddd;
       display: none;
       z-index: 5;
     }
-    /* Τα κελιά του καμβά περιόδων θα σχεδιαστούν στον κώδικα p5 */
-    
     /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Ετικέτες περιόδων (παλαιές, αν υπάρχουν) – εδώ δεν χρησιμοποιούνται πλέον, καθώς ο καμβάς περιόδων δείχνει τα ονόματα */
-    
-    /* Full view: όλες οι βάσεις ξεκινούν σε επαφή με τον s */
+    /* Full view - αρχικές θέσεις: όλοι οι τομείς (εκτός του s) ξεκινούν από 134px */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view: σταθερές θέσεις */
+    /* Collapsed view - σταθερές θέσεις */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
     .collapsed #canvasP { top: 100px; left: 564px; width: 252px; }
+    /* Ετικέτες Περιόδων - οι παλαιές ετικέτες (αν χρησιμοποιούνταν) έχουν line-height 13px με !important */
+    .period-label {
+      position: absolute;
+      left: 15px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #333;
+      background: rgba(200,200,200,0.9);
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: none;
+      line-height: 13px !important;
+      z-index: 30;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
 
-  <!-- Καμβάς περιόδων: δημιουργείται μία φορά και εμφανίζεται μόλις το full view έχει συμπληρωθεί -->
+  <!-- Καμβάς Περιόδων (θα εμφανίζεται όταν το full view έχει συμπληρωθεί) -->
   <div id="canvasPeriods" class="canvas"></div>
 
-  <!-- Canvases για τους τομείς -->
+  <!-- Καμβάδες τομέων -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -126,21 +139,20 @@
       if(periodsInitialized) return;
       new p5(p => {
         p.setup = () => {
-          let canvas = p.createCanvas(42, 42*7); // 42 x 294
+          let canvas = p.createCanvas(40, 292);
           canvas.parent("canvasPeriods");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
           p.textStyle(p.BOLD);
-          // Δημιουργούμε τα κελιά με διάκενο 2px: κάθε κελί θα είναι σχεδιασμένο μέσα σε ένα πλαίσιο 42x42 με το ίδιο φόντο, και θα σχεδιάζεται ένα 38x38 κελί στο κέντρο.
+          p.background(221);
           const labels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
           for (let i = 0; i < 7; i++) {
-            // Σχεδιάζουμε το κελί: αφήνουμε περιθώριο 2px
-            p.fill(221); // απαλό γκρι
-            p.rect(0, i*42, 42, 42);
-            // Σχεδιάζουμε το κείμενο στο κέντρο του κελιού
+            // Κάθε κελί: 40x40, με 2px διάκενο μεταξύ (δηλαδή τα κελιά είναι σχεδιασμένα ώστε το περιθώριο να είναι σταθερό)
+            p.fill(221);
+            p.rect(0, i * 42, 40, 40);
             p.fill(0);
-            p.text(labels[i], 21, i*42 + 21);
+            p.text(labels[i], 20, i * 42 + 20);
           }
         };
       });
@@ -289,6 +301,7 @@
             };
           });
         });
+        // Εφαρμογή δυναμικών μετατοπίσεων μόνο στη full view
         if(!document.body.classList.contains('collapsed')){
           let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
@@ -368,6 +381,8 @@
 
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 0;
+        // Επαναφορά του καμβά περιόδων ώστε να δημιουργηθεί ξανά στο επόμενο full view
+        periodsInitialized = false;
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
         document.getElementById('canvasPeriods').style.display = "none";
