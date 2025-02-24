@@ -55,52 +55,32 @@
       background: transparent;
       transition: all 0.5s ease-in-out;
     }
-    /* Καμβάς περιόδων */
+    /* Καμβάς περιόδων: πίνακας 1στήλης, 7 γραμμών, κάθε κελί με συνολικό μέγεθος 42×42 (με 2px διάκενο μέσα στο 42) */
     #canvasPeriods {
       position: absolute;
       left: 10px;
       top: 100px;
-      width: 40px;
-      height: 280px; /* 7 rows * 40px */
+      width: 42px;
+      height: 42 * 7 + "px"; /* 294px */
       background: #ddd;
       display: none;
       z-index: 5;
     }
+    /* Τα κελιά του καμβά περιόδων θα σχεδιαστούν στον κώδικα p5 */
+    
     /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Ετικέτες Περιόδων – οι παλαιές ετικέτες θα αντικατασταθούν από τον καμβά περιόδων */
-    .period-label {
-      position: absolute;
-      left: 15px;
-      font-size: 11px;
-      font-weight: bold;
-      color: #333;
-      background: rgba(200,200,200,0.9);
-      padding: 2px 5px;
-      border-radius: 3px;
-      display: none;
-      line-height: 13px !important;
-      z-index: 30;
-    }
-    /* Full view αρχικές θέσεις για τους τομείς:
-       Όλοι ξεκινούν "σε επαφή" με τον s:
-         s: left = 50px 
-         f, d, p: left = 134px 
-       (με z-index: s (1), f (2), d (3), p (4))
-    */
+    /* Ετικέτες περιόδων (παλαιές, αν υπάρχουν) – εδώ δεν χρησιμοποιούνται πλέον, καθώς ο καμβάς περιόδων δείχνει τα ονόματα */
+    
+    /* Full view: όλες οι βάσεις ξεκινούν σε επαφή με τον s */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view: Σταθερές θέσεις
-       s: left = 50px 
-       f: left = 134px, top = 194px 
-       d: left = 144px (10px κενό από το s) 
-       p: left = 564px (δίπλα στον d)
-    */
+    /* Collapsed view: σταθερές θέσεις */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
@@ -111,10 +91,10 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
 
-  <!-- Καμβάς Περιόδων (θα εμφανίζεται όταν currentZ ≥ 120 στη full view) -->
+  <!-- Καμβάς περιόδων: δημιουργείται μία φορά και εμφανίζεται μόλις το full view έχει συμπληρωθεί -->
   <div id="canvasPeriods" class="canvas"></div>
 
-  <!-- Τα υπόλοιπα canvases για τους τομείς -->
+  <!-- Canvases για τους τομείς -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -140,30 +120,33 @@
   </div>
 
   <script>
-    // Δημιουργούμε μια ξεχωριστή p5 σκέψη για τον καμβά περιόδων
+    // Δημιουργία του καμβά περιόδων μόνο μία φορά
+    let periodsInitialized = false;
     function initPeriodsCanvas() {
-      let periodsCanvas = new p5(p => {
+      if(periodsInitialized) return;
+      new p5(p => {
         p.setup = () => {
-          let canvas = p.createCanvas(40, 280); // 1 στήλη, 7 γραμμές, κάθε κελί 40x40
+          let canvas = p.createCanvas(42, 42*7); // 42 x 294
           canvas.parent("canvasPeriods");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
-          p.fill(200);
-          p.background(221); // απαλό γκρι
-          // Γράφουμε τα ονόματα των περιόδων: "1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"
+          p.textStyle(p.BOLD);
+          // Δημιουργούμε τα κελιά με διάκενο 2px: κάθε κελί θα είναι σχεδιασμένο μέσα σε ένα πλαίσιο 42x42 με το ίδιο φόντο, και θα σχεδιάζεται ένα 38x38 κελί στο κέντρο.
           const labels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
           for (let i = 0; i < 7; i++) {
-            // Κάθε κελί 40x40, σχεδιάζουμε το κείμενο στο κέντρο
+            // Σχεδιάζουμε το κελί: αφήνουμε περιθώριο 2px
+            p.fill(221); // απαλό γκρι
+            p.rect(0, i*42, 42, 42);
+            // Σχεδιάζουμε το κείμενο στο κέντρο του κελιού
             p.fill(0);
-            p.text(labels[i], 20, 20 + i * 40);
+            p.text(labels[i], 21, i*42 + 21);
           }
         };
       });
-      document.getElementById("canvasPeriods").style.display = "block";
+      periodsInitialized = true;
     }
 
-    // Το υπόλοιπο του κώδικα για τους τομείς έχει ήδη υλοποιηθεί
     (function() {
       const BLOCK_COLORS = {
         's': '#ffcccc',
@@ -270,6 +253,7 @@
             p.rect(pos.x, pos.y, 40, 40, 5);
             p.fill(0);
             p.textSize(e.number > 99 ? 10 : 12);
+            p.textStyle(p.BOLD);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(e.number.toString(), pos.x + 20, pos.y + 20);
           }
@@ -305,7 +289,6 @@
             };
           });
         });
-        // Εφαρμογή δυναμικών μετατοπίσεων μόνο στη full view
         if(!document.body.classList.contains('collapsed')){
           let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
@@ -332,7 +315,6 @@
           document.getElementById('canvasP').style.left = "564px";
         }
         if(currentZ >= 120){
-          // Αν το full view έχει συμπληρωθεί, εμφανίζουμε και τον καμβά περιόδων
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
         } else {
@@ -394,7 +376,6 @@
       });
 
       document.getElementById('toggleFBlock').addEventListener('click', () => {
-        // Ενεργοποίηση toggle μόνο όταν το full view έχει συμπληρωθεί (currentZ ≥ 120)
         if(currentZ < 120) return;
         document.body.classList.toggle('collapsed');
         redrawAll();
