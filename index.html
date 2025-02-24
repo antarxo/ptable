@@ -22,7 +22,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Info Panel Full view: κεντρική τοποθέτηση, top 500px, width 600px */
+    /* Info Panel Full view */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -33,28 +33,26 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      width: 600px;
+      width: 800px;
       position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
       top: 500px;
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Info Panel Collapsed view: width 300px, top 100px, left = (window.innerWidth – 300 – 42), height 300px */
+    /* Info Panel Collapsed view */
     body.collapsed #infoPanel {
       width: 300px;
       top: 100px;
-      /* left υπολογίζεται δυναμικά μέσω JS (κάτω στο redrawAll) */
+      left: 450px;  /* σταθερό σύμφωνα με οδηγία */
       transform: none;
       height: 300px;
     }
-    /* Εσωτερικά τμήματα του infoPanel (διαιρούμενα σε δύο κελιά – αριστερό και δεξιό) */
+    /* Δύο εσωτερικά "κελιά" (αριστερό και δεξιό) */
     #leftPanel, #middlePanel {
       padding: 5px;
       width: 50%;
     }
-    /* Fixed κουμπιά: το #rightPanel παραμένει fixed στην κάτω δεξιά γωνία */
+    /* Fixed κουμπιά: το #rightPanel */
     #rightPanel {
       position: fixed;
       bottom: 20px;
@@ -64,14 +62,14 @@
       gap: 5px;
       z-index: 100;
     }
-    /* Οι κύριοι καμβάδες στοιχείων */
+    /* Καμβάδες στοιχείων */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: σταθερή θέση */
+    /* Καμβάς Περιόδων */
     #canvasPeriods {
       left: 6px;
       top: 100px;
@@ -83,21 +81,21 @@
     }
     /* Καμβάδες Ομάδων */
     #canvasS_groups {
-      width: 82px;  /* 2*40 + 2 */
-      height: 32px; /* 2*16 */
+      width: 82px;
+      height: 32px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
     #canvasD_groups {
-      width: 418px; /* 10*40 + 9*2 */
+      width: 418px;
       height: 32px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
     #canvasP_groups {
-      width: 250px; /* 6*40 + 5*2 */
+      width: 250px;
       height: 32px;
       background: #f0f0f0;
       display: none;
@@ -108,21 +106,17 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Θέσεις κύριων καμβάδων στο FULL view */
+    /* Θέσεις κύριων καμβάδων στο Full view */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
-    /* Η p αρχικά ξεκινά στο 134px, αλλά μετακινείται σύμφωνα με τον currentZ */
+    /* Η p μετακινείται δυναμικά (με βάση currentZ) – εδώ αρχική θέση: left=134px */
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Στην FULL view, για p μετατοπίσεις */
-    /* Η λογική μετακίνησης του p: αν currentZ ≥21 και ≤30, shift = 42·(currentZ–20);
-       αν 31–56, shift = 42·10; αν 57–70, shift = 42·10 + 42·(currentZ–56); αν πάνω, shift σταθερό */
-    /* Θα οριστεί στο redrawAll μέσω JS */
-    /* Στην COLLAPSED view: */
+    /* Στην Collapsed view */
     .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasF { top: 190px; left: 154px; width: 588px; }  /* f: +20px δεξιότερα, +90px πιο κάτω */
+    .collapsed #canvasF { top: 190px; left: 154px; width: 588px; }  /* f: +20px, +90px */
     .collapsed #canvasD { top: 100px; left: 134px; width: 420px; }
-    .collapsed #canvasP { top: 100px; left: 554px; width: 252px; }  /* p: δίπλα στον d (134+420) */
+    .collapsed #canvasP { top: 100px; left: 554px; width: 252px; }  /* p: δίπλα στον d (134+420=554) */
     /* Οι παλαιές ετικέτες περιόδων */
     .period-label {
       position: absolute;
@@ -156,7 +150,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Info Panel (ένα div) -->
+  <!-- Info Panel (HTML div) -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -192,7 +186,7 @@
           p.textStyle(p.BOLD);
           p.background(240);
           const labels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
-          for (let i = 0; i < labels.length; i++){
+          for(let i = 0; i < labels.length; i++){
             p.fill(240);
             p.rect(0, i * 42, 40, 40);
             p.fill(0);
@@ -300,8 +294,8 @@
       /* currentZ:
          - <3: Δεν εμφανίζονται στοιχεία.
          - 120: Full view χωρίς ομάδες.
-         - 121: Collapsed view (infoPanel collapsed, ομάδες εμφανίζονται).
-         - 122 και πάνω: Ο μετρητής συνεχίζει.
+         - 121: Collapsed view (infoPanel collapsed) εμφανίζεται.
+         - 122 και πάνω: μετρητής συνεχίζεται.
       */
       
       function updateToggleButton() {
@@ -328,7 +322,7 @@
               const canvas = p.createCanvas(config.cols*42, config.rows*42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows*42}px`;
-              // Για Full view: θέσεις αρχικές
+              // Σε Full view: θέσεις όπως πριν
               canvas.elt.style.left = (block==='s' ? "50px" : "134px");
               canvas.elt.style.top = "100px";
               drawElements(p, block);
@@ -354,8 +348,9 @@
           x = (e.col-1)*42;
         else if(block==='f'){
           if(document.body.classList.contains('collapsed')){
-            x = (e.col-3)*42 + 20;  // 20px δεξιότερα
-            y = (e.row-1)*42 + 90;   // 90px πιο κάτω
+            // Collapsed view: f μετατοπίζεται +20px δεξιότερα και +90px κάτω
+            x = (e.col-3)*42 + 20;
+            y = (e.row-1)*42 + 90;
           } else {
             x = (e.col-3)*42;
             y = (e.row-1)*42;
@@ -366,7 +361,7 @@
           y = (e.row-1)*42;
         }
         else if(block==='p'){
-          x = (currentZ<20 && e.row===1) ? (e.col-18)*42 : (e.col-13)*42;
+          x = (currentZ < 20 && e.row===1) ? (e.col-18)*42 : (e.col-13)*42;
           y = (e.row-1)*42;
         }
         return {x, y};
@@ -409,18 +404,18 @@
               const canvas = p.createCanvas(config.cols*42, config.rows*42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows*42}px`;
-              // Στο Full view:
               if(!document.body.classList.contains('collapsed')){
+                // Full view: βασικές θέσεις
                 canvas.elt.style.left = (block==='s' ? "50px" : "134px");
                 canvas.elt.style.top = "100px";
-                // Για τον p τομέα στο full view, εφαρμόζουμε μετατοπίσεις:
+                // Για p, εφαρμόζουμε μετατοπίσεις ανάλογα με τον currentZ:
                 if(block==='p'){
                   let base = 134;
                   let shift = 0;
-                  if(currentZ>=21 && currentZ<=30) { shift = 42*(currentZ-20); }
-                  else if(currentZ>=31 && currentZ<=56) { shift = 42*10; }
-                  else if(currentZ>=57 && currentZ<=70) { shift = 42*10 + 42*(currentZ-56); }
-                  else if(currentZ>70) { shift = 42*10 + 42*14; }
+                  if(currentZ>=21 && currentZ<=30){ shift = 42*(currentZ-20); }
+                  else if(currentZ>=31 && currentZ<=56){ shift = 42*10; }
+                  else if(currentZ>=57 && currentZ<=70){ shift = 42*10 + 42*(currentZ-56); }
+                  else if(currentZ>70){ shift = 42*10 + 42*14; }
                   canvas.elt.style.left = (base + shift) + "px";
                 }
               } else {
@@ -429,13 +424,13 @@
                   canvas.elt.style.left = "50px";
                   canvas.elt.style.top = "100px";
                 } else if(block==='f'){
-                  canvas.elt.style.left = "154px"; // 134+20
-                  canvas.elt.style.top = "190px";  // 100+90
+                  canvas.elt.style.left = "154px";  // 134 + 20
+                  canvas.elt.style.top = "190px";   // 100 + 90
                 } else if(block==='d'){
                   canvas.elt.style.left = "134px";
                   canvas.elt.style.top = "100px";
                 } else if(block==='p'){
-                  canvas.elt.style.left = "554px"; // 134+420
+                  canvas.elt.style.left = "554px";  // 134+420
                   canvas.elt.style.top = "100px";
                 }
               }
@@ -454,7 +449,7 @@
             };
           });
         });
-        // Εμφάνιση των καμβάδων ομάδων και περιόδων όταν currentZ>=120
+        // Εμφάνιση καμβάδων ομάδων και περιόδων όταν currentZ>=120
         if(currentZ>=120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
@@ -478,13 +473,17 @@
         }
         // Ενημέρωση του infoPanel ανάλογα με το view:
         if(document.body.classList.contains('collapsed')){
-          let w = window.innerWidth;
-          let newLeft = w - 300 - 42; // 42px πριν το δεξιό όριο
-          document.getElementById('infoPanel').style.left = newLeft + "px";
+          // Στην collapsed view, το infoPanel έχει σταθερό left = 450px (σύμφωνα με την οδηγία)
+          document.getElementById('infoPanel').style.left = "450px";
           document.getElementById('infoPanel').style.width = "300px";
         } else {
-          document.getElementById('infoPanel').style.left = "";
-          document.getElementById('infoPanel').style.width = "600px";
+          // Στο full view, το infoPanel κεντράρεται στο μέσον της απόστασης μεταξύ του αριστερού ορίου και του αριστερού ορίου των κουμπιών.
+          let rpRect = document.getElementById('rightPanel').getBoundingClientRect();
+          let leftEdgeButtons = rpRect.left; // αριστερό όριο του fixed panel
+          let mid = leftEdgeButtons / 2;
+          let newLeft = mid - 400; // 800px/2 = 400
+          document.getElementById('infoPanel').style.left = newLeft + "px";
+          document.getElementById('infoPanel').style.width = "800px";
         }
         updateInfo(currentZ);
         updateToggleButton();
