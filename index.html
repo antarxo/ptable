@@ -3,43 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <title>Περιοδικός Πίνακας</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
+      font-family: 'Roboto', sans-serif;
       margin: 0;
       overflow: hidden;
-      background: #f0f0f0;
-      font-family: Arial, sans-serif;
+      background: #f7f7f7;
     }
 
-    .container {
-      position: relative;
-      height: 100vh;
-    }
-
-    .element {
+    #title {
       position: absolute;
-      width: 40px;
-      height: 40px;
-      border: 1px solid #000;
-      text-align: center;
-      line-height: 40px;
-      background: white;
-      transition: all 0.3s ease;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10;
     }
 
-    .block {
+    #infoPanel {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.95);
+      border: 2px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      padding: 20px;
+      width: 1200px;
       position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 500px;
+      z-index: 10;
+    }
+
+    #leftPanel, #middlePanel {
+      border-right: 1px solid #ccc;
+      padding-right: 20px;
+    }
+
+    #leftPanel { width: 30%; }
+    #middlePanel { width: 50%; }
+    #rightPanel { width: 20%; }
+
+    #remarks {
+      font-style: italic;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .canvas {
+      position: absolute;
+      background: transparent;
+      z-index: 1;
       transition: all 0.5s ease-in-out;
     }
 
-    #s-block { left: 50px; top: 150px; width: 84px; }
-    #f-block { left: 134px; top: 150px; width: 588px; }
-    #d-block { left: 722px; top: 150px; width: 420px; }
-    #p-block { left: 1142px; top: 150px; width: 252px; }
+    /* Χρώματα από το αρχικό another.html */
+    .element.s-block { background: #ffcccc; }
+    .element.p-block { background: #ccffcc; }
+    .element.d-block { background: #ccccff; }
+    .element.f-block { background: #ffe5cc; }
 
-    .collapsed #f-block { top: 250px; left: 228px; width: 1326px; }
-    .collapsed #d-block { left: 140px; }
-    .collapsed #p-block { left: 560px; }
+    /* Full mode */
+    .full #canvasS { top: 100px; left: 50px; width: 84px; }
+    .full #canvasF { top: 100px; left: 134px; width: 588px; }
+    .full #canvasD { top: 100px; left: 722px; width: 420px; }
+    .full #canvasP { top: 100px; left: 1142px; width: 252px; }
+
+    /* Collapsed mode */
+    .collapsed #canvasS { top: 100px; left: 50px; }
+    .collapsed #canvasD { top: 100px; left: 140px; }
+    .collapsed #canvasP { top: 100px; left: 566px; }
+    .collapsed #canvasF { top: 200px; left: 50px; width: 1326px; }
 
     .period-label {
       position: absolute;
@@ -52,7 +90,7 @@
       display: none;
     }
 
-    .group-container {
+    .group-labels {
       position: absolute;
       display: none;
       background: rgba(200,200,200,0.9);
@@ -62,247 +100,188 @@
       gap: 2px;
       z-index: 2;
     }
-
-    .group-row {
-      display: flex;
-      gap: 42px;
-    }
-
-    .group-label {
-      width: 42px;
-      text-align: center;
-      font-weight: bold;
-      color: #333;
-      font-size: 12px;
-    }
-
-    .old-group { 
-      font-size: 10px;
-      display: none;
-    }
-
-    #infoPanel {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-
-    button {
-      padding: 8px 16px;
-      margin: 0 4px;
-      cursor: pointer;
-    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
-<body>
-  <div class="container">
-    <!-- Περίοδοι -->
-    <div class="period-label" style="top: 160px">1η K</div>
-    <div class="period-label" style="top: 202px">2η L</div>
-    <div class="period-label" style="top: 244px">3η M</div>
-    <div class="period-label" style="top: 286px">4η N</div>
-    <div class="period-label" style="top: 328px">5η O</div>
-    <div class="period-label" style="top: 370px">6η P</div>
-    <div class="period-label" style="top: 412px">7η Q</div>
+<body class="full">
+  <div id="title">Περιοδικός Πίνακας - Ατομικοί Αριθμοί</div>
+  
+  <div class="period-label" style="top: 130px">1η K</div>
+  <div class="period-label" style="top: 170px">2η L</div>
+  <div class="period-label" style="top: 210px">3η M</div>
+  <div class="period-label" style="top: 250px">4η N</div>
+  <div class="period-label" style="top: 290px">5η O</div>
+  <div class="period-label" style="top: 330px">6η P</div>
+  <div class="period-label" style="top: 370px">7η Q</div>
 
-    <!-- Ομάδες -->
-    <div class="group-container" id="s-groups" style="top: 130px; left: 50px">
-      <div class="group-row">
-        <div class="group-label">1</div>
-        <div class="group-label">2</div>
-      </div>
-      <div class="group-row">
-        <div class="group-label old-group">IA</div>
-        <div class="group-label old-group">IIA</div>
-      </div>
+  <div id="infoPanel">
+    <div id="leftPanel">
+      <div id="elementInfo"></div>
+      <div id="subshells"></div>
+      <div id="shells"></div>
+      <div id="outerShell"></div>
     </div>
-
-    <div class="group-container" id="d-groups" style="top: 130px; left: 722px">
-      <div class="group-row">
-        <div class="group-label">3</div>
-        <div class="group-label">4</div>
-        <div class="group-label">5</div>
-        <div class="group-label">6</div>
-        <div class="group-label">7</div>
-        <div class="group-label">8</div>
-        <div class="group-label">9</div>
-        <div class="group-label">10</div>
-        <div class="group-label">11</div>
-        <div class="group-label">12</div>
-      </div>
-      <div class="group-row">
-        <div class="group-label old-group">IIIB</div>
-        <div class="group-label old-group">IVB</div>
-        <div class="group-label old-group">VB</div>
-        <div class="group-label old-group">VIB</div>
-        <div class="group-label old-group">VIIB</div>
-        <div class="group-label old-group">VIII</div>
-        <div class="group-label old-group">VIII</div>
-        <div class="group-label old-group">VIII</div>
-        <div class="group-label old-group">IB</div>
-        <div class="group-label old-group">IIB</div>
-      </div>
+    <div id="middlePanel">
+      <div id="explanation"></div>
+      <div id="remarks"></div>
     </div>
-
-    <div class="group-container" id="p-groups" style="top: 130px; left: 1142px">
-      <div class="group-row">
-        <div class="group-label">13</div>
-        <div class="group-label">14</div>
-        <div class="group-label">15</div>
-        <div class="group-label">16</div>
-        <div class="group-label">17</div>
-        <div class="group-label">18</div>
-      </div>
-      <div class="group-row">
-        <div class="group-label old-group">IIIA</div>
-        <div class="group-label old-group">IVA</div>
-        <div class="group-label old-group">VA</div>
-        <div class="group-label old-group">VIA</div>
-        <div class="group-label old-group">VIIA</div>
-        <div class="group-label old-group">VIIIA</div>
-      </div>
-    </div>
-
-    <!-- Blocks -->
-    <div id="s-block" class="block"></div>
-    <div id="f-block" class="block"></div>
-    <div id="d-block" class="block"></div>
-    <div id="p-block" class="block"></div>
-
-    <!-- Controls -->
-    <div id="infoPanel">
-      <button id="next">Επόμενο</button>
+    <div id="rightPanel">
+      <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <button id="toggleF">Εναλλαγή f-block</button>
+      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
       <button id="reset">Reset</button>
-      <div id="remarks">Πατήστε "Επόμενο" για να ξεκινήσετε</div>
     </div>
   </div>
 
+  <div id="canvasS" class="canvas"></div>
+  <div id="canvasF" class="canvas"></div>
+  <div id="canvasD" class="canvas"></div>
+  <div id="canvasP" class="canvas"></div>
+
   <script>
-    let currentZ = 3;
-    let elements = [];
-    let showOldGroups = false;
+    (function() {
+      const BLOCK_COLORS = {
+        's': '#ffcccc',
+        'p': '#ccffcc',
+        'd': '#ccccff',
+        'f': '#ffe5cc'
+      };
 
-    const blocks = {
-      's': { element: document.getElementById('s-block'), cols: 2, start: 1 },
-      'd': { element: document.getElementById('d-block'), cols: 10, start: 3 },
-      'p': { element: document.getElementById('p-block'), cols: 6, start: 13 }
-    };
+      const BLOCKS_CONFIG = {
+        s: { cols: 2, rows: 7 },
+        p: { cols: 6, rows: 7 },
+        d: { cols: 10, rows: 7 },
+        f: { cols: 14, rows: 7 }
+      };
 
-    async function loadElements() {
-      try {
-        const response = await fetch('elements.json');
-        elements = await response.json();
-        initializeElements();
-      } catch (err) {
-        console.error('Σφάλμα φόρτωσης:', err);
+      let elements = [];
+      let currentZ = 3; // Αρχίζει από το 3
+      let currentState = 'main';
+
+      async function loadElements() {
+        try {
+          const response = await fetch('elements.json');
+          elements = await response.json();
+          initializeCanvases();
+        } catch (err) {
+          console.error('Σφάλμα φόρτωσης:', err);
+        }
       }
-    }
 
-    function initializeElements() {
-      Object.entries(blocks).forEach(([blockType, config]) => {
-        const block = config.element;
-        block.innerHTML = '';
-        for (let row = 0; row < 7; row++) {
-          for (let col = 0; col < config.cols; col++) {
-            const elementDiv = document.createElement('div');
-            elementDiv.className = 'element';
-            elementDiv.style.display = 'none';
-            elementDiv.style.left = `${col * 42}px`;
-            elementDiv.style.top = `${row * 42}px`;
-            block.appendChild(elementDiv);
-          }
-        }
-      });
-    }
-
-    function updateDisplay() {
-      elements.forEach((el, index) => {
-        if (index < currentZ) {
-          const block = blocks[el.block];
-          const position = (el.row - 1) * block.cols + (el.col - block.start);
-          const elementDiv = block.element.children[position];
-          if (elementDiv) {
-            elementDiv.style.display = 'block';
-            elementDiv.textContent = el.number;
-          }
-        }
-      });
-
-      document.getElementById('remarks').textContent = 
-        `Εμφανίζονται στοιχεία 3 έως ${currentZ}`;
-    }
-
-    async function fillElements(start, end) {
-      for (let i = start; i <= end; i++) {
-        currentZ = i;
-        updateDisplay();
-        await new Promise(r => setTimeout(r, 10));
+      function initializeCanvases() {
+        Object.keys(BLOCKS_CONFIG).forEach(block => {
+          new p5(p => {
+            p.setup = () => {
+              const config = BLOCKS_CONFIG[block];
+              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+              canvas.parent(`canvas${block.toUpperCase()}`);
+              canvas.elt.style.height = `${config.rows * 42}px`;
+              drawElements(p, block);
+            };
+          });
+        });
       }
-    }
 
-    function showSpecialElements() {
-      elements.slice(0, 3).forEach(el => {
-        const block = blocks[el.block];
-        const position = (el.row - 1) * block.cols + (el.col - block.start);
-        const elementDiv = block.element.children[position];
-        if (elementDiv) {
-          elementDiv.style.display = 'block';
-          elementDiv.textContent = el.number;
+      function calculatePosition(e, block) {
+        let x = 0, y = (e.row - 1) * 42;
+        switch(block) {
+          case 's': x = (e.col - 1) * 42; break;
+          case 'f': x = (e.col - 3) * 42; break;
+          case 'd': x = (e.col - 3) * 42; break;
+          case 'p': x = (e.col - 13) * 42; break;
         }
-      });
-    }
+        return {x, y};
+      }
 
-    function showPeriodsAndGroups() {
-      document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
-      document.querySelectorAll('.group-container').forEach(el => el.style.display = 'flex');
-    }
+      function drawElements(p, block) {
+        p.stroke(150);
+        p.strokeWeight(1);
+        
+        elements.filter(e => 
+          e.block === block && 
+          e.number <= currentZ &&
+          e.number >= 3 // Αγνοεί τα πρώτα 2 στοιχεία
+        ).forEach(e => {
+          const pos = calculatePosition(e, block);
+          if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
+            p.fill(BLOCK_COLORS[block]);
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.fill(0);
+            p.textSize(e.number > 99 ? 10 : 12);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(e.number.toString(), pos.x + 20, pos.y + 20);
+          }
+        });
+      }
 
-    document.getElementById('next').addEventListener('click', () => {
-      if (currentZ < 118) {
+      function redrawAll() {
+        Object.keys(BLOCKS_CONFIG).forEach(block => {
+          const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
+          canvasDiv.innerHTML = '';
+          new p5(p => {
+            p.setup = () => {
+              const config = BLOCKS_CONFIG[block];
+              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+              canvas.parent(`canvas${block.toUpperCase()}`);
+              canvas.elt.style.height = `${config.rows * 42}px`;
+              drawElements(p, block);
+            };
+          });
+        });
+        updateInfo(currentZ);
+      }
+
+      function updateInfo(z) {
+        const element = elements.find(e => e.number === z);
+        if(!element) return;
+        
+        document.getElementById('elementInfo').innerHTML = 
+          `<strong>${element.name} (${element.symbol})</strong> [Z=${z}]`;
+        document.getElementById('subshells').textContent = 
+          `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').textContent = 
+          `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').textContent = 
+          `Εξωτερική: ${element.outerShell}`;
+        document.getElementById('explanation').textContent = 
+          `Επεξήγηση: ${element.explanation}`;
+        document.getElementById('remarks').textContent = 
+          `Παρατηρήσεις: ${element.remarks}`;
+      }
+
+      document.getElementById('nextElement').addEventListener('click', () => {
+        if (currentZ >= 118) return;
         currentZ++;
-        updateDisplay();
-        if (currentZ === 118) showPeriodsAndGroups();
-      }
-    });
-
-    document.getElementById('fillAll').addEventListener('click', async () => {
-      await fillElements(3, 118);
-      showSpecialElements();
-      showPeriodsAndGroups();
-    });
-
-    document.getElementById('toggleF').addEventListener('click', () => {
-      document.body.classList.toggle('collapsed');
-    });
-
-    document.getElementById('reset').addEventListener('click', () => {
-      currentZ = 3;
-      document.body.classList.remove('collapsed');
-      document.querySelectorAll('.element').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.period-label, .group-container').forEach(el => el.style.display = 'none');
-      document.getElementById('remarks').textContent = 'Πατήστε "Επόμενο" για να ξεκινήσετε';
-    });
-
-    document.querySelectorAll('.group-container').forEach(container => {
-      container.addEventListener('click', () => {
-        showOldGroups = !showOldGroups;
-        container.querySelectorAll('.old-group').forEach(el => 
-          el.style.display = showOldGroups ? 'block' : 'none'
-        );
-        container.querySelectorAll('.group-label:not(.old-group)').forEach(el => 
-          el.style.display = showOldGroups ? 'none' : 'block'
-        );
+        redrawAll();
       });
-    });
 
-    loadElements();
+      document.getElementById('fillAll').addEventListener('click', () => {
+        currentZ = 118;
+        redrawAll();
+        setTimeout(() => { 
+          currentZ = 1;
+          redrawAll();
+          setTimeout(() => {
+            currentZ = 2;
+            redrawAll();
+            document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
+          }, 300);
+        }, 300);
+      });
+
+      document.getElementById('reset').addEventListener('click', () => {
+        currentZ = 3;
+        redrawAll();
+        document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
+      });
+
+      document.getElementById('toggleFBlock').addEventListener('click', () => {
+        document.body.classList.toggle('collapsed');
+        redrawAll();
+      });
+
+      loadElements();
+    })();
   </script>
 </body>
 </html>
