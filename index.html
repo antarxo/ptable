@@ -82,10 +82,10 @@
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
     .collapsed #canvasP { top: 100px; left: 560px; }
-    /* Σ collapsed: ο f τομέας μετατοπίζεται:
-         - το full view του f είναι στο left: 134px και top: 100px,
+    /* Σ collapsed: ο f τομέας μετατοπίζεται
+         - στο full view ο f έχει left: 134px, top: 100px.
          - στο collapsed μετατοπίζεται κατά 42px δεξιότερα (134+42 = 176px)
-         - και κατεβαίνει κατά 84px (π.χ. top: 100+84 = 184px, αλλά σύμφωνα με οδηγίες εδώ θα τοποθετηθεί στο 194px, ώστε να αφήνει 15px από τα υπόλοιπα, π.χ. εάν τα s, d, p καταλήγουν στο 179px ή παρόμοιο – εδώ ορίζουμε top: 194px)
+         - και κατεβαίνει 84px (π.χ. top: 100+84 = 184px, αλλά σύμφωνα με τις οδηγίες εδώ ορίζουμε top: 194px)
     */
     .collapsed #canvasF { top: 194px; left: 176px; width: 1326px; }
   </style>
@@ -143,13 +143,13 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και οδηγίες μέσω remarks στο JSON.
-      // Τα στοιχεία 1 και 2 δεν εμφανίζονται μέχρι να φτάσει το 118,
-      // και μετά με διαδοχικά κλικ "Επόμενο" θα εμφανιστούν: 
-      // currentZ == 119 → εμφανίζεται το στοιχείο 1,
-      // currentZ == 120 → εμφανίζεται το στοιχείο 2.
+      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και οδηγίες μέσω remarks.
+      // Τα στοιχεία 1 και 2 δεν εμφανίζονται μέχρι το 118,
+      // και μετά με διαδοχικά κλικ "Επόμενο" θα εμφανιστούν:
+      // currentZ == 119 → στοιχείο 1,
+      // currentZ == 120 → στοιχείο 2.
       let elements = [];
-      let currentZ = 0; 
+      let currentZ = 0;
       let currentState = 'main';
 
       async function loadElements() {
@@ -180,17 +180,17 @@
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         switch(block) {
-          case 's':
-            x = (e.col - 1) * 42;
+          case 's': 
+            x = (e.col - 1) * 42; 
             break;
-          case 'f':
-            x = (e.col - 3) * 42;
+          case 'f': 
+            x = (e.col - 3) * 42; 
             break;
-          case 'd':
-            x = (e.col - 3) * 42;
+          case 'd': 
+            x = (e.col - 3) * 42; 
             break;
-          case 'p':
-            x = (e.col - 13) * 42;
+          case 'p': 
+            x = (e.col - 13) * 42; 
             break;
         }
         return { x, y };
@@ -199,21 +199,14 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        elements.filter(e => {
-          // Αν currentZ < 118, εμφανίζονται μόνο τα στοιχεία με e.number ≥ 3 και e.number ≤ currentZ.
-          if (currentZ < 118) {
-            return e.number >= 3 && e.number <= currentZ;
-          } else if (currentZ === 118) {
-            // Όλα τα στοιχεία 3..118 εμφανίζονται, αλλά τα 1 και 2 παραμένουν κενά.
-            return e.number >= 3 && e.number <= 118;
-          } else if (currentZ === 119) {
-            // Εμφάνιση στοιχείου 1 μαζί με τα 3..118.
-            return (e.number >= 3 && e.number <= 118) || (e.number === 1);
-          } else {
-            // currentZ >= 120: εμφανίζονται όλα (1,2, και 3..118).
-            return (e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2);
-          }
-        }).forEach(e => {
+        // Εφαρμόζουμε το φίλτρο ώστε να συμπληρώνονται μόνο τα στοιχεία που ανήκουν στον τρέχοντα τομέα.
+        const minNum = (currentZ >= 118) ? 1 : 3;
+        elements.filter(e => e.block === block && (
+          (currentZ < 118 && e.number >= 3 && e.number <= currentZ) ||
+          (currentZ === 118 && e.number >= 3 && e.number <= 118) ||
+          (currentZ === 119 && ((e.number >= 3 && e.number <= 118) || e.number === 1)) ||
+          (currentZ >= 120 && ((e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2)))
+        )).forEach(e => {
           const pos = calculatePosition(e, block);
           if (pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
             p.fill(BLOCK_COLORS[block]);
@@ -240,7 +233,7 @@
             };
           });
         });
-        // Εάν το currentZ είναι ≥ 118, εμφανίζουμε τις περίοδοι.
+        // Εμφάνιση ονομάτων περιόδων μόλις το currentZ είναι ≥ 118
         if (currentZ >= 118) {
           document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
         }
@@ -271,21 +264,18 @@
 
       document.getElementById('nextElement').addEventListener('click', () => {
         if (currentZ < 3) {
-          currentZ = 3; // Ξεκινάμε με το στοιχείο 3
+          currentZ = 3;
         } else if (currentZ < 118) {
           currentZ++;
         } else if (currentZ === 118) {
-          // Μετά το 118, το πρώτο κλικ εμφανίζει το στοιχείο 1
           currentZ = 119;
         } else if (currentZ === 119) {
-          // Το επόμενο κλικ εμφανίζει το στοιχείο 2
           currentZ = 120;
         }
         redrawAll();
       });
 
       document.getElementById('fillAll').addEventListener('click', () => {
-        // Ολοκληρώνουμε με όλα τα στοιχεία (3..118, και 1,2)
         currentZ = 120;
         redrawAll();
       });
