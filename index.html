@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας – Info Panel & Buttons Σταθερά</title>
+  <title>Περιοδικός Πίνακας – Info Panel & Fixed Buttons</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     /* Βασικές ρυθμίσεις */
@@ -12,7 +12,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Τίτλος */
+    /* Τίτλος – ανεβασμένος ώστε να μην επικαλύπτει τα ονόματα ομάδων */
     #title {
       position: absolute;
       top: 10px;
@@ -22,7 +22,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Info Panel στο full view */
+    /* Info Panel στο full view: κεντρική τοποθέτηση */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -41,31 +41,36 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Info Panel στο collapsed view */
+    /* Info Panel στο collapsed view: width 300px, top 100px και left = (p.right + 42px) */
     body.collapsed #infoPanel {
       width: 300px;
       top: 100px;
-      left: 42px;
+      left: 428px;  /* Παράδειγμα: αν p έχει left=134px και width=252px, δεξί άκρο = 386px, +42 = 428px */
       transform: none;
+      height: 300px;  /* Ορισμένο σταθερό ύψος ώστε να χωράνε τα κουμπιά */
     }
     /* Τα εσωτερικά τμήματα του infoPanel */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
-    /* Το #rightPanel με κατακόρυφη διάταξη σταθερή σε όλες τις μορφές */
+    /* #rightPanel: Fixed στη κάτω δεξιά γωνία της οθόνης με κατακόρυφη διάταξη */
     #rightPanel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
       display: flex;
       flex-direction: column;
       gap: 5px;
+      z-index: 100;
     }
-    /* Ολοι οι καμβάδες έχουν ομαλή μετάβαση και εφέ "υπερυψωμένων" */
+    /* Όλοι οι καμβάδες έχουν ομαλή μετάβαση και "υπερυψωμένο" εφέ */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων – παραμένει στη θέση */
+    /* Καμβάς Περιόδων: παραμένει στη θέση left 6px, top 100px */
     #canvasPeriods {
       left: 6px;
       top: 100px;
@@ -75,7 +80,8 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες Ομάδων (σταθερές διαστάσεις όπως προηγουμένως) */
+    /* Καμβάδες Ομάδων: κάθε πίνακας έχει 2 σειρές, κάθε κελί 40px x 16px με 2px διάκενο οριζόντια */
+    /* Συνολικό ύψος = 32px. Τοποθετούνται με top = 66px (ώστε το κάτω άκρο να είναι στο 98px) */
     #canvasS_groups {
       width: 82px;
       height: 32px;
@@ -97,16 +103,22 @@
       display: none;
       z-index: 11;
     }
-    /* Ορισμός θέσεων κύριων καμβάδων (ίδιοι σε full view και collapsed view) */
+    /* Χρώματα blocks για τους κύριους τομείς */
+    .s-block { background: #ffcccc !important; }
+    .p-block { background: #ccffcc !important; }
+    .d-block { background: #ccccff !important; }
+    .f-block { background: #ffe5cc !important; }
+    /* Θέσεις κύριων καμβάδων στο full view (όπως προηγουμένως) */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
+    /* Στην collapsed view οι κύριοι καμβάδες παραμένουν στις ίδιες θέσεις */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 100px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 134px; width: 420px; }
     .collapsed #canvasP { top: 100px; left: 134px; width: 252px; }
-    /* Οι παλαιές ετικέτες περιόδων παραμένουν όπως είχαν */
+    /* Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν */
     .period-label {
       position: absolute;
       left: 15px;
@@ -133,12 +145,13 @@
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Καμβάδες τομέων -->
+  <!-- Καμβάδες Τομέων -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
+  <!-- Info Panel -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -196,7 +209,6 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Εμφάνιση: στην collapsed view, οι ομάδες εμφανίζονται με την ίδια δομή (πάνω: νέα, κάτω: παλιά)
           p.fill(0);
           p.text("1", 20, 8);
           p.text("2", 20+42, 8);
@@ -282,8 +294,8 @@
       let currentZ = 0;
       /* Μετρητής:
          120: full view χωρίς ομάδες,
-         121: εμφάνιση ομάδων (πάνω: νέα, κάτω: παλιά) – collapsed view.
-         122: (και παραπάνω) συνεχίζεται ο μετρητής.
+         121: collapsed view με infoPanel και ομάδες (mode: infoPanel έχει width 300px, top 100px, left = (p.right + 42px)),
+         122: μετά συνεχίζεται ο μετρητής.
       */
       
       function updateToggleButton() {
@@ -310,12 +322,8 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              // Θέσεις κύριων καμβάδων παραμένουν ίδιες και στις δύο μορφές
-              if(document.body.classList.contains('collapsed')){
-                canvas.elt.style.left = (block==='s' ? "50px" : "134px");
-              } else {
-                canvas.elt.style.left = (block==='s' ? "50px" : "134px");
-              }
+              // Οι κύριοι καμβάδες παραμένουν στις ίδιες θέσεις σε full view και collapsed view
+              canvas.elt.style.left = (block==='s' ? "50px" : "134px");
               drawElements(p, block);
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => e.block === block && e.number >= 3 && e.number <= currentZ);
@@ -380,9 +388,7 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              canvas.elt.style.left = (document.body.classList.contains('collapsed')
-                ? (block==='s' ? "50px" : "134px")
-                : (block==='s' ? "50px" : "134px"));
+              canvas.elt.style.left = (block==='s' ? "50px" : "134px");
               drawElements(p, block);
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => e.block === block && e.number >= 3 && e.number <= currentZ);
@@ -402,13 +408,10 @@
         if(!document.body.classList.contains('collapsed')){
           let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
-          if(currentZ <= 20){
-            shiftP = 0; shiftD = 0;
-          } else if(currentZ >= 21 && currentZ <= 30){
-            shiftP = 42 * (currentZ - 20);
-          } else if(currentZ >= 31 && currentZ <= 56){
-            shiftP = 42 * 10;
-          } else if(currentZ >= 57 && currentZ <= 70){
+          if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+          else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
+          else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
+          else if(currentZ >= 57 && currentZ <= 70) {
             shiftP = 42 * 10 + 42 * (currentZ - 56);
             shiftD = 42 * (currentZ - 56);
           } else {
@@ -425,7 +428,7 @@
           document.getElementById('canvasP').style.left = "564px";
         }
         // Εμφάνιση καμβάδων ομάδων και περιόδων όταν currentZ >= 120
-        if(currentZ >= 120){
+        if(currentZ >= 120) {
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
           document.getElementById('canvasS_groups').style.display = "block";
@@ -446,9 +449,10 @@
           document.getElementById('canvasD_groups').style.display = "none";
           document.getElementById('canvasP_groups').style.display = "none";
         }
-        // Στην collapsed view, ο infoPanel ορίζεται με left 42px και width 300px
+        // Στην collapsed view, ο infoPanel ορίζεται με left 428px και width 300px,
+        // ενώ στο full view παραμένει στο κέντρο με width 1300px.
         if(document.body.classList.contains('collapsed')){
-          document.getElementById('infoPanel').style.left = "42px";
+          document.getElementById('infoPanel').style.left = "428px";
           document.getElementById('infoPanel').style.width = "300px";
         } else {
           document.getElementById('infoPanel').style.left = "";
@@ -481,13 +485,20 @@
       }
       
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ < 3) currentZ = 3;
-        else if(currentZ < 118) currentZ++;
-        else if(currentZ === 118) currentZ = 119;
-        else if(currentZ === 119) currentZ = 120;
-        else if(currentZ === 120) currentZ = 121;
-        else if(currentZ === 121) currentZ = 122;
-        else currentZ++;
+        if(currentZ < 3)
+          currentZ = 3;
+        else if(currentZ < 118)
+          currentZ++;
+        else if(currentZ === 118)
+          currentZ = 119;
+        else if(currentZ === 119)
+          currentZ = 120;
+        else if(currentZ === 120)
+          currentZ = 121;
+        else if(currentZ === 121)
+          currentZ = 122;
+        else
+          currentZ++;
         redrawAll();
       });
       
