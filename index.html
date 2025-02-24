@@ -21,7 +21,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών – διατηρεί τις αρχικές του διαστάσεις και διάταξη */
+    /* Πίνακας πληροφοριών – σταθερός, όπως αρχικά */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -38,34 +38,45 @@
       top: 500px;
       z-index: 40;
     }
+    /* Στην collapsed view ο infoPanel τοποθετείται στο δεξί μέρος με κατακόρυφη διάταξη */
+    body.collapsed #infoPanel {
+      flex-direction: column;
+      width: 300px;
+      top: 100px;
+      right: 50px;
+      left: auto;
+    }
+    /* Τα τμήματα μέσα στο infoPanel παραμένουν σταθερά */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
-    /* Καμβάδες τομέων */
+    /* Για τα κουμπιά: το rightPanel σε collapsed view, τα κουμπιά σε στήλη */
+    body.collapsed #rightPanel {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
-      /* Εφέ "υπερυψωμένων": ανεβάζουμε όλους τους καμβάδες κατά 10px */
+      /* Εφέ υπερυψωμένων: ανεβάζουμε όλους κατά 10px */
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων – φόντο #f0f0f0, θέση: left=6px, top=80px */
+    /* Καμβάς Περιόδων – θέτουμε top=100px ώστε να ευθυγραμμίζεται με τον πίνακα στοιχείων, left=6px για 2px διάκενο */
     #canvasPeriods {
       position: absolute;
       left: 6px;
-      top: 80px;
+      top: 100px;
       width: 42px;
       height: 292px;
       background: #f0f0f0;
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες Ομάδων:
-       - Για s: 2x2, κάθε κελί 40×20, διάκενο 2px → συνολικό μέγεθος: 82×42
-       - Για d: 2x10 → πλάτος = 10*40 + 9*2 = 418px, ύψος = 42px
-       - Για p: 2x6 → πλάτος = 6*40 + 5*2 = 250px, ύψος = 42px
-       Το φόντο είναι #f0f0f0.
-    */
+    /* Καμβάδες Ομάδων */
+    /* Για s: 2 σειρές x 2 στήλες, κάθε κελί 40×20, 2px διάκενο → συνολικό μέγεθος: 82×42 */
     #canvasS_groups {
       position: absolute;
       width: 82px;
@@ -74,6 +85,7 @@
       display: none;
       z-index: 11;
     }
+    /* Για d: 2×10, πλάτος = 10×40 + 9×2 = 418px, ύψος 42px */
     #canvasD_groups {
       position: absolute;
       width: 418px;
@@ -82,6 +94,7 @@
       display: none;
       z-index: 11;
     }
+    /* Για p: 2×6, πλάτος = 6×40 + 5×2 = 250px, ύψος 42px */
     #canvasP_groups {
       position: absolute;
       width: 250px;
@@ -105,7 +118,7 @@
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
     .collapsed #canvasP { top: 100px; left: 564px; width: 252px; }
-    /* (Οι παλαιές ετικέτες περιόδων, αν υπάρχουν, παραμένουν) */
+    /* (Οι παλαιές ετικέτες περιόδων, αν υπάρχουν, παραμένουν όπως είχαν) */
     .period-label {
       position: absolute;
       left: 15px;
@@ -159,7 +172,7 @@
   
   <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
   <script>
-    // Global: Καμβάς Περιόδων
+    // Global: Καμβάς Περιόδων (δεν επανασχεδιάζεται αν έχει ήδη δημιουργηθεί)
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -182,8 +195,9 @@
       });
       window.periodsInitialized = true;
     }
-    // Global: Καμβάδες Ομάδων – τώρα σχεδιάζουμε και τις δύο σειρές σε κάθε καμβά
+    // Global: Καμβάδες Ομάδων. Δείχνουμε είτε μόνο τα παλιά (mode 1) είτε και και τα νέα (mode 2).
     function initGroupsCanvases() {
+      if(window.groupsInitialized) return;
       // Για s:
       new p5(p => {
         p.setup = () => {
@@ -194,18 +208,21 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Στην πάνω σειρά (y=0) γράφουμε τη νέα αρίθμηση: "1", "2"
-          p.fill(0);
-          p.text("1", 20, 10);
-          p.text("2", 20 + 42/2, 10); // Δεξιά κελί; ή μπορούμε να τοποθετήσουμε σωστά: 
-          // Αν τα κελιά είναι 40px πλάτος και 2px διάκενο, τα κελιά θα είναι:
-          // κελί 1: x=0, y=0, κελί 2: x = 40+2 = 42, y=0.
-          // Επομένως:
-          p.text("1", 0 + 20, 0 + 10);
-          p.text("2", 42 + 20, 0 + 10);
-          // Στη δεύτερη σειρά (y = 20+2 = 22) γράφουμε τα παλιά ονόματα: "IA", "IIA"
-          p.text("IA", 0 + 20, 22 + 10);
-          p.text("IIA", 42 + 20, 22 + 10);
+          // Αν currentZ == 121 εμφανίζουμε μόνο την κάτω σειρά (old), αν 122 εμφανίζουμε και την πάνω (new) και την κάτω.
+          if(window.currentZ === 121) {
+            // Old row: y = 22, δύο κελιά
+            p.fill(0);
+            p.text("IA", 0 + 20, 22 + 10);
+            p.text("IIA", 42 + 20, 22 + 10);
+          } else if(window.currentZ >= 122) {
+            // New row (πάνω): y = 0
+            p.fill(0);
+            p.text("1", 0 + 20, 0 + 10);
+            p.text("2", 42 + 20, 0 + 10);
+            // Old row (κάτω): y = 22
+            p.text("IA", 0 + 20, 22 + 10);
+            p.text("IIA", 42 + 20, 22 + 10);
+          }
         };
       });
       // Για d:
@@ -218,22 +235,33 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πάνω σειρά: νέα αρίθμηση 3 έως 12
-          for(let c = 0; c < 10; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 0, 40, 20);
-            p.fill(0);
-            p.text((c+3).toString(), x + 20, 10);
-          }
-          // Δεύτερη σειρά: παλιά ονόματα για d
-          const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
-          for(let c = 0; c < 10; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 22, 40, 20);
-            p.fill(0);
-            p.text(oldLabels[c], x + 20, 22 + 10);
+          if(window.currentZ === 121) {
+            const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
+            for(let c = 0; c < 10; c++){
+              let x = c * (40 + 2);
+              p.fill(240);
+              p.rect(x, 22, 40, 20);
+              p.fill(0);
+              p.text(oldLabels[c], x + 20, 22 + 10);
+            }
+          } else if(window.currentZ >= 122) {
+            // New row (πάνω): 3-12
+            for(let c = 0; c < 10; c++){
+              let x = c * (40 + 2);
+              p.fill(240);
+              p.rect(x, 0, 40, 20);
+              p.fill(0);
+              p.text((c+3).toString(), x + 20, 0 + 10);
+            }
+            // Old row (κάτω):
+            const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
+            for(let c = 0; c < 10; c++){
+              let x = c * (40 + 2);
+              p.fill(240);
+              p.rect(x, 22, 40, 20);
+              p.fill(0);
+              p.text(oldLabels[c], x + 20, 22 + 10);
+            }
           }
         };
       });
@@ -247,26 +275,38 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πάνω σειρά: νέα αρίθμηση 13 έως 18
-          for(let c = 0; c < 6; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 0, 40, 20);
-            p.fill(0);
-            p.text((c+13).toString(), x + 20, 10);
-          }
-          // Δεύτερη σειρά: παλιά ονόματα για p: "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
-          const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
-          for(let c = 0; c < 6; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 22, 40, 20);
-            p.fill(0);
-            p.text(oldLabels[c], x + 20, 22 + 10);
+          if(window.currentZ === 121) {
+            const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
+            for(let c = 0; c < 6; c++){
+              let x = c * (40 + 2);
+              p.fill(240);
+              p.rect(x, 22, 40, 20);
+              p.fill(0);
+              p.text(oldLabels[c], x + 20, 22 + 10);
+            }
+          } else if(window.currentZ >= 122) {
+            // New row (πάνω): 13-18
+            for(let c = 0; c < 6; c++){
+              let x = c * (40 + 2);
+              p.fill(240);
+              p.rect(x, 0, 40, 20);
+              p.fill(0);
+              p.text((c+13).toString(), x + 20, 0 + 10);
+            }
+            // Old row (κάτω):
+            const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
+            for(let c = 0; c < 6; c++){
+              let x = c * (40 + 2);
+              p.fill(240);
+              p.rect(x, 22, 40, 20);
+              p.fill(0);
+              p.text(oldLabels[c], x + 20, 22 + 10);
+            }
           }
         };
       });
       window.groupsInitialized = true;
+      window.lastGroupsMode = window.currentZ;
     }
   </script>
   
@@ -290,10 +330,9 @@
       let currentZ = 0;
       /* Μετρητής:
          120: full view χωρίς ομάδες,
-         121: εμφάνιση παλαιών ονομάτων ομάδων,
-         122: εμφάνιση και των δύο σειρών (δηλαδή, πάνω: νέα, κάτω: παλιά)
+         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων (κάτω σειρά),
+         122: εμφάνιση και των δύο σειρών (πάνω: νέα, κάτω: παλιά).
       */
-      let currentState = 'main';
   
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 122);
@@ -335,7 +374,6 @@
                 }
               }
               drawElements(p, block);
-              // Προσθήκη mouseClicked για ενημέρωση infoPanel με πληροφορίες από το JSON
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => e.block === block && e.number >= 3 && e.number <= currentZ);
                 for(let candidate of candidates) {
@@ -465,11 +503,10 @@
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
-          // Εμφάνιση καμβάδων ομάδων:
+          // Εμφάνιση καμβάδων ομάδων
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          // Τοποθέτηση: οι καμβάδες ομάδων τοποθετούνται πάνω από τους κύριους καμβάδες
           document.getElementById('canvasS_groups').style.top = "50px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -478,11 +515,8 @@
           let pLeft = document.getElementById('canvasP').style.left;
           document.getElementById('canvasP_groups').style.top = "50px";
           document.getElementById('canvasP_groups').style.left = pLeft;
-          // Ο μετρητής για τους καμβάδες ομάδων: 
-          // currentZ = 121: εμφανίζονται μόνο η δεύτερη σειρά (παλιά ονόματα)
-          // currentZ ≥ 122: εμφανίζονται και οι δύο σειρές (πάνω: νέα, κάτω: παλιά)
-          let groupsMode = (currentZ === 121) ? 1 : 2;
-          initGroupsCanvases(groupsMode);
+          // Ο μετρητής: currentZ = 121 -> μόνο old, currentZ = 122 -> και new (πάνω) και old (κάτω)
+          initGroupsCanvases();
         } else {
           document.getElementById('canvasPeriods').style.display = "none";
           document.getElementById('canvasS_groups').style.display = "none";
@@ -525,9 +559,9 @@
         } else if(currentZ === 119){
           currentZ = 120;
         } else if(currentZ === 120){
-          currentZ = 121;  // πρώτα εμφανίζονται τα παλιά ονόματα ομάδων
+          currentZ = 121;  // πρώτα old ονόματα ομάδων
         } else if(currentZ === 121){
-          currentZ = 122;  // μετά εμφανίζονται και οι νέες αριθμήσεις (δηλαδή, και οι δύο σειρές)
+          currentZ = 122;  // μετά εμφανίζονται και οι νέες αριθμήσεις (και old)
         } else {
           currentZ++;
         }
