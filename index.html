@@ -322,6 +322,13 @@
         'd': '#ccccff',
         'f': '#ffe5cc'
       };
+      // Νέος χάρτης για το χρώμα του συμβόλου (με πιο σκουρότερους τόνους)
+      const BLOCK_SYMBOL_COLORS = {
+        's': '#cc0000', // dark red
+        'p': '#ff8c00', // dark orange
+        'd': '#00008b', // dark blue
+        'f': '#006400'  // dark green
+      };
       const BLOCKS_CONFIG = {
         s: { cols: 2, rows: 7 },
         p: { cols: 6, rows: 7 },
@@ -557,9 +564,9 @@
         }
         const element = elements.find(e => e.number === z);
         if(!element) return;
-        // Εμφάνιση στοιχείων με το σύμβολο στο χρώμα του τομέα, μεγαλύτερη γραμματοσειρά και έντονο
+        // Εμφάνιση στοιχείων: Το σύμβολο εμφανίζεται με το αντίστοιχο πιο σκουρότερο χρώμα
         document.getElementById('elementInfo').innerHTML =
-          `<strong>${element.name} (<span style="color:${BLOCK_COLORS[element.block]}; font-size:24px; font-weight:bold;">${element.symbol}</span>)</strong> [Z=${z}]`;
+          `<strong>${element.name} (<span style="color:${BLOCK_SYMBOL_COLORS[element.block]}; font-size:24px; font-weight:bold;">${element.symbol}</span>)</strong> [Z=${z}]`;
   
         // Μορφοποίηση των υποστιβαδών, αν το πεδίο subshells υπάρχει
         document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
