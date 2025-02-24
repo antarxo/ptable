@@ -59,7 +59,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Περίοδοι */
+    /* Περίοδοι – προσθέτουμε z-index για να εμφανίζονται πάνω από τα canvases */
     .period-label {
       position: absolute;
       left: 15px;
@@ -71,6 +71,7 @@
       border-radius: 3px;
       display: none;
       transition: all 0.3s ease;
+      z-index: 10;
     }
     /* Διάταξη blocks - Full view */
     .full #canvasS { top: 100px; left: 50px; width: 84px; }
@@ -81,9 +82,8 @@
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
     .collapsed #canvasP { top: 100px; left: 560px; }
-    /* Ο f τομέας: στο collapsed, το πάνω μέρος του να αφήνει 15px κενό από το κάτω όριο των s, d, p (394px + 15 = 409px)
-       και μετατοπίζεται δεξιότερα κατά 42px (από left 152px σε left 194px) */
-    .collapsed #canvasF { top: 409px; left: 194px; width: 1326px; }
+    /* Σ collapsed: ο f τομέας τοποθετείται με top 110px (10px κάτω από τα s, d, p) και μετατοπίζεται δεξιότερα κατά 42px (από 134px σε 176px) */
+    .collapsed #canvasF { top: 110px; left: 176px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -139,7 +139,7 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και δυνατότητα οδηγίας μέσω του remarks στο JSON.
+      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και δυνατότητα οδηγιών (μέσω remarks στο JSON)
       let elements = [];
       let currentZ = 0;
       let currentState = 'main';
@@ -172,17 +172,17 @@
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         switch(block) {
-          case 's': 
-            x = (e.col - 1) * 42; 
+          case 's':
+            x = (e.col - 1) * 42;
             break;
-          case 'f': 
-            x = (e.col - 3) * 42; 
+          case 'f':
+            x = (e.col - 3) * 42;
             break;
-          case 'd': 
-            x = (e.col - 3) * 42; 
+          case 'd':
+            x = (e.col - 3) * 42;
             break;
-          case 'p': 
-            x = (e.col - 13) * 42; 
+          case 'p':
+            x = (e.col - 13) * 42;
             break;
         }
         return { x, y };
@@ -191,9 +191,9 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        // Αν currentZ >= 118, εμφανίζουμε όλα τα στοιχεία (≥ 1). Αλλιώς, μόνο εκείνα με e.number ≥ 3.
+        // Αν currentZ ≥ 118, εμφανίζουμε όλα τα στοιχεία (δηλαδή minNum = 1). Αλλιώς, εμφανίζουμε μόνο εκείνα με αριθμό ≥ 3.
         const minNum = (currentZ >= 118) ? 1 : 3;
-        elements.filter(e => 
+        elements.filter(e =>
           e.block === block &&
           e.number <= currentZ &&
           e.number >= minNum
@@ -228,9 +228,10 @@
       }
 
       function updateInfo(z) {
-        // Αν currentZ είναι 0, εμφανίζουμε οδηγίες (εφόσον υπάρχουν στο remarks του JSON)
+        // Εμφανίζουμε οδηγίες όταν currentZ = 0 (ίσως περιέχονται στο remarks του JSON)
         if (z < 3) {
-          document.getElementById('elementInfo').innerHTML = "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
+          document.getElementById('elementInfo').innerHTML =
+            "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           document.getElementById('subshells').textContent = "";
           document.getElementById('shells').textContent = "";
           document.getElementById('outerShell').textContent = "";
@@ -240,7 +241,7 @@
         }
         const element = elements.find(e => e.number === z);
         if (!element) return;
-        document.getElementById('elementInfo').innerHTML = 
+        document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (${element.symbol})</strong> [Z=${z}]`;
         document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
         document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
@@ -250,7 +251,7 @@
       }
 
       document.getElementById('nextElement').addEventListener('click', () => {
-        // Αν το currentZ είναι μικρότερο από 3, θέτουμε το currentZ στο 3 για να ξεκινήσουμε από το στοιχείο 3
+        // Αν currentZ < 3, θέτουμε απευθείας στο 3 για να ξεκινήσουμε από το στοιχείο 3.
         if (currentZ < 3) {
           currentZ = 3;
         } else if (currentZ < 118) {
@@ -262,7 +263,7 @@
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 118;
         redrawAll();
-        // Με το currentZ=118, ο κύριος βρόχος σχεδίασης θα εμφανίσει όλα τα στοιχεία (≥ 1)
+        // Εμφάνιση των ονομάτων των περιόδων
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
       });
 
