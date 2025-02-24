@@ -11,7 +11,6 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-
     #title {
       position: absolute;
       top: 20px;
@@ -21,7 +20,6 @@
       font-weight: bold;
       z-index: 10;
     }
-
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -38,35 +36,29 @@
       top: 500px;
       z-index: 10;
     }
-
     #leftPanel, #middlePanel {
       border-right: 1px solid #ccc;
       padding-right: 20px;
     }
-
     #leftPanel { width: 30%; }
     #middlePanel { width: 50%; }
     #rightPanel { width: 20%; }
-
     #remarks {
       font-style: italic;
       color: #666;
       margin-top: 10px;
     }
-
     .canvas {
       position: absolute;
       background: transparent;
       z-index: 1;
       transition: all 0.5s ease-in-out;
     }
-
     /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-
     /* Περίοδοι */
     .period-label {
       position: absolute;
@@ -80,17 +72,18 @@
       display: none;
       transition: all 0.3s ease;
     }
-
-    /* Διάταξη blocks */
+    /* Διάταξη blocks - Full view */
     .full #canvasS { top: 100px; left: 50px; width: 84px; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; }
     .full #canvasD { top: 100px; left: 722px; width: 420px; }
     .full #canvasP { top: 100px; left: 1142px; width: 252px; }
-
+    /* Διάταξη blocks - Collapsed view */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
-    .collapsed #canvasP { top: 100px; left: 566px; }
-    .collapsed #canvasF { top: 200px; left: 50px; width: 1326px; }
+    /* Αφαίρεση κενού μεταξύ d και p: το p‑block ξεκινά στο 560px αντί για 566px */
+    .collapsed #canvasP { top: 100px; left: 560px; }
+    /* Μετατόπιση του f‑block: 60px πιο κάτω και 60px πιο δεξιά */
+    .collapsed #canvasF { top: 260px; left: 110px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -147,7 +140,7 @@
       };
 
       let elements = [];
-      let currentZ = 3;
+      let currentZ = 3; // Τα στοιχεία με αριθμούς 1 και 2 παραλείπονται αρχικά (δείκτης >=3)
       let currentState = 'main';
 
       async function loadElements() {
@@ -177,25 +170,33 @@
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         switch(block) {
-          case 's': x = (e.col - 1) * 42; break;
-          case 'f': x = (e.col - 3) * 42; break;
-          case 'd': x = (e.col - 3) * 42; break;
-          case 'p': x = (e.col - 13) * 42; break;
+          case 's': 
+            x = (e.col - 1) * 42; 
+            break;
+          case 'f': 
+            x = (e.col - 3) * 42; 
+            break;
+          case 'd': 
+            x = (e.col - 3) * 42; 
+            break;
+          case 'p': 
+            x = (e.col - 13) * 42; 
+            break;
         }
-        return {x, y};
+        return { x, y };
       }
 
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        
+        // Εμφάνιση στοιχείων με αριθμούς από 3 έως currentZ
         elements.filter(e => 
-          e.block === block && 
+          e.block === block &&
           e.number <= currentZ &&
           e.number >= 3
         ).forEach(e => {
           const pos = calculatePosition(e, block);
-          if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
+          if (pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
             p.fill(BLOCK_COLORS[block]);
             p.rect(pos.x, pos.y, 40, 40, 5);
             p.fill(0);
@@ -225,20 +226,14 @@
 
       function updateInfo(z) {
         const element = elements.find(e => e.number === z);
-        if(!element) return;
-        
+        if (!element) return;
         document.getElementById('elementInfo').innerHTML = 
           `<strong>${element.name} (${element.symbol})</strong> [Z=${z}]`;
-        document.getElementById('subshells').textContent = 
-          `Υποστιβάδες: ${element.subshells}`;
-        document.getElementById('shells').textContent = 
-          `Στιβάδες: ${element.shells}`;
-        document.getElementById('outerShell').textContent = 
-          `Εξωτερική: ${element.outerShell}`;
-        document.getElementById('explanation').textContent = 
-          `Επεξήγηση: ${element.explanation}`;
-        document.getElementById('remarks').textContent = 
-          `Παρατηρήσεις: ${element.remarks}`;
+        document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').textContent = `Εξωτερική: ${element.outerShell}`;
+        document.getElementById('explanation').textContent = `Επεξήγηση: ${element.explanation}`;
+        document.getElementById('remarks').textContent = `Παρατηρήσεις: ${element.remarks}`;
       }
 
       document.getElementById('nextElement').addEventListener('click', () => {
@@ -250,9 +245,8 @@
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 118;
         redrawAll();
-        
         setTimeout(() => {
-          // Προσθήκη στοιχείων 1 και 2 χωρίς αλλαγή currentZ
+          // Εμφάνιση των στοιχείων 1 και 2 (που ανήκουν στην πρώτη γραμμή) χωρίς αλλαγή currentZ
           elements.filter(e => e.number <= 2).forEach(e => {
             new p5(p => {
               p.setup = () => {
@@ -269,7 +263,6 @@
               };
             });
           });
-          
           document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
         }, 500);
       });
