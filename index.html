@@ -59,7 +59,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Περίοδοι – ορίζουμε υψηλό z-index και αυξάνουμε το διάστιχο (line-height) κατά 1px */
+    /* Περίοδοι – εμφανίζονται πάνω από τα canvases */
     .period-label {
       position: absolute;
       left: 15px;
@@ -78,16 +78,13 @@
     .full #canvasS { top: 100px; left: 50px; width: 84px; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; }
     .full #canvasD { top: 100px; left: 722px; width: 420px; }
+    /* Στην full view, όταν currentZ ≥ 20, ο p τομέας τοποθετείται κανονικά στα 1142px,
+       αλλιώς (για currentZ < 20) θα το μετακινήσουμε δυναμικά ώστε να είναι ακριβώς δίπλα στο s */
     .full #canvasP { top: 100px; left: 1142px; width: 252px; }
-    /* Διάταξη blocks - Collapsed view */
+    /* Διάταξη blocks - Collapsed view (δεν επηρεάζει το ζητούμενο για Z < 20) */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
     .collapsed #canvasP { top: 100px; left: 560px; }
-    /* Σ collapsed: ο f τομέας μετατοπίζεται από την full view θέση (left: 134px, top: 100px)
-         μετατοπίζοντας το κατά 42px δεξιότερα (134+42 = 176px)
-         και κατεβαίνει κατά 84px (ώστε το top να γίνει 100+84 = 184px, αλλά σύμφωνα με τις οδηγίες τοποθετούμε το 194px)
-         (η τιμή 194px διατηρεί την επιθυμητή τοποθέτηση στην εναλλαγή)
-    */
     .collapsed #canvasF { top: 194px; left: 176px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -95,7 +92,7 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
 
-  <!-- Οι ετικέτες των περιόδων έχουν μετακινηθεί κατά -21px από τις προηγούμενες τιμές -->
+  <!-- Ετικέτες Περιόδων (τα οποία έχουν μετακινηθεί κατά -21px σε σχέση με τις προηγούμενες τιμές) -->
   <div class="period-label" style="top: 109px">1η K</div>
   <div class="period-label" style="top: 149px">2η L</div>
   <div class="period-label" style="top: 189px">3η M</div>
@@ -144,10 +141,8 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και οδηγίες μέσω remarks.
-      // Τα στοιχεία 1 και 2 δεν εμφανίζονται μέχρι το 118,
-      // και μετά με διαδοχικά κλικ "Επόμενο" θα εμφανιστούν:
-      // currentZ == 119 → στοιχείο 1, currentZ == 120 → στοιχείο 2.
+      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και οδηγίες (μέσω remarks στο JSON).
+      // Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118, με διαδοχικά κλικ "Επόμενο" (119 για το 1, 120 για το 2).
       let elements = [];
       let currentZ = 0;
       let currentState = 'main';
@@ -177,21 +172,26 @@
         });
       }
 
+      // Η συνάρτηση calculatePosition έχει τροποποιηθεί για τον τομέα p:
+      // Αν currentZ < 20, τότε για στοιχεία της πρώτης περιόδου (row 1) αφαιρούμε 18, αλλιώς αφαιρούμε 13.
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
-        switch(block) {
-          case 's': 
-            x = (e.col - 1) * 42; 
-            break;
-          case 'f': 
-            x = (e.col - 3) * 42; 
-            break;
-          case 'd': 
-            x = (e.col - 3) * 42; 
-            break;
-          case 'p': 
-            x = (e.col - 13) * 42; 
-            break;
+        if (block === 's') {
+          x = (e.col - 1) * 42;
+        } else if (block === 'f') {
+          x = (e.col - 3) * 42;
+        } else if (block === 'd') {
+          x = (e.col - 3) * 42;
+        } else if (block === 'p') {
+          if (currentZ < 20) {
+            if (e.row === 1) {
+              x = (e.col - 18) * 42;  // για περίοδο 1, το αριστερό στοιχείο (He) θα ξεκινάει στο 0.
+            } else {
+              x = (e.col - 13) * 42;  // για τις επόμενες περιόδους.
+            }
+          } else {
+            x = (e.col - 13) * 42;
+          }
         }
         return { x, y };
       }
@@ -199,14 +199,19 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        // Εφαρμόζουμε το φίλτρο ώστε να συμπληρώνονται μόνο τα στοιχεία που ανήκουν στον τομέα
-        const minNum = (currentZ >= 118) ? 1 : 3;
-        elements.filter(e => e.block === block && (
-          (currentZ < 118 && e.number >= 3 && e.number <= currentZ) ||
-          (currentZ === 118 && e.number >= 3 && e.number <= 118) ||
-          (currentZ === 119 && ((e.number >= 3 && e.number <= 118) || e.number === 1)) ||
-          (currentZ >= 120 && ((e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2)))
-        )).forEach(e => {
+        // Εμφάνιση στοιχείων: αν currentZ < 118, εμφανίζονται μόνο εκείνα με e.number ≥ 3,
+        // αλλιώς μετά το 118 εμφανίζονται και τα στοιχεία 1 και 2 με διαδοχικά κλικ.
+        elements.filter(e => {
+          if (currentZ < 118) {
+            return e.block === block && e.number >= 3 && e.number <= currentZ;
+          } else if (currentZ === 118) {
+            return e.block === block && e.number >= 3 && e.number <= 118;
+          } else if (currentZ === 119) {
+            return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
+          } else {
+            return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2));
+          }
+        }).forEach(e => {
           const pos = calculatePosition(e, block);
           if (pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
             p.fill(BLOCK_COLORS[block]);
@@ -233,7 +238,13 @@
             };
           });
         });
-        // Εμφάνιση ονομάτων περιόδων μόλις το currentZ είναι ≥ 118
+        // Αν currentZ < 20, τοποθετούμε δυναμικά τον τομέα p έτσι ώστε να είναι σε επαφή με το s.
+        if (currentZ < 20) {
+          document.getElementById('canvasP').style.left = "134px";
+        } else {
+          document.getElementById('canvasP').style.left = "1142px";
+        }
+        // Εμφάνιση ονομάτων περιόδων μόλις currentZ ≥ 118
         if (currentZ >= 118) {
           document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
         }
