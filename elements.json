@@ -1,1549 +1,596 @@
-[
-    {
-        "number": 0,
-        "symbol": "Κύριο πλήκτρο το Συνέχεια",
-        "name": "Συμπληρώνει ένα ένα τα στοιχεία",
-        "subshells": "Πλήκτρο Συμπλήρωσε για αυτόματη συμπλήρωση",
-        "shells": "Εναλλαγή για συνεπτυγμένο Πίνακα",
-        "outerShell": "Reset για καθάρισμα",
-        "explanation": "καλώς ήλθατε στον δημιουργό Περιοδικού Πίνακα",
-        "remarks": "Ας ξεκινήσουμε τη δημιουργία του Περιοδικού Πίνακα από το στοιχείο 3. Εδώ θα βρίσκετε Παρατηρήσεις και οδηγίες για την κατά βήμα συμπλήρωση του Σύγχρονου Περιοδικού Πίνακα. Ας Ξεκινήσουμε! Πίέστε Επόμενο ή Ολοκλήρωσε",
-        "block": "s",
-        "row": 1,
-        "col": 1
-    },
-    {
-        "number": 1,
-        "symbol": "H",
-        "name": "Υδρογόνο",
-        "subshells": "1s¹",
-        "shells": "1",
-        "outerShell": "1",
-        "explanation": "Βασικό συστατικό του νερού και πιο ελαφρύ στοιχείο",
-        "remarks": "Παρατηρώντας τη δομή του στοιχείου ας πάμε στη συνέχεια στο επόμενο",
-        "block": "s",
-        "row": 1,
-        "col": 1
-    },
-    {
-        "number": 2,
-        "symbol": "He",
-        "name": "Ήλιο",
-        "subshells": "1s²",
-        "shells": "2",
-        "outerShell": "1",
-        "explanation": "Ευγενές αέριο, χρησιμοποιείται σε μπαλόνια",
-        "remarks": "Παρατηρώντας τη δομή του στοιχείου που διαφέρει από το προηγούμενο ας πάμε στη συνέχεια στο επόμενο",
-        "block": "p",
-        "row": 1,
-        "col": 18
-    },
-    {
-        "number": 3,
-        "symbol": "Li",
-        "name": "Λίθιο",
-        "subshells": "1s² 2s¹",
-        "shells": "2, 1",
-        "outerShell": "2",
-        "explanation": "Αλκάλιο μέταλλο, πολύ δραστικό",
-        "remarks": "",
-        "block": "s",
-        "row": 2,
-        "col": 1
-    },
-    {
-        "number": 4,
-        "symbol": "Be",
-        "name": "Βηρύλλιο",
-        "subshells": "1s² 2s²",
-        "shells": "2, 2",
-        "outerShell": "2",
-        "explanation": "Ελαφρύ μέταλλο, χρησιμοποιείται στην αεροδιαστημική",
-        "remarks": "Παρατηρώντας τη δομή του στοιχείου που διαφέρει από το προηγούμενο ας πάμε στη συνέχεια στο επόμενο",
-        "block": "s",
-        "row": 2,
-        "col": 2
-    },
-    {
-        "number": 5,
-        "symbol": "B",
-        "name": "Βόριο",
-        "subshells": "1s² 2s² 2p¹",
-        "shells": "2, 3",
-        "outerShell": "2",
-        "explanation": "Χρησιμοποιείται σε γυαλιά και κεραμικά",
-        "remarks": "",
-        "block": "p",
-        "row": 2,
-        "col": 13
-    },
-    {
-        "number": 6,
-        "symbol": "C",
-        "name": "Άνθρακας",
-        "subshells": "1s² 2s² 2p²",
-        "shells": "2, 4",
-        "outerShell": "2",
-        "explanation": "Βασικό συστατικό όλων των οργανικών ενώσεων",
-        "remarks": "Παρατηρώντας τη δομή του στοιχείου που διαφέρει από το προηγούμενο ας πάμε στη συνέχεια στο επόμενο",
-        "block": "p",
-        "row": 2,
-        "col": 14
-    },
-    {
-        "number": 7,
-        "symbol": "N",
-        "name": "Άζωτο",
-        "subshells": "1s² 2s² 2p³",
-        "shells": "2, 5",
-        "outerShell": "2",
-        "explanation": "Βασικό συστατικό της ατμόσφαιρας",
-        "remarks": "Παρατηρώντας τη δομή του στοιχείου που διαφέρει από το προηγούμενο ας πάμε στη συνέχεια στο επόμενο",
-        "block": "p",
-        "row": 2,
-        "col": 15
-    },
-    {
-        "number": 8,
-        "symbol": "O",
-        "name": "Οξυγόνο",
-        "subshells": "1s² 2s² 2p⁴",
-        "shells": "2, 6",
-        "outerShell": "2",
-        "explanation": "Απαραίτητο για την αναπνοή",
-        "remarks": "Παρατηρώντας τη δομή του στοιχείου που διαφέρει από το προηγούμενο ας πάμε στη συνέχεια στο επόμενο",
-        "block": "p",
-        "row": 2,
-        "col": 16
-    },
-    {
-        "number": 9,
-        "symbol": "F",
-        "name": "Φθόριο",
-        "subshells": "1s² 2s² 2p⁵",
-        "shells": "2, 7",
-        "outerShell": "2",
-        "explanation": "Το πιο ηλεκτραρνητικό στοιχείο",
-        "remarks": "Παρατηρώντας τη δομή του στοιχείου που διαφέρει από το προηγούμενο ας πάμε στη συνέχεια στο επόμενο",
-        "block": "p",
-        "row": 2,
-        "col": 17
-    },
-    {
-        "number": 10,
-        "symbol": "Ne",
-        "name": "Νέον",
-        "subshells": "1s² 2s² 2p⁶",
-        "shells": "2, 8",
-        "outerShell": "2",
-        "explanation": "Ευγενές αέριο, χρησιμοποιείται σε φωτεινές πινακίδες",
-        "remarks": "",
-        "block": "p",
-        "row": 2,
-        "col": 18
-    },
-       {
-        "number": 11,
-        "symbol": "Na",
-        "name": "Νάτριο",
-        "subshells": "1s² 2s² 2p⁶ 3s¹",
-        "shells": "2, 8, 1",
-        "outerShell": "3",
-        "explanation": "Αλκάλιο μέταλλο, χρησιμοποιείται σε αλάτι",
-        "remarks": "Παρατηρούμε την εξωτερική στιβάδα του στοιχείου που είναι ίδια με του στοιχείου με Ζ=3. Καλώς τοποθετήθηκε κάτω από αυτό. Ας πάμε στο επόμενο",
-        "block": "s",
-        "row": 3,
-        "col": 1
-    },
-    {
-        "number": 12,
-        "symbol": "Mg",
-        "name": "Μαγνήσιο",
-        "subshells": "1s² 2s² 2p⁶ 3s²",
-        "shells": "2, 8, 2",
-        "outerShell": "3",
-        "explanation": "Αναγκαίο για τη φωτοσύνθεση",
-        "remarks": "",
-        "block": "s",
-        "row": 3,
-        "col": 2
-    },
-    {
-        "number": 13,
-        "symbol": "Al",
-        "name": "Αργίλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p¹",
-        "shells": "2, 8, 3",
-        "outerShell": "3",
-        "explanation": "Ελαφρύ μέταλλο, χρησιμοποιείται σε συσκευασίες",
-        "remarks": "Παρατηρούμε την εξωτερική στιβάδα του στοιχείου που είναι ίδια με του στοιχείου με Ζ=4. Καλώς τοποθετήθηκε κάτω από αυτό (Η ...ιστορία επαναλαμβάνεται!). Ας πάμε στο επόμενο",
-        "block": "p",
-        "row": 3,
-        "col": 13
-    },
-    {
-        "number": 14,
-        "symbol": "Si",
-        "name": "Πυρίτιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p²",
-        "shells": "2, 8, 4",
-        "outerShell": "3",
-        "explanation": "Βασικό συστατικό των ημιαγωγών",
-        "remarks": "Παρατηρούμε πως η εξωτερική στιβάδα του στοιχείου είναι ίδια με του στοιχείου με Ζ=5. Καλώς τοποθετήθηκε λοιπόν κάτω από αυτό (Η ...ιστορία επαναλαμβάνεται!). Ας πάμε στο επόμενο",
-        "block": "p",
-        "row": 3,
-        "col": 14
-    },
-    {
-        "number": 15,
-        "symbol": "P",
-        "name": "Φωσφόρος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p³",
-        "shells": "2, 8, 5",
-        "outerShell": "3",
-        "explanation": "Απαραίτητο για τη ζωή",
-        "remarks": "",
-        "block": "p",
-        "row": 3,
-        "col": 15
-    },
-    {
-        "number": 16,
-        "symbol": "S",
-        "name": "Θείο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁴",
-        "shells": "2, 8, 6",
-        "outerShell": "3",
-        "explanation": "Χρησιμοποιείται σε οξέα και λιπάσματα",
-        "remarks": "",
-        "block": "p",
-        "row": 3,
-        "col": 16
-    },
-    {
-        "number": 17,
-        "symbol": "Cl",
-        "name": "Χλώριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁵",
-        "shells": "2, 8, 7",
-        "outerShell": "3",
-        "explanation": "Χρησιμοποιείται για την απολύμανση νερού",
-        "remarks": "",
-        "block": "p",
-        "row": 3,
-        "col": 17
-    },
-    {
-        "number": 18,
-        "symbol": "Ar",
-        "name": "Αργό",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶",
-        "shells": "2, 8, 8",
-        "outerShell": "3",
-        "explanation": "Ευγενές αέριο, χρησιμοποιείται σε συσκευασίες",
-        "remarks": "",
-        "block": "p",
-        "row": 3,
-        "col": 18
-    },
-    {
-        "number": 19,
-        "symbol": "K",
-        "name": "Κάλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹",
-        "shells": "2, 8, 8, 1",
-        "outerShell": "4",
-        "explanation": "Απαραίτητο για τη λειτουργία νευρικού συστήματος",
-        "remarks": "",
-        "block": "s",
-        "row": 4,
-        "col": 1
-    },
-    {
-        "number": 20,
-        "symbol": "Ca",
-        "name": "Ασβέστιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s²",
-        "shells": "2, 8, 8, 2",
-        "outerShell": "4",
-        "explanation": "Απαραίτητο για τα οστά και τους δόντια",
-        "remarks": "",
-        "block": "s",
-        "row": 4,
-        "col": 2
-    },
-     {
-        "number": 21,
-        "symbol": "Sc",
-        "name": "Σκάνδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹ 4s²",
-        "shells": "2, 8, 9, 2",
-        "outerShell": "4",
-        "explanation": "Μετάλλωμα που χρησιμοποιείται σε κράματα",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 3
-    },
-    {
-        "number": 22,
-        "symbol": "Ti",
-        "name": "Τιτάνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d² 4s²",
-        "shells": "2, 8, 10, 2",
-        "outerShell": "4",
-        "explanation": "Ελαφρύ και ανθεκτικό μέταλλο",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 4
-    },
-    {
-        "number": 23,
-        "symbol": "V",
-        "name": "Βανάδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d³ 4s²",
-        "shells": "2, 8, 11, 2",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται σε κράματα χάλυβα",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 5
-    },
-    {
-        "number": 24,
-        "symbol": "Cr",
-        "name": "Χρώμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s¹",
-        "shells": "2, 8, 13, 1",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται για ανοξείδωτες επικαλύψεις",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 6
-    },
-    {
-        "number": 25,
-        "symbol": "Mn",
-        "name": "Μαγγάνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s²",
-        "shells": "2, 8, 13, 2",
-        "outerShell": "4",
-        "explanation": "Απαραίτητο για τη μεταλλουργία",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 7
-    },
-    {
-        "number": 26,
-        "symbol": "Fe",
-        "name": "Σίδηρος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁶ 4s²",
-        "shells": "2, 8, 14, 2",
-        "outerShell": "4",
-        "explanation": "Βασικό συστατικό του χάλυβα",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 8
-    },
-    {
-        "number": 27,
-        "symbol": "Co",
-        "name": "Κοβάλτιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁷ 4s²",
-        "shells": "2, 8, 15, 2",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται σε μπαταρίες και κράματα",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 9
-    },
-    {
-        "number": 28,
-        "symbol": "Ni",
-        "name": "Νικέλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁸ 4s²",
-        "shells": "2, 8, 16, 2",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται σε κράματα και επικαλύψεις",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 10
-    },
-    {
-        "number": 29,
-        "symbol": "Cu",
-        "name": "Χαλκός",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s¹",
-        "shells": "2, 8, 18, 1",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται σε ηλεκτρικά καλώδια και κράματα",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 11
-    },
-    {
-        "number": 30,
-        "symbol": "Zn",
-        "name": "Ψευδάργυρος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s²",
-        "shells": "2, 8, 18, 2",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται για γαλβανισμό και κράματα",
-        "remarks": "",
-        "block": "d",
-        "row": 4,
-        "col": 12
-    },
-    {
-        "number": 31,
-        "symbol": "Ga",
-        "name": "Γάλλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p¹",
-        "shells": "2, 8, 18, 3",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται σε ημιαγωγούς",
-        "remarks": "",
-        "block": "p",
-        "row": 4,
-        "col": 13
-    },
-    {
-        "number": 32,
-        "symbol": "Ge",
-        "name": "Γερμάνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p²",
-        "shells": "2, 8, 18, 4",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται σε ημιαγωγούς και οπτικές ίνες",
-        "remarks": "",
-        "block": "p",
-        "row": 4,
-        "col": 14
-    },
-    {
-        "number": 33,
-        "symbol": "As",
-        "name": "Αρσενικό",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p³",
-        "shells": "2, 8, 18, 5",
-        "outerShell": "4",
-        "explanation": "Τοξικό στοιχείο, χρησιμοποιείται σε φυτοφάρμακα",
-        "remarks": "",
-        "block": "p",
-        "row": 4,
-        "col": 15
-    },
-    {
-        "number": 34,
-        "symbol": "Se",
-        "name": "Σελήνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁴",
-        "shells": "2, 8, 18, 6",
-        "outerShell": "4",
-        "explanation": "Απαραίτητο για τη ζωή σε μικρές ποσότητες",
-        "remarks": "",
-        "block": "p",
-        "row": 4,
-        "col": 16
-    },
-    {
-        "number": 35,
-        "symbol": "Br",
-        "name": "Βρώμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁵",
-        "shells": "2, 8, 18, 7",
-        "outerShell": "4",
-        "explanation": "Χρησιμοποιείται σε φάρμακα και φωτογραφικά υλικά",
-        "remarks": "",
-        "block": "p",
-        "row": 4,
-        "col": 17
-    },
-    {
-        "number": 36,
-        "symbol": "Kr",
-        "name": "Κρυπτό",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶",
-        "shells": "2, 8, 18, 8",
-        "outerShell": "4",
-        "explanation": "Ευγενές αέριο, χρησιμοποιείται σε φωτεινές πινακίδες",
-        "remarks": "",
-        "block": "p",
-        "row": 4,
-        "col": 18
-    },
-    {
-        "number": 37,
-        "symbol": "Rb",
-        "name": "Ρουβίδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 5s¹",
-        "shells": "2, 8, 18, 8, 1",
-        "outerShell": "5",
-        "explanation": "Αλκάλιο μέταλλο, χρησιμοποιείται σε ατομικά ρολόγια",
-        "remarks": "",
-        "block": "s",
-        "row": 5,
-        "col": 1
-    },
-    {
-        "number": 38,
-        "symbol": "Sr",
-        "name": "Στρόντιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 5s²",
-        "shells": "2, 8, 18, 8, 2",
-        "outerShell": "5",
-        "explanation": "Χρησιμοποιείται σε πυροτεχνήματα",
-        "remarks": "",
-        "block": "s",
-        "row": 5,
-        "col": 2
-    },
-    {
-        "number": 39,
-        "symbol": "Y",
-        "name": "Ύττριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹ 5s²",
-        "shells": "2, 8, 18, 9, 2",
-        "outerShell": "5",
-        "explanation": "Χρησιμοποιείται σε κράματα και ηλεκτρονικά",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 3
-    },
-    {
-        "number": 40,
-        "symbol": "Zr",
-        "name": "Ζιρκόνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d² 5s²",
-        "shells": "2, 8, 18, 10, 2",
-        "outerShell": "5",
-        "explanation": "Χρησιμοποιείται σε πυρηνικούς αντιδραστήρες",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 4
-    },
-     {
-        "number": 41,
-        "symbol": "Nb",
-        "name": "Νιόβιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s¹ 4d⁴",
-        "shells": "2, 8, 18, 12, 1",
-        "outerShell": "5",
-        "explanation": "Μετάλλειο με υψηλή αντοχή στη διάβρωση, χρησιμοποιείται σε κράματα",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 5
-    },
-    {
-        "number": 42,
-        "symbol": "Mo",
-        "name": "Μολυβδένιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s¹ 4d⁵",
-        "shells": "2, 8, 18, 13, 1",
-        "outerShell": "5",
-        "explanation": "Χρησιμοποιείται σε κράματα και ως καταλύτης",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 6
-    },
-    {
-        "number": 43,
-        "symbol": "Tc",
-        "name": "Τεχνήτιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d⁵",
-        "shells": "2, 8, 18, 13, 2",
-        "outerShell": "5",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται στην ιατρική",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 7
-    },
-    {
-        "number": 44,
-        "symbol": "Ru",
-        "name": "Ρουθήνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s¹ 4d⁷",
-        "shells": "2, 8, 18, 15, 1",
-        "outerShell": "5",
-        "explanation": "Σπάνιο μέταλλο, χρησιμοποιείται σε καταλύτες και ηλεκτρονικά",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 8
-    },
-    {
-        "number": 45,
-        "symbol": "Rh",
-        "name": "Ρόδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s¹ 4d⁸",
-        "shells": "2, 8, 18, 16, 1",
-        "outerShell": "5",
-        "explanation": "Ευγενές μέταλλο, χρησιμοποιείται σε καταλύτες και κοσμήματα",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 9
-    },
-    {
-        "number": 46,
-        "symbol": "Pd",
-        "name": "Παλλάδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 4d¹⁰",
-        "shells": "2, 8, 18, 18",
-        "outerShell": "4",
-        "explanation": "Ευγενές μέταλλο, χρησιμοποιείται σε καταλύτες και κοσμήματα",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 10
-    },
-    {
-        "number": 47,
-        "symbol": "Ag",
-        "name": "Άργυρος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s¹ 4d¹⁰",
-        "shells": "2, 8, 18, 18, 1",
-        "outerShell": "5",
-        "explanation": "Ευγενές μέταλλο, χρησιμοποιείται σε κοσμήματα και ηλεκτρονικά",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 11
-    },
-    {
-        "number": 48,
-        "symbol": "Cd",
-        "name": "Κάδμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰",
-        "shells": "2, 8, 18, 18, 2",
-        "outerShell": "5",
-        "explanation": "Μέταλλο, χρησιμοποιείται σε μπαταρίες και επιστρώσεις",
-        "remarks": "",
-        "block": "d",
-        "row": 5,
-        "col": 12
-    },
-    {
-        "number": 49,
-        "symbol": "In",
-        "name": "Ινδίου",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p¹",
-        "shells": "2, 8, 18, 18, 3",
-        "outerShell": "5",
-        "explanation": "Μέταλλο, χρησιμοποιείται σε ημιαγωγούς και επιστρώσεις",
-        "remarks": "",
-        "block": "p",
-        "row": 5,
-        "col": 13
-    },
-    {
-        "number": 50,
-        "symbol": "Sn",
-        "name": "Κασσίτερος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p²",
-        "shells": "2, 8, 18, 18, 4",
-        "outerShell": "5",
-        "explanation": "Μέταλλο, χρησιμοποιείται σε κράματα και συσκευασίες",
-        "remarks": "",
-        "block": "p",
-        "row": 5,
-        "col": 14
-    },
-    {
-        "number": 51,
-        "symbol": "Sb",
-        "name": "Αντιμόνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p³",
-        "shells": "2, 8, 18, 18, 5",
-        "outerShell": "5",
-        "explanation": "Μεταλλοειδές, χρησιμοποιείται σε κράματα και ημιαγωγούς",
-        "remarks": "",
-        "block": "p",
-        "row": 5,
-        "col": 15
-    },
-    {
-        "number": 52,
-        "symbol": "Te",
-        "name": "Τελλούριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁴",
-        "shells": "2, 8, 18, 18, 6",
-        "outerShell": "5",
-        "explanation": "Μεταλλοειδές, χρησιμοποιείται σε ημιαγωγούς και κράματα",
-        "remarks": "",
-        "block": "p",
-        "row": 5,
-        "col": 16
-    },
-    {
-        "number": 53,
-        "symbol": "I",
-        "name": "Ιώδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁵",
-        "shells": "2, 8, 18, 18, 7",
-        "outerShell": "5",
-        "explanation": "Αλογόνο, χρησιμοποιείται στην ιατρική και ως αντισηπτικό",
-        "remarks": "",
-        "block": "p",
-        "row": 5,
-        "col": 17
-    },
-    {
-        "number": 54,
-        "symbol": "Xe",
-        "name": "Ξένο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶",
-        "shells": "2, 8, 18, 18, 8",
-        "outerShell": "5",
-        "explanation": "Ευγενές αέριο, χρησιμοποιείται σε φώτα και αναισθητικά",
-        "remarks": "",
-        "block": "p",
-        "row": 5,
-        "col": 18
-    },
-    {
-        "number": 55,
-        "symbol": "Cs",
-        "name": "Καίσιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s¹",
-        "shells": "2, 8, 18, 18, 8, 1",
-        "outerShell": "6",
-        "explanation": "Αλκάλιο μέταλλο, χρησιμοποιείται σε ατομικά ρολόγια",
-        "remarks": "",
-        "block": "s",
-        "row": 6,
-        "col": 1
-    },
-    {
-        "number": 56,
-        "symbol": "Ba",
-        "name": "Βάριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s²",
-        "shells": "2, 8, 18, 18, 8, 2",
-        "outerShell": "6",
-        "explanation": "Αλκαλικό γαιώδες μέταλλο, χρησιμοποιείται σε πυροτεχνήματα",
-        "remarks": "",
-        "block": "s",
-        "row": 6,
-        "col": 2
-    },
-    {
-        "number": 57,
-        "symbol": "La",
-        "name": "Λανθάνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 5d¹",
-        "shells": "2, 8, 18, 18, 9, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε κράματα και φωτεινά υλικά",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 3
-    },
-    {
-        "number": 58,
-        "symbol": "Ce",
-        "name": "Δημήτριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹ 5d¹",
-        "shells": "2, 8, 18, 20, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε κράματα και καταλύτες",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 4
-    },
-    {
-        "number": 59,
-        "symbol": "Pr",
-        "name": "Πρασινοδύμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f³",
-        "shells": "2, 8, 18, 21, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε μαγνητικά υλικά",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 5
-    },
-    {
-        "number": 60,
-        "symbol": "Nd",
-        "name": "Νεοδύμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f⁴",
-        "shells": "2, 8, 18, 22, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε μαγνήτες και λέιζερ",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 6
-    },
-    {
-        "number": 61,
-        "symbol": "Pm",
-        "name": "Προμήθειο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f⁵",
-        "shells": "2, 8, 18, 23, 8, 2",
-        "outerShell": "6",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πηγές φωτός",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 7
-    },
-    {
-        "number": 62,
-        "symbol": "Sm",
-        "name": "Σαμάριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f⁶",
-        "shells": "2, 8, 18, 24, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε μαγνήτες και πυρηνικές εφαρμογές",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 8
-    },
-    {
-        "number": 63,
-        "symbol": "Eu",
-        "name": "Ευρώπιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f⁷",
-        "shells": "2, 8, 18, 25, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε φωτεινά υλικά και τηλεοράσεις",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 9
-    },
-    {
-        "number": 64,
-        "symbol": "Gd",
-        "name": "Γαδολίνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f⁷ 5d¹",
-        "shells": "2, 8, 18, 25, 9, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε μαγνητική τομογραφία",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 10
-    },
-    {
-        "number": 65,
-        "symbol": "Tb",
-        "name": "Τερβίο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f⁹",
-        "shells": "2, 8, 18, 27, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε φωτεινά υλικά",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 11
-    },
-    {
-        "number": 66,
-        "symbol": "Dy",
-        "name": "Δυσπρόσιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁰",
-        "shells": "2, 8, 18, 28, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε μαγνήτες και λέιζερ",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 12
-    },
-    {
-        "number": 67,
-        "symbol": "Ho",
-        "name": "Όλμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹¹",
-        "shells": "2, 8, 18, 29, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε μαγνητικά υλικά",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 13
-    },
-    {
-        "number": 68,
-        "symbol": "Er",
-        "name": "Έρβιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹²",
-        "shells": "2, 8, 18, 30, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε οπτικές ίνες και λέιζερ",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 14
-    },
-    {
-        "number": 69,
-        "symbol": "Tm",
-        "name": "Θούλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹³",
-        "shells": "2, 8, 18, 31, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε ιατρικές εφαρμογές",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 15
-    },
-    {
-        "number": 70,
-        "symbol": "Yb",
-        "name": "Υττέρβιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴",
-        "shells": "2, 8, 18, 32, 8, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε κράματα και λέιζερ",
-        "remarks": "",
-        "block": "f",
-        "row": 6,
-        "col": 16
-    },
-    {
-        "number": 71,
-        "symbol": "Lu",
-        "name": "Λουτήτιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹",
-        "shells": "2, 8, 18, 32, 9, 2",
-        "outerShell": "6",
-        "explanation": "Λανθανίδη, χρησιμοποιείται σε καταλύτες και ιατρικές εφαρμογές",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 3
-    },
-    {
-        "number": 72,
-        "symbol": "Hf",
-        "name": "Χάφνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d²",
-        "shells": "2, 8, 18, 32, 10, 2",
-        "outerShell": "6",
-        "explanation": "Μετάλλειο, χρησιμοποιείται σε αντιδραστήρες και κράματα",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 4
-    },
-    {
-        "number": 73,
-        "symbol": "Ta",
-        "name": "Ταντάλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d³",
-        "shells": "2, 8, 18, 32, 11, 2",
-        "outerShell": "6",
-        "explanation": "Μετάλλειο, χρησιμοποιείται σε ηλεκτρονικά και ιατρικές συσκευές",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 5
-    },
-    {
-        "number": 74,
-        "symbol": "W",
-        "name": "Βολφράμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d⁴",
-        "shells": "2, 8, 18, 32, 12, 2",
-        "outerShell": "6",
-        "explanation": "Μετάλλειο, χρησιμοποιείται σε λαμπτήρες και κράματα",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 6
-    },
-    {
-        "number": 75,
-        "symbol": "Re",
-        "name": "Ρήνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d⁵",
-        "shells": "2, 8, 18, 32, 13, 2",
-        "outerShell": "6",
-        "explanation": "Μετάλλειο, χρησιμοποιείται σε κράματα και καταλύτες",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 7
-    },
-    {
-        "number": 76,
-        "symbol": "Os",
-        "name": "Όσμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d⁶",
-        "shells": "2, 8, 18, 32, 14, 2",
-        "outerShell": "6",
-        "explanation": "Μετάλλειο, χρησιμοποιείται σε κράματα και ιατρικές εφαρμογές",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 8
-    },
-    {
-        "number": 77,
-        "symbol": "Ir",
-        "name": "Ιρίδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d⁷",
-        "shells": "2, 8, 18, 32, 15, 2",
-        "outerShell": "6",
-        "explanation": "Ευγενές μέταλλο, χρησιμοποιείται σε κράματα και καταλύτες",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 9
-    },
-    {
-        "number": 78,
-        "symbol": "Pt",
-        "name": "Λευκόχρυσος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s¹ 4f¹⁴ 5d⁹",
-        "shells": "2, 8, 18, 32, 17, 1",
-        "outerShell": "6",
-        "explanation": "Ευγενές μέταλλο, χρησιμοποιείται σε κοσμήματα και καταλύτες",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 10
-    },
-    {
-        "number": 79,
-        "symbol": "Au",
-        "name": "Χρυσός",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s¹ 4f¹⁴ 5d¹⁰",
-        "shells": "2, 8, 18, 32, 18, 1",
-        "outerShell": "6",
-        "explanation": "Ευγενές μέταλλο, χρησιμοποιείται σε κοσμήματα και ηλεκτρονικά",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 11
-    },
-    {
-        "number": 80,
-        "symbol": "Hg",
-        "name": "Υδράργυρος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰",
-        "shells": "2, 8, 18, 32, 18, 2",
-        "outerShell": "6",
-        "explanation": "Υγρό μέταλλο, χρησιμοποιείται σε θερμόμετρα και ηλεκτρονικά",
-        "remarks": "",
-        "block": "d",
-        "row": 6,
-        "col": 12
-    },
-    {
-        "number": 81,
-        "symbol": "Tl",
-        "name": "Θάλλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p¹",
-        "shells": "2, 8, 18, 32, 18, 3",
-        "outerShell": "6",
-        "explanation": "Μέταλλο, χρησιμοποιείται σε ηλεκτρονικά και ιατρικές εφαρμογές",
-        "remarks": "",
-        "block": "p",
-        "row": 6,
-        "col": 13
-    },
-    {
-        "number": 82,
-        "symbol": "Pb",
-        "name": "Μόλυβδος",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p²",
-        "shells": "2, 8, 18, 32, 18, 4",
-        "outerShell": "6",
-        "explanation": "Μέταλλο, χρησιμοποιείται σε μπαταρίες και κατασκευές",
-        "remarks": "",
-        "block": "p",
-        "row": 6,
-        "col": 14
-    },
-    {
-        "number": 83,
-        "symbol": "Bi",
-        "name": "Βισμούθιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p³",
-        "shells": "2, 8, 18, 32, 18, 5",
-        "outerShell": "6",
-        "explanation": "Μεταλλοειδές, χρησιμοποιείται σε φάρμακα και κράματα",
-        "remarks": "",
-        "block": "p",
-        "row": 6,
-        "col": 15
-    },
-    {
-        "number": 84,
-        "symbol": "Po",
-        "name": "Πολώνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁴",
-        "shells": "2, 8, 18, 32, 18, 6",
-        "outerShell": "6",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πηγές θερμότητας",
-        "remarks": "",
-        "block": "p",
-        "row": 6,
-        "col": 16
-    },
-    {
-        "number": 85,
-        "symbol": "At",
-        "name": "Αστάτιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁵",
-        "shells": "2, 8, 18, 32, 18, 7",
-        "outerShell": "6",
-        "explanation": "Ραδιενεργό αλογόνο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "p",
-        "row": 6,
-        "col": 17
-    },
-    {
-        "number": 86,
-        "symbol": "Rn",
-        "name": "Ραδόνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶",
-        "shells": "2, 8, 18, 32, 18, 8",
-        "outerShell": "6",
-        "explanation": "Ραδιενεργό ευγενές αέριο, χρησιμοποιείται στην ιατρική",
-        "remarks": "",
-        "block": "p",
-        "row": 6,
-        "col": 18
-    },
-    {
-        "number": 87,
-        "symbol": "Fr",
-        "name": "Φράγκιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s¹",
-        "shells": "2, 8, 18, 32, 18, 8, 1",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό αλκάλιο μέταλλο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "s",
-        "row": 7,
-        "col": 1
-    },
-    {
-        "number": 88,
-        "symbol": "Ra",
-        "name": "Ράδιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s²",
-        "shells": "2, 8, 18, 32, 18, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό αλκαλικό γαιώδες μέταλλο, χρησιμοποιείται στην ιατρική",
-        "remarks": "",
-        "block": "s",
-        "row": 7,
-        "col": 2
-    },
-    {
-        "number": 89,
-        "symbol": "Ac",
-        "name": "Ακτίνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 6d¹",
-        "shells": "2, 8, 18, 32, 18, 9, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 3
-    },
-    {
-        "number": 90,
-        "symbol": "Th",
-        "name": "Θόριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 6d²",
-        "shells": "2, 8, 18, 32, 18, 10, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πυρηνικά καύσιμα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 4
-    },
-    {
-        "number": 91,
-        "symbol": "Pa",
-        "name": "Πρωτακτίνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f² 6d¹",
-        "shells": "2, 8, 18, 32, 20, 9, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 5
-    },
-    {
-        "number": 92,
-        "symbol": "U",
-        "name": "Ουράνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f³ 6d¹",
-        "shells": "2, 8, 18, 32, 21, 9, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πυρηνικά καύσιμα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 6
-    },
-    {
-        "number": 93,
-        "symbol": "Np",
-        "name": "Νεπτούνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁴ 6d¹",
-        "shells": "2, 8, 18, 32, 22, 9, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 7
-    },
-    {
-        "number": 94,
-        "symbol": "Pu",
-        "name": "Πλουτώνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁶",
-        "shells": "2, 8, 18, 32, 24, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε πυρηνικά καύσιμα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 8
-    },
-    {
-        "number": 95,
-        "symbol": "Am",
-        "name": "Αμερίκιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁷",
-        "shells": "2, 8, 18, 32, 25, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 9
-    },
-    {
-        "number": 96,
-        "symbol": "Cm",
-        "name": "Κιούριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁷ 6d¹",
-        "shells": "2, 8, 18, 32, 25, 9, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 10
-    },
-    {
-        "number": 97,
-        "symbol": "Bk",
-        "name": "Μπερκέλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁹",
-        "shells": "2, 8, 18, 32, 27, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 11
-    },
-    {
-        "number": 98,
-        "symbol": "Cf",
-        "name": "Καλιφόρνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁰",
-        "shells": "2, 8, 18, 32, 28, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 12
-    },
-    {
-        "number": 99,
-        "symbol": "Es",
-        "name": "Αϊνστάνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹¹",
-        "shells": "2, 8, 18, 32, 29, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 13
-    },
-    {
-        "number": 100,
-        "symbol": "Fm",
-        "name": "Φέρμιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹²",
-        "shells": "2, 8, 18, 32, 30, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 14
-    },
-    {
-        "number": 101,
-        "symbol": "Md",
-        "name": "Μεντελέβιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹³",
-        "shells": "2, 8, 18, 32, 31, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 15
-    },
-    {
-        "number": 102,
-        "symbol": "No",
-        "name": "Νομπέλιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴",
-        "shells": "2, 8, 18, 32, 32, 8, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "f",
-        "row": 7,
-        "col": 16
-    },
-    {
-        "number": 103,
-        "symbol": "Lr",
-        "name": "Λωρένσιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹",
-        "shells": "2, 8, 18, 32, 32, 9, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 3
-    },
-    {
-        "number": 104,
-        "symbol": "Rf",
-        "name": "Ραδερφόρντιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d²",
-        "shells": "2, 8, 18, 32, 32, 10, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 4
-    },
-    {
-        "number": 105,
-        "symbol": "Db",
-        "name": "Ντούμπνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d³",
-        "shells": "2, 8, 18, 32, 32, 11, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 5
-    },
-    {
-        "number": 106,
-        "symbol": "Sg",
-        "name": "Σιμπόργκιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁴",
-        "shells": "2, 8, 18, 32, 32, 12, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 6
-    },
-    {
-        "number": 107,
-        "symbol": "Bh",
-        "name": "Μπόριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁵",
-        "shells": "2, 8, 18, 32, 32, 13, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 7
-    },
-    {
-        "number": 108,
-        "symbol": "Hs",
-        "name": "Χάσιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁶",
-        "shells": "2, 8, 18, 32, 32, 14, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 8
-    },
-    {
-        "number": 109,
-        "symbol": "Mt",
-        "name": "Μάιτνεριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁷",
-        "shells": "2, 8, 18, 32, 32, 15, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 9
-    },
-    {
-        "number": 110,
-        "symbol": "Ds",
-        "name": "Νταρμστάντιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁸",
-        "shells": "2, 8, 18, 32, 32, 16, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 10
-    },
-    {
-        "number": 111,
-        "symbol": "Rg",
-        "name": "Ρεντγκέντιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d⁹",
-        "shells": "2, 8, 18, 32, 32, 17, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 11
-    },
-    {
-        "number": 112,
-        "symbol": "Cn",
-        "name": "Κοπερνίκιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰",
-        "shells": "2, 8, 18, 32, 32, 18, 2",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "d",
-        "row": 7,
-        "col": 12
-    },
-    {
-        "number": 113,
-        "symbol": "Nh",
-        "name": "Νιχόνιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p¹",
-        "shells": "2, 8, 18, 32, 32, 18, 3",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "p",
-        "row": 7,
-        "col": 13
-    },
-    {
-        "number": 114,
-        "symbol": "Fl",
-        "name": "Φλερόβιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p²",
-        "shells": "2, 8, 18, 32, 32, 18, 4",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "p",
-        "row": 7,
-        "col": 14
-    },
-    {
-        "number": 115,
-        "symbol": "Mc",
-        "name": "Μοσκόβιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p³",
-        "shells": "2, 8, 18, 32, 32, 18, 5",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "p",
-        "row": 7,
-        "col": 15
-    },
-    {
-        "number": 116,
-        "symbol": "Lv",
-        "name": "Λιβερμόριο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p⁴",
-        "shells": "2, 8, 18, 32, 32, 18, 6",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "p",
-        "row": 7,
-        "col": 16
-    },
-    {
-        "number": 117,
-        "symbol": "Ts",
-        "name": "Τενέσιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p⁵",
-        "shells": "2, 8, 18, 32, 32, 18, 7",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό στοιχείο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "p",
-        "row": 7,
-        "col": 17
-    },
-    {
-        "number": 118,
-        "symbol": "Og",
-        "name": "Ογκανέσσιο",
-        "subshells": "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f¹⁴ 6d¹⁰ 7p⁶",
-        "shells": "2, 8, 18, 32, 32, 18, 8",
-        "outerShell": "7",
-        "explanation": "Ραδιενεργό ευγενές αέριο, χρησιμοποιείται σε έρευνα",
-        "remarks": "",
-        "block": "p",
-        "row": 7,
-        "col": 18
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Περιοδικός Πίνακας – Ομάδες, Περιόδους & Info</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rightPanelWidth: 150px; /* Αρχική προεπιλεγμένη τιμή, ενημερώνεται δυναμικά */
     }
-]
+    /* Βασικές ρυθμίσεις */
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      overflow: hidden;
+      background: #f7f7f7;
+    }
+    #title {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 50;
+    }
+    /* infoPanel: Full view & Collapsed view */
+    body:not(.collapsed) #infoPanel {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.95);
+      border: 2px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      padding: 20px;
+      position: absolute;
+      left: 20px;
+      top: 500px;
+      /* Αφαιρούμε δυναμικά το πλάτος των fixed κουμπιών και 120px επιπλέον */
+      width: calc(100vw - var(--rightPanelWidth) - 120px);
+      z-index: 40;
+      transition: all 1.5s ease;
+    }
+    body.collapsed #infoPanel {
+      display: flex;
+      flex-direction: column;
+      background: rgba(255,255,255,0.95);
+      border: 2px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      padding: 20px;
+      position: absolute;
+      left: 848px;
+      top: 100px;
+      width: calc(100vw - 920px);
+      z-index: 40;
+      transition: all 1.5s ease;
+    }
+    /* Τα τμήματα μέσα στο infoPanel παραμένουν σταθερά */
+    #leftPanel, #middlePanel, #rightPanel {
+      padding: 5px;
+    }
+    /* Fixed κουμπιά στην κάτω δεξιά γωνία */
+    #rightPanel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) έχουν εφέ "υπερυψωμένων" */
+    .canvas {
+      position: absolute;
+      background: transparent;
+      transition: all 0.5s ease-in-out;
+      transform: translateY(-10px);
+    }
+    /* Καμβάς Περιόδων: μετατοπισμένος κατά 50px (top από 100px σε 150px) */
+    #canvasPeriods {
+      position: absolute;
+      left: 6px;
+      top: 150px;
+      width: 42px;
+      height: 292px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 5;
+    }
+    /* Καμβάδες Ομάδων */
+    #canvasS_groups {
+      position: absolute;
+      width: 82px;
+      height: 40px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    #canvasD_groups {
+      position: absolute;
+      width: 418px;
+      height: 40px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    #canvasP_groups {
+      position: absolute;
+      width: 250px;
+      height: 40px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    /* Χρώματα blocks για τους κύριους τομείς */
+    .s-block { background: #ffcccc !important; }
+    .p-block { background: #ccffcc !important; }
+    .d-block { background: #ccccff !important; }
+    .f-block { background: #ffe5cc !important; }
+    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων */
+    .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
+    .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
+    /* Αρχικά, οι καμβάδες d και p ξεκινούν στο 134px */
+    .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
+    .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
+    /* Collapsed view – θέσεις καμβάδων στοιχείων */
+    .collapsed #canvasS { top: 150px; left: 50px; }
+    .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
+    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* d: left=139px για 5px κενό με την s */
+    .collapsed #canvasP { top: 150px; left: 554px; width: 252px; }
+    /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
+    .period-label {
+      position: absolute;
+      left: 15px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #333;
+      background: rgba(200,200,200,0.9);
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: none;
+      line-height: 13px !important;
+      z-index: 30;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body class="full">
+  <div id="title">Περιοδικός Πίνακας</div>
+  
+  <!-- Καμβάς Περιόδων -->
+  <div id="canvasPeriods" class="canvas"></div>
+  <!-- Καμβάδες Ομάδων -->
+  <div id="canvasS_groups" class="canvas"></div>
+  <div id="canvasD_groups" class="canvas"></div>
+  <div id="canvasP_groups" class="canvas"></div>
+  
+  <!-- Καμβάδες τομέων -->
+  <div id="canvasS" class="canvas"></div>
+  <div id="canvasF" class="canvas"></div>
+  <div id="canvasD" class="canvas"></div>
+  <div id="canvasP" class="canvas"></div>
+  
+  <div id="infoPanel">
+    <div id="leftPanel">
+      <div id="elementInfo"></div>
+      <div id="subshells"></div>
+      <div id="shells"></div>
+      <div id="outerShell"></div>
+    </div>
+    <div id="middlePanel">
+      <div id="explanation"></div>
+      <div id="remarks"></div>
+    </div>
+    <div id="rightPanel">
+      <button id="nextElement">Επόμενο</button>
+      <button id="fillAll">Συμπλήρωσε</button>
+      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
+      <button id="reset">Reset</button>
+    </div>
+  </div>
+  
+  <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
+  <script>
+    // Global: Καμβάς Περιόδων
+    function initPeriodsCanvas() {
+      if(window.periodsInitialized) return;
+      new p5(p => {
+        p.setup = () => {
+          let canvas = p.createCanvas(40, 292);
+          canvas.parent("canvasPeriods");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          const labels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+          for (let i = 0; i < 7; i++) {
+            p.fill(240);
+            p.rect(0, i * 42, 40, 40);
+            p.fill(0);
+            p.text(labels[i], 20, i * 42 + 20);
+          }
+        };
+      });
+      window.periodsInitialized = true;
+    }
+    // Global: Καμβάδες Ομάδων – δύο σειρές (πάνω: νέα, κάτω: παλιά)
+    function initGroupsCanvases() {
+      if(window.groupsInitialized) return;
+      // Για s:
+      new p5(p => {
+        p.setup = () => {
+          let canvas = p.createCanvas(82, 40);
+          canvas.parent("canvasS_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          p.fill(0);
+          p.text("1", 20, 10);
+          p.text("2", 62, 10);
+          p.text("IA", 20, 32);
+          p.text("IIA", 62, 32);
+        };
+      });
+      // Για d:
+      new p5(p => {
+        p.setup = () => {
+          let canvas = p.createCanvas(418, 40);
+          canvas.parent("canvasD_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          for(let c = 0; c < 10; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 0, 40, 20);
+            p.fill(0);
+            p.text((c+3).toString(), x + 20, 10);
+          }
+          const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
+          for(let c = 0; c < 10; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 22, 40, 20);
+            p.fill(0);
+            p.text(oldLabels[c], x + 20, 32);
+          }
+        };
+      });
+      // Για p:
+      new p5(p => {
+        p.setup = () => {
+          let canvas = p.createCanvas(250, 40);
+          canvas.parent("canvasP_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          for(let c = 0; c < 6; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 0, 40, 20);
+            p.fill(0);
+            p.text((c+13).toString(), x + 20, 10);
+          }
+          const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
+          for(let c = 0; c < 6; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 22, 40, 20);
+            p.fill(0);
+            p.text(oldLabels[c], x + 20, 32);
+          }
+        };
+      });
+      window.groupsInitialized = true;
+    }
+  </script>
+  
+  <!-- Κύριος κώδικας (IIFE) -->
+  <script>
+    (function() {
+      const BLOCK_COLORS = {
+        's': '#ffcccc',
+        'p': '#ccffcc',
+        'd': '#ccccff',
+        'f': '#ffe5cc'
+      };
+      const BLOCKS_CONFIG = {
+        s: { cols: 2, rows: 7 },
+        p: { cols: 6, rows: 7 },
+        d: { cols: 10, rows: 7 },
+        f: { cols: 14, rows: 7 }
+      };
+  
+      let elements = [];
+      let currentZ = 0;
+      /* Μετρητής:
+         120: full view χωρίς ομάδες,
+         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων,
+         122: εμφάνιση και των δύο σειρών (πάνω: νέα, κάτω: παλιά).
+      */
+  
+      function updateToggleButton() {
+        document.getElementById('toggleFBlock').disabled = (currentZ < 122);
+      }
+  
+      async function loadElements() {
+        try {
+          const response = await fetch('elements.json');
+          elements = await response.json();
+          initializeCanvases();
+          updateInfo(currentZ);
+          updateToggleButton();
+        } catch (err) {
+          console.error('Σφάλμα φόρτωσης:', err);
+        }
+      }
+  
+      function initializeCanvases() {
+        Object.keys(BLOCKS_CONFIG).forEach(block => {
+          new p5(p => {
+            p.setup = () => {
+              const config = BLOCKS_CONFIG[block];
+              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+              canvas.parent(`canvas${block.toUpperCase()}`);
+              canvas.elt.style.height = `${config.rows * 42}px`;
+              if(document.body.classList.contains('collapsed')){
+                if(block==='s'){
+                  canvas.elt.style.left = "50px";
+                } else if(block==='f' || block==='d'){
+                  canvas.elt.style.left = (block==='f' ? "154px" : "139px");
+                } else if(block==='p'){
+                  canvas.elt.style.left = "554px";
+                }
+              } else {
+                // Στο full view, αρχικά όλοι οι καμβάδες (f, d, p) ξεκινούν στο 134px.
+                if(block==='s'){
+                  canvas.elt.style.left = "50px";
+                } else if(block==='f' || block==='d' || block==='p'){
+                  canvas.elt.style.left = "134px";
+                }
+              }
+              drawElements(p, block);
+              p.mouseClicked = () => {
+                let candidates = elements.filter(e => e.block === block && e.number >= 3 && e.number <= currentZ);
+                for(let candidate of candidates) {
+                  let pos = calculatePosition(candidate, block);
+                  if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
+                     p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                    updateInfo(candidate.number);
+                    break;
+                  }
+                }
+              };
+            };
+          });
+        });
+      }
+  
+      function calculatePosition(e, block) {
+        let x = 0, y = (e.row - 1) * 42;
+        if(block==='s'){
+          x = (e.col - 1) * 42;
+        } else if(block==='f'){
+          x = (e.col - 3) * 42;
+        } else if(block==='d'){
+          x = (e.col - 3) * 42;
+        } else if(block==='p'){
+          if(currentZ < 20 && e.row === 1){
+            x = (e.col - 18) * 42;
+          } else {
+            x = (e.col - 13) * 42;
+          }
+        }
+        return { x, y };
+      }
+  
+      function drawElements(p, block) {
+        p.stroke(150);
+        p.strokeWeight(1);
+        let filter;
+        if(currentZ < 118){
+          filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
+        } else if(currentZ === 118){
+          filter = e => e.block === block && e.number >= 3 && e.number <= 118;
+        } else if(currentZ === 119){
+          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
+        } else {
+          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2));
+        }
+        elements.filter(filter).forEach(e => {
+          const pos = calculatePosition(e, block);
+          if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height){
+            p.fill(BLOCK_COLORS[block]);
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.fill(0);
+            p.textSize(e.number > 99 ? 10 : 12);
+            p.textStyle(p.BOLD);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(e.number.toString(), pos.x + 20, pos.y + 20);
+          }
+        });
+      }
+  
+      function redrawAll() {
+        Object.keys(BLOCKS_CONFIG).forEach(block => {
+          const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
+          canvasDiv.innerHTML = '';
+          new p5(p => {
+            p.setup = () => {
+              const config = BLOCKS_CONFIG[block];
+              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+              canvas.parent(`canvas${block.toUpperCase()}`);
+              canvas.elt.style.height = `${config.rows * 42}px`;
+              if(document.body.classList.contains('collapsed')){
+                if(block==='s'){
+                  canvas.elt.style.left = "50px";
+                } else if(block==='f' || block==='d'){
+                  canvas.elt.style.left = (block==='f' ? "154px" : "139px");
+                } else if(block==='p'){
+                  canvas.elt.style.left = "554px";
+                }
+              } else {
+                if(block==='s'){
+                  canvas.elt.style.left = "50px";
+                } else if(block==='f' || block==='d' || block==='p'){
+                  canvas.elt.style.left = "134px";
+                }
+              }
+              drawElements(p, block);
+              p.mouseClicked = () => {
+                let candidates = elements.filter(e => e.block === block && e.number >= 3 && e.number <= currentZ);
+                for(let candidate of candidates) {
+                  let pos = calculatePosition(candidate, block);
+                  if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
+                     p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                    updateInfo(candidate.number);
+                    break;
+                  }
+                }
+              };
+            };
+          });
+        });
+        if(!document.body.classList.contains('collapsed')){
+          // Στο full view, οι καμβάδες f, d, p ξεκινούν όλοι από 134px.
+          let base = 134;
+          let shiftP = 0;
+          let shiftD = 0;
+          if(currentZ <= 20){
+            shiftP = 0;
+            shiftD = 0;
+          } else if(currentZ >= 21 && currentZ <= 30){
+            // Μετακινείται μόνο ο canvasP
+            shiftP = 42 * (currentZ - 20);
+            shiftD = 0;
+          } else if(currentZ >= 31 && currentZ <= 56){
+            // Ο canvasP παραμένει σταθερός στο 134 + 420 = 554, ενώ ο canvasD δεν έχει ξεκινήσει
+            shiftP = 42 * 10;
+            shiftD = 0;
+          } else if(currentZ >= 57 && currentZ <= 70){
+            // Από εδώ και μετά, μετακινείται και ο canvasD, μαζί με τον canvasP
+            shiftP = 42 * 10 + 42 * (currentZ - 56);
+            shiftD = 42 * (currentZ - 56);
+          } else {
+            // Τελικές θέσεις: canvasD φτάνει στο 134 + 42*14 = 722, canvasP στο 134 + 42*10 + 42*14 = 1142
+            shiftP = 42 * 10 + 42 * 14;
+            shiftD = 42 * 14;
+          }
+          document.getElementById('canvasF').style.left = base + "px";
+          document.getElementById('canvasD').style.left = (base + shiftD) + "px";
+          document.getElementById('canvasP').style.left = (base + shiftP) + "px";
+        } else {
+          document.getElementById('canvasS').style.left = "50px";
+          document.getElementById('canvasF').style.left = "154px";
+          document.getElementById('canvasD').style.left = "139px";
+          document.getElementById('canvasP').style.left = "554px";
+        }
+        if(currentZ >= 120){
+          document.getElementById('canvasPeriods').style.display = "block";
+          initPeriodsCanvas();
+          document.getElementById('canvasS_groups').style.display = "block";
+          document.getElementById('canvasD_groups').style.display = "block";
+          document.getElementById('canvasP_groups').style.display = "block";
+          /* Μετατοπισμός των groups καμβάδων: top 58px → 108px (δηλαδή +50px) */
+          document.getElementById('canvasS_groups').style.top = "108px";
+          document.getElementById('canvasS_groups').style.left = "50px";
+          let dLeft = document.getElementById('canvasD').style.left;
+          document.getElementById('canvasD_groups').style.top = "108px";
+          document.getElementById('canvasD_groups').style.left = dLeft;
+          let pLeft = document.getElementById('canvasP').style.left;
+          document.getElementById('canvasP_groups').style.top = "108px";
+          document.getElementById('canvasP_groups').style.left = pLeft;
+          initGroupsCanvases();
+        } else {
+          document.getElementById('canvasPeriods').style.display = "none";
+          document.getElementById('canvasS_groups').style.display = "none";
+          document.getElementById('canvasD_groups').style.display = "none";
+          document.getElementById('canvasP_groups').style.display = "none";
+        }
+        updateInfo(currentZ);
+        updateToggleButton();
+      }
+  
+      function updateInfo(z) {
+        if(z < 3){
+          document.getElementById('elementInfo').innerHTML =
+            "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
+          document.getElementById('subshells').textContent = "";
+          document.getElementById('shells').textContent = "";
+          document.getElementById('outerShell').textContent = "";
+          document.getElementById('explanation').textContent = "";
+          document.getElementById('remarks').textContent = "";
+          return;
+        }
+        const element = elements.find(e => e.number === z);
+        if(!element) return;
+        document.getElementById('elementInfo').innerHTML =
+          `<strong>${element.name} (${element.symbol})</strong> [Z=${z}]`;
+        document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
+        document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
+        document.getElementById('outerShell').textContent = `Εξωτερική: ${element.outerShell}`;
+        document.getElementById('explanation').textContent = `Επεξήγηση: ${element.explanation}`;
+        document.getElementById('remarks').textContent = `Παρατηρήσεις: ${element.remarks}`;
+      }
+  
+      document.getElementById('nextElement').addEventListener('click', () => {
+        if(currentZ < 3){
+          currentZ = 3;
+        } else if(currentZ < 118){
+          currentZ++;
+        } else if(currentZ === 118){
+          currentZ = 119;
+        } else if(currentZ === 119){
+          currentZ = 120;
+        } else if(currentZ === 120){
+          currentZ = 121;  // πρώτα εμφανίζονται τα παλιά ονόματα ομάδων
+        } else if(currentZ === 121){
+          currentZ = 122;  // μετά εμφανίζονται και οι νέες αριθμήσεις (και old)
+        } else {
+          currentZ++;
+        }
+        redrawAll();
+      });
+  
+      document.getElementById('fillAll').addEventListener('click', () => {
+        currentZ = 122;
+        redrawAll();
+      });
+  
+      document.getElementById('reset').addEventListener('click', () => {
+        currentZ = 0;
+        window.groupsInitialized = false;
+        window.periodsInitialized = false;
+        document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
+        document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
+        document.getElementById('canvasPeriods').style.display = "none";
+        document.getElementById('canvasS_groups').style.display = "none";
+        document.getElementById('canvasD_groups').style.display = "none";
+        document.getElementById('canvasP_groups').style.display = "none";
+        initializeCanvases();
+        updateInfo(currentZ);
+      });
+  
+      document.getElementById('toggleFBlock').addEventListener('click', () => {
+        if(currentZ < 122) return;
+        document.body.classList.toggle('collapsed');
+        redrawAll();
+      });
+  
+      loadElements();
+    })();
+  </script>
+  
+  <!-- Script για δυναμικό υπολογισμό του πλάτους των fixed κουμπιών -->
+  <script>
+    function updateRightPanelWidth() {
+      const rp = document.getElementById('rightPanel');
+      if (rp) {
+        const width = rp.offsetWidth;
+        document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
+      }
+    }
+    window.addEventListener('load', updateRightPanelWidth);
+    window.addEventListener('resize', updateRightPanelWidth);
+  </script>
+</body>
+</html>
