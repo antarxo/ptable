@@ -12,7 +12,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Τίτλος – μετακινημένος πιο πάνω */
+    /* Τίτλος – μετακινημένος προς τα πάνω ώστε να μην καλύπτει τα ονόματα ομάδων */
     #title {
       position: absolute;
       top: 10px;
@@ -22,7 +22,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών – σταθερή διάταξη */
+    /* Πίνακας πληροφοριών (infoPanel) στο full view: σταθερή διάταξη (όπως αρχικά) */
     #infoPanel {
       display: flex;
       flex-direction: column;
@@ -32,33 +32,38 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      width: 302px; /* 1200 - (δεξί άκρο του p = 816) - 82 = 302px */
+      width: 1200px; /* full view: αφήνουμε όπως ήταν */
       position: absolute;
-      left: 42px;  /* οριζόντια θέση 42px */
+      left: 50%;
+      transform: translateX(-50%);
       top: 500px;
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Τα εσωτερικά τμήματα παραμένουν */
+    /* Στην collapsed view ο infoPanel θα αναδιαμορφώνεται */
+    body.collapsed #infoPanel {
+      /* Η οριζόντια θέση θα οριστεί μέσω JS (left = 42px) και το πλάτος δυναμικά */
+      top: 500px; /* για παράδειγμα παραμένει στο ίδιο ύψος */
+    }
+    /* Τα τμήματα μέσα στον infoPanel παραμένουν με padding */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
-    /* Τα κουμπιά στο #rightPanel σε κατακόρυφη διάταξη */
+    /* Τα κουμπιά στο #rightPanel εμφανίζονται κατακόρυφα */
     #rightPanel {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-    /* Όλοι οι καμβάδες έχουν ομαλή μετάβαση και εφέ "υπερυψωμένων" */
+    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) με ομαλή μετάβαση και εφέ "υπερυψωμένων" */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων – παραμένει στην ίδια θέση */
+    /* Καμβάς Περιόδων – παραμένει στη θέση: left = 6px, top = 100px */
     #canvasPeriods {
-      position: absolute;
       left: 6px;
       top: 100px;
       width: 42px;
@@ -67,29 +72,28 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες Ομάδων: Νέα διάσταση κελιών: 40×16, χωρίς κατακόρυφο διάστημα, canvas ύψος = 32px */
-    /* Για s: συνολικό πλάτος = 2*40 + 1*2 = 82px, ύψος = 32px */
+    /* Καμβάδες Ομάδων:
+       Κάθε πίνακας έχει 2 σειρές, με κάθε κελί να έχει 40px πλάτος και 16px ύψος, χωρίς κατακόρυφο διάστημα.
+       Οριζόντια μεταξύ των κελιών υπάρχει 2px διάκενο.
+       Συνολικό ύψος = 16*2 = 32px.
+       Τοποθετούνται με top = 66px ώστε το κάτω τους άκρο (66+32=98px) να αφήνει 2px διάκενο με τα στοιχεία (ξεκινούν στο 100px).
+    */
     #canvasS_groups {
-      position: absolute;
-      width: 82px;
+      width: 82px; /* 2*40 + 1*2 */
       height: 32px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
-    /* Για d: συνολικό πλάτος = 10*40 + 9*2 = 418px, ύψος = 32px */
     #canvasD_groups {
-      position: absolute;
-      width: 418px;
+      width: 418px; /* 10*40 + 9*2 */
       height: 32px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
-    /* Για p: συνολικό πλάτος = 6*40 + 5*2 = 250px, ύψος = 32px */
     #canvasP_groups {
-      position: absolute;
-      width: 250px;
+      width: 250px; /* 6*40 + 5*2 */
       height: 32px;
       background: #f0f0f0;
       display: none;
@@ -105,14 +109,13 @@
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – δεν αλλάζει ο infoPanel πλέον */
+    /* Collapsed view – οι κύριοι καμβάδες παραμένουν όπως στο full view (για λόγους σταθερότητας) */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
     .collapsed #canvasP { top: 100px; left: 564px; width: 252px; }
-    /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως πριν) */
+    /* Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν */
     .period-label {
-      position: absolute;
       left: 15px;
       font-size: 11px;
       font-weight: bold;
@@ -122,6 +125,7 @@
       border-radius: 3px;
       display: none;
       line-height: 13px !important;
+      position: absolute;
       z-index: 30;
     }
   </style>
@@ -164,7 +168,7 @@
   
   <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
   <script>
-    // Global: Καμβάς Περιόδων (δημιουργείται μόνο μία φορά)
+    // Global: Καμβάς Περιόδων
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -188,8 +192,7 @@
       window.periodsInitialized = true;
     }
     // Global: Καμβάδες Ομάδων – οι πίνακες για κάθε τομέα έχουν δύο σειρές:
-    // Στην πάνω σειρά (y = 0): νέα αρίθμηση.
-    // Στη δεύτερη σειρά (y = 16): παλιά ονόματα.
+    // Πάνω σειρά (y=0): νέα αρίθμηση, κάτω σειρά (y=16): παλιά ονόματα.
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       // Για s:
@@ -203,17 +206,15 @@
           p.textStyle(p.BOLD);
           p.background(240);
           if(window.currentZ === 121) {
-            // Εμφανίζουμε μόνο την κάτω σειρά (old)
+            // Εμφάνιση μόνο της κάτω σειράς (old)
             p.fill(0);
             p.text("IA", 20, 16 + 8);
             p.text("IIA", 20 + 42, 16 + 8);
           } else if(window.currentZ >= 122) {
-            // Εμφανίζουμε και τις δύο σειρές:
-            // New row (πάνω, y=0)
+            // Εμφάνιση και των δύο σειρών
             p.fill(0);
             p.text("1", 20, 8);
             p.text("2", 20 + 42, 8);
-            // Old row (κάτω, y = 16)
             p.text("IA", 20, 16 + 8);
             p.text("IIA", 20 + 42, 16 + 8);
           }
@@ -247,7 +248,7 @@
               p.fill(0);
               p.text((c+3).toString(), x + 20, 8);
             }
-            // Old row (κάτω, y=16):
+            // Old row (κάτω, y=16)
             const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
@@ -287,7 +288,7 @@
               p.fill(0);
               p.text((c+13).toString(), x + 20, 8);
             }
-            // Old row (κάτω, y=16):
+            // Old row (κάτω, y=16)
             const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
@@ -303,7 +304,7 @@
     }
   </script>
   
-  <!-- Κύριος κώδικας (IIFE) -->
+  <!-- Κύριος κώδικας -->
   <script>
     (function() {
       const BLOCK_COLORS = {
@@ -496,11 +497,12 @@
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
-          // Εμφάνιση καμβάδων ομάδων:
+          // Εμφάνιση καμβάδων ομάδων
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          // Τοποθέτηση: οι καμβάδες ομάδων τοποθετούνται πάνω από τους κύριους καμβάδες, με top = 66px
+          // Τοποθέτηση: οι καμβάδες ομάδων τοποθετούνται πάνω από τους κύριους καμβάδες,
+          // με top = 66px ώστε το κάτω τους άκρο (66+32 = 98px) να έχει 2px διάκενο από τα στοιχεία (ξεκινούν στο 100px)
           document.getElementById('canvasS_groups').style.top = "66px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -515,6 +517,17 @@
           document.getElementById('canvasS_groups').style.display = "none";
           document.getElementById('canvasD_groups').style.display = "none";
           document.getElementById('canvasP_groups').style.display = "none";
+        }
+        // Εάν είμαστε στην collapsed view, ενημερώνουμε τον infoPanel ώστε:
+        // left = 42px και width = (window.innerWidth - (δεξί άκρο του canvasP) - 82px)
+        if(document.body.classList.contains('collapsed')){
+          let pElem = document.getElementById('canvasP');
+          let leftP = parseInt(pElem.style.left) || 564;
+          let widthP = parseInt(pElem.style.width) || 252;
+          let rightEdge = leftP + widthP;
+          let newWidth = window.innerWidth - rightEdge - 82;
+          document.getElementById('infoPanel').style.width = newWidth + "px";
+          document.getElementById('infoPanel').style.left = "42px";
         }
         updateInfo(currentZ);
         updateToggleButton();
