@@ -21,7 +21,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών (full view) */
+    /* Πίνακας πληροφοριών – διατηρεί τις αρχικές διαστάσεις και διάταξη */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -38,19 +38,7 @@
       top: 500px;
       z-index: 40;
     }
-    /* Στυλ για το infoPanel στη collapsed view */
-    body.collapsed #infoPanel {
-      flex-direction: column;
-      width: 300px;  /* π.χ. μικρότερο πλάτος */
-      top: 100px;
-      right: 50px;
-      left: auto;
-    }
-    /* Αλλαγή σειράς στα τμήματα στο collapsed view */
-    body.collapsed #leftPanel { order: 1; }
-    body.collapsed #middlePanel { order: 2; }
-    body.collapsed #rightPanel { order: 3; }
-    /* Τα υπόλοιπα τμήματα του infoPanel παραμένουν */
+    /* Τα εσωτερικά τμήματα παραμένουν ως έχουν */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
@@ -59,20 +47,22 @@
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
+      /* Εφέ "υπερυψωμένων": ανεβάζουμε όλους τους καμβάδες κατά 10px */
+      transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων – φόντο πιο διακριτικό (#f0f0f0) και τοποθετείται πριν τον s */
+    /* Καμβάς Περιόδων – φόντο #f0f0f0, τοποθετείται πριν από τον s */
     #canvasPeriods {
       position: absolute;
-      left: 6px; /* 6+42=48, αφήνει 2px διάκενο με s που ξεκινά στο 50px */
-      top: 80px;  /* "υπερυψωμένος" */
+      left: 6px; /* 6+42 = 48, δίνοντας 2px διάκενο με s (left=50px) */
+      top: 80px;
       width: 42px;
       height: 292px;
       background: #f0f0f0;
       display: none;
-      z-index: 10;
+      z-index: 5;
     }
-    /* Καμβάδες Ομάδων */
-    /* Για s: 2x2, κάθε κελί 40x20 με 2px διάκενο: συνολικό μέγεθος 82x42 */
+    /* Καμβάδες Ομάδων – όλοι έχουν φόντο #f0f0f0 */
+    /* Για s: 2x2, κάθε κελί 40x20, διάκενο 2px → συνολικό μέγεθος 82x42 */
     #canvasS_groups {
       position: absolute;
       width: 82px;
@@ -81,7 +71,7 @@
       display: none;
       z-index: 11;
     }
-    /* Για d: 2x10, συνολικό πλάτος 418px, ύψος 42px */
+    /* Για d: 2x10 → πλάτος = 10*40 + 9*2 = 418px, ύψος = 42px */
     #canvasD_groups {
       position: absolute;
       width: 418px;
@@ -90,7 +80,7 @@
       display: none;
       z-index: 11;
     }
-    /* Για p: 2x6, συνολικό πλάτος 250px, ύψος 42px */
+    /* Για p: 2x6 → πλάτος = 6*40 + 5*2 = 250px, ύψος = 42px */
     #canvasP_groups {
       position: absolute;
       width: 250px;
@@ -99,22 +89,22 @@
       display: none;
       z-index: 11;
     }
-    /* Χρώματα blocks (για τους κύριους τομείς) */
+    /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view - αρχικές θέσεις για τους τομείς */
+    /* Full view – αρχικές θέσεις για τους κύριους καμβάδες */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view - σταθερές θέσεις */
+    /* Collapsed view – σταθερές θέσεις */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
     .collapsed #canvasP { top: 100px; left: 564px; width: 252px; }
-    /* (Οι παλαιές ετικέτες περιόδων αν υπάρχουν παραμένουν) */
+    /* (Οι παλαιές ετικέτες περιόδων αν υπάρχουν παραμένουν ως έχουν) */
     .period-label {
       position: absolute;
       left: 15px;
@@ -166,7 +156,7 @@
     </div>
   </div>
   
-  <!-- Global functions για καμβάδες περιόδων και ομάδων -->
+  <!-- Global functions για καμβάδες Περιόδων και Ομάδων -->
   <script>
     // Global: Καμβάς Περιόδων
     function initPeriodsCanvas() {
@@ -206,16 +196,15 @@
           p.background(240);
           if(groupsMode === 1) {
             // Old: δείχνουμε τα παλιά ονόματα για s: "IA" και "IIA"
-            // Για παράδειγμα, γράφουμε "IA" στο αριστερό κελί και "IIA" στο δεξί.
             p.fill(0);
-            // Διαίρεση σε 2 κελιά:
+            // Δύο κελιά: αριστερό: "IA", δεξί: "IIA"
             p.text("IA", 20, 10);
-            p.text("IIA", 20, 10+ (20+2));
+            p.text("IIA", 20, 10 + (20+2));
           } else if(groupsMode === 2) {
-            // New: δείχνουμε τα νούμερα 1 και 2 για s
+            // New: δείχνουμε τα νούμερα 1 και 2
             p.fill(0);
             p.text("1", 20, 10);
-            p.text("2", 20, 10+ (20+2));
+            p.text("2", 20, 10 + (20+2));
           }
         };
       });
@@ -230,9 +219,7 @@
           p.textStyle(p.BOLD);
           p.background(240);
           if(groupsMode === 1) {
-            // Old: χρησιμοποιούμε τα 10 παλιά ονόματα για d:
-            // Ας ορίσουμε τα labels σύμφωνα με τις οδηγίες: 
-            // "IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"
+            // Old: τα παλιά ονόματα για d:
             const labels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
@@ -242,7 +229,7 @@
               p.text(labels[c], x + 20, 21);
             }
           } else if(groupsMode === 2) {
-            // New: δείχνουμε τα νούμερα 3 έως 12 για d
+            // New: νούμερα 3 έως 12 για d
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
               p.fill(240);
@@ -264,7 +251,7 @@
           p.textStyle(p.BOLD);
           p.background(240);
           if(groupsMode === 1) {
-            // Old: δείχνουμε τα παλιά ονόματα για p: "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
+            // Old: τα παλιά ονόματα για p: "IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"
             const labels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
@@ -274,7 +261,7 @@
               p.text(labels[c], x + 20, 21);
             }
           } else if(groupsMode === 2) {
-            // New: δείχνουμε τα νούμερα 13 έως 18 για p
+            // New: νούμερα 13 έως 18 για p
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
               p.fill(240);
@@ -290,7 +277,7 @@
     }
   </script>
   
-  <!-- Κύριος κώδικας -->
+  <!-- Κύριος κώδικας (IIFE) -->
   <script>
     (function() {
       const BLOCK_COLORS = {
@@ -308,7 +295,7 @@
   
       let elements = [];
       let currentZ = 0;
-      /* Ο μετρητής επεκτείνεται:
+      /* Ο μετρητής επεκτείνεται ως εξής:
          120: full view χωρίς ομάδες,
          121: εμφάνιση παλαιών ονομάτων ομάδων,
          122: εμφάνιση νέων αριθμήσεων ομάδων.
@@ -316,7 +303,7 @@
       let currentState = 'main';
   
       function updateToggleButton() {
-        document.getElementById('toggleFBlock').disabled = (currentZ < 120);
+        document.getElementById('toggleFBlock').disabled = (currentZ < 122);
       }
   
       async function loadElements() {
@@ -462,11 +449,11 @@
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
-          // Το full view έχει συμπληρωθεί, εμφανίζουμε τους καμβάδες ομάδων.
+          // Εμφάνιση καμβάδων ομάδων: οι ομαδικοί καμβάδες εμφανίζονται όταν currentZ ≥ 120.
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          // Τοποθέτηση: οι καμβάδες ομάδων τοποθετούνται πάνω από τους κύριους καμβάδες.
+          // Τοποθέτηση: οι καμβάδες ομάδων τοποθετούνται πάνω από τους αντίστοιχους κύριους καμβάδες.
           document.getElementById('canvasS_groups').style.top = "50px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -475,9 +462,9 @@
           let pLeft = document.getElementById('canvasP').style.left;
           document.getElementById('canvasP_groups').style.top = "50px";
           document.getElementById('canvasP_groups').style.left = pLeft;
-          // Εμφάνιση ομάδων: currentZ = 121 για παλιά ονόματα, 122 για νέους αριθμούς.
+          // Ο μετρητής groups: currentZ = 121 για παλιά ονόματα, 122 για νέες αριθμήσεις.
           let groupsMode = 0;
-          if(currentZ >= 121 && currentZ < 122) groupsMode = 1;
+          if(currentZ === 121) groupsMode = 1;
           else if(currentZ >= 122) groupsMode = 2;
           initGroupsCanvases(groupsMode);
         } else {
@@ -524,7 +511,7 @@
         } else if(currentZ === 120){
           currentZ = 121;  // πρώτα εμφανίζονται τα παλιά ονόματα ομάδων
         } else if(currentZ === 121){
-          currentZ = 122;  // μετά εμφανίζονται οι νέοι αριθμοί
+          currentZ = 122;  // μετά εμφανίζονται οι νέες αριθμήσεις
         } else {
           currentZ++;
         }
@@ -551,7 +538,7 @@
       });
   
       document.getElementById('toggleFBlock').addEventListener('click', () => {
-        if(currentZ < 120) return;
+        if(currentZ < 122) return;
         document.body.classList.toggle('collapsed');
         redrawAll();
       });
