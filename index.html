@@ -58,7 +58,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Ετικέτες Περιόδων – με υψηλό z-index, top μειωμένο κατά 21px και line-height 12px */
+    /* Ετικέτες Περιόδων – με υψηλό z-index, top μειωμένο κατά 21px και line-height 13px */
     .period-label {
       position: absolute;
       left: 15px;
@@ -69,7 +69,7 @@
       padding: 2px 5px;
       border-radius: 3px;
       display: none;
-      line-height: 12px;
+      line-height: 13px;
       z-index: 30;
     }
     /* Full view αρχικές θέσεις */
@@ -77,7 +77,7 @@
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 1342px; width: 252px; z-index: 4; }
-    /* Collapsed view – όταν ενεργοποιείται, οι βάσεις ορίζονται ως εξής: */
+    /* Collapsed view – ορίζονται βάσεις όταν ενεργοποιείται */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 194px; left: 176px; width: 1326px; }
     .collapsed #canvasD { top: 100px; left: 722px; width: 420px; }
@@ -137,8 +137,9 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // currentZ αρχικά = 0. Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118:
-      // currentZ = 119 → στοιχείο 1, currentZ = 120 → στοιχείο 2.
+      // currentZ αρχικά = 0.
+      // Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118, με διαδοχικά κλικ "Επόμενο": 
+      // 119 → στοιχείο 1, 120 → στοιχείο 2.
       let elements = [];
       let currentZ = 0;
       let currentState = 'main';
@@ -162,16 +163,11 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              // Θέσεις βάσει του αν έχουμε collapsed ή όχι:
-              if(document.body.classList.contains('collapsed')){
-                if(block==='s') canvas.elt.style.left = "50px";
-                else if(block==='f') canvas.elt.style.left = "176px";
-                else if(block==='d') canvas.elt.style.left = "722px";
-                else if(block==='p') canvas.elt.style.left = "1142px";
-              } else {
-                if(block==='s') canvas.elt.style.left = "50px";
-                else if(block==='f' || block==='d') canvas.elt.style.left = "134px";
-                else if(block==='p') canvas.elt.style.left = "1342px";
+              // Αρχικές θέσεις full view:
+              if(block==='s'){
+                canvas.elt.style.left = "50px";
+              } else if(block==='f' || block==='d' || block==='p'){
+                canvas.elt.style.left = "134px";
               }
               drawElements(p, block);
             };
@@ -179,7 +175,6 @@
         });
       }
 
-      // calculatePosition: για τον τομέα p, αν currentZ < 20 και για στοιχεία της πρώτης περιόδου (row 1) χρησιμοποιούμε offset 18.
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         if(block==='s'){
@@ -234,56 +229,32 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              if(document.body.classList.contains('collapsed')){
-                if(block==='s') canvas.elt.style.left = "50px";
-                else if(block==='f') canvas.elt.style.left = "176px";
-                else if(block==='d') canvas.elt.style.left = "722px";
-                else if(block==='p') canvas.elt.style.left = "1142px";
-              } else {
-                if(block==='s') canvas.elt.style.left = "50px";
-                else if(block==='f' || block==='d') canvas.elt.style.left = "134px";
-                else if(block==='p') canvas.elt.style.left = "1342px";
+              if(block==='s'){
+                canvas.elt.style.left = "50px";
+              } else if(block==='f' || block==='d' || block==='p'){
+                canvas.elt.style.left = "134px";
               }
               drawElements(p, block);
             };
           });
         });
         // Δυναμικές μετατοπίσεις:
-        // Ο τομέας s και ο f παραμένουν σταθεροί.
-        // Καθορίζουμε βάσεις για full και collapsed:
-        let isCollapsed = document.body.classList.contains('collapsed');
-        let baseS, baseF, baseD, baseP;
-        if(isCollapsed){
-          baseS = 50;
-          baseF = 176;
-          baseD = 722;
-          baseP = 1142;
-        } else {
-          baseS = 50;
-          baseF = 134;
-          baseD = 134;
-          baseP = 1342;
-        }
-        // Δυναμική μετατόπιση για τομέα p:
-        let shiftP = 0;
+        // Βάσεις για full view:
+        let baseS = 50, baseF = 134, baseD = 134, baseP = 1342;
+        // Για currentZ ≤ 20, οι θέσεις παραμένουν σταθερές.
+        let shiftP = 0, shiftD = 0;
         if(currentZ <= 20){
           shiftP = 0;
+          shiftD = 0;
         } else if(currentZ >= 21 && currentZ <= 30){
           shiftP = 42 * (currentZ - 20);
         } else if(currentZ >= 31 && currentZ <= 56){
           shiftP = 42 * 10;
         } else if(currentZ >= 57 && currentZ <= 70){
           shiftP = 42 * 10 + 42 * (currentZ - 56);
-        } else {
-          shiftP = 42 * 10 + 42 * 14;
-        }
-        // Δυναμική μετατόπιση για τομέα d:
-        let shiftD = 0;
-        if(currentZ < 57){
-          shiftD = 0;
-        } else if(currentZ >= 57 && currentZ <= 70){
           shiftD = 42 * (currentZ - 56);
         } else {
+          shiftP = 42 * 10 + 42 * 14;
           shiftD = 42 * 14;
         }
         document.getElementById('canvasS').style.left = baseS + "px";
@@ -340,7 +311,6 @@
 
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 0;
-        document.body.classList.remove('collapsed');
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
         initializeCanvases();
