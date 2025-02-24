@@ -24,7 +24,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* infoPanel: Full view & Collapsed view */
+    /* infoPanel: Full view & Collapsed view – διατηρείται η αρχική μορφοποίηση */
     body:not(.collapsed) #infoPanel {
       display: flex;
       flex-direction: row;
@@ -121,14 +121,21 @@
     /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
-    /* Αρχικά, οι καμβάδες d και p ξεκινούν στο 134px */
+    /* Στο full view, αρχικά οι καμβάδες d και p ξεκινούν στο left = 134px.
+       Καθώς προχωράει ο μετρητής, αρχικά μετακινείται ο canvasP και μετά, από currentZ=57 και μετά, μετακινείται και ο canvasD,
+       ώστε τελικά να φτάσουν στο left = 722px (για d) και left = 1142px (για p). */
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων */
+    /* Collapsed view – θέσεις καμβάδων στοιχείων όπως στο αρχικό αρχείο, με τις επιθυμητές προσαρμογές:
+         canvasS: left = 50px,
+         canvasF: left = 154px,
+         canvasD: left = 139px (δηλαδή 5px κενό από το canvasS, αφού το canvasS έχει left = 50px και πλάτος 84px → 50+84=134px),
+         canvasP: left = 559px (δηλαδή +5px σε σχέση με την αρχική θέση 554px, ώστε να μην "καβαλλάει" ο d).
+    */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
-    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* d: left=139px για 5px κενό με την s */
-    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; } /* p: αύξηση κατά 5px */
+    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; }
+    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; }
     /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
     .period-label {
       position: absolute;
@@ -162,6 +169,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
+  <!-- Πίνακας πληροφοριών -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -341,7 +349,7 @@
                   canvas.elt.style.left = "559px";
                 }
               } else {
-                // Στο full view, αρχικά όλοι οι καμβάδες (f, d, p) ξεκινούν στο 134px.
+                // Στο full view, οι καμβάδες f, d, p ξεκινούν αρχικά στο 134px.
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
                 } else if(block==='f' || block==='d' || block==='p'){
