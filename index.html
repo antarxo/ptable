@@ -139,8 +139,10 @@
         f: { cols: 14, rows: 7 }
       };
 
+      // Τα στοιχεία 1 και 2 δεν σχεδιάζονται στην κύρια ροή (φιλτράρονται για e.number ≥ 3)
+      // και προστίθενται μόνο όταν πατηθεί το κουμπί "Συμπλήρωσε" (currentZ = 118).
       let elements = [];
-      let currentZ = 3; // Τα στοιχεία με αριθμούς 1 και 2 παραλείπονται αρχικά (δείκτης >=3)
+      let currentZ = 3;
       let currentState = 'main';
 
       async function loadElements() {
@@ -246,7 +248,7 @@
         currentZ = 118;
         redrawAll();
         setTimeout(() => {
-          // Εμφάνιση των στοιχείων 1 και 2 (που ανήκουν στην πρώτη γραμμή) χωρίς αλλαγή currentZ
+          // Εμφάνιση των στοιχείων 1 και 2 όταν πατηθεί το κουμπί "Συμπλήρωσε"
           elements.filter(e => e.number <= 2).forEach(e => {
             new p5(p => {
               p.setup = () => {
