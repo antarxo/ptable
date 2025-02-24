@@ -58,7 +58,7 @@
     /* Καμβάς Περιόδων */
     #canvasPeriods {
       position: absolute;
-      left: 10px;
+      left: 6px; /* ώστε το δεξί του άκρο (6+42=48px) να αφήνει 2px διάκενο με τον s που ξεκινά στο 50px */
       top: 100px;
       width: 42px;
       height: 292px;
@@ -67,7 +67,7 @@
       z-index: 5;
     }
     /* Καμβάδες Ομάδων */
-    /* Για τον s: πίνακας 2x2, κάθε κελί 40x40 με 2px διάκενο */
+    /* Για τον s: πίνακας 2x2, κάθε κελί 40x40 με 2px διάκενο → συνολικό μέγεθος 42x82 */
     #canvasS_groups {
       position: absolute;
       width: 42px;
@@ -161,9 +161,9 @@
     </div>
   </div>
   
-  <!-- ΔΗΛΩΣΗ Global συναρτήσεων για τους καμβάδες περιόδων και ομάδων -->
+  <!-- Global functions for periods and groups canvases -->
   <script>
-    // Global: Δημιουργία του καμβά περιόδων (μόνο μία φορά)
+    // Global: Καμβάς Περιόδων
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -186,11 +186,10 @@
       });
       window.periodsInitialized = true;
     }
-  
-    // Global: Δημιουργία των καμβάδων ομάδων για s, d, p (μόνο μία φορά)
+    // Global: Καμβάδες Ομάδων
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // για s: 2x2
+      // Για s: 2x2
       new p5(p => {
         p.setup = () => {
           let canvas = p.createCanvas(42, 82);
@@ -213,7 +212,7 @@
           }
         };
       });
-      // για d: 2x10
+      // Για d: 2x10
       new p5(p => {
         p.setup = () => {
           let canvas = p.createCanvas(218, 82);
@@ -239,7 +238,7 @@
           }
         };
       });
-      // για p: 2x6
+      // Για p: 2x6
       new p5(p => {
         p.setup = () => {
           let canvas = p.createCanvas(130, 82);
@@ -269,7 +268,7 @@
     }
   </script>
   
-  <!-- Κύριος κώδικας (IIFE) -->
+  <!-- Κύριος κώδικας -->
   <script>
     (function() {
       const BLOCK_COLORS = {
@@ -436,19 +435,22 @@
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
-          document.getElementById('canvasGroups').style.display = "block";
-          // Ορίστε τις θέσεις των καμβάδων ομάδων ώστε να ακολουθούν τις κινήσεις των αντίστοιχων τομέων:
-          // Για s, θέτουμε π.χ. πάνω από το canvasS (top: 50px, left ίσο με το canvasS)
+          // Εμφάνιση των καμβάδων ομάδων
+          document.getElementById('canvasS_groups').style.display = "block";
+          document.getElementById('canvasD_groups').style.display = "block";
+          document.getElementById('canvasP_groups').style.display = "block";
+          // Θέσεις ομάδων: Τοποθετούμε τους καμβάδες πάνω από τους αντίστοιχους τομείς
+          // Για s: τοποθετούμε τον canvasS_groups πάνω από canvasS (π.χ. top = 50px, left = 50px)
           document.getElementById('canvasS_groups').style.top = "50px";
           document.getElementById('canvasS_groups').style.left = "50px";
-          // Για d, ακολουθεί το canvasD
-          let canvasDLeft = document.getElementById('canvasD').style.left;
+          // Για d: ακολουθεί την θέση του canvasD
+          let dLeft = document.getElementById('canvasD').style.left;
           document.getElementById('canvasD_groups').style.top = "50px";
-          document.getElementById('canvasD_groups').style.left = canvasDLeft;
-          // Για p, ακολουθεί το canvasP
-          let canvasPLeft = document.getElementById('canvasP').style.left;
+          document.getElementById('canvasD_groups').style.left = dLeft;
+          // Για p: ακολουθεί την θέση του canvasP
+          let pLeft = document.getElementById('canvasP').style.left;
           document.getElementById('canvasP_groups').style.top = "50px";
-          document.getElementById('canvasP_groups').style.left = canvasPLeft;
+          document.getElementById('canvasP_groups').style.left = pLeft;
           initGroupsCanvases();
         } else {
           document.getElementById('canvasPeriods').style.display = "none";
