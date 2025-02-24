@@ -36,8 +36,7 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 500px;
-      /* Αφαιρούμε δυναμικά το πλάτος των fixed κουμπιών και 120px επιπλέον */
+      top: 440px; /* Ανέβηκε κατά 60px από τα 500px */
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
       transition: all 1.5s ease;
@@ -57,10 +56,7 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Δομή του infoPanel:
-         - leftPanel: elementInfo, υποστιβάδες, στιβάδες, εξωτερική στιβάδα, επεξήγηση (με μικρότερη γραμματοσειρά)
-         - middlePanel: ηλεκτρονική δομή (3 σειρές για προηγούμενο, τρέχον, επόμενο στοιχείο) πάνω από τα remarks
-         - rightPanel: fixed κουμπιά */
+    /* Δομή του infoPanel */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
@@ -73,13 +69,13 @@
       flex-direction: column;
       gap: 5px;
     }
-    /* Στυλ για την επεξήγηση (με μικρότερη γραμματοσειρά και αριστερή στοίχιση) */
+    /* Στυλ για την επεξήγηση */
     #explanation {
       font-size: 12px;
       text-align: left;
       margin-top: 8px;
     }
-    /* Στυλ για τις παρατηρήσεις: κεντραρισμένες οριζόντια και κατακόρυφα */
+    /* Στυλ για τις παρατηρήσεις */
     #remarks {
       display: flex;
       align-items: center;
@@ -89,20 +85,20 @@
       font-size: 14px;
       margin-top: 8px;
     }
-    /* Στυλ για την ηλεκτρονική δομή (electronicStructure) */
+    /* Στυλ για την ηλεκτρονική δομή */
     #electronicStructure {
       font-size: 12px;
       line-height: 1.4;
       margin-bottom: 8px;
     }
-    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) έχουν εφέ "υπερυψωμένων" */
+    /* Όλοι οι καμβάδες */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: μετατοπισμένος κατά 50px (top: 150px αντί για 100px) */
+    /* Καμβάς Περιόδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -143,17 +139,18 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων (με top μετατοπισμένο από 100px σε 150px) */
+    /* Full view – θέσεις καμβάδων στοιχείων (top μετατοπισμένο σε 150px) */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
-    .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
+    /* Το canvas d έχει μετατοπιστεί ώστε να αφήνει 5px κενό από το s (50+84+5=139) */
+    .full #canvasD { top: 150px; left: 139px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων (προστίθεται 50px στο top) */
+    /* Collapsed view – θέσεις καμβάδων στοιχείων */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
     .collapsed #canvasD { top: 150px; left: 134px; width: 420px; }
     .collapsed #canvasP { top: 150px; left: 554px; width: 252px; }
-    /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
+    /* Οι παλαιές ετικέτες περιόδων */
     .period-label {
       position: absolute;
       left: 15px;
@@ -322,12 +319,13 @@
         'd': '#ccccff',
         'f': '#ffe5cc'
       };
-      // Νέος χάρτης για το χρώμα του συμβόλου (με πιο σκουρότερους τόνους)
+      // Νέος χάρτης για το χρώμα του συμβόλου με πιο σκουρότερους τόνους:
+      // s: dark red, p: dark green, d: dark blue, f: dark orange
       const BLOCK_SYMBOL_COLORS = {
-        's': '#cc0000', // dark red
-        'p': '#ff8c00', // dark orange
-        'd': '#00008b', // dark blue
-        'f': '#006400'  // dark green
+        's': '#cc0000',  // dark red
+        'p': '#006400',  // dark green
+        'd': '#00008b',  // dark blue
+        'f': '#ff8c00'   // dark orange
       };
       const BLOCKS_CONFIG = {
         s: { cols: 2, rows: 7 },
@@ -500,7 +498,7 @@
           });
         });
         if(!document.body.classList.contains('collapsed')){
-          let baseF = 134, baseD = 134, baseP = 134;
+          let baseF = 134, baseD = 139, baseP = 134;  // baseD τώρα 139 για να αφήνει 5px κενό από το s
           let shiftP = 0, shiftD = 0;
           if(currentZ <= 20){
             shiftP = 0; shiftD = 0;
@@ -530,7 +528,7 @@
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          // Μετατοπισμός των groups καμβάδων: top 58px → 108px (δηλαδή +50px)
+          // Μετατοπισμός των groups: top 58px → 108px (δηλαδή +50px)
           document.getElementById('canvasS_groups').style.top = "108px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -568,19 +566,19 @@
         document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (<span style="color:${BLOCK_SYMBOL_COLORS[element.block]}; font-size:24px; font-weight:bold;">${element.symbol}</span>)</strong> [Z=${z}]`;
   
-        // Μορφοποίηση των υποστιβαδών, αν το πεδίο subshells υπάρχει
+        // Μορφοποίηση των υποστιβαδών
         document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
   
-        // Μορφοποίηση των στιβαδών σε μορφή K(2), L(8), ...
+        // Μορφοποίηση των στιβάδων σε μορφή K(2), L(8), ...
         document.getElementById('shells').textContent = `Στιβάδες: ${formatShells(element.shells)}`;
   
         // Μορφοποίηση της εξωτερικής στιβάδας
         document.getElementById('outerShell').textContent = `Εξωτερική: ${formatOuterShell(element.shells, element.outerShell)}`;
   
-        // Η επεξήγηση τοποθετείται με μικρότερη γραμματοσειρά (είναι ήδη στο leftPanel)
+        // Η επεξήγηση τοποθετείται με μικρότερη γραμματοσειρά
         document.getElementById('explanation').textContent = element.explanation;
   
-        // Ενημέρωση της ηλεκτρονικής δομής (σε 3 σειρές: προηγούμενο, τρέχον, επόμενο στοιχείο)
+        // Ενημέρωση της ηλεκτρονικής δομής (3 σειρές: προηγούμενο, τρέχον, επόμενο στοιχείο)
         let esHTML = "";
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
@@ -589,7 +587,7 @@
         esHTML += `<div style="font-size:12px;">Επόμενο: ${next ? next.subshells : '-'}</div>`;
         document.getElementById('electronicStructure').innerHTML = esHTML;
   
-        // Εμφάνιση παρατηρήσεων κεντραρισμένων
+        // Εμφάνιση παρατηρήσεων (κεντραρισμένες)
         document.getElementById('remarks').textContent = element.remarks;
       }
   
