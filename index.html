@@ -80,10 +80,12 @@
     /* Διάταξη blocks - Collapsed view */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
-    /* Αφαίρεση κενού μεταξύ d και p: το p‑block ξεκινά στο 560px αντί για 566px */
+    /* Το p‑block ξεκινά στο 560px για να μην υπάρχει κενό μεταξύ d και p */
     .collapsed #canvasP { top: 100px; left: 560px; }
-    /* Μετατόπιση του f‑block: 60px πιο κάτω και 60px πιο δεξιά */
-    .collapsed #canvasF { top: 260px; left: 110px; width: 1326px; }
+    /* Ο f‑block τοποθετείται 10px κάτω από το κάτω μέρος του d‑block 
+       (d block ξεκινά στο 100px με ύψος 7*42 = 294px → κάτω μέρος στο 394px, +10px = 404px)
+       και μετατοπίζεται δεξιότερα κατά 42px (π.χ. από το 110px σε 152px) */
+    .collapsed #canvasF { top: 404px; left: 152px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -139,10 +141,9 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // Τα στοιχεία 1 και 2 δεν σχεδιάζονται στην κύρια ροή (φιλτράρονται για e.number ≥ 3)
-      // και προστίθενται μόνο όταν πατηθεί το κουμπί "Συμπλήρωσε" (currentZ = 118).
+      // Ξεκινάμε με currentZ = 2, ώστε να μην εμφανίζεται καμία πληροφορία ή στοιχείο
       let elements = [];
-      let currentZ = 3;
+      let currentZ = 2;
       let currentState = 'main';
 
       async function loadElements() {
@@ -191,7 +192,7 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        // Εμφάνιση στοιχείων με αριθμούς από 3 έως currentZ
+        // Σχεδιάζουμε μόνο στοιχεία με αριθμό από 3 και άνω
         elements.filter(e => 
           e.block === block &&
           e.number <= currentZ &&
@@ -227,6 +228,16 @@
       }
 
       function updateInfo(z) {
+        // Αν z < 3, μην εμφανίζουμε πληροφορίες
+        if (z < 3) {
+          document.getElementById('elementInfo').innerHTML = "";
+          document.getElementById('subshells').textContent = "";
+          document.getElementById('shells').textContent = "";
+          document.getElementById('outerShell').textContent = "";
+          document.getElementById('explanation').textContent = "";
+          document.getElementById('remarks').textContent = "";
+          return;
+        }
         const element = elements.find(e => e.number === z);
         if (!element) return;
         document.getElementById('elementInfo').innerHTML = 
@@ -248,7 +259,7 @@
         currentZ = 118;
         redrawAll();
         setTimeout(() => {
-          // Εμφάνιση των στοιχείων 1 και 2 όταν πατηθεί το κουμπί "Συμπλήρωσε"
+          // Προσθήκη στοιχείων 1 και 2 στις θέσεις τους στην πρώτη γραμμή
           elements.filter(e => e.number <= 2).forEach(e => {
             new p5(p => {
               p.setup = () => {
@@ -270,7 +281,7 @@
       });
 
       document.getElementById('reset').addEventListener('click', () => {
-        currentZ = 3;
+        currentZ = 2;
         document.body.classList.remove('collapsed');
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
