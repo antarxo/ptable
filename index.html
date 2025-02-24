@@ -12,16 +12,17 @@
       overflow: hidden;
       background: #f7f7f7;
     }
+    /* Ο τίτλος ανεβαίνει */
     #title {
       position: absolute;
-      top: 20px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 24px;
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών – σταθερή διάταξη (κατακόρυφη) σε όλες τις προβολές */
+    /* Πίνακας πληροφοριών – διατηρεί τις ίδιες διαστάσεις σε όλες τις προβολές */
     #infoPanel {
       display: flex;
       flex-direction: column;
@@ -31,32 +32,32 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      width: 302px; /* υπολογισμένο ως 1200 - 816 - 82 */
+      width: 302px;  /* σύμφωνα με τον προηγούμενο υπολογισμό */
       position: absolute;
       left: 42px;  /* οριζόντια θέση 42px */
       top: 500px;
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Τα τμήματα μέσα στον infoPanel παραμένουν σταθερά */
+    /* Τα εσωτερικά τμήματα και τα κουμπιά παραμένουν σταθερά και σε κατακόρυφη διάταξη */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
-    /* Τα κουμπιά στο #rightPanel (τα οποία εμφανίζονται κατακόρυφα) */
     #rightPanel {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-    /* Όλοι οι καμβάδες έχουν μετάβαση 1s για ομαλή κίνηση και εφέ "υπερυψωμένων" */
+    /* Όλοι οι καμβάδες έχουν transition 1s και εφέ "υπερυψωμένων" */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων – θέση ώστε να ευθυγραμμίζεται με τα στοιχεία */
+    /* Καμβάς Περιόδων παραμένει στην ίδια θέση */
     #canvasPeriods {
+      position: absolute;
       left: 6px;
       top: 100px;
       width: 42px;
@@ -65,28 +66,31 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες Ομάδων */
-    /* Για s: 2x2, κάθε κελί 40×20, οριζόντια διάταξη με 2px διάκενο → συνολικό μέγεθος: 82px x 40px.
-       Τοποθετούνται με top = 58px */
+    /* Καμβάδες Ομάδων – νέα διαστάσεις:
+       Κάθε κελί: 40px πλάτος και 16px ύψος, χωρίς κατακόρυφο διάστημα.
+       Συνολικό ύψος: 2×16 = 32px.
+       Τοποθετούνται με top = 58px ώστε το κάτω άκρο να είναι στο 58+32=90px (2px διάκενο από τα στοιχεία που ξεκινούν στο 100px).
+    */
     #canvasS_groups {
-      width: 82px;
-      height: 40px;
+      position: absolute;
+      width: 82px; /* 2×40 + 1×2 = 82px */
+      height: 32px; /* 2×16 = 32px */
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
-    /* Για d: 2x10, συνολικό πλάτος 418px, ύψος 40px */
     #canvasD_groups {
-      width: 418px;
-      height: 40px;
+      position: absolute;
+      width: 418px; /* 10×40 + 9×2 = 418px */
+      height: 32px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
-    /* Για p: 2x6, συνολικό πλάτος 250px, ύψος 40px */
     #canvasP_groups {
-      width: 250px;
-      height: 40px;
+      position: absolute;
+      width: 250px; /* 6×40 + 5×2 = 250px */
+      height: 32px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
@@ -96,18 +100,19 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – αρχικές θέσεις για τους κύριους καμβάδες */
+    /* Full view – θέσεις κύριων καμβάδων */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – σταθερές θέσεις (δεν αλλάζουν πλέον ο infoPanel) */
+    /* Collapsed view – δεν αλλάζει ο infoPanel πλέον, τα στοιχεία παραμένουν όπως στο full view */
     .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
-    .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
-    .collapsed #canvasP { top: 100px; left: 564px; width: 252px; }
-    /* (Οι παλαιές ετικέτες περιόδων, αν υπάρχουν, παραμένουν όπως πριν) */
+    .collapsed #canvasF { top: 100px; left: 134px; width: 588px; }
+    .collapsed #canvasD { top: 100px; left: 134px; width: 420px; }
+    .collapsed #canvasP { top: 100px; left: 134px; width: 252px; }
+    /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως πριν) */
     .period-label {
+      position: absolute;
       left: 15px;
       font-size: 11px;
       font-weight: bold;
@@ -117,7 +122,6 @@
       border-radius: 3px;
       display: none;
       line-height: 13px !important;
-      position: absolute;
       z-index: 30;
     }
   </style>
@@ -160,7 +164,7 @@
   
   <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
   <script>
-    // Global: Καμβάς Περιόδων (δημιουργείται μόνο μία φορά)
+    // Global: Καμβάς Περιόδων (δημιουργείται μία φορά)
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -183,39 +187,40 @@
       });
       window.periodsInitialized = true;
     }
-    // Global: Καμβάδες Ομάδων – σχεδιάζονται μία φορά
+    // Global: Καμβάδες Ομάδων – σχεδιάζονται μία φορά.
+    // Σε κάθε καμβά, η πάνω σειρά (y=0) εμφανίζει τη νέα αρίθμηση, ενώ η κάτω (y=16) τα παλιά ονόματα.
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       // Για s:
       new p5(p => {
         p.setup = () => {
-          let canvas = p.createCanvas(82, 40);
+          let canvas = p.createCanvas(82, 32);
           canvas.parent("canvasS_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Αν currentZ == 121, εμφανίζουμε μόνο την κάτω σειρά (old), ενώ αν currentZ >= 122, εμφανίζουμε και τις δύο σειρές.
           if(window.currentZ === 121) {
+            // Εμφάνιση μόνο παλιών ονομάτων (κάτω σειρά)
             p.fill(0);
-            p.text("IA", 20, 22 + 10);
-            p.text("IIA", 20 + 42, 22 + 10);
+            p.text("IA", 20, 16+8);
+            p.text("IIA", 20+42, 16+8);
           } else if(window.currentZ >= 122) {
-            // New row (πάνω): νέα αρίθμηση: "1" και "2"
+            // Πάνω σειρά: νέα αρίθμηση
             p.fill(0);
-            p.text("1", 20, 10);
-            p.text("2", 20 + 42, 10);
-            // Old row (κάτω): "IA" και "IIA"
-            p.text("IA", 20, 22 + 10);
-            p.text("IIA", 20 + 42, 22 + 10);
+            p.text("1", 20, 8);
+            p.text("2", 20+42, 8);
+            // Κάτω σειρά: παλιά ονόματα
+            p.text("IA", 20, 16+8);
+            p.text("IIA", 20+42, 16+8);
           }
         };
       });
       // Για d:
       new p5(p => {
         p.setup = () => {
-          let canvas = p.createCanvas(418, 40);
+          let canvas = p.createCanvas(418, 32);
           canvas.parent("canvasD_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -227,27 +232,27 @@
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
               p.fill(240);
-              p.rect(x, 22, 40, 20);
+              p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 22+10);
+              p.text(oldLabels[c], x + 20, 16+8);
             }
           } else if(window.currentZ >= 122) {
-            // New row (πάνω): νούμερα 3 έως 12
+            // Πάνω σειρά: νέα αρίθμηση (3-12)
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
               p.fill(240);
-              p.rect(x, 0, 40, 20);
+              p.rect(x, 0, 40, 16);
               p.fill(0);
-              p.text((c+3).toString(), x + 20, 10);
+              p.text((c+3).toString(), x + 20, 8);
             }
-            // Old row (κάτω):
+            // Κάτω σειρά: παλιά ονόματα
             const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
               p.fill(240);
-              p.rect(x, 22, 40, 20);
+              p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 22+10);
+              p.text(oldLabels[c], x + 20, 16+8);
             }
           }
         };
@@ -255,7 +260,7 @@
       // Για p:
       new p5(p => {
         p.setup = () => {
-          let canvas = p.createCanvas(250, 40);
+          let canvas = p.createCanvas(250, 32);
           canvas.parent("canvasP_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -267,27 +272,27 @@
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
               p.fill(240);
-              p.rect(x, 22, 40, 20);
+              p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 22+10);
+              p.text(oldLabels[c], x + 20, 16+8);
             }
           } else if(window.currentZ >= 122) {
-            // New row (πάνω): νούμερα 13 έως 18
+            // Πάνω σειρά: νέα αρίθμηση (13-18)
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
               p.fill(240);
-              p.rect(x, 0, 40, 20);
+              p.rect(x, 0, 40, 16);
               p.fill(0);
-              p.text((c+13).toString(), x + 20, 10);
+              p.text((c+13).toString(), x + 20, 8);
             }
-            // Old row (κάτω):
+            // Κάτω σειρά: παλιά ονόματα
             const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
               p.fill(240);
-              p.rect(x, 22, 40, 20);
+              p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 22+10);
+              p.text(oldLabels[c], x + 20, 16+8);
             }
           }
         };
@@ -316,7 +321,7 @@
       let currentZ = 0;
       /* Μετρητής:
          120: full view χωρίς ομάδες,
-         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων,
+         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων (κάτω σειρά),
          122: εμφάνιση και των δύο σειρών (πάνω: νέα, κάτω: παλιά).
       */
   
