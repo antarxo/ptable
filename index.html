@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας – Info Panel Positioning</title>
+  <title>Περιοδικός Πίνακας – Ολοκληρωμένη Λύση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     /* Βασικές ρυθμίσεις */
@@ -22,7 +22,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Info Panel – αυτό το div εμφανίζεται ανάλογα με το view */
+    /* Info Panel */
     #infoPanel {
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
@@ -33,21 +33,45 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Fixed κουμπιά στο #rightPanel, ορισμένα με πλάτος 150px */
+    /* Full view: infoPanel.top = 500px, left = 20px, width = window.innerWidth - 210 */
+    body.full #infoPanel {
+      top: 500px;
+      left: 20px;
+      width: calc(100vw - 210px);
+    }
+    /* Collapsed view: infoPanel.top = 100px, left = (p.right + 42) i.e. 848px, width = window.innerWidth - 888 */
+    body.collapsed #infoPanel {
+      top: 100px;
+      left: calc(100vw - 888px);
+      width: calc(100vw - 888px); /* ή, σύμφωνα με την οδηγία: width = window.innerWidth - 888 */
+      height: 300px; /* Σταθερό ύψος ώστε να περιέχει τα κουμπιά */
+    }
+    /* Εσωτερικά τμήματα του infoPanel: διαιρούμενο σε δύο "κελιά" */
+    #leftPanel, #middlePanel {
+      padding: 5px;
+      width: 50%;
+    }
+    /* Fixed κουμπιά στο #rightPanel */
     #rightPanel {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 150px;
+      width: 150px; /* Ορίζουμε σταθερό πλάτος */
       display: flex;
       flex-direction: column;
       gap: 5px;
       z-index: 100;
     }
-    /* Παράδειγμα θέσεων καμβάδων τομέων */
+    /* Καμβάδες τομέων – βασικές ρυθμίσεις */
+    .canvas {
+      position: absolute;
+      background: transparent;
+      transition: all 1s ease-in-out;
+      transform: translateY(-10px);
+    }
+    /* Full view θέσεις: */
     /* s τομέας */
     #canvasS {
-      position: absolute;
       left: 50px;
       top: 100px;
       width: 84px;
@@ -56,7 +80,6 @@
     }
     /* f τομέας */
     #canvasF {
-      position: absolute;
       left: 134px;
       top: 100px;
       width: 588px;
@@ -65,30 +88,84 @@
     }
     /* d τομέας */
     #canvasD {
-      position: absolute;
       left: 134px;
       top: 100px;
       width: 420px;
       height: 294px;
       background: #ccccff;
     }
-    /* p τομέας */
+    /* p τομέας - Full view: αρχική θέση; μετατοπίσεις για p υπολογίζονται δυναμικά με βάση currentZ */
     #canvasP {
-      position: absolute;
-      left: 134px; /* αρχική τιμή στο full view; θα μετατοπιστεί δυναμικά */
+      left: 134px; /* και μετά θα μετατοπιστεί μέσω JS */
       top: 100px;
       width: 252px;
       height: 294px;
       background: #ccffcc;
     }
-    /* Στην collapsed view, μετατοπίσεις: */
+    /* Collapsed view μετατοπίσεις: */
+    body.collapsed #canvasS {
+      left: 50px;
+      top: 100px;
+    }
     body.collapsed #canvasF {
       left: 154px;  /* 134 + 20 */
       top: 190px;   /* 100 + 90 */
+      width: 588px;
+    }
+    body.collapsed #canvasD {
+      left: 134px;
+      top: 100px;
+      width: 420px;
     }
     body.collapsed #canvasP {
-      left: 554px;  /* 134 + 420, δίπλα στον d */
+      left: 554px;  /* 134 + 420 */
       top: 100px;
+      width: 252px;
+    }
+    /* Ομαδοποίηση: καμβάδες ομάδων (εμφανίζονται όταν currentZ>=120) */
+    #canvasS_groups {
+      position: absolute;
+      left: 50px;
+      top: 66px;
+      width: 82px;
+      height: 32px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    #canvasD_groups {
+      position: absolute;
+      left: 134px; /* θα πάρει την τιμή του canvasD */
+      top: 66px;
+      width: 418px;
+      height: 32px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    #canvasP_groups {
+      position: absolute;
+      left: 134px; /* θα ενημερωθεί με βάση το canvasP */
+      top: 66px;
+      width: 250px;
+      height: 32px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    /* Παλιές ετικέτες περιόδων */
+    .period-label {
+      position: absolute;
+      left: 15px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #333;
+      background: rgba(200,200,200,0.9);
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: none;
+      line-height: 13px;
+      z-index: 30;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -96,16 +173,31 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάδες τομέων -->
-  <div id="canvasS"></div>
-  <div id="canvasF"></div>
-  <div id="canvasD"></div>
-  <div id="canvasP"></div>
+  <!-- Καμβάδες Περιόδων -->
+  <div id="canvasPeriods" class="canvas"></div>
+  <!-- Καμβάδες Ομάδων -->
+  <div id="canvasS_groups" class="canvas"></div>
+  <div id="canvasD_groups" class="canvas"></div>
+  <div id="canvasP_groups" class="canvas"></div>
+  
+  <!-- Καμβάδες Τομέων -->
+  <div id="canvasS" class="canvas"></div>
+  <div id="canvasF" class="canvas"></div>
+  <div id="canvasD" class="canvas"></div>
+  <div id="canvasP" class="canvas"></div>
   
   <!-- Info Panel -->
   <div id="infoPanel">
-    <div id="leftPanel">Info Left</div>
-    <div id="middlePanel">Info Right</div>
+    <div id="leftPanel">
+      <div id="elementInfo"></div>
+      <div id="subshells"></div>
+      <div id="shells"></div>
+      <div id="outerShell"></div>
+    </div>
+    <div id="middlePanel">
+      <div id="explanation"></div>
+      <div id="remarks"></div>
+    </div>
   </div>
   
   <!-- Fixed κουμπιά -->
@@ -116,52 +208,118 @@
     <button id="reset">Reset</button>
   </div>
   
+  <!-- JavaScript: Λειτουργίες για Info Panel, μετατοπίσεις καμβάδων και διαχείριση view -->
   <script>
+    // Ενημέρωση του infoPanel ανάλογα με το view
     function updateInfoPanelPosition() {
       const infoPanel = document.getElementById('infoPanel');
       const W = window.innerWidth;
       if(document.body.classList.contains('collapsed')){
         // Collapsed view:
-        // p τομέας στην collapsed view έχει: left = 554px, width = 252px → δεξιό άκρο = 554 + 252 = 806px.
-        // infoPanel.left = p.right + 42 = 806 + 42 = 848px.
-        // infoPanel.width = W – (p.right) – 82 = W – 806 – 82 = W – 888.
+        // infoPanel.left = (δεξιό όκρο του p τομέα) + 42.
+        // Στην collapsed view ο p τομέας έχει left = 554px και width = 252px → δεξιό όκρο = 806px.
+        // Άρα infoPanel.left = 806 + 42 = 848px.
+        // infoPanel.width = W – (δεξιό όκρο του p) – 82 = W – 806 – 82 = W – 888.
         infoPanel.style.top = "100px";
         infoPanel.style.left = "848px";
         infoPanel.style.width = (W - 888) + "px";
       } else {
         // Full view:
-        // infoPanel.top = 500px, left = 20px, width = W – (πλάτος κουμπιών) – 60.
-        // Εδώ θεωρούμε πλάτος κουμπιών = 150px → width = W – 210.
+        // infoPanel.top = 500px, left = 20px, width = W – (πλάτος κουμπιών, 150px) – 60 = W – 210.
         infoPanel.style.top = "500px";
         infoPanel.style.left = "20px";
         infoPanel.style.width = (W - 210) + "px";
       }
     }
     
-    // Ενημέρωση infoPanel κατά φόρτωση και resize
-    window.addEventListener('load', updateInfoPanelPosition);
-    window.addEventListener('resize', updateInfoPanelPosition);
+    // Ενημέρωση θέσεων των καμβάδων (τομείς) με βάση το view και τον currentZ
+    function updateCanvasPositions() {
+      // Full view: οι θέσεις ορίζονται σταθερά (με μετατοπίσεις του p με βάση τον currentZ)
+      if(!document.body.classList.contains('collapsed')){
+        // s, f, d: όπως ορίζονται στα CSS
+        // p: μετατόπιση με βάση currentZ
+        if(currentZ >= 21) {
+          let base = 134;
+          let shift = 0;
+          if(currentZ >= 21 && currentZ <= 30) {
+            shift = 42 * (currentZ - 20);
+          } else if(currentZ >= 31 && currentZ <= 56) {
+            shift = 42 * 10;
+          } else if(currentZ >= 57 && currentZ <= 70) {
+            shift = 42 * 10 + 42 * (currentZ - 56);
+          } else if(currentZ > 70) {
+            shift = 42 * 10 + 42 * 14;
+          }
+          document.getElementById('canvasP').style.left = (base + shift) + "px";
+        } else {
+          document.getElementById('canvasP').style.left = "134px";
+        }
+      } else {
+        // Collapsed view: οι θέσεις έχουν οριστεί στα CSS:
+        // s: left = 50px, f: left = 154px, d: left = 134px, p: left = 554px.
+        // Δεν χρειάζεται περαιτέρω μετατόπιση.
+      }
+    }
     
-    // Dummy handlers για κουμπιά (για δοκιμή)
+    // Λειτουργία για ενημέρωση του infoPanel (dummy update)
+    function updateInfo(z) {
+      const elementInfo = document.getElementById('elementInfo');
+      // Για δοκιμή, εμφανίζουμε απλώς το Z
+      elementInfo.innerText = "Επιλεγμένο Z: " + z;
+      // Μπορείτε να επεκτείνετε για να εμφανίζονται και οι άλλες πληροφορίες
+    }
+    
+    // Δοκιμαστικές λειτουργίες για τα κουμπιά (Next, FillAll, Reset, Toggle)
     let currentZ = 0;
     document.getElementById('nextElement').addEventListener('click', () => {
-      currentZ++;
-      console.log("currentZ:", currentZ);
-    });
-    document.getElementById('fillAll').addEventListener('click', () => {
-      currentZ = 122;
-      console.log("currentZ:", currentZ);
-    });
-    document.getElementById('reset').addEventListener('click', () => {
-      currentZ = 0;
-      console.log("currentZ:", currentZ);
+      if(currentZ < 3)
+        currentZ = 3;
+      else if(currentZ < 118)
+        currentZ++;
+      else if(currentZ === 118)
+        currentZ = 119;
+      else if(currentZ === 119)
+        currentZ = 120;
+      else if(currentZ === 120)
+        currentZ = 121;
+      else if(currentZ === 121)
+        currentZ = 122;
+      else
+        currentZ++;
+      updateInfo(currentZ);
+      updateCanvasPositions();
     });
     
-    // Dummy toggle για το collapsed view
+    document.getElementById('fillAll').addEventListener('click', () => {
+      currentZ = 122;
+      updateInfo(currentZ);
+      updateCanvasPositions();
+    });
+    
+    document.getElementById('reset').addEventListener('click', () => {
+      currentZ = 0;
+      updateInfo(currentZ);
+      // Επαναφορά θέσεων καμβάδων
+      document.body.classList.remove('collapsed');
+      updateInfoPanelPosition();
+      updateCanvasPositions();
+    });
+    
     document.getElementById('toggleFBlock').addEventListener('click', () => {
-      if(currentZ < 122) return; // Απενεργοποιούμε αν δεν έχει φτάσει
+      if(currentZ < 122) return;
       document.body.classList.toggle('collapsed');
       updateInfoPanelPosition();
+      updateCanvasPositions();
+    });
+    
+    // Ενημέρωση κατά φόρτωση και αλλαγή μεγέθους παραθύρου
+    window.addEventListener('load', () => {
+      updateInfoPanelPosition();
+      updateCanvasPositions();
+    });
+    window.addEventListener('resize', () => {
+      updateInfoPanelPosition();
+      updateCanvasPositions();
     });
   </script>
 </body>
