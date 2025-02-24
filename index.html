@@ -35,7 +35,7 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
       position: absolute;
-      left: 25px; /* 5px δεξιότερα */
+      left: 25px; /* μετατοπισμένος 5px δεξιότερα */
       top: 440px;
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
@@ -98,7 +98,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων (με top:150px) */
+    /* Καμβάς Περιόδων (top:150px) */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -142,14 +142,13 @@
     /* Full view – θέσεις καμβάδων στοιχείων (top:150px) */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
-    /* Επαναφορά: στο full view, το canvas d να έχει left:134px (χωρίς το επιπλέον κενό) */
+    /* Στο full view το canvas d επανέρχεται στο left:134px (χωρίς επιπλέον κενό) */
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
     /* Collapsed view – θέσεις καμβάδων στοιχείων */
     .collapsed #canvasS { top: 150px; left: 50px; }
-    /* Στην collapsed view, το canvas f να έχει top:243px και να παραμένει left:154px */
+    /* Στην collapsed view το canvas f έχει top:243px και left:154px */
     .collapsed #canvasF { top: 243px; left: 154px; width: 588px; }
-    /* Για το d στο collapsed view, διατηρούμε left:134px */
     .collapsed #canvasD { top: 150px; left: 134px; width: 420px; }
     .collapsed #canvasP { top: 150px; left: 554px; width: 252px; }
     /* Οι παλαιές ετικέτες περιόδων */
@@ -337,8 +336,8 @@
   
       let elements = [];
       let currentZ = 0;
-      /* Θέλουμε να ξεκινάμε από το στοιχείο 3. Όταν ο μετρητής είναι πάνω από 120, 
-         θα εμφανίζονται τα στοιχεία 1 και 2 με τον τύπο currentZ-120.
+      /* Θέλουμε να ξεκινάμε από το στοιχείο 3. Όταν ο μετρητής είναι πάνω από 120,
+         τότε θα εμφανίζονται τα στοιχεία 1 και 2 με τον τύπο: effectiveZ = currentZ - 120.
       */
   
       function updateToggleButton() {
@@ -513,7 +512,8 @@
             shiftD = 42 * 14;
           }
           document.getElementById('canvasF').style.left = baseF + "px";
-          document.getElementById('canvasD').style.left = baseD + "px";  // Full view: d έχει left 134px
+          // Στο full view, το canvas d επανέρχεται στο left:134px
+          document.getElementById('canvasD').style.left = "134px";
           document.getElementById('canvasP').style.left = (baseP + shiftP) + "px";
         } else {
           document.getElementById('canvasS').style.left = "50px";
@@ -547,7 +547,7 @@
       }
   
       function updateInfo(z) {
-        // Αν currentZ > 120, τότε χρησιμοποιούμε effectiveZ = currentZ - 120 για να αντιστοιχίσουμε σωστά τα στοιχεία 1 και 2
+        // Εάν το currentZ είναι πάνω από 120, υπολογίζουμε effectiveZ = currentZ - 120 για να αντιστοιχίσουμε τα στοιχεία 1 και 2
         let effectiveZ = z;
         if(z > 120) {
           effectiveZ = z - 120;
@@ -580,19 +580,12 @@
           currentZ++;
         } else {
           currentZ++;
-          if(currentZ > 120) {
-            currentZ = currentZ - 120;
-          }
         }
         redrawAll();
       });
   
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 122;
-        // Αν είναι πάνω από 120, τότε επαναπροσδιορίζουμε
-        if(currentZ > 120) {
-          currentZ = currentZ - 120;
-        }
         redrawAll();
       });
   
