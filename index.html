@@ -5,6 +5,9 @@
   <title>Περιοδικός Πίνακας – Ομάδες, Περιόδους & Info</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --rightPanelWidth: 150px; /* αρχική προεπιλεγμένη τιμή, θα ενημερωθεί δυναμικά */
+    }
     /* Βασικές ρυθμίσεις */
     body {
       font-family: 'Roboto', sans-serif;
@@ -21,8 +24,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Ρυθμίσεις του infoPanel ανάλογα με την κατάσταση εμφάνισης */
-    /* Full view (χωρίς την κλάση "collapsed") */
+    /* infoPanel: Full view & Collapsed view */
     body:not(.collapsed) #infoPanel {
       display: flex;
       flex-direction: row;
@@ -33,13 +35,13 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
       position: absolute;
-      left: 20px;              /* Σύμφωνα με τις οδηγίες */
+      left: 20px;
       top: 500px;
-      width: calc(100vw - 210px);  /* window.innerWidth – (150+60) */
+      /* Αφαιρούμε δυναμικά το πλάτος των fixed κουμπιών και 60px επιπλέον */
+      width: calc(100vw - var(--rightPanelWidth) - 60px);
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Collapsed view (με την κλάση "collapsed") */
     body.collapsed #infoPanel {
       display: flex;
       flex-direction: column;
@@ -49,9 +51,9 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
       position: absolute;
-      left: 848px;             /* (δεξιό όκρο του p + 42px), όπου το δεξιό όκρο του p είναι 806px */
+      left: 848px; /* όπως απαιτείται */
       top: 100px;
-      width: calc(100vw - 888px);  /* window.innerWidth – (806+82) */
+      width: calc(100vw - 908px);
       z-index: 40;
       transition: all 1.5s ease;
     }
@@ -59,7 +61,7 @@
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
-    /* Τα fixed κουμπιά τοποθετούνται στην κάτω δεξιά γωνία */
+    /* Fixed κουμπιά στην κάτω δεξιά γωνία */
     #rightPanel {
       position: fixed;
       bottom: 20px;
@@ -564,6 +566,19 @@
   
       loadElements();
     })();
+  </script>
+  
+  <!-- Script για δυναμικό υπολογισμό του πλάτους των fixed κουμπιών -->
+  <script>
+    function updateRightPanelWidth() {
+      const rp = document.getElementById('rightPanel');
+      if (rp) {
+        const width = rp.offsetWidth;
+        document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
+      }
+    }
+    window.addEventListener('load', updateRightPanelWidth);
+    window.addEventListener('resize', updateRightPanelWidth);
   </script>
 </body>
 </html>
