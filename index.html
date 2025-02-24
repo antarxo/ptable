@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     :root {
-      --rightPanelWidth: 150px; /* αρχική προεπιλεγμένη τιμή, θα ενημερωθεί δυναμικά */
+      --rightPanelWidth: 150px; /* Αρχική προεπιλεγμένη τιμή, ενημερώνεται δυναμικά */
     }
     /* Βασικές ρυθμίσεις */
     body {
@@ -37,8 +37,8 @@
       position: absolute;
       left: 20px;
       top: 500px;
-      /* Αφαιρούμε δυναμικά το πλάτος των fixed κουμπιών και 60px επιπλέον */
-      width: calc(100vw - var(--rightPanelWidth) - 60px);
+      /* Αφαιρούμε δυναμικά το πλάτος των fixed κουμπιών και 120px επιπλέον */
+      width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
       transition: all 1.5s ease;
     }
@@ -51,9 +51,9 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
       position: absolute;
-      left: 848px; /* όπως απαιτείται */
+      left: 848px;
       top: 100px;
-      width: calc(100vw - 908px);
+      width: calc(100vw - 920px);
       z-index: 40;
       transition: all 1.5s ease;
     }
@@ -70,7 +70,7 @@
       flex-direction: column;
       gap: 5px;
     }
-    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) */
+    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) έχουν εφέ "υπερυψωμένων" */
     .canvas {
       position: absolute;
       background: transparent;
