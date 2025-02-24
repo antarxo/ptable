@@ -77,11 +77,11 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων */
+    /* Καμβάς Περιόδων: μετατοπισμένος κατά 50px (top από 100px σε 150px) */
     #canvasPeriods {
       position: absolute;
       left: 6px;
-      top: 100px;
+      top: 150px;
       width: 42px;
       height: 292px;
       background: #f0f0f0;
@@ -118,16 +118,16 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων */
-    .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
-    .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
-    .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
-    .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων */
-    .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasF { top: 190px; left: 154px; width: 588px; }
-    .collapsed #canvasD { top: 100px; left: 134px; width: 420px; }
-    .collapsed #canvasP { top: 100px; left: 554px; width: 252px; }
+    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων (top: 100px → 150px) */
+    .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
+    .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
+    .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
+    .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
+    /* Collapsed view – θέσεις καμβάδων στοιχείων (top: προσθέτουμε 50px) */
+    .collapsed #canvasS { top: 150px; left: 50px; }
+    .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
+    .collapsed #canvasD { top: 150px; left: 134px; width: 420px; }
+    .collapsed #canvasP { top: 150px; left: 554px; width: 252px; }
     /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
     .period-label {
       position: absolute;
@@ -479,13 +479,14 @@
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          document.getElementById('canvasS_groups').style.top = "58px";
+          // Μετατοπισμός των groups καμβάδων: top 58px → 108px (δηλαδή +50px)
+          document.getElementById('canvasS_groups').style.top = "108px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
-          document.getElementById('canvasD_groups').style.top = "58px";
+          document.getElementById('canvasD_groups').style.top = "108px";
           document.getElementById('canvasD_groups').style.left = dLeft;
           let pLeft = document.getElementById('canvasP').style.left;
-          document.getElementById('canvasP_groups').style.top = "58px";
+          document.getElementById('canvasP_groups').style.top = "108px";
           document.getElementById('canvasP_groups').style.left = pLeft;
           initGroupsCanvases();
         } else {
