@@ -16,41 +16,31 @@
       height: 100vh;
     }
 
+    .element {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 1px solid #000;
+      text-align: center;
+      line-height: 40px;
+      background: white;
+      transition: all 0.3s ease;
+    }
+
     .block {
       position: absolute;
       transition: all 0.5s ease-in-out;
     }
 
-    /* Στυλ για τους καμβάδες */
-    #s-block { left: 50px; top: 100px; width: 84px; }
-    #f-block { left: 134px; top: 100px; width: 588px; }
-    #d-block { left: 722px; top: 100px; width: 420px; }
-    #p-block { left: 1142px; top: 100px; width: 252px; }
+    #s-block { left: 50px; top: 150px; width: 84px; }
+    #f-block { left: 134px; top: 150px; width: 588px; }
+    #d-block { left: 722px; top: 150px; width: 420px; }
+    #p-block { left: 1142px; top: 150px; width: 252px; }
 
-    /* Συνεπτυγμένη μορφή */
-    .collapsed #f-block { top: 200px; left: 144px; width: 1326px; }
+    .collapsed #f-block { top: 250px; left: 228px; width: 1326px; }
     .collapsed #d-block { left: 140px; }
     .collapsed #p-block { left: 560px; }
 
-    /* Στυλ ομάδων */
-    .group-labels {
-      position: absolute;
-      display: flex;
-      gap: 42px;
-      background: rgba(200,200,200,0.9);
-      padding: 2px 5px;
-      border-radius: 3px;
-    }
-
-    .group-label {
-      width: 42px;
-      text-align: center;
-      font-weight: bold;
-      color: #333;
-      font-size: 12px;
-    }
-
-    /* Περίοδοι */
     .period-label {
       position: absolute;
       left: 20px;
@@ -62,7 +52,35 @@
       display: none;
     }
 
-    /* Πληροφορίες */
+    .group-container {
+      position: absolute;
+      display: none;
+      background: rgba(200,200,200,0.9);
+      padding: 2px 5px;
+      border-radius: 3px;
+      flex-direction: column;
+      gap: 2px;
+      z-index: 2;
+    }
+
+    .group-row {
+      display: flex;
+      gap: 42px;
+    }
+
+    .group-label {
+      width: 42px;
+      text-align: center;
+      font-weight: bold;
+      color: #333;
+      font-size: 12px;
+    }
+
+    .old-group { 
+      font-size: 10px;
+      display: none;
+    }
+
     #infoPanel {
       position: fixed;
       bottom: 20px;
@@ -73,43 +91,82 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
+
+    button {
+      padding: 8px 16px;
+      margin: 0 4px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Ομάδες -->
-    <div class="group-labels" id="s-groups" style="top: 80px; left: 50px">
-      <div class="group-label new">1</div>
-      <div class="group-label new">2</div>
-      <div class="group-label old">IA</div>
-      <div class="group-label old">IIA</div>
-    </div>
-
-    <div class="group-labels" id="d-groups" style="top: 80px; left: 722px">
-      <!-- Νέα αρίθμηση 3-12 -->
-      <div class="group-label new">3</div><div>4</div><div>5</div><div>6</div>
-      <div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div>
-      <!-- Παλιά αρίθμηση -->
-      <div class="group-label old">IIIB</div><div>IVB</div><div>VB</div>
-      <div>VIB</div><div>VIIB</div><div>VIII</div><div>VIII</div>
-      <div>VIII</div><div>IB</div><div>IIB</div>
-    </div>
-
-    <div class="group-labels" id="p-groups" style="top: 80px; left: 1142px">
-      <div class="group-label new">13</div><div>14</div><div>15</div>
-      <div>16</div><div>17</div><div>18</div>
-      <div class="group-label old">IIIA</div><div>IVA</div><div>VA</div>
-      <div>VIA</div><div>VIIA</div><div>VIIIA</div>
-    </div>
-
     <!-- Περίοδοι -->
-    <div class="period-label" style="top: 110px">1η K</div>
-    <div class="period-label" style="top: 152px">2η L</div>
-    <div class="period-label" style="top: 194px">3η M</div>
-    <div class="period-label" style="top: 236px">4η N</div>
-    <div class="period-label" style="top: 278px">5η O</div>
-    <div class="period-label" style="top: 320px">6η P</div>
-    <div class="period-label" style="top: 362px">7η Q</div>
+    <div class="period-label" style="top: 160px">1η K</div>
+    <div class="period-label" style="top: 202px">2η L</div>
+    <div class="period-label" style="top: 244px">3η M</div>
+    <div class="period-label" style="top: 286px">4η N</div>
+    <div class="period-label" style="top: 328px">5η O</div>
+    <div class="period-label" style="top: 370px">6η P</div>
+    <div class="period-label" style="top: 412px">7η Q</div>
+
+    <!-- Ομάδες -->
+    <div class="group-container" id="s-groups" style="top: 130px; left: 50px">
+      <div class="group-row">
+        <div class="group-label">1</div>
+        <div class="group-label">2</div>
+      </div>
+      <div class="group-row">
+        <div class="group-label old-group">IA</div>
+        <div class="group-label old-group">IIA</div>
+      </div>
+    </div>
+
+    <div class="group-container" id="d-groups" style="top: 130px; left: 722px">
+      <div class="group-row">
+        <div class="group-label">3</div>
+        <div class="group-label">4</div>
+        <div class="group-label">5</div>
+        <div class="group-label">6</div>
+        <div class="group-label">7</div>
+        <div class="group-label">8</div>
+        <div class="group-label">9</div>
+        <div class="group-label">10</div>
+        <div class="group-label">11</div>
+        <div class="group-label">12</div>
+      </div>
+      <div class="group-row">
+        <div class="group-label old-group">IIIB</div>
+        <div class="group-label old-group">IVB</div>
+        <div class="group-label old-group">VB</div>
+        <div class="group-label old-group">VIB</div>
+        <div class="group-label old-group">VIIB</div>
+        <div class="group-label old-group">VIII</div>
+        <div class="group-label old-group">VIII</div>
+        <div class="group-label old-group">VIII</div>
+        <div class="group-label old-group">IB</div>
+        <div class="group-label old-group">IIB</div>
+      </div>
+    </div>
+
+    <div class="group-container" id="p-groups" style="top: 130px; left: 1142px">
+      <div class="group-row">
+        <div class="group-label">13</div>
+        <div class="group-label">14</div>
+        <div class="group-label">15</div>
+        <div class="group-label">16</div>
+        <div class="group-label">17</div>
+        <div class="group-label">18</div>
+      </div>
+      <div class="group-row">
+        <div class="group-label old-group">IIIA</div>
+        <div class="group-label old-group">IVA</div>
+        <div class="group-label old-group">VA</div>
+        <div class="group-label old-group">VIA</div>
+        <div class="group-label old-group">VIIA</div>
+        <div class="group-label old-group">VIIIA</div>
+      </div>
+    </div>
 
     <!-- Blocks -->
     <div id="s-block" class="block"></div>
@@ -123,39 +180,102 @@
       <button id="fillAll">Συμπλήρωσε</button>
       <button id="toggleF">Εναλλαγή f-block</button>
       <button id="reset">Reset</button>
-      <div id="remarks"></div>
+      <div id="remarks">Πατήστε "Επόμενο" για να ξεκινήσετε</div>
     </div>
   </div>
 
   <script>
-    let currentZ = 0;
+    let currentZ = 3;
+    let elements = [];
     let showOldGroups = false;
-    const elements = Array.from({length: 118}, (_,i) => i+1);
 
-    // Αρχικοποίηση
-    document.addEventListener('DOMContentLoaded', () => {
-      updateRemarks('Πατήστε "Επόμενο" για να ξεκινήσετε');
-      document.querySelectorAll('.group-labels, .period-label').forEach(el => el.style.display = 'none');
-    });
+    const blocks = {
+      's': { element: document.getElementById('s-block'), cols: 2, start: 1 },
+      'd': { element: document.getElementById('d-block'), cols: 10, start: 3 },
+      'p': { element: document.getElementById('p-block'), cols: 6, start: 13 }
+    };
 
-    // Ενημέρωση περιεχομένων
-    function updateRemarks(text) {
-      document.getElementById('remarks').textContent = text;
+    async function loadElements() {
+      try {
+        const response = await fetch('elements.json');
+        elements = await response.json();
+        initializeElements();
+      } catch (err) {
+        console.error('Σφάλμα φόρτωσης:', err);
+      }
     }
 
-    // Λειτουργίες κουμπιών
+    function initializeElements() {
+      Object.entries(blocks).forEach(([blockType, config]) => {
+        const block = config.element;
+        block.innerHTML = '';
+        for (let row = 0; row < 7; row++) {
+          for (let col = 0; col < config.cols; col++) {
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'element';
+            elementDiv.style.display = 'none';
+            elementDiv.style.left = `${col * 42}px`;
+            elementDiv.style.top = `${row * 42}px`;
+            block.appendChild(elementDiv);
+          }
+        }
+      });
+    }
+
+    function updateDisplay() {
+      elements.forEach((el, index) => {
+        if (index < currentZ) {
+          const block = blocks[el.block];
+          const position = (el.row - 1) * block.cols + (el.col - block.start);
+          const elementDiv = block.element.children[position];
+          if (elementDiv) {
+            elementDiv.style.display = 'block';
+            elementDiv.textContent = el.number;
+          }
+        }
+      });
+
+      document.getElementById('remarks').textContent = 
+        `Εμφανίζονται στοιχεία 3 έως ${currentZ}`;
+    }
+
+    async function fillElements(start, end) {
+      for (let i = start; i <= end; i++) {
+        currentZ = i;
+        updateDisplay();
+        await new Promise(r => setTimeout(r, 10));
+      }
+    }
+
+    function showSpecialElements() {
+      elements.slice(0, 3).forEach(el => {
+        const block = blocks[el.block];
+        const position = (el.row - 1) * block.cols + (el.col - block.start);
+        const elementDiv = block.element.children[position];
+        if (elementDiv) {
+          elementDiv.style.display = 'block';
+          elementDiv.textContent = el.number;
+        }
+      });
+    }
+
+    function showPeriodsAndGroups() {
+      document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
+      document.querySelectorAll('.group-container').forEach(el => el.style.display = 'flex');
+    }
+
     document.getElementById('next').addEventListener('click', () => {
-      if(currentZ < 118) currentZ++;
-      updateDisplay();
+      if (currentZ < 118) {
+        currentZ++;
+        updateDisplay();
+        if (currentZ === 118) showPeriodsAndGroups();
+      }
     });
 
     document.getElementById('fillAll').addEventListener('click', async () => {
-      for(let i = currentZ; i <= 118; i++) {
-        currentZ = i;
-        await new Promise(r => setTimeout(r, 10));
-        updateDisplay();
-      }
+      await fillElements(3, 118);
       showSpecialElements();
+      showPeriodsAndGroups();
     });
 
     document.getElementById('toggleF').addEventListener('click', () => {
@@ -163,54 +283,26 @@
     });
 
     document.getElementById('reset').addEventListener('click', () => {
-      currentZ = 0;
+      currentZ = 3;
       document.body.classList.remove('collapsed');
-      document.querySelectorAll('.group-labels, .period-label').forEach(el => el.style.display = 'none');
-      updateRemarks('Επαναφορά συστήματος');
+      document.querySelectorAll('.element').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.period-label, .group-container').forEach(el => el.style.display = 'none');
+      document.getElementById('remarks').textContent = 'Πατήστε "Επόμενο" για να ξεκινήσετε';
     });
 
-    // Εμφάνιση ειδικών στοιχείων
-    function showSpecialElements() {
-      setTimeout(() => {
-        currentZ = 3;
-        updateDisplay();
-        setTimeout(() => {
-          currentZ = 1;
-          updateDisplay();
-          setTimeout(() => {
-            currentZ = 2;
-            updateDisplay();
-            showGroupsAndPeriods();
-          }, 300);
-        }, 300);
-      }, 500);
-    }
-
-    // Εμφάνιση ομάδων και περιόδων
-    function showGroupsAndPeriods() {
-      document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
-      document.querySelectorAll('.group-labels').forEach(el => {
-        el.style.display = 'flex';
-        el.addEventListener('click', toggleGroupNumbering);
+    document.querySelectorAll('.group-container').forEach(container => {
+      container.addEventListener('click', () => {
+        showOldGroups = !showOldGroups;
+        container.querySelectorAll('.old-group').forEach(el => 
+          el.style.display = showOldGroups ? 'block' : 'none'
+        );
+        container.querySelectorAll('.group-label:not(.old-group)').forEach(el => 
+          el.style.display = showOldGroups ? 'none' : 'block'
+        );
       });
-    }
+    });
 
-    // Εναλλαγή αρίθμησης
-    function toggleGroupNumbering() {
-      showOldGroups = !showOldGroups;
-      document.querySelectorAll('.group-label').forEach(label => {
-        label.style.display = showOldGroups ? 
-          (label.classList.contains('old') ? 'block' : 'none') :
-          (label.classList.contains('new') ? 'block' : 'none');
-      });
-    }
-
-    // Βασική ενημέρωση
-    function updateDisplay() {
-      // Προσομοίωση εμφάνισης στοιχείων
-      const visibleElements = elements.slice(0, currentZ).filter(n => n > 3 || n === 0);
-      updateRemarks(`Εμφανίζονται ${visibleElements.length} στοιχεία`);
-    }
+    loadElements();
   </script>
 </body>
 </html>
