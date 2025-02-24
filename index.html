@@ -59,7 +59,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Περίοδοι – προσθέτουμε z-index για να εμφανίζονται πάνω από τα canvases */
+    /* Περίοδοι – ορίζουμε υψηλό z-index ώστε να εμφανίζονται πάνω από τα canvases */
     .period-label {
       position: absolute;
       left: 15px;
@@ -82,8 +82,12 @@
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
     .collapsed #canvasP { top: 100px; left: 560px; }
-    /* Σ collapsed: ο f τομέας τοποθετείται με top 110px (10px κάτω από τα s, d, p) και μετατοπίζεται δεξιότερα κατά 42px (από 134px σε 176px) */
-    .collapsed #canvasF { top: 110px; left: 176px; width: 1326px; }
+    /* Σ collapsed: ο f τομέας μετατοπίζεται:
+         - το full view του f είναι στο left: 134px και top: 100px,
+         - στο collapsed μετατοπίζεται κατά 42px δεξιότερα (134+42 = 176px)
+         - και κατεβαίνει κατά 84px (π.χ. top: 100+84 = 184px, αλλά σύμφωνα με οδηγίες εδώ θα τοποθετηθεί στο 194px, ώστε να αφήνει 15px από τα υπόλοιπα, π.χ. εάν τα s, d, p καταλήγουν στο 179px ή παρόμοιο – εδώ ορίζουμε top: 194px)
+    */
+    .collapsed #canvasF { top: 194px; left: 176px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -139,9 +143,13 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και δυνατότητα οδηγιών (μέσω remarks στο JSON)
+      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και οδηγίες μέσω remarks στο JSON.
+      // Τα στοιχεία 1 και 2 δεν εμφανίζονται μέχρι να φτάσει το 118,
+      // και μετά με διαδοχικά κλικ "Επόμενο" θα εμφανιστούν: 
+      // currentZ == 119 → εμφανίζεται το στοιχείο 1,
+      // currentZ == 120 → εμφανίζεται το στοιχείο 2.
       let elements = [];
-      let currentZ = 0;
+      let currentZ = 0; 
       let currentState = 'main';
 
       async function loadElements() {
@@ -191,13 +199,21 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        // Αν currentZ ≥ 118, εμφανίζουμε όλα τα στοιχεία (δηλαδή minNum = 1). Αλλιώς, εμφανίζουμε μόνο εκείνα με αριθμό ≥ 3.
-        const minNum = (currentZ >= 118) ? 1 : 3;
-        elements.filter(e =>
-          e.block === block &&
-          e.number <= currentZ &&
-          e.number >= minNum
-        ).forEach(e => {
+        elements.filter(e => {
+          // Αν currentZ < 118, εμφανίζονται μόνο τα στοιχεία με e.number ≥ 3 και e.number ≤ currentZ.
+          if (currentZ < 118) {
+            return e.number >= 3 && e.number <= currentZ;
+          } else if (currentZ === 118) {
+            // Όλα τα στοιχεία 3..118 εμφανίζονται, αλλά τα 1 και 2 παραμένουν κενά.
+            return e.number >= 3 && e.number <= 118;
+          } else if (currentZ === 119) {
+            // Εμφάνιση στοιχείου 1 μαζί με τα 3..118.
+            return (e.number >= 3 && e.number <= 118) || (e.number === 1);
+          } else {
+            // currentZ >= 120: εμφανίζονται όλα (1,2, και 3..118).
+            return (e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2);
+          }
+        }).forEach(e => {
           const pos = calculatePosition(e, block);
           if (pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
             p.fill(BLOCK_COLORS[block]);
@@ -224,11 +240,14 @@
             };
           });
         });
+        // Εάν το currentZ είναι ≥ 118, εμφανίζουμε τις περίοδοι.
+        if (currentZ >= 118) {
+          document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
+        }
         updateInfo(currentZ);
       }
 
       function updateInfo(z) {
-        // Εμφανίζουμε οδηγίες όταν currentZ = 0 (ίσως περιέχονται στο remarks του JSON)
         if (z < 3) {
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
@@ -251,20 +270,24 @@
       }
 
       document.getElementById('nextElement').addEventListener('click', () => {
-        // Αν currentZ < 3, θέτουμε απευθείας στο 3 για να ξεκινήσουμε από το στοιχείο 3.
         if (currentZ < 3) {
-          currentZ = 3;
+          currentZ = 3; // Ξεκινάμε με το στοιχείο 3
         } else if (currentZ < 118) {
           currentZ++;
+        } else if (currentZ === 118) {
+          // Μετά το 118, το πρώτο κλικ εμφανίζει το στοιχείο 1
+          currentZ = 119;
+        } else if (currentZ === 119) {
+          // Το επόμενο κλικ εμφανίζει το στοιχείο 2
+          currentZ = 120;
         }
         redrawAll();
       });
 
       document.getElementById('fillAll').addEventListener('click', () => {
-        currentZ = 118;
+        // Ολοκληρώνουμε με όλα τα στοιχεία (3..118, και 1,2)
+        currentZ = 120;
         redrawAll();
-        // Εμφάνιση των ονομάτων των περιόδων
-        document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
       });
 
       document.getElementById('reset').addEventListener('click', () => {
