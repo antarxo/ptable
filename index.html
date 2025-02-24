@@ -128,7 +128,7 @@
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
     .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* d: left=139px για 5px κενό με την s */
-    .collapsed #canvasP { top: 150px; left: 554px; width: 252px; }
+    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; } /* p: αύξηση κατά 5px */
     /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
     .period-label {
       position: absolute;
@@ -338,7 +338,7 @@
                 } else if(block==='f' || block==='d'){
                   canvas.elt.style.left = (block==='f' ? "154px" : "139px");
                 } else if(block==='p'){
-                  canvas.elt.style.left = "554px";
+                  canvas.elt.style.left = "559px";
                 }
               } else {
                 // Στο full view, αρχικά όλοι οι καμβάδες (f, d, p) ξεκινούν στο 134px.
@@ -426,7 +426,7 @@
                 } else if(block==='f' || block==='d'){
                   canvas.elt.style.left = (block==='f' ? "154px" : "139px");
                 } else if(block==='p'){
-                  canvas.elt.style.left = "554px";
+                  canvas.elt.style.left = "559px";
                 }
               } else {
                 if(block==='s'){
@@ -482,7 +482,7 @@
           document.getElementById('canvasS').style.left = "50px";
           document.getElementById('canvasF').style.left = "154px";
           document.getElementById('canvasD').style.left = "139px";
-          document.getElementById('canvasP').style.left = "554px";
+          document.getElementById('canvasP').style.left = "559px";
         }
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
