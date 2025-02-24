@@ -12,7 +12,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Ο τίτλος ανεβαίνει */
+    /* Τίτλος – μετακινημένος πιο πάνω */
     #title {
       position: absolute;
       top: 10px;
@@ -22,7 +22,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών – διατηρεί τις ίδιες διαστάσεις σε όλες τις προβολές */
+    /* Πίνακας πληροφοριών – σταθερή διάταξη */
     #infoPanel {
       display: flex;
       flex-direction: column;
@@ -32,30 +32,31 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      width: 302px;  /* σύμφωνα με τον προηγούμενο υπολογισμό */
+      width: 302px; /* 1200 - (δεξί άκρο του p = 816) - 82 = 302px */
       position: absolute;
       left: 42px;  /* οριζόντια θέση 42px */
       top: 500px;
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Τα εσωτερικά τμήματα και τα κουμπιά παραμένουν σταθερά και σε κατακόρυφη διάταξη */
+    /* Τα εσωτερικά τμήματα παραμένουν */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
+    /* Τα κουμπιά στο #rightPanel σε κατακόρυφη διάταξη */
     #rightPanel {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-    /* Όλοι οι καμβάδες έχουν transition 1s και εφέ "υπερυψωμένων" */
+    /* Όλοι οι καμβάδες έχουν ομαλή μετάβαση και εφέ "υπερυψωμένων" */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων παραμένει στην ίδια θέση */
+    /* Καμβάς Περιόδων – παραμένει στην ίδια θέση */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -66,30 +67,29 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες Ομάδων – νέα διαστάσεις:
-       Κάθε κελί: 40px πλάτος και 16px ύψος, χωρίς κατακόρυφο διάστημα.
-       Συνολικό ύψος: 2×16 = 32px.
-       Τοποθετούνται με top = 58px ώστε το κάτω άκρο να είναι στο 58+32=90px (2px διάκενο από τα στοιχεία που ξεκινούν στο 100px).
-    */
+    /* Καμβάδες Ομάδων: Νέα διάσταση κελιών: 40×16, χωρίς κατακόρυφο διάστημα, canvas ύψος = 32px */
+    /* Για s: συνολικό πλάτος = 2*40 + 1*2 = 82px, ύψος = 32px */
     #canvasS_groups {
       position: absolute;
-      width: 82px; /* 2×40 + 1×2 = 82px */
-      height: 32px; /* 2×16 = 32px */
-      background: #f0f0f0;
-      display: none;
-      z-index: 11;
-    }
-    #canvasD_groups {
-      position: absolute;
-      width: 418px; /* 10×40 + 9×2 = 418px */
+      width: 82px;
       height: 32px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
+    /* Για d: συνολικό πλάτος = 10*40 + 9*2 = 418px, ύψος = 32px */
+    #canvasD_groups {
+      position: absolute;
+      width: 418px;
+      height: 32px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    /* Για p: συνολικό πλάτος = 6*40 + 5*2 = 250px, ύψος = 32px */
     #canvasP_groups {
       position: absolute;
-      width: 250px; /* 6×40 + 5×2 = 250px */
+      width: 250px;
       height: 32px;
       background: #f0f0f0;
       display: none;
@@ -100,16 +100,16 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – θέσεις κύριων καμβάδων */
+    /* Full view – αρχικές θέσεις για τους κύριους καμβάδες */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – δεν αλλάζει ο infoPanel πλέον, τα στοιχεία παραμένουν όπως στο full view */
+    /* Collapsed view – δεν αλλάζει ο infoPanel πλέον */
     .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasF { top: 100px; left: 134px; width: 588px; }
-    .collapsed #canvasD { top: 100px; left: 134px; width: 420px; }
-    .collapsed #canvasP { top: 100px; left: 134px; width: 252px; }
+    .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
+    .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
+    .collapsed #canvasP { top: 100px; left: 564px; width: 252px; }
     /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως πριν) */
     .period-label {
       position: absolute;
@@ -164,7 +164,7 @@
   
   <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
   <script>
-    // Global: Καμβάς Περιόδων (δημιουργείται μία φορά)
+    // Global: Καμβάς Περιόδων (δημιουργείται μόνο μία φορά)
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -187,8 +187,9 @@
       });
       window.periodsInitialized = true;
     }
-    // Global: Καμβάδες Ομάδων – σχεδιάζονται μία φορά.
-    // Σε κάθε καμβά, η πάνω σειρά (y=0) εμφανίζει τη νέα αρίθμηση, ενώ η κάτω (y=16) τα παλιά ονόματα.
+    // Global: Καμβάδες Ομάδων – οι πίνακες για κάθε τομέα έχουν δύο σειρές:
+    // Στην πάνω σειρά (y = 0): νέα αρίθμηση.
+    // Στη δεύτερη σειρά (y = 16): παλιά ονόματα.
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       // Για s:
@@ -202,18 +203,19 @@
           p.textStyle(p.BOLD);
           p.background(240);
           if(window.currentZ === 121) {
-            // Εμφάνιση μόνο παλιών ονομάτων (κάτω σειρά)
+            // Εμφανίζουμε μόνο την κάτω σειρά (old)
             p.fill(0);
-            p.text("IA", 20, 16+8);
-            p.text("IIA", 20+42, 16+8);
+            p.text("IA", 20, 16 + 8);
+            p.text("IIA", 20 + 42, 16 + 8);
           } else if(window.currentZ >= 122) {
-            // Πάνω σειρά: νέα αρίθμηση
+            // Εμφανίζουμε και τις δύο σειρές:
+            // New row (πάνω, y=0)
             p.fill(0);
             p.text("1", 20, 8);
-            p.text("2", 20+42, 8);
-            // Κάτω σειρά: παλιά ονόματα
-            p.text("IA", 20, 16+8);
-            p.text("IIA", 20+42, 16+8);
+            p.text("2", 20 + 42, 8);
+            // Old row (κάτω, y = 16)
+            p.text("IA", 20, 16 + 8);
+            p.text("IIA", 20 + 42, 16 + 8);
           }
         };
       });
@@ -234,10 +236,10 @@
               p.fill(240);
               p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 16+8);
+              p.text(oldLabels[c], x + 20, 16 + 8);
             }
           } else if(window.currentZ >= 122) {
-            // Πάνω σειρά: νέα αρίθμηση (3-12)
+            // New row (πάνω, y=0): 3 έως 12
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
               p.fill(240);
@@ -245,14 +247,14 @@
               p.fill(0);
               p.text((c+3).toString(), x + 20, 8);
             }
-            // Κάτω σειρά: παλιά ονόματα
+            // Old row (κάτω, y=16):
             const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
               p.fill(240);
               p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 16+8);
+              p.text(oldLabels[c], x + 20, 16 + 8);
             }
           }
         };
@@ -274,10 +276,10 @@
               p.fill(240);
               p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 16+8);
+              p.text(oldLabels[c], x + 20, 16 + 8);
             }
           } else if(window.currentZ >= 122) {
-            // Πάνω σειρά: νέα αρίθμηση (13-18)
+            // New row (πάνω, y=0): 13 έως 18
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
               p.fill(240);
@@ -285,14 +287,14 @@
               p.fill(0);
               p.text((c+13).toString(), x + 20, 8);
             }
-            // Κάτω σειρά: παλιά ονόματα
+            // Old row (κάτω, y=16):
             const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
               p.fill(240);
               p.rect(x, 16, 40, 16);
               p.fill(0);
-              p.text(oldLabels[c], x + 20, 16+8);
+              p.text(oldLabels[c], x + 20, 16 + 8);
             }
           }
         };
@@ -321,7 +323,7 @@
       let currentZ = 0;
       /* Μετρητής:
          120: full view χωρίς ομάδες,
-         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων (κάτω σειρά),
+         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων,
          122: εμφάνιση και των δύο σειρών (πάνω: νέα, κάτω: παλιά).
       */
   
@@ -494,18 +496,18 @@
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
-          // Εμφάνιση καμβάδων ομάδων
+          // Εμφάνιση καμβάδων ομάδων:
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          // Τοποθέτηση: Οι καμβάδες ομάδων τοποθετούνται πάνω από τους κύριους καμβάδες, με top = 58px
-          document.getElementById('canvasS_groups').style.top = "58px";
+          // Τοποθέτηση: οι καμβάδες ομάδων τοποθετούνται πάνω από τους κύριους καμβάδες, με top = 66px
+          document.getElementById('canvasS_groups').style.top = "66px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
-          document.getElementById('canvasD_groups').style.top = "58px";
+          document.getElementById('canvasD_groups').style.top = "66px";
           document.getElementById('canvasD_groups').style.left = dLeft;
           let pLeft = document.getElementById('canvasP').style.left;
-          document.getElementById('canvasP_groups').style.top = "58px";
+          document.getElementById('canvasP_groups').style.top = "66px";
           document.getElementById('canvasP_groups').style.left = pLeft;
           initGroupsCanvases();
         } else {
