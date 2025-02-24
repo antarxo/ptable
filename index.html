@@ -18,7 +18,7 @@
       transform: translateX(-50%);
       font-size: 24px;
       font-weight: bold;
-      z-index: 10;
+      z-index: 20;
     }
     #infoPanel {
       display: flex;
@@ -34,7 +34,7 @@
       left: 50%;
       transform: translateX(-50%);
       top: 500px;
-      z-index: 10;
+      z-index: 20;
     }
     #leftPanel, #middlePanel {
       border-right: 1px solid #ccc;
@@ -51,7 +51,6 @@
     .canvas {
       position: absolute;
       background: transparent;
-      z-index: 1;
       transition: all 0.5s ease-in-out;
     }
     /* Χρώματα blocks */
@@ -59,7 +58,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Περίοδοι – εμφανίζονται πάνω από τα canvases */
+    /* Ετικέτες Περιόδων */
     .period-label {
       position: absolute;
       left: 15px;
@@ -70,29 +69,21 @@
       padding: 2px 5px;
       border-radius: 3px;
       display: none;
-      transition: all 0.3s ease;
-      z-index: 10;
-      line-height: 12px;
+      line-height: 12px; /* αυξημένο διάστιχο κατά 1px */
+      z-index: 30;
     }
-    /* Διάταξη blocks - Full view */
-    .full #canvasS { top: 100px; left: 50px; width: 84px; }
-    .full #canvasF { top: 100px; left: 134px; width: 588px; }
-    .full #canvasD { top: 100px; left: 722px; width: 420px; }
-    /* Στην full view, όταν currentZ ≥ 20, ο p τομέας τοποθετείται κανονικά στα 1142px,
-       αλλιώς (για currentZ < 20) θα το μετακινήσουμε δυναμικά ώστε να είναι ακριβώς δίπλα στο s */
-    .full #canvasP { top: 100px; left: 1142px; width: 252px; }
-    /* Διάταξη blocks - Collapsed view (δεν επηρεάζει το ζητούμενο για Z < 20) */
-    .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasD { top: 100px; left: 140px; }
-    .collapsed #canvasP { top: 100px; left: 560px; }
-    .collapsed #canvasF { top: 194px; left: 176px; width: 1326px; }
+    /* Full view αρχικές θέσεις */
+    .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
+    .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
+    .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
+    .full #canvasP { top: 100px; left: 1342px; width: 252px; z-index: 4; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
 
-  <!-- Ετικέτες Περιόδων (τα οποία έχουν μετακινηθεί κατά -21px σε σχέση με τις προηγούμενες τιμές) -->
+  <!-- Ετικέτες Περιόδων (με top μειωμένα κατά 21px) -->
   <div class="period-label" style="top: 109px">1η K</div>
   <div class="period-label" style="top: 149px">2η L</div>
   <div class="period-label" style="top: 189px">3η M</div>
@@ -120,6 +111,7 @@
     </div>
   </div>
 
+  <!-- Canvases για τους τομείς -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -141,8 +133,12 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και οδηγίες (μέσω remarks στο JSON).
-      // Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118, με διαδοχικά κλικ "Επόμενο" (119 για το 1, 120 για το 2).
+      /*
+       currentZ αρχικά = 0.
+       Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118, με διαδοχικά κλικ "Επόμενο":
+         currentZ = 119 → στοιχείο 1,
+         currentZ = 120 → στοιχείο 2.
+      */
       let elements = [];
       let currentZ = 0;
       let currentState = 'main';
@@ -166,14 +162,24 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
+              // Αρχικές θέσεις full view:
+              if (block === 's') {
+                canvas.elt.style.left = "50px";
+              } else if (block === 'f') {
+                canvas.elt.style.left = "134px";
+              } else if (block === 'd') {
+                canvas.elt.style.left = "134px";
+              } else if (block === 'p') {
+                canvas.elt.style.left = "1342px";
+              }
               drawElements(p, block);
             };
           });
         });
       }
 
-      // Η συνάρτηση calculatePosition έχει τροποποιηθεί για τον τομέα p:
-      // Αν currentZ < 20, τότε για στοιχεία της πρώτης περιόδου (row 1) αφαιρούμε 18, αλλιώς αφαιρούμε 13.
+      // Η συνάρτηση calculatePosition υπολογίζει τη θέση κάθε στοιχείου βάσει του block.
+      // Για τον τομέα p: όταν currentZ < 20 και για τα στοιχεία της πρώτης περιόδου (row 1) χρησιμοποιούμε offset 18 (ώστε να είναι σε επαφή με το s).
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         if (block === 's') {
@@ -183,12 +189,8 @@
         } else if (block === 'd') {
           x = (e.col - 3) * 42;
         } else if (block === 'p') {
-          if (currentZ < 20) {
-            if (e.row === 1) {
-              x = (e.col - 18) * 42;  // για περίοδο 1, το αριστερό στοιχείο (He) θα ξεκινάει στο 0.
-            } else {
-              x = (e.col - 13) * 42;  // για τις επόμενες περιόδους.
-            }
+          if (currentZ < 20 && e.row === 1) {
+            x = (e.col - 18) * 42;
           } else {
             x = (e.col - 13) * 42;
           }
@@ -199,19 +201,17 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        // Εμφάνιση στοιχείων: αν currentZ < 118, εμφανίζονται μόνο εκείνα με e.number ≥ 3,
-        // αλλιώς μετά το 118 εμφανίζονται και τα στοιχεία 1 και 2 με διαδοχικά κλικ.
-        elements.filter(e => {
-          if (currentZ < 118) {
-            return e.block === block && e.number >= 3 && e.number <= currentZ;
-          } else if (currentZ === 118) {
-            return e.block === block && e.number >= 3 && e.number <= 118;
-          } else if (currentZ === 119) {
-            return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
-          } else {
-            return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2));
-          }
-        }).forEach(e => {
+        let filter;
+        if (currentZ < 118) {
+          filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
+        } else if (currentZ === 118) {
+          filter = e => e.block === block && e.number >= 3 && e.number <= 118;
+        } else if (currentZ === 119) {
+          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
+        } else {
+          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2));
+        }
+        elements.filter(filter).forEach(e => {
           const pos = calculatePosition(e, block);
           if (pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
             p.fill(BLOCK_COLORS[block]);
@@ -225,6 +225,7 @@
       }
 
       function redrawAll() {
+        // Αναδημιουργούμε κάθε canvas
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
           canvasDiv.innerHTML = '';
@@ -234,18 +235,48 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
+              // Αρχικές θέσεις:
+              if (block === 's') {
+                canvas.elt.style.left = "50px";
+              } else if (block === 'f') {
+                canvas.elt.style.left = "134px";
+              } else if (block === 'd') {
+                canvas.elt.style.left = "134px";
+              } else if (block === 'p') {
+                canvas.elt.style.left = "1342px";
+              }
               drawElements(p, block);
             };
           });
         });
-        // Αν currentZ < 20, τοποθετούμε δυναμικά τον τομέα p έτσι ώστε να είναι σε επαφή με το s.
-        if (currentZ < 20) {
-          document.getElementById('canvasP').style.left = "134px";
+        // Δυναμικές μετατοπίσεις:
+        // Ο τομέας s παραμένει σταθερός (left = 50px) και ο f επίσης σταθερός (left = 134px).
+        // Για τον τομέα p:
+        let pShift = 0;
+        if (currentZ <= 20) {
+          pShift = 0;
+        } else if (currentZ >= 21 && currentZ <= 30) {
+          pShift = 42 * (currentZ - 20);
+        } else if (currentZ >= 31 && currentZ <= 56) {
+          pShift = 42 * 10; // 420px
+        } else if (currentZ >= 57 && currentZ <= 70) {
+          pShift = 42 * 10 + 42 * (currentZ - 56);
         } else {
-          document.getElementById('canvasP').style.left = "1142px";
+          pShift = 42 * 10 + 42 * 14; // max shift = 420 + 588 = 1008px
         }
-        // Εμφάνιση ονομάτων περιόδων μόλις currentZ ≥ 118
-        if (currentZ >= 118) {
+        // Για τον τομέα d:
+        let dShift = 0;
+        if (currentZ < 57) {
+          dShift = 0;
+        } else if (currentZ >= 57 && currentZ <= 70) {
+          dShift = 42 * (currentZ - 56);
+        } else {
+          dShift = 42 * 14; // max shift = 588px
+        }
+        document.getElementById('canvasP').style.left = (1342 + pShift) + "px";
+        document.getElementById('canvasD').style.left = (134 + dShift) + "px";
+        // Εμφάνιση ετικετών περιόδων όταν currentZ ≥ 120
+        if (currentZ >= 120) {
           document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
         }
         updateInfo(currentZ);
@@ -282,6 +313,8 @@
           currentZ = 119;
         } else if (currentZ === 119) {
           currentZ = 120;
+        } else {
+          currentZ++;
         }
         redrawAll();
       });
@@ -293,7 +326,6 @@
 
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 0;
-        document.body.classList.remove('collapsed');
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
         initializeCanvases();
@@ -301,6 +333,7 @@
       });
 
       document.getElementById('toggleFBlock').addEventListener('click', () => {
+        // Δοκιμαστική λειτουργία για collapsed αν χρειαστεί, αλλά εδώ επικεντρωνόμαστε στη full view.
         document.body.classList.toggle('collapsed');
         redrawAll();
       });
