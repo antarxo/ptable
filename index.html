@@ -57,7 +57,10 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Τα τμήματα μέσα στο infoPanel παραμένουν σταθερά */
+    /* Δομή του infoPanel:
+         - leftPanel: elementInfo, υποστιβάδες, στιβάδες, εξωτερική στιβάδα, επεξήγηση (με μικρότερη γραμματοσειρά)
+         - middlePanel: ηλεκτρονική δομή (3 σειρές για προηγούμενο, τρέχον, επόμενο στοιχείο) πάνω από τα remarks
+         - rightPanel: fixed κουμπιά */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
@@ -70,6 +73,28 @@
       flex-direction: column;
       gap: 5px;
     }
+    /* Στυλ για την επεξήγηση (με μικρότερη γραμματοσειρά και αριστερή στοίχιση) */
+    #explanation {
+      font-size: 12px;
+      text-align: left;
+      margin-top: 8px;
+    }
+    /* Στυλ για τις παρατηρήσεις: κεντραρισμένες οριζόντια και κατακόρυφα */
+    #remarks {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    /* Στυλ για την ηλεκτρονική δομή (electronicStructure) */
+    #electronicStructure {
+      font-size: 12px;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
     /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) έχουν εφέ "υπερυψωμένων" */
     .canvas {
       position: absolute;
@@ -77,7 +102,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: μετατοπισμένος κατά 50px (top από 100px σε 150px) */
+    /* Καμβάς Περιόδων: μετατοπισμένος κατά 50px (top: 150px αντί για 100px) */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -118,12 +143,12 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων (top: 100px → 150px) */
+    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων (με top μετατοπισμένο από 100px σε 150px) */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων (top: προσθέτουμε 50px) */
+    /* Collapsed view – θέσεις καμβάδων στοιχείων (προστίθεται 50px στο top) */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
     .collapsed #canvasD { top: 150px; left: 134px; width: 420px; }
@@ -161,17 +186,22 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
+  <!-- Πίνακας Πληροφοριών -->
   <div id="infoPanel">
+    <!-- Αριστερό πάνελ: βασικές πληροφορίες & επεξήγηση -->
     <div id="leftPanel">
       <div id="elementInfo"></div>
       <div id="subshells"></div>
       <div id="shells"></div>
       <div id="outerShell"></div>
-    </div>
-    <div id="middlePanel">
       <div id="explanation"></div>
+    </div>
+    <!-- Μεσαίο πάνελ: ηλεκτρονική δομή (προηγούμενο, τρέχον, επόμενο) & παρατηρήσεις -->
+    <div id="middlePanel">
+      <div id="electronicStructure"></div>
       <div id="remarks"></div>
     </div>
+    <!-- Δεξί πάνελ: fixed κουμπιά -->
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
@@ -309,6 +339,20 @@
   
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 122);
+      }
+  
+      // Βοηθητικές συναρτήσεις μορφοποίησης για τις στιβάδες
+      function formatShells(shells) {
+        const names = ["K", "L", "M", "N", "O", "P", "Q"];
+        let parts = shells.split(',');
+        return parts.map((n, i) => `${names[i]}(${n.trim()})`).join(", ");
+      }
+  
+      function formatOuterShell(shells, outer) {
+        const names = ["K", "L", "M", "N", "O", "P", "Q"];
+        let parts = shells.split(',');
+        let index = parts.length - 1;
+        return `${names[index]}(${outer})`;
       }
   
       async function loadElements() {
@@ -507,18 +551,39 @@
           document.getElementById('shells').textContent = "";
           document.getElementById('outerShell').textContent = "";
           document.getElementById('explanation').textContent = "";
+          document.getElementById('electronicStructure').innerHTML = "";
           document.getElementById('remarks').textContent = "";
           return;
         }
         const element = elements.find(e => e.number === z);
         if(!element) return;
+        // Εμφάνιση στοιχείων με το σύμβολο στο χρώμα του τομέα, μεγαλύτερη γραμματοσειρά και έντονο
         document.getElementById('elementInfo').innerHTML =
-          `<strong>${element.name} (${element.symbol})</strong> [Z=${z}]`;
+          `<strong>${element.name} (<span style="color:${BLOCK_COLORS[element.block]}; font-size:24px; font-weight:bold;">${element.symbol}</span>)</strong> [Z=${z}]`;
+  
+        // Μορφοποίηση των υποστιβαδών, αν το πεδίο subshells υπάρχει
         document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
-        document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
-        document.getElementById('outerShell').textContent = `Εξωτερική: ${element.outerShell}`;
-        document.getElementById('explanation').textContent = `Επεξήγηση: ${element.explanation}`;
-        document.getElementById('remarks').textContent = `Παρατηρήσεις: ${element.remarks}`;
+  
+        // Μορφοποίηση των στιβαδών σε μορφή K(2), L(8), ...
+        document.getElementById('shells').textContent = `Στιβάδες: ${formatShells(element.shells)}`;
+  
+        // Μορφοποίηση της εξωτερικής στιβάδας
+        document.getElementById('outerShell').textContent = `Εξωτερική: ${formatOuterShell(element.shells, element.outerShell)}`;
+  
+        // Η επεξήγηση τοποθετείται με μικρότερη γραμματοσειρά (είναι ήδη στο leftPanel)
+        document.getElementById('explanation').textContent = element.explanation;
+  
+        // Ενημέρωση της ηλεκτρονικής δομής (σε 3 σειρές: προηγούμενο, τρέχον, επόμενο στοιχείο)
+        let esHTML = "";
+        let prev = elements.find(e => e.number === (z - 1));
+        let next = elements.find(e => e.number === (z + 1));
+        esHTML += `<div style="font-size:12px;">Προηγούμενο: ${prev ? prev.subshells : '-'}</div>`;
+        esHTML += `<div style="font-size:14px; font-weight:bold;">Τρέχον: ${element.subshells}</div>`;
+        esHTML += `<div style="font-size:12px;">Επόμενο: ${next ? next.subshells : '-'}</div>`;
+        document.getElementById('electronicStructure').innerHTML = esHTML;
+  
+        // Εμφάνιση παρατηρήσεων κεντραρισμένων
+        document.getElementById('remarks').textContent = element.remarks;
       }
   
       document.getElementById('nextElement').addEventListener('click', () => {
