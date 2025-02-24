@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας – Ομάδες, Περιόδους & Info</title>
+  <title>Περιοδικός Πίνακας – Info Panel & Buttons Σταθερά</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     /* Βασικές ρυθμίσεις */
@@ -12,7 +12,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Ο τίτλος παραμένει όπως είχε */
+    /* Τίτλος */
     #title {
       position: absolute;
       top: 10px;
@@ -22,17 +22,18 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Ο πίνακας πληροφοριών (infoPanel) στη full view παραμένει όπως είχε (σταθερή διάταξη) */
+    /* Info Panel στο full view */
     #infoPanel {
       display: flex;
       flex-direction: row;
       justify-content: space-between;
+      align-items: center;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      width: 1200px;
+      width: 1300px;
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
@@ -40,23 +41,31 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Σταθερή διάταξη των εσωτερικών τμημάτων και των κουμπιών (τα κουμπιά εμφανίζονται κατακόρυφα) */
+    /* Info Panel στο collapsed view */
+    body.collapsed #infoPanel {
+      width: 300px;
+      top: 100px;
+      left: 42px;
+      transform: none;
+    }
+    /* Τα εσωτερικά τμήματα του infoPanel */
     #leftPanel, #middlePanel, #rightPanel {
       padding: 5px;
     }
+    /* Το #rightPanel με κατακόρυφη διάταξη σταθερή σε όλες τις μορφές */
     #rightPanel {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-    /* Όλοι οι καμβάδες έχουν ομαλή μετάβαση και εφέ "υπερυψωμένων" */
+    /* Ολοι οι καμβάδες έχουν ομαλή μετάβαση και εφέ "υπερυψωμένων" */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Ο καμβάς των περιόδων – παραμένει στην αρχική θέση: left=6px, top=100px */
+    /* Καμβάς Περιόδων – παραμένει στη θέση */
     #canvasPeriods {
       left: 6px;
       top: 100px;
@@ -66,14 +75,7 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες ομάδων:
-       Κάθε πίνακας έχει 2 σειρές. Κάθε κελί έχει 40px πλάτος και 16px ύψος, χωρίς κατακόρυφο διάστημα.
-       Οριζόντια υπάρχει διάκενο 2px, οπότε το συνολικό πλάτος είναι:
-         s: 2*40+2 = 82px,
-         d: 10*40+9*2 = 418px,
-         p: 6*40+5*2 = 250px.
-       Τοποθετούνται με top = 66px (ώστε το κάτω τους άκρο να είναι στο 66+32=98px, δίνοντας 2px διάκενο από τα στοιχεία που ξεκινούν στο 100px).
-    */
+    /* Καμβάδες Ομάδων (σταθερές διαστάσεις όπως προηγουμένως) */
     #canvasS_groups {
       width: 82px;
       height: 32px;
@@ -95,23 +97,18 @@
       display: none;
       z-index: 11;
     }
-    /* Χρώματα blocks για τους κύριους τομείς */
-    .s-block { background: #ffcccc !important; }
-    .p-block { background: #ccffcc !important; }
-    .d-block { background: #ccccff !important; }
-    .f-block { background: #ffe5cc !important; }
-    /* Full view – αρχικές θέσεις για τους κύριους καμβάδες */
+    /* Ορισμός θέσεων κύριων καμβάδων (ίδιοι σε full view και collapsed view) */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – οι κύριοι καμβάδες παραμένουν στις ίδιες θέσεις όπως στο full view */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 100px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 134px; width: 420px; }
     .collapsed #canvasP { top: 100px; left: 134px; width: 252px; }
-    /* Οι παλαιές ετικέτες περιόδων παραμένουν όπως είχε */
+    /* Οι παλαιές ετικέτες περιόδων παραμένουν όπως είχαν */
     .period-label {
+      position: absolute;
       left: 15px;
       font-size: 11px;
       font-weight: bold;
@@ -121,7 +118,6 @@
       border-radius: 3px;
       display: none;
       line-height: 13px !important;
-      position: absolute;
       z-index: 30;
     }
   </style>
@@ -164,7 +160,7 @@
   
   <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
   <script>
-    // Δημιουργία του καμβά περίοδων μόνο μία φορά
+    // Δημιουργία του καμβά περίοδων (δημιουργείται μία φορά)
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -177,7 +173,7 @@
           p.textStyle(p.BOLD);
           p.background(240);
           const labels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
-          for (let i = 0; i < 7; i++) {
+          for (let i = 0; i < 7; i++){
             p.fill(240);
             p.rect(0, i * 42, 40, 40);
             p.fill(0);
@@ -187,7 +183,7 @@
       });
       window.periodsInitialized = true;
     }
-    // Δημιουργία των καμβάδων ομάδων μία φορά
+    // Δημιουργία των καμβάδων ομάδων (δημιουργούνται μία φορά)
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       // Για s:
@@ -200,19 +196,12 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          if(window.currentZ === 121) {
-            // Μόνο old (κάτω σειρά)
-            p.fill(0);
-            p.text("IA", 20, 16+8);
-            p.text("IIA", 20+42, 16+8);
-          } else if(window.currentZ >= 122) {
-            // Και new (πάνω, y=0) και old (κάτω, y=16)
-            p.fill(0);
-            p.text("1", 20, 8);
-            p.text("2", 20+42, 8);
-            p.text("IA", 20, 16+8);
-            p.text("IIA", 20+42, 16+8);
-          }
+          // Εμφάνιση: στην collapsed view, οι ομάδες εμφανίζονται με την ίδια δομή (πάνω: νέα, κάτω: παλιά)
+          p.fill(0);
+          p.text("1", 20, 8);
+          p.text("2", 20+42, 8);
+          p.text("IA", 20, 16+8);
+          p.text("IIA", 20+42, 16+8);
         };
       });
       // Για d:
@@ -225,31 +214,20 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          if(window.currentZ === 121) {
-            const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
-            for(let c = 0; c < 10; c++){
-              let x = c * (40+2);
-              p.fill(240);
-              p.rect(x, 16, 40, 16);
-              p.fill(0);
-              p.text(oldLabels[c], x+20, 16+8);
-            }
-          } else if(window.currentZ >= 122) {
-            for(let c = 0; c < 10; c++){
-              let x = c * (40+2);
-              p.fill(240);
-              p.rect(x, 0, 40, 16);
-              p.fill(0);
-              p.text((c+3).toString(), x+20, 8);
-            }
-            const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
-            for(let c = 0; c < 10; c++){
-              let x = c * (40+2);
-              p.fill(240);
-              p.rect(x, 16, 40, 16);
-              p.fill(0);
-              p.text(oldLabels[c], x+20, 16+8);
-            }
+          for(let c = 0; c < 10; c++){
+            let x = c * (40+2);
+            p.fill(240);
+            p.rect(x, 0, 40, 16);
+            p.fill(0);
+            p.text((c+3).toString(), x+20, 8);
+          }
+          const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
+          for(let c = 0; c < 10; c++){
+            let x = c * (40+2);
+            p.fill(240);
+            p.rect(x, 16, 40, 16);
+            p.fill(0);
+            p.text(oldLabels[c], x+20, 16+8);
           }
         };
       });
@@ -263,31 +241,20 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          if(window.currentZ === 121) {
-            const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
-            for(let c = 0; c < 6; c++){
-              let x = c * (40+2);
-              p.fill(240);
-              p.rect(x, 16, 40, 16);
-              p.fill(0);
-              p.text(oldLabels[c], x+20, 16+8);
-            }
-          } else if(window.currentZ >= 122) {
-            for(let c = 0; c < 6; c++){
-              let x = c * (40+2);
-              p.fill(240);
-              p.rect(x, 0, 40, 16);
-              p.fill(0);
-              p.text((c+13).toString(), x+20, 8);
-            }
-            const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
-            for(let c = 0; c < 6; c++){
-              let x = c * (40+2);
-              p.fill(240);
-              p.rect(x, 16, 40, 16);
-              p.fill(0);
-              p.text(oldLabels[c], x+20, 16+8);
-            }
+          for(let c = 0; c < 6; c++){
+            let x = c * (40+2);
+            p.fill(240);
+            p.rect(x, 0, 40, 16);
+            p.fill(0);
+            p.text((c+13).toString(), x+20, 8);
+          }
+          const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
+          for(let c = 0; c < 6; c++){
+            let x = c * (40+2);
+            p.fill(240);
+            p.rect(x, 16, 40, 16);
+            p.fill(0);
+            p.text(oldLabels[c], x+20, 16+8);
           }
         };
       });
@@ -297,7 +264,7 @@
   
   <!-- Κύριος κώδικας -->
   <script>
-    (function() {
+    (function(){
       const BLOCK_COLORS = {
         's': '#ffcccc',
         'p': '#ccffcc',
@@ -310,19 +277,19 @@
         d: { cols: 10, rows: 7 },
         f: { cols: 14, rows: 7 }
       };
-  
+      
       let elements = [];
       let currentZ = 0;
       /* Μετρητής:
          120: full view χωρίς ομάδες,
-         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων,
-         122: εμφάνιση και των δύο σειρών (πάνω: νέα, κάτω: παλιά).
+         121: εμφάνιση ομάδων (πάνω: νέα, κάτω: παλιά) – collapsed view.
+         122: (και παραπάνω) συνεχίζεται ο μετρητής.
       */
-  
+      
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 122);
       }
-  
+      
       async function loadElements() {
         try {
           const response = await fetch('elements.json');
@@ -330,11 +297,11 @@
           initializeCanvases();
           updateInfo(currentZ);
           updateToggleButton();
-        } catch (err) {
+        } catch(err) {
           console.error('Σφάλμα φόρτωσης:', err);
         }
       }
-  
+      
       function initializeCanvases() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           new p5(p => {
@@ -343,25 +310,16 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
+              // Θέσεις κύριων καμβάδων παραμένουν ίδιες και στις δύο μορφές
               if(document.body.classList.contains('collapsed')){
-                if(block==='s'){
-                  canvas.elt.style.left = "50px";
-                } else if(block==='f' || block==='d'){
-                  canvas.elt.style.left = "134px";
-                } else if(block==='p'){
-                  canvas.elt.style.left = "554px";
-                }
+                canvas.elt.style.left = (block==='s' ? "50px" : "134px");
               } else {
-                if(block==='s'){
-                  canvas.elt.style.left = "50px";
-                } else if(block==='f' || block==='d' || block==='p'){
-                  canvas.elt.style.left = "134px";
-                }
+                canvas.elt.style.left = (block==='s' ? "50px" : "134px");
               }
               drawElements(p, block);
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => e.block === block && e.number >= 3 && e.number <= currentZ);
-                for(let candidate of candidates) {
+                for(let candidate of candidates){
                   let pos = calculatePosition(candidate, block);
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
@@ -374,38 +332,30 @@
           });
         });
       }
-  
+      
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
-        if(block==='s'){
-          x = (e.col - 1) * 42;
-        } else if(block==='f'){
-          x = (e.col - 3) * 42;
-        } else if(block==='d'){
-          x = (e.col - 3) * 42;
-        } else if(block==='p'){
-          if(currentZ < 20 && e.row === 1){
-            x = (e.col - 18) * 42;
-          } else {
-            x = (e.col - 13) * 42;
-          }
+        if(block==='s') x = (e.col - 1) * 42;
+        else if(block==='f') x = (e.col - 3) * 42;
+        else if(block==='d') x = (e.col - 3) * 42;
+        else if(block==='p'){
+          x = (currentZ < 20 && e.row===1) ? (e.col - 18) * 42 : (e.col - 13) * 42;
         }
         return { x, y };
       }
-  
+      
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
         let filter;
-        if(currentZ < 118){
+        if(currentZ < 118)
           filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
-        } else if(currentZ === 118){
+        else if(currentZ === 118)
           filter = e => e.block === block && e.number >= 3 && e.number <= 118;
-        } else if(currentZ === 119){
+        else if(currentZ === 119)
           filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
-        } else {
+        else
           filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 1 || e.number === 2));
-        }
         elements.filter(filter).forEach(e => {
           const pos = calculatePosition(e, block);
           if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height){
@@ -419,7 +369,7 @@
           }
         });
       }
-  
+      
       function redrawAll() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
@@ -430,25 +380,13 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              if(document.body.classList.contains('collapsed')){
-                if(block==='s'){
-                  canvas.elt.style.left = "50px";
-                } else if(block==='f' || block==='d'){
-                  canvas.elt.style.left = "134px";
-                } else if(block==='p'){
-                  canvas.elt.style.left = "554px";
-                }
-              } else {
-                if(block==='s'){
-                  canvas.elt.style.left = "50px";
-                } else if(block==='f' || block==='d' || block==='p'){
-                  canvas.elt.style.left = "134px";
-                }
-              }
+              canvas.elt.style.left = (document.body.classList.contains('collapsed')
+                ? (block==='s' ? "50px" : "134px")
+                : (block==='s' ? "50px" : "134px"));
               drawElements(p, block);
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => e.block === block && e.number >= 3 && e.number <= currentZ);
-                for(let candidate of candidates) {
+                for(let candidate of candidates){
                   let pos = calculatePosition(candidate, block);
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
@@ -460,6 +398,7 @@
             };
           });
         });
+        // Μετατοπίσεις για τους κύριους καμβάδες (όπως προηγουμένως)
         if(!document.body.classList.contains('collapsed')){
           let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
@@ -485,14 +424,13 @@
           document.getElementById('canvasD').style.left = "144px";
           document.getElementById('canvasP').style.left = "564px";
         }
+        // Εμφάνιση καμβάδων ομάδων και περιόδων όταν currentZ >= 120
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
-          // Εμφάνιση των καμβάδων ομάδων (δεν επανασχεδιάζονται αν έχουν ήδη δημιουργηθεί)
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          // Τοποθέτηση: οι καμβάδες ομάδων τοποθετούνται πάνω από τους κύριους καμβάδες, με top = 66px
           document.getElementById('canvasS_groups').style.top = "66px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -508,12 +446,20 @@
           document.getElementById('canvasD_groups').style.display = "none";
           document.getElementById('canvasP_groups').style.display = "none";
         }
+        // Στην collapsed view, ο infoPanel ορίζεται με left 42px και width 300px
+        if(document.body.classList.contains('collapsed')){
+          document.getElementById('infoPanel').style.left = "42px";
+          document.getElementById('infoPanel').style.width = "300px";
+        } else {
+          document.getElementById('infoPanel').style.left = "";
+          document.getElementById('infoPanel').style.width = "1300px";
+        }
         updateInfo(currentZ);
         updateToggleButton();
       }
-  
+      
       function updateInfo(z) {
-        if(z < 3){
+        if(z < 3) {
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           document.getElementById('subshells').textContent = "";
@@ -533,23 +479,23 @@
         document.getElementById('explanation').textContent = `Επεξήγηση: ${element.explanation}`;
         document.getElementById('remarks').textContent = `Παρατηρήσεις: ${element.remarks}`;
       }
-  
+      
       document.getElementById('nextElement').addEventListener('click', () => {
         if(currentZ < 3) currentZ = 3;
         else if(currentZ < 118) currentZ++;
         else if(currentZ === 118) currentZ = 119;
         else if(currentZ === 119) currentZ = 120;
-        else if(currentZ === 120) currentZ = 121;  // πρώτα old ομάδες
-        else if(currentZ === 121) currentZ = 122;  // μετά new (και old)
+        else if(currentZ === 120) currentZ = 121;
+        else if(currentZ === 121) currentZ = 122;
         else currentZ++;
         redrawAll();
       });
-  
+      
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 122;
         redrawAll();
       });
-  
+      
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 0;
         window.groupsInitialized = false;
@@ -563,13 +509,13 @@
         initializeCanvases();
         updateInfo(currentZ);
       });
-  
+      
       document.getElementById('toggleFBlock').addEventListener('click', () => {
         if(currentZ < 122) return;
         document.body.classList.toggle('collapsed');
         redrawAll();
       });
-  
+      
       loadElements();
     })();
   </script>
