@@ -70,19 +70,19 @@
       padding: 2px 5px;
       border-radius: 3px;
       display: none;
-      line-height: 13px;
+      line-height: 13px !important;
       z-index: 30;
     }
-    /* Full view - όλες οι βάσεις (σε επαφή με τον s): */
+    /* Full view - αρχικές θέσεις: όλοι οι τομείς (εκτός του s) ξεκινούν από 134px */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view - σταθερές βάσεις χωρίς δυναμική μετατόπιση */
+    /* Collapsed view - σταθερές θέσεις: ο p τομέας τοποθετείται δίπλα στον d */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 134px; width: 420px; }
-    .collapsed #canvasP { top: 100px; left: 134px; width: 252px; }
+    .collapsed #canvasP { top: 100px; left: 554px; width: 252px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -117,7 +117,7 @@
     </div>
   </div>
 
-  <!-- Canvases για τους τομείς -->
+  <!-- Canvases -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -165,16 +165,15 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              // Θέσεις βάσει αν έχουμε collapsed ή όχι:
               if(document.body.classList.contains('collapsed')){
-                // collapsed view: όλες οι βάσεις = 50 για s και 134 για τους υπόλοιπους.
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
-                } else {
+                } else if(block==='f' || block==='d'){
                   canvas.elt.style.left = "134px";
+                } else if(block==='p'){
+                  canvas.elt.style.left = "554px";
                 }
               } else {
-                // full view: βάσεις: s: 50, f: 134, d: 134, p: 1342 (όμως σύμφωνα με τις νέες απαιτήσεις, όλοι ξεκινούν από 134)
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
                 } else if(block==='f' || block==='d' || block==='p'){
@@ -188,16 +187,15 @@
       }
 
       // Η calculatePosition υπολογίζει τη θέση κάθε στοιχείου βάσει του block.
-      // Για τον τομέα p: αν currentZ < 20 και για στοιχεία της πρώτης περιόδου (row 1) χρησιμοποιούμε offset 18.
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
-        if(block === 's'){
+        if(block==='s'){
           x = (e.col - 1) * 42;
-        } else if(block === 'f'){
+        } else if(block==='f'){
           x = (e.col - 3) * 42;
-        } else if(block === 'd'){
+        } else if(block==='d'){
           x = (e.col - 3) * 42;
-        } else if(block === 'p'){
+        } else if(block==='p'){
           if(currentZ < 20 && e.row === 1){
             x = (e.col - 18) * 42;
           } else {
@@ -246,8 +244,10 @@
               if(document.body.classList.contains('collapsed')){
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
-                } else {
+                } else if(block==='f' || block==='d'){
                   canvas.elt.style.left = "134px";
+                } else if(block==='p'){
+                  canvas.elt.style.left = "554px";
                 }
               } else {
                 if(block==='s'){
@@ -260,10 +260,9 @@
             };
           });
         });
-        // Δυναμικές μετατοπίσεις εφαρμόζονται μόνο στη full view.
-        let isCollapsed = document.body.classList.contains('collapsed');
-        if(!isCollapsed){
-          let baseS = 50, baseF = 134, baseD = 134, baseP = 134; // όλοι ξεκινούν από 134
+        // Δυναμικές μετατοπίσεις μόνο στη full view
+        if(!document.body.classList.contains('collapsed')){
+          let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
           if(currentZ <= 20){
             shiftP = 0; shiftD = 0;
@@ -278,16 +277,15 @@
             shiftP = 42 * 10 + 42 * 14;
             shiftD = 42 * 14;
           }
-          document.getElementById('canvasS').style.left = baseS + "px";
           document.getElementById('canvasF').style.left = baseF + "px";
           document.getElementById('canvasD').style.left = (baseD + shiftD) + "px";
           document.getElementById('canvasP').style.left = (baseP + shiftP) + "px";
         } else {
-          // Σε collapsed view, δεν εφαρμόζονται δυναμικές μετατοπίσεις.
+          // Στη collapsed view, οι θέσεις είναι σταθερές:
           document.getElementById('canvasS').style.left = "50px";
           document.getElementById('canvasF').style.left = "134px";
           document.getElementById('canvasD').style.left = "134px";
-          document.getElementById('canvasP').style.left = "134px";
+          document.getElementById('canvasP').style.left = "554px";  // δίπλα στον d
         }
         if(currentZ >= 120){
           document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
