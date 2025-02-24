@@ -118,15 +118,16 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων (top: 100px → 150px) */
+    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
-    .full #canvasD { top: 150px; left: 722px; width: 420px; z-index: 3; } /* left: 134 + 588 = 722px */
+    /* Αρχικά, οι καμβάδες d και p ξεκινούν στο 134px */
+    .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων (top: προσθέτουμε 50px) */
+    /* Collapsed view – θέσεις καμβάδων στοιχείων */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
-    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* Τροποποιημένο: left=139px για 5px κενό με την s */
+    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* d: left=139px για 5px κενό με την s */
     .collapsed #canvasP { top: 150px; left: 554px; width: 252px; }
     /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
     .period-label {
@@ -335,11 +336,12 @@
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
                 } else if(block==='f' || block==='d'){
-                  canvas.elt.style.left = (block==='f' ? "154px" : "139px"); // Για collapsed: canvasD left=139px
+                  canvas.elt.style.left = (block==='f' ? "154px" : "139px");
                 } else if(block==='p'){
                   canvas.elt.style.left = "554px";
                 }
               } else {
+                // Στο full view, αρχικά όλοι οι καμβάδες (f, d, p) ξεκινούν στο 134px.
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
                 } else if(block==='f' || block==='d' || block==='p'){
@@ -449,26 +451,37 @@
           });
         });
         if(!document.body.classList.contains('collapsed')){
-          let baseF = 134, baseP = 134;
+          // Στο full view, οι καμβάδες f, d, p ξεκινούν όλοι από 134px.
+          let base = 134;
           let shiftP = 0;
+          let shiftD = 0;
           if(currentZ <= 20){
             shiftP = 0;
+            shiftD = 0;
           } else if(currentZ >= 21 && currentZ <= 30){
+            // Μετακινείται μόνο ο canvasP
             shiftP = 42 * (currentZ - 20);
+            shiftD = 0;
           } else if(currentZ >= 31 && currentZ <= 56){
+            // Ο canvasP παραμένει σταθερός στο 134 + 420 = 554, ενώ ο canvasD δεν έχει ξεκινήσει
             shiftP = 42 * 10;
+            shiftD = 0;
           } else if(currentZ >= 57 && currentZ <= 70){
+            // Από εδώ και μετά, μετακινείται και ο canvasD, μαζί με τον canvasP
             shiftP = 42 * 10 + 42 * (currentZ - 56);
+            shiftD = 42 * (currentZ - 56);
           } else {
+            // Τελικές θέσεις: canvasD φτάνει στο 134 + 42*14 = 722, canvasP στο 134 + 42*10 + 42*14 = 1142
             shiftP = 42 * 10 + 42 * 14;
+            shiftD = 42 * 14;
           }
-          document.getElementById('canvasF').style.left = baseF + "px";
-          document.getElementById('canvasD').style.left = "722px"; /* Σταθερή θέση στο full view */
-          document.getElementById('canvasP').style.left = (baseP + shiftP) + "px";
+          document.getElementById('canvasF').style.left = base + "px";
+          document.getElementById('canvasD').style.left = (base + shiftD) + "px";
+          document.getElementById('canvasP').style.left = (base + shiftP) + "px";
         } else {
           document.getElementById('canvasS').style.left = "50px";
           document.getElementById('canvasF').style.left = "154px";
-          document.getElementById('canvasD').style.left = "139px"; /* Τροποποιημένη θέση για collapsed */
+          document.getElementById('canvasD').style.left = "139px";
           document.getElementById('canvasP').style.left = "554px";
         }
         if(currentZ >= 120){
