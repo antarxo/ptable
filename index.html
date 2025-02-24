@@ -61,51 +61,43 @@
       transition: all 0.5s ease-in-out;
     }
 
-    /* Χρώματα από το αρχικό another.html */
-    .element.s-block { background: #ffcccc; }
-    .element.p-block { background: #ccffcc; }
-    .element.d-block { background: #ccccff; }
-    .element.f-block { background: #ffe5cc; }
+    /* Χρώματα blocks */
+    .s-block { background: #ffcccc !important; }
+    .p-block { background: #ccffcc !important; }
+    .d-block { background: #ccccff !important; }
+    .f-block { background: #ffe5cc !important; }
 
-    /* Full mode */
-    .full #canvasS { top: 100px; left: 50px; width: 84px; }
-    .full #canvasF { top: 100px; left: 134px; width: 588px; }
-    .full #canvasD { top: 100px; left: 722px; width: 420px; }
-    .full #canvasP { top: 100px; left: 1142px; width: 252px; }
-
-    /* Collapsed mode */
-    .collapsed #canvasS { top: 100px; left: 50px; }
-    .collapsed #canvasD { top: 100px; left: 140px; }
-    .collapsed #canvasP { top: 100px; left: 566px; }
-    .collapsed #canvasF { top: 200px; left: 50px; width: 1326px; }
-
+    /* Περίοδοι */
     .period-label {
       position: absolute;
-      left: 20px;
+      left: 15px;
+      font-size: 11px;
       font-weight: bold;
       color: #333;
       background: rgba(200,200,200,0.9);
       padding: 2px 5px;
       border-radius: 3px;
       display: none;
+      transition: all 0.3s ease;
     }
 
-    .group-labels {
-      position: absolute;
-      display: none;
-      background: rgba(200,200,200,0.9);
-      padding: 2px 5px;
-      border-radius: 3px;
-      flex-direction: column;
-      gap: 2px;
-      z-index: 2;
-    }
+    /* Διάταξη blocks */
+    .full #canvasS { top: 100px; left: 50px; width: 84px; }
+    .full #canvasF { top: 100px; left: 134px; width: 588px; }
+    .full #canvasD { top: 100px; left: 722px; width: 420px; }
+    .full #canvasP { top: 100px; left: 1142px; width: 252px; }
+
+    .collapsed #canvasS { top: 100px; left: 50px; }
+    .collapsed #canvasD { top: 100px; left: 140px; }
+    .collapsed #canvasP { top: 100px; left: 566px; }
+    .collapsed #canvasF { top: 200px; left: 50px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
 <body class="full">
-  <div id="title">Περιοδικός Πίνακας - Ατομικοί Αριθμοί</div>
-  
+  <div id="title">Περιοδικός Πίνακας</div>
+
+  <!-- Περίοδοι -->
   <div class="period-label" style="top: 130px">1η K</div>
   <div class="period-label" style="top: 170px">2η L</div>
   <div class="period-label" style="top: 210px">3η M</div>
@@ -155,7 +147,7 @@
       };
 
       let elements = [];
-      let currentZ = 3; // Αρχίζει από το 3
+      let currentZ = 3;
       let currentState = 'main';
 
       async function loadElements() {
@@ -200,7 +192,7 @@
         elements.filter(e => 
           e.block === block && 
           e.number <= currentZ &&
-          e.number >= 3 // Αγνοεί τα πρώτα 2 στοιχεία
+          e.number >= 3
         ).forEach(e => {
           const pos = calculatePosition(e, block);
           if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
@@ -258,21 +250,36 @@
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 118;
         redrawAll();
-        setTimeout(() => { 
-          currentZ = 1;
-          redrawAll();
-          setTimeout(() => {
-            currentZ = 2;
-            redrawAll();
-            document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
-          }, 300);
-        }, 300);
+        
+        setTimeout(() => {
+          // Προσθήκη στοιχείων 1 και 2 χωρίς αλλαγή currentZ
+          elements.filter(e => e.number <= 2).forEach(e => {
+            new p5(p => {
+              p.setup = () => {
+                const block = BLOCKS_CONFIG[e.block];
+                const pos = calculatePosition(e, e.block);
+                const canvas = p.createCanvas(block.cols * 42, block.rows * 42);
+                canvas.parent(`canvas${e.block.toUpperCase()}`);
+                p.fill(BLOCK_COLORS[e.block]);
+                p.rect(pos.x, pos.y, 40, 40, 5);
+                p.fill(0);
+                p.textSize(12);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.text(e.number.toString(), pos.x + 20, pos.y + 20);
+              };
+            });
+          });
+          
+          document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
+        }, 500);
       });
 
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 3;
-        redrawAll();
+        document.body.classList.remove('collapsed');
+        document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
+        initializeCanvases();
       });
 
       document.getElementById('toggleFBlock').addEventListener('click', () => {
