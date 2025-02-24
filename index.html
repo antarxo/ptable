@@ -80,12 +80,10 @@
     /* Διάταξη blocks - Collapsed view */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
-    /* Το p‑block ξεκινά στο 560px για να μην υπάρχει κενό μεταξύ d και p */
     .collapsed #canvasP { top: 100px; left: 560px; }
-    /* Ο f‑block τοποθετείται 10px κάτω από το κάτω μέρος του d‑block 
-       (d block ξεκινά στο 100px με ύψος 7*42 = 294px → κάτω μέρος στο 394px, +10px = 404px)
-       και μετατοπίζεται δεξιότερα κατά 42px (π.χ. από το 110px σε 152px) */
-    .collapsed #canvasF { top: 404px; left: 152px; width: 1326px; }
+    /* Ο f τομέας: στο collapsed, το πάνω μέρος του να αφήνει 15px κενό από το κάτω όριο των s, d, p (394px + 15 = 409px)
+       και μετατοπίζεται δεξιότερα κατά 42px (από left 152px σε left 194px) */
+    .collapsed #canvasF { top: 409px; left: 194px; width: 1326px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -141,9 +139,9 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // Ξεκινάμε με currentZ = 2, ώστε να μην εμφανίζεται καμία πληροφορία ή στοιχείο
+      // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και δυνατότητα οδηγίας μέσω του remarks στο JSON.
       let elements = [];
-      let currentZ = 2;
+      let currentZ = 0;
       let currentState = 'main';
 
       async function loadElements() {
@@ -151,6 +149,7 @@
           const response = await fetch('elements.json');
           elements = await response.json();
           initializeCanvases();
+          updateInfo(currentZ);
         } catch (err) {
           console.error('Σφάλμα φόρτωσης:', err);
         }
@@ -192,11 +191,12 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        // Σχεδιάζουμε μόνο στοιχεία με αριθμό από 3 και άνω
+        // Αν currentZ >= 118, εμφανίζουμε όλα τα στοιχεία (≥ 1). Αλλιώς, μόνο εκείνα με e.number ≥ 3.
+        const minNum = (currentZ >= 118) ? 1 : 3;
         elements.filter(e => 
           e.block === block &&
           e.number <= currentZ &&
-          e.number >= 3
+          e.number >= minNum
         ).forEach(e => {
           const pos = calculatePosition(e, block);
           if (pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height) {
@@ -228,9 +228,9 @@
       }
 
       function updateInfo(z) {
-        // Αν z < 3, μην εμφανίζουμε πληροφορίες
+        // Αν currentZ είναι 0, εμφανίζουμε οδηγίες (εφόσον υπάρχουν στο remarks του JSON)
         if (z < 3) {
-          document.getElementById('elementInfo').innerHTML = "";
+          document.getElementById('elementInfo').innerHTML = "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           document.getElementById('subshells').textContent = "";
           document.getElementById('shells').textContent = "";
           document.getElementById('outerShell').textContent = "";
@@ -250,42 +250,29 @@
       }
 
       document.getElementById('nextElement').addEventListener('click', () => {
-        if (currentZ >= 118) return;
-        currentZ++;
+        // Αν το currentZ είναι μικρότερο από 3, θέτουμε το currentZ στο 3 για να ξεκινήσουμε από το στοιχείο 3
+        if (currentZ < 3) {
+          currentZ = 3;
+        } else if (currentZ < 118) {
+          currentZ++;
+        }
         redrawAll();
       });
 
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 118;
         redrawAll();
-        setTimeout(() => {
-          // Προσθήκη στοιχείων 1 και 2 στις θέσεις τους στην πρώτη γραμμή
-          elements.filter(e => e.number <= 2).forEach(e => {
-            new p5(p => {
-              p.setup = () => {
-                const block = BLOCKS_CONFIG[e.block];
-                const pos = calculatePosition(e, e.block);
-                const canvas = p.createCanvas(block.cols * 42, block.rows * 42);
-                canvas.parent(`canvas${e.block.toUpperCase()}`);
-                p.fill(BLOCK_COLORS[e.block]);
-                p.rect(pos.x, pos.y, 40, 40, 5);
-                p.fill(0);
-                p.textSize(12);
-                p.textAlign(p.CENTER, p.CENTER);
-                p.text(e.number.toString(), pos.x + 20, pos.y + 20);
-              };
-            });
-          });
-          document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
-        }, 500);
+        // Με το currentZ=118, ο κύριος βρόχος σχεδίασης θα εμφανίσει όλα τα στοιχεία (≥ 1)
+        document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
       });
 
       document.getElementById('reset').addEventListener('click', () => {
-        currentZ = 2;
+        currentZ = 0;
         document.body.classList.remove('collapsed');
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
         initializeCanvases();
+        updateInfo(currentZ);
       });
 
       document.getElementById('toggleFBlock').addEventListener('click', () => {
