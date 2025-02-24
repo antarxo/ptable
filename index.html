@@ -59,7 +59,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Περίοδοι – ορίζουμε υψηλό z-index ώστε να εμφανίζονται πάνω από τα canvases */
+    /* Περίοδοι – ορίζουμε υψηλό z-index και αυξάνουμε το διάστιχο (line-height) κατά 1px */
     .period-label {
       position: absolute;
       left: 15px;
@@ -72,6 +72,7 @@
       display: none;
       transition: all 0.3s ease;
       z-index: 10;
+      line-height: 12px;
     }
     /* Διάταξη blocks - Full view */
     .full #canvasS { top: 100px; left: 50px; width: 84px; }
@@ -82,10 +83,10 @@
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasD { top: 100px; left: 140px; }
     .collapsed #canvasP { top: 100px; left: 560px; }
-    /* Σ collapsed: ο f τομέας μετατοπίζεται
-         - στο full view ο f έχει left: 134px, top: 100px.
-         - στο collapsed μετατοπίζεται κατά 42px δεξιότερα (134+42 = 176px)
-         - και κατεβαίνει 84px (π.χ. top: 100+84 = 184px, αλλά σύμφωνα με τις οδηγίες εδώ ορίζουμε top: 194px)
+    /* Σ collapsed: ο f τομέας μετατοπίζεται από την full view θέση (left: 134px, top: 100px)
+         μετατοπίζοντας το κατά 42px δεξιότερα (134+42 = 176px)
+         και κατεβαίνει κατά 84px (ώστε το top να γίνει 100+84 = 184px, αλλά σύμφωνα με τις οδηγίες τοποθετούμε το 194px)
+         (η τιμή 194px διατηρεί την επιθυμητή τοποθέτηση στην εναλλαγή)
     */
     .collapsed #canvasF { top: 194px; left: 176px; width: 1326px; }
   </style>
@@ -94,14 +95,14 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
 
-  <!-- Περίοδοι -->
-  <div class="period-label" style="top: 130px">1η K</div>
-  <div class="period-label" style="top: 170px">2η L</div>
-  <div class="period-label" style="top: 210px">3η M</div>
-  <div class="period-label" style="top: 250px">4η N</div>
-  <div class="period-label" style="top: 290px">5η O</div>
-  <div class="period-label" style="top: 330px">6η P</div>
-  <div class="period-label" style="top: 370px">7η Q</div>
+  <!-- Οι ετικέτες των περιόδων έχουν μετακινηθεί κατά -21px από τις προηγούμενες τιμές -->
+  <div class="period-label" style="top: 109px">1η K</div>
+  <div class="period-label" style="top: 149px">2η L</div>
+  <div class="period-label" style="top: 189px">3η M</div>
+  <div class="period-label" style="top: 229px">4η N</div>
+  <div class="period-label" style="top: 269px">5η O</div>
+  <div class="period-label" style="top: 309px">6η P</div>
+  <div class="period-label" style="top: 349px">7η Q</div>
 
   <div id="infoPanel">
     <div id="leftPanel">
@@ -146,8 +147,7 @@
       // Αρχική τιμή currentZ = 0 για εμφάνιση κενών θέσεων και οδηγίες μέσω remarks.
       // Τα στοιχεία 1 και 2 δεν εμφανίζονται μέχρι το 118,
       // και μετά με διαδοχικά κλικ "Επόμενο" θα εμφανιστούν:
-      // currentZ == 119 → στοιχείο 1,
-      // currentZ == 120 → στοιχείο 2.
+      // currentZ == 119 → στοιχείο 1, currentZ == 120 → στοιχείο 2.
       let elements = [];
       let currentZ = 0;
       let currentState = 'main';
@@ -199,7 +199,7 @@
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
-        // Εφαρμόζουμε το φίλτρο ώστε να συμπληρώνονται μόνο τα στοιχεία που ανήκουν στον τρέχοντα τομέα.
+        // Εφαρμόζουμε το φίλτρο ώστε να συμπληρώνονται μόνο τα στοιχεία που ανήκουν στον τομέα
         const minNum = (currentZ >= 118) ? 1 : 3;
         elements.filter(e => e.block === block && (
           (currentZ < 118 && e.number >= 3 && e.number <= currentZ) ||
