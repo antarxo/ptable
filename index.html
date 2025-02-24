@@ -49,17 +49,29 @@
       color: #666;
       margin-top: 10px;
     }
+    /* Καμβάδες τομέων */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
+    }
+    /* Καμβάς περιόδων */
+    #canvasPeriods {
+      position: absolute;
+      left: 10px;
+      top: 100px;
+      width: 40px;
+      height: 280px; /* 7 rows * 40px */
+      background: #ddd;
+      display: none;
+      z-index: 5;
     }
     /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Ετικέτες Περιόδων – line-height 13px με !important */
+    /* Ετικέτες Περιόδων – οι παλαιές ετικέτες θα αντικατασταθούν από τον καμβά περιόδων */
     .period-label {
       position: absolute;
       left: 15px;
@@ -73,20 +85,21 @@
       line-height: 13px !important;
       z-index: 30;
     }
-    /* Full view: όλες οι βάσεις ξεκινούν από τις εξής τιμές:
-       s: left = 50px
-       f, d, p: left = 134px  (δηλαδή σε επαφή με τον s, αφού s έχει width 84px και τελειώνει στο 134px)
-       και τα z-index: s (1), f (2), d (3), p (4)
+    /* Full view αρχικές θέσεις για τους τομείς:
+       Όλοι ξεκινούν "σε επαφή" με τον s:
+         s: left = 50px 
+         f, d, p: left = 134px 
+       (με z-index: s (1), f (2), d (3), p (4))
     */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 100px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view: σταθερές βάσεις:
-       s: left = 50px
-       f: left = 134px, top = 194px
-       d: left = 144px  (δηλαδή 10px κενό μεταξύ s και d)
-       p: left = 564px  (δίπλα στον d, αφού 144 + 420 = 564)
+    /* Collapsed view: Σταθερές θέσεις
+       s: left = 50px 
+       f: left = 134px, top = 194px 
+       d: left = 144px (10px κενό από το s) 
+       p: left = 564px (δίπλα στον d)
     */
     .collapsed #canvasS { top: 100px; left: 50px; }
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
@@ -98,14 +111,14 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
 
-  <!-- Ετικέτες Περιόδων -->
-  <div class="period-label" style="top: 109px">1η K</div>
-  <div class="period-label" style="top: 149px">2η L</div>
-  <div class="period-label" style="top: 189px">3η M</div>
-  <div class="period-label" style="top: 229px">4η N</div>
-  <div class="period-label" style="top: 269px">5η O</div>
-  <div class="period-label" style="top: 309px">6η P</div>
-  <div class="period-label" style="top: 349px">7η Q</div>
+  <!-- Καμβάς Περιόδων (θα εμφανίζεται όταν currentZ ≥ 120 στη full view) -->
+  <div id="canvasPeriods" class="canvas"></div>
+
+  <!-- Τα υπόλοιπα canvases για τους τομείς -->
+  <div id="canvasS" class="canvas"></div>
+  <div id="canvasF" class="canvas"></div>
+  <div id="canvasD" class="canvas"></div>
+  <div id="canvasP" class="canvas"></div>
 
   <div id="infoPanel">
     <div id="leftPanel">
@@ -126,13 +139,31 @@
     </div>
   </div>
 
-  <!-- Canvases για τους τομείς -->
-  <div id="canvasS" class="canvas"></div>
-  <div id="canvasF" class="canvas"></div>
-  <div id="canvasD" class="canvas"></div>
-  <div id="canvasP" class="canvas"></div>
-
   <script>
+    // Δημιουργούμε μια ξεχωριστή p5 σκέψη για τον καμβά περιόδων
+    function initPeriodsCanvas() {
+      let periodsCanvas = new p5(p => {
+        p.setup = () => {
+          let canvas = p.createCanvas(40, 280); // 1 στήλη, 7 γραμμές, κάθε κελί 40x40
+          canvas.parent("canvasPeriods");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.fill(200);
+          p.background(221); // απαλό γκρι
+          // Γράφουμε τα ονόματα των περιόδων: "1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"
+          const labels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+          for (let i = 0; i < 7; i++) {
+            // Κάθε κελί 40x40, σχεδιάζουμε το κείμενο στο κέντρο
+            p.fill(0);
+            p.text(labels[i], 20, 20 + i * 40);
+          }
+        };
+      });
+      document.getElementById("canvasPeriods").style.display = "block";
+    }
+
+    // Το υπόλοιπο του κώδικα για τους τομείς έχει ήδη υλοποιηθεί
     (function() {
       const BLOCK_COLORS = {
         's': '#ffcccc',
@@ -147,13 +178,15 @@
         f: { cols: 14, rows: 7 }
       };
 
-      // currentZ αρχικά = 0. Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118:
-      // 119 → στοιχείο 1, 120 → στοιχείο 2.
+      /* currentZ αρχικά = 0.
+         Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118:
+         119 → στοιχείο 1, 120 → στοιχείο 2.
+      */
       let elements = [];
       let currentZ = 0;
       let currentState = 'main';
 
-      // Απενεργοποιούμε το κουμπί toggle μέχρι να συμπληρωθεί το full view (currentZ ≥ 120)
+      // Ενεργοποίηση του κουμπιού Εναλλαγής μόνο όταν το full view έχει συμπληρωθεί (currentZ ≥ 120)
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 120);
       }
@@ -178,7 +211,6 @@
               const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
-              // Full view: όλες οι βάσεις:
               if(document.body.classList.contains('collapsed')){
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
@@ -273,7 +305,7 @@
             };
           });
         });
-        // Δυναμικές μετατοπίσεις εφαρμόζονται μόνο στη full view.
+        // Εφαρμογή δυναμικών μετατοπίσεων μόνο στη full view
         if(!document.body.classList.contains('collapsed')){
           let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
@@ -294,14 +326,17 @@
           document.getElementById('canvasD').style.left = (baseD + shiftD) + "px";
           document.getElementById('canvasP').style.left = (baseP + shiftP) + "px";
         } else {
-          // Σ collapsed, οι θέσεις παραμένουν σταθερές:
           document.getElementById('canvasS').style.left = "50px";
           document.getElementById('canvasF').style.left = "134px";
-          document.getElementById('canvasD').style.left = "144px";  // 10px κενό από το s (50+84+10=144)
-          document.getElementById('canvasP').style.left = "564px";  // δίπλα στον d (144+420=564)
+          document.getElementById('canvasD').style.left = "144px";
+          document.getElementById('canvasP').style.left = "564px";
         }
         if(currentZ >= 120){
-          document.querySelectorAll('.period-label').forEach(el => el.style.display = 'block');
+          // Αν το full view έχει συμπληρωθεί, εμφανίζουμε και τον καμβά περιόδων
+          document.getElementById('canvasPeriods').style.display = "block";
+          initPeriodsCanvas();
+        } else {
+          document.getElementById('canvasPeriods').style.display = "none";
         }
         updateInfo(currentZ);
         updateToggleButton();
@@ -353,6 +388,7 @@
         currentZ = 0;
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
+        document.getElementById('canvasPeriods').style.display = "none";
         initializeCanvases();
         updateInfo(currentZ);
       });
