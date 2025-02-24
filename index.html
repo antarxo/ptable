@@ -35,7 +35,7 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
       position: absolute;
-      left: 25px; /* μετατοπισμένος 5px δεξιότερα */
+      left: 25px; /* 5px δεξιότερα */
       top: 440px;
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
@@ -98,7 +98,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: μετατοπισμένος κατά 50px (top:150px αντί για 100px) */
+    /* Καμβάς Περιόδων (με top:150px) */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -142,12 +142,15 @@
     /* Full view – θέσεις καμβάδων στοιχείων (top:150px) */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
-    .full #canvasD { top: 150px; left: 139px; width: 420px; z-index: 3; }
+    /* Επαναφορά: στο full view, το canvas d να έχει left:134px (χωρίς το επιπλέον κενό) */
+    .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
     /* Collapsed view – θέσεις καμβάδων στοιχείων */
     .collapsed #canvasS { top: 150px; left: 50px; }
-    .collapsed #canvasF { top: 160px; left: 154px; width: 588px; } /* μετατοπισμένος 10px προς τα κάτω, 20px δεξιότερα */
-    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* διατηρείται το 5px κενό */
+    /* Στην collapsed view, το canvas f να έχει top:243px και να παραμένει left:154px */
+    .collapsed #canvasF { top: 243px; left: 154px; width: 588px; }
+    /* Για το d στο collapsed view, διατηρούμε left:134px */
+    .collapsed #canvasD { top: 150px; left: 134px; width: 420px; }
     .collapsed #canvasP { top: 150px; left: 554px; width: 252px; }
     /* Οι παλαιές ετικέτες περιόδων */
     .period-label {
@@ -334,10 +337,8 @@
   
       let elements = [];
       let currentZ = 0;
-      /* Μετρητής:
-         120: full view χωρίς ομάδες,
-         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων,
-         122: εμφάνιση και των δύο σειρών (πάνω: νέα, κάτω: παλιά).
+      /* Θέλουμε να ξεκινάμε από το στοιχείο 3. Όταν ο μετρητής είναι πάνω από 120, 
+         θα εμφανίζονται τα στοιχεία 1 και 2 με τον τύπο currentZ-120.
       */
   
       function updateToggleButton() {
@@ -469,8 +470,7 @@
                 if(block==='s'){
                   canvas.elt.style.left = "50px";
                 } else if(block==='f' || block==='d'){
-                  /* Στην collapsed view, για το f θέλουμε left=154px, ενώ για το d left=139px */
-                  canvas.elt.style.left = (block==='f' ? "154px" : "139px");
+                  canvas.elt.style.left = (block==='f' ? "154px" : "134px");
                 } else if(block==='p'){
                   canvas.elt.style.left = "554px";
                 }
@@ -497,7 +497,7 @@
           });
         });
         if(!document.body.classList.contains('collapsed')){
-          let baseF = 134, baseD = 139, baseP = 134;
+          let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
           if(currentZ <= 20){
             shiftP = 0; shiftD = 0;
@@ -513,12 +513,12 @@
             shiftD = 42 * 14;
           }
           document.getElementById('canvasF').style.left = baseF + "px";
-          document.getElementById('canvasD').style.left = (baseD + shiftD) + "px";
+          document.getElementById('canvasD').style.left = baseD + "px";  // Full view: d έχει left 134px
           document.getElementById('canvasP').style.left = (baseP + shiftP) + "px";
         } else {
           document.getElementById('canvasS').style.left = "50px";
           document.getElementById('canvasF').style.left = "154px";
-          document.getElementById('canvasD').style.left = "139px";
+          document.getElementById('canvasD').style.left = "134px";
           document.getElementById('canvasP').style.left = "554px";
         }
         if(currentZ >= 120){
@@ -527,7 +527,6 @@
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          /* Μετατοπισμός των groups: top 58px → 108px (δηλαδή +50px) */
           document.getElementById('canvasS_groups').style.top = "108px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -548,22 +547,15 @@
       }
   
       function updateInfo(z) {
-        if(z < 3){
-          document.getElementById('elementInfo').innerHTML =
-            "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
-          document.getElementById('subshells').textContent = "";
-          document.getElementById('shells').textContent = "";
-          document.getElementById('outerShell').textContent = "";
-          document.getElementById('explanation').textContent = "";
-          document.getElementById('electronicStructure').innerHTML = "";
-          document.getElementById('remarks').textContent = "";
-          return;
+        // Αν currentZ > 120, τότε χρησιμοποιούμε effectiveZ = currentZ - 120 για να αντιστοιχίσουμε σωστά τα στοιχεία 1 και 2
+        let effectiveZ = z;
+        if(z > 120) {
+          effectiveZ = z - 120;
         }
-        const element = elements.find(e => e.number === z);
+        const element = elements.find(e => e.number === effectiveZ);
         if(!element) return;
-        /* Εμφάνιση στοιχείων: Το σύμβολο εμφανίζεται με το αντίστοιχο πιο σκουρότερο χρώμα */
         document.getElementById('elementInfo').innerHTML =
-          `<strong>${element.name} (<span style="color:${BLOCK_SYMBOL_COLORS[element.block]}; font-size:24px; font-weight:bold;">${element.symbol}</span>)</strong> [Z=${z}]`;
+          `<strong>${element.name} (<span style="color:${BLOCK_SYMBOL_COLORS[element.block]}; font-size:24px; font-weight:bold;">${element.symbol}</span>)</strong> [Z=${effectiveZ}]`;
   
         document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
         document.getElementById('shells').textContent = `Στιβάδες: ${formatShells(element.shells)}`;
@@ -571,8 +563,8 @@
         document.getElementById('explanation').textContent = element.explanation;
   
         let esHTML = "";
-        let prev = elements.find(e => e.number === (z - 1));
-        let next = elements.find(e => e.number === (z + 1));
+        let prev = elements.find(e => e.number === ((effectiveZ - 1) >= 3 ? (effectiveZ - 1) : '-'));
+        let next = elements.find(e => e.number === (effectiveZ + 1));
         esHTML += `<div style="font-size:12px;">Προηγούμενο: ${prev ? prev.subshells : '-'}</div>`;
         esHTML += `<div style="font-size:14px; font-weight:bold;">Τρέχον: ${element.subshells}</div>`;
         esHTML += `<div style="font-size:12px;">Επόμενο: ${next ? next.subshells : '-'}</div>`;
@@ -584,24 +576,23 @@
       document.getElementById('nextElement').addEventListener('click', () => {
         if(currentZ < 3){
           currentZ = 3;
-        } else if(currentZ < 118){
+        } else if(currentZ < 120){
           currentZ++;
-        } else if(currentZ === 118){
-          currentZ = 119;
-        } else if(currentZ === 119){
-          currentZ = 120;
-        } else if(currentZ === 120){
-          currentZ = 121;
-        } else if(currentZ === 121){
-          currentZ = 122;
         } else {
           currentZ++;
+          if(currentZ > 120) {
+            currentZ = currentZ - 120;
+          }
         }
         redrawAll();
       });
   
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 122;
+        // Αν είναι πάνω από 120, τότε επαναπροσδιορίζουμε
+        if(currentZ > 120) {
+          currentZ = currentZ - 120;
+        }
         redrawAll();
       });
   
@@ -620,7 +611,7 @@
       });
   
       document.getElementById('toggleFBlock').addEventListener('click', () => {
-        if(currentZ < 122) return;
+        if(currentZ < 120) return;
         document.body.classList.toggle('collapsed');
         redrawAll();
       });
