@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας</title>
+  <title>Περιοδικός Πίνακας με Ομάδες</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     /* Βασικές ρυθμίσεις */
@@ -55,26 +55,51 @@
       background: transparent;
       transition: all 0.5s ease-in-out;
     }
-    /* Καμβάς Περιόδων: πίνακας 1 στήλης, 7 γραμμών,
-       κάθε κελί: 40x40 με 2px κενό μεταξύ (συνολικό ύψος 292px),
-       φόντο: απαλό γκρι, χωρίς περίγραμμα.
-    */
+    /* Καμβάς Περιόδων (όπως προηγουμένως) */
     #canvasPeriods {
       position: absolute;
       left: 10px;
       top: 100px;
-      width: 40px;
+      width: 42px;
       height: 292px;
       background: #ddd;
       display: none;
       z-index: 5;
     }
-    /* Χρώματα blocks */
+    /* Νέοι καμβάδες για τις ομάδες */
+    /* Καμβάς ομάδων για s: 2 σειρές x 2 στήλες, κάθε κελί 40x40 με 2px διάστημα */
+    #canvasS_groups {
+      position: absolute;
+      width: 42px;  /* 2*20 + 1*2 = 42px */
+      height: 82px; /* 2*40 + 1*2 = 82px */
+      background: #ddd;
+      display: none;
+      z-index: 6;
+    }
+    /* Για d: 2 σειρές x 10 στήλες → πλάτος: 10*20 + 9*2 = 218px, ύψος: 82px */
+    #canvasD_groups {
+      position: absolute;
+      width: 218px;
+      height: 82px;
+      background: #ddd;
+      display: none;
+      z-index: 6;
+    }
+    /* Για p: 2 σειρές x 6 στήλες → πλάτος: 6*20 + 5*2 = 130px, ύψος: 82px */
+    #canvasP_groups {
+      position: absolute;
+      width: 130px;
+      height: 82px;
+      background: #ddd;
+      display: none;
+      z-index: 6;
+    }
+    /* Χρώματα blocks (υπάρχουν ήδη) */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view - αρχικές θέσεις: όλοι οι τομείς (εκτός του s) ξεκινούν από 134px */
+    /* Full view - αρχικές θέσεις για τους τομείς */
     .full #canvasS { top: 100px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 100px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 100px; left: 134px; width: 420px; z-index: 3; }
@@ -84,7 +109,7 @@
     .collapsed #canvasF { top: 194px; left: 134px; width: 588px; }
     .collapsed #canvasD { top: 100px; left: 144px; width: 420px; }
     .collapsed #canvasP { top: 100px; left: 564px; width: 252px; }
-    /* Ετικέτες Περιόδων - οι παλαιές ετικέτες (αν χρησιμοποιούνταν) έχουν line-height 13px με !important */
+    /* Ετικέτες Περιόδων (αν υπάρχουν, δεν χρησιμοποιούνται πλέον) */
     .period-label {
       position: absolute;
       left: 15px;
@@ -104,8 +129,12 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
 
-  <!-- Καμβάς Περιόδων (θα εμφανίζεται όταν το full view έχει συμπληρωθεί) -->
+  <!-- Καμβάς Περιόδων -->
   <div id="canvasPeriods" class="canvas"></div>
+  <!-- Καμβάδες Ομάδων -->
+  <div id="canvasS_groups" class="canvas"></div>
+  <div id="canvasD_groups" class="canvas"></div>
+  <div id="canvasP_groups" class="canvas"></div>
 
   <!-- Καμβάδες τομέων -->
   <div id="canvasS" class="canvas"></div>
@@ -133,32 +162,90 @@
   </div>
 
   <script>
-    // Δημιουργία του καμβά περιόδων μόνο μία φορά
-    let periodsInitialized = false;
-    function initPeriodsCanvas() {
-      if(periodsInitialized) return;
+    // Δημιουργία των καμβάδων ομάδων: Θα δημιουργηθούν μία φορά και θα ακολουθούν τις κινήσεις των αντίστοιχων τομέων.
+    let groupsInitialized = false;
+    function initGroupsCanvases() {
+      if(groupsInitialized) return;
+      // Για s (2x2)
       new p5(p => {
         p.setup = () => {
-          let canvas = p.createCanvas(40, 292);
-          canvas.parent("canvasPeriods");
+          let canvas = p.createCanvas(42, 82);
+          canvas.parent("canvasS_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(221);
-          const labels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
-          for (let i = 0; i < 7; i++) {
-            // Κάθε κελί: 40x40, με 2px διάκενο μεταξύ (δηλαδή τα κελιά είναι σχεδιασμένα ώστε το περιθώριο να είναι σταθερό)
-            p.fill(221);
-            p.rect(0, i * 42, 40, 40);
-            p.fill(0);
-            p.text(labels[i], 20, i * 42 + 20);
+          const labels = ["1", "2"]; // ή τα ονόματα των ομάδων για s
+          // Σχεδιάζουμε τα 4 κελιά, αλλά αν έχουμε μόνο 2 ομάδες ίσως θέλουμε 2 κελιά; εδώ προτείνουμε 2 σειρές και 2 στήλες.
+          for(let r = 0; r < 2; r++){
+            for(let c = 0; c < 2; c++){
+              let x = c * (20 + 2);
+              let y = r * (40 + 2);
+              p.fill(221);
+              p.rect(x, y, 20, 40);
+              p.fill(0);
+              // Δείχνουμε τα ονόματα, για παράδειγμα, ομαδοποίηση: μπορούμε να χρησιμοποιήσουμε τα labels[0] και labels[1] για τις δύο σειρές
+              p.text(labels[r], x + 10, y + 20);
+            }
           }
         };
       });
-      periodsInitialized = true;
+      // Για d (2x10)
+      new p5(p => {
+        p.setup = () => {
+          let canvas = p.createCanvas(218, 82); // 10*20 + 9*2 = 218, ύψος 82
+          canvas.parent("canvasD_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(221);
+          const labels = [];
+          for(let i=1; i<=10; i++){
+            labels.push(i.toString());
+          }
+          for(let r = 0; r < 2; r++){
+            for(let c = 0; c < 10; c++){
+              let x = c * (20 + 2);
+              let y = r * (40 + 2);
+              p.fill(221);
+              p.rect(x, y, 20, 40);
+              p.fill(0);
+              p.text(labels[c], x + 10, y + 20);
+            }
+          }
+        };
+      });
+      // Για p (2x6)
+      new p5(p => {
+        p.setup = () => {
+          let canvas = p.createCanvas(130, 82); // 6*20 + 5*2 = 130, ύψος 82
+          canvas.parent("canvasP_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(221);
+          const labels = [];
+          for(let i=1; i<=6; i++){
+            labels.push(i.toString());
+          }
+          for(let r = 0; r < 2; r++){
+            for(let c = 0; c < 6; c++){
+              let x = c * (20 + 2);
+              let y = r * (40 + 2);
+              p.fill(221);
+              p.rect(x, y, 20, 40);
+              p.fill(0);
+              p.text(labels[c], x + 10, y + 20);
+            }
+          }
+        };
+      });
+      groupsInitialized = true;
     }
-
+  
     (function() {
       const BLOCK_COLORS = {
         's': '#ffcccc',
@@ -172,20 +259,15 @@
         d: { cols: 10, rows: 7 },
         f: { cols: 14, rows: 7 }
       };
-
-      /* currentZ αρχικά = 0.
-         Τα στοιχεία 1 και 2 εμφανίζονται μόνο μετά το 118:
-         119 → στοιχείο 1, 120 → στοιχείο 2.
-      */
+  
       let elements = [];
       let currentZ = 0;
       let currentState = 'main';
-
-      // Ενεργοποίηση του κουμπιού Εναλλαγής μόνο όταν το full view έχει συμπληρωθεί (currentZ ≥ 120)
+  
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 120);
       }
-
+  
       async function loadElements() {
         try {
           const response = await fetch('elements.json');
@@ -197,7 +279,7 @@
           console.error('Σφάλμα φόρτωσης:', err);
         }
       }
-
+  
       function initializeCanvases() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           new p5(p => {
@@ -226,7 +308,7 @@
           });
         });
       }
-
+  
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         if(block==='s'){
@@ -244,7 +326,7 @@
         }
         return { x, y };
       }
-
+  
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
@@ -271,7 +353,7 @@
           }
         });
       }
-
+  
       function redrawAll() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
@@ -301,7 +383,7 @@
             };
           });
         });
-        // Εφαρμογή δυναμικών μετατοπίσεων μόνο στη full view
+        // Δυναμικές μετατοπίσεις μόνο στη full view
         if(!document.body.classList.contains('collapsed')){
           let baseF = 134, baseD = 134, baseP = 134;
           let shiftP = 0, shiftD = 0;
@@ -330,13 +412,16 @@
         if(currentZ >= 120){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
+          document.getElementById('canvasGroups').style.display = "block";
+          initGroupsCanvases();
         } else {
           document.getElementById('canvasPeriods').style.display = "none";
+          document.getElementById('canvasGroups').style.display = "none";
         }
         updateInfo(currentZ);
         updateToggleButton();
       }
-
+  
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -358,7 +443,7 @@
         document.getElementById('explanation').textContent = `Επεξήγηση: ${element.explanation}`;
         document.getElementById('remarks').textContent = `Παρατηρήσεις: ${element.remarks}`;
       }
-
+  
       document.getElementById('nextElement').addEventListener('click', () => {
         if(currentZ < 3){
           currentZ = 3;
@@ -373,29 +458,29 @@
         }
         redrawAll();
       });
-
+  
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 120;
         redrawAll();
       });
-
+  
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 0;
-        // Επαναφορά του καμβά περιόδων ώστε να δημιουργηθεί ξανά στο επόμενο full view
-        periodsInitialized = false;
+        groupsInitialized = false; // Επαναφορά των group canvases
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
         document.getElementById('canvasPeriods').style.display = "none";
+        document.getElementById('canvasGroups').style.display = "none";
         initializeCanvases();
         updateInfo(currentZ);
       });
-
+  
       document.getElementById('toggleFBlock').addEventListener('click', () => {
         if(currentZ < 120) return;
         document.body.classList.toggle('collapsed');
         redrawAll();
       });
-
+  
       loadElements();
     })();
   </script>
