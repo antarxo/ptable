@@ -522,7 +522,13 @@
             }
             p.strokeWeight(1);
           } else {
-            p.fill(BLOCK_COLORS[ e.block]);
+            if(e.number === 119) {
+              p.fill("yellow");
+            } else if(e.number === 120) {
+              p.fill(BLOCK_COLORS["s"]);
+            } else {
+              p.fill(BLOCK_COLORS[e.block]);
+            }
             p.rect(pos.x, pos.y, 40, 40, 5);
             p.fill(0);
             p.textSize(e.number > 99 ? 10 : 12);
@@ -652,9 +658,11 @@
         const element = elements.find(e => e.number === z);
         if(!element) return;
   
+        // Υπολογίζουμε το εμφανιζόμενο Z: για τα στοιχεία 1 και 2 (εσωτερικά 119 και 120) εμφανίζεται το Z-118
+        let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
         let symbolColor = getBlockColor(element.block);
         document.getElementById('elementInfo').innerHTML =
-          `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${z}]`;
+          `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${displayZ}]`;
   
         // Ετοιμάζουμε τα δεδομένα για τις υποστιβάδες: προηγούμενη, τρέχουσα (Bold), επόμενη
         let prev = elements.find(e => e.number === (z - 1));
