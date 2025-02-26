@@ -61,25 +61,18 @@
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Right column: εμφανίζει τα remarks με πλήρη κεντράρισμα */
-    #remarks {
-      flex-grow: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1em;
-      text-align: center;
-    }
-    /* Overlay για τις υποστιβάδες */
+    /* Δεν εμφανίζουμε πλέον τα remarks */
+    /* Overlay για τις υποστιβάδες: τοποθετείται δεξιά από το s και κάτω από τις ομάδες */
     #subshells {
       position: absolute;
-      top: 300px;
+      top: 160px;
       left: 134px;
+      max-width: 420px;
       z-index: 100;
       border: 1px solid #333;
       padding: 5px;
       background: rgba(255,255,255,0.95);
-      font-size: 0.9em;
+      font-size: 0.8em;
       line-height: 1.4em;
     }
     /* Button panel: fixed στο κάτω δεξί μέρος */
@@ -105,8 +98,7 @@
     button:hover {
       background-color: #005f75;
     }
-    /* Toggle button: εναλλασσόμενο κείμενο και χρώμα */
-    /* Διορθώσαμε εδώ το κείμενο ώστε όταν είναι collapsed να δείχνει "Ανάπτυξη" */
+    /* Toggle button: το κείμενο έχει διορθωθεί ώστε όταν είναι collapsed να δείχνει "Ανάπτυξη" */
     #toggleFBlock.active {
       background-color: #e68a00;
     }
@@ -185,14 +177,13 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας πληροφοριών: 2 στήλες -->
+  <!-- Πίνακας πληροφοριών: 2 στήλες (χωρίς τα remarks) -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
       <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
       <div id="explanation" style="font-size:0.8em; margin-top:10px;"></div>
     </div>
-    <div id="remarks"></div>
   </div>
   
   <!-- Overlay για τις υποστιβάδες -->
@@ -590,13 +581,12 @@
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           document.getElementById('subshells').textContent = "";
-          // Ελέγχουμε αν υπάρχουν τα στοιχεία shells και outerShell, αλλιώς παραλείπουμε
+          // Δεν ενημερώνουμε πλέον τα remarks
           if(document.getElementById('shells'))
             document.getElementById('shells').textContent = "";
           if(document.getElementById('outerShell'))
             document.getElementById('outerShell').textContent = "";
           document.getElementById('comments').textContent = "";
-          document.getElementById('remarks').textContent = "Οδηγίες: Πατήστε 'Επόμενο' για να ξεκινήσετε την εμφάνιση των στοιχείων.";
           document.getElementById('explanation').textContent = "";
           return;
         }
@@ -622,8 +612,6 @@
         document.getElementById('comments').innerHTML = `<span>${element.remarks}</span>`;
   
         document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
-  
-        document.getElementById('remarks').textContent = element.remarks ? element.remarks : "";
       }
   
       document.getElementById('nextElement').addEventListener('click', () => {
@@ -668,7 +656,7 @@
         if(currentZ < 122) return;
         document.body.classList.toggle('collapsed');
         let toggleBtn = document.getElementById('toggleFBlock');
-        // Διορθώσαμε το κείμενο: όταν το body έχει την κλάση collapsed, το κουμπί δείχνει "Ανάπτυξη"
+        // Όταν το body έχει την κλάση collapsed εμφανίζεται "Ανάπτυξη", αλλιώς "Σύμπτυξη"
         if(document.body.classList.contains('collapsed')){
           toggleBtn.textContent = "Ανάπτυξη";
           toggleBtn.classList.remove("active");
