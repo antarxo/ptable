@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel: διαρθρώνεται σε 2 στήλες */
+    /* InfoPanel: δύο στήλες: αριστερή (elementInfo, comments, explanation) και δεξιά (subshells + remarks) */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -40,40 +40,38 @@
       transition: all 1.5s ease;
     }
     body.collapsed #infoPanel {
-      display: flex;
-      flex-direction: row;
-      background: rgba(255,255,255,0.95);
-      border: 2px solid #333;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      padding: 20px;
-      position: absolute;
       left: 848px;
       top: 100px;
       width: calc(100vw - 920px);
-      z-index: 40;
-      transition: all 1.5s ease;
     }
-    /* Left column: περιέχει elementInfo, comments και στο κάτω μέρος το explanation */
+    /* Αριστερή στήλη: elementInfo, comments, explanation */
     #leftPanel {
       width: 220px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Δεν εμφανίζουμε πλέον τα remarks */
-    /* Overlay για τις υποστιβάδες: τοποθετείται δεξιά από το s και κάτω από τις ομάδες */
-    #subshells {
-      position: absolute;
-      top: 160px;
-      left: 134px;
-      max-width: 420px;
-      z-index: 100;
-      border: 1px solid #333;
-      padding: 5px;
-      background: rgba(255,255,255,0.95);
-      font-size: 0.8em;
-      line-height: 1.4em;
+    /* Δεξιά στήλη: τα subshells πάνω (3 σειρές) και τα remarks κάτω */
+    #remarks {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      font-size: 0.9em;
+      text-align: center;
+      padding-left: 20px;
+    }
+    /* Στυλ για τις γραμμές των υποστιβάδων */
+    .subshell-line {
+      width: 100%;
+    }
+    .subshell-prev,
+    .subshell-next {
+      color: #333;
+    }
+    .subshell-current {
+      font-weight: bold;
     }
     /* Button panel: fixed στο κάτω δεξί μέρος */
     #buttonPanel {
@@ -84,7 +82,6 @@
       flex-direction: column;
       gap: 5px;
     }
-    /* Στυλ κουμπιών */
     button {
       background-color: #008CBA;
       color: white;
@@ -98,7 +95,7 @@
     button:hover {
       background-color: #005f75;
     }
-    /* Toggle button: το κείμενο έχει διορθωθεί ώστε όταν είναι collapsed να δείχνει "Ανάπτυξη" */
+    /* Toggle button: όταν το body είναι collapsed εμφανίζει "Ανάπτυξη", αλλιώς "Σύμπτυξη" */
     #toggleFBlock.active {
       background-color: #e68a00;
     }
@@ -135,7 +132,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view: αρχικά όλοι οι καμβάδες ξεκινούν στο left = 134px */
+    /* Full view: οι καμβάδες τοποθετούνται αρχικά στο left = 134px (εκτός της s που έχει left=50px) */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
@@ -164,9 +161,8 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάς Περιόδων -->
+  <!-- Καμβάδες περιόδων και ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
-  <!-- Καμβάδες Ομάδων -->
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
@@ -177,19 +173,17 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας πληροφοριών: 2 στήλες (χωρίς τα remarks) -->
+  <!-- Πίνακας πληροφοριών: αριστερή και δεξιά στήλη -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
       <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
       <div id="explanation" style="font-size:0.8em; margin-top:10px;"></div>
     </div>
+    <div id="remarks"></div>
   </div>
   
-  <!-- Overlay για τις υποστιβάδες -->
-  <div id="subshells"></div>
-  
-  <!-- Το div με τα κουμπιά παραμένει fixed στο κάτω δεξί μέρος -->
+  <!-- Το div με τα κουμπιά -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -580,14 +574,8 @@
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
-          document.getElementById('subshells').textContent = "";
-          // Δεν ενημερώνουμε πλέον τα remarks
-          if(document.getElementById('shells'))
-            document.getElementById('shells').textContent = "";
-          if(document.getElementById('outerShell'))
-            document.getElementById('outerShell').textContent = "";
-          document.getElementById('comments').textContent = "";
-          document.getElementById('explanation').textContent = "";
+          // Στην περίπτωση αυτή δεν ενημερώνουμε τη δεξιά στήλη
+          document.getElementById('remarks').innerHTML = "";
           return;
         }
         const element = elements.find(e => e.number === z);
@@ -597,19 +585,21 @@
         document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${z}]`;
   
+        // Εμφάνιση των υποστιβάδων με τις 3 σειρές: προηγούμενη, τρέχουσα (Bold) και επόμενη
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
-        let prevSub = prev ? `<span style="color:${getBlockColor(prev.block)};">${prev.subshells}</span>` : "";
-        let currSub = `<span style="color:${getBlockColor(element.block)};"><strong>${element.subshells}</strong></span>`;
-        let nextSub = next ? `<span style="color:${getBlockColor(next.block)};">${next.subshells}</span>` : "";
-        document.getElementById('subshells').innerHTML = prevSub + "<br>" + currSub + "<br>" + nextSub;
+        let subshellHTML = "";
+        if(prev)
+          subshellHTML += `<div class="subshell-line subshell-prev" style="color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
+        subshellHTML += `<div class="subshell-line subshell-current" style="color:${getBlockColor(element.block)}; font-weight:bold;">${element.subshells}</div>`;
+        if(next)
+          subshellHTML += `<div class="subshell-line subshell-next" style="color:${getBlockColor(next.block)};">${next.subshells}</div>`;
   
-        if(document.getElementById('shells'))
-          document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
-        if(document.getElementById('outerShell'))
-          document.getElementById('outerShell').textContent = `e- Εξωτερικής: ${element.outerShell}`;
+        let remarksHTML = element.remarks ? element.remarks : "";
+        // Στη δεξιά στήλη, τα subshells εμφανίζονται πάνω και τα remarks κάτω
+        document.getElementById('remarks').innerHTML = subshellHTML + "<br>" + remarksHTML;
   
-        document.getElementById('comments').innerHTML = `<span>${element.remarks}</span>`;
+        document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
   
         document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
       }
@@ -656,7 +646,6 @@
         if(currentZ < 122) return;
         document.body.classList.toggle('collapsed');
         let toggleBtn = document.getElementById('toggleFBlock');
-        // Όταν το body έχει την κλάση collapsed εμφανίζεται "Ανάπτυξη", αλλιώς "Σύμπτυξη"
         if(document.body.classList.contains('collapsed')){
           toggleBtn.textContent = "Ανάπτυξη";
           toggleBtn.classList.remove("active");
