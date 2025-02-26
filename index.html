@@ -352,7 +352,7 @@
     function updateBalloonPosition(element) {
       // Χρησιμοποιούμε την calculatePosition για το block του στοιχείου
       let block = element.block;
-      let pos = calculatePosition(element, block); // θέση στο σχετικό canvas
+      let pos = calculatePosition(element, block); // Η calculatePosition θα είναι διαθέσιμη παγκοσμίως
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
       let rect = canvasElem.getBoundingClientRect();
@@ -736,6 +736,9 @@
       });
   
       loadElements();
+  
+      // ★ Εξάγουμε την calculatePosition στο global scope για να είναι προσβάσιμη από updateBalloonPosition
+      window.calculatePosition = calculatePosition;
     })();
   </script>
   
