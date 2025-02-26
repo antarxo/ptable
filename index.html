@@ -349,17 +349,30 @@
     }
     
     /* --- ΣΥΜΠΛΗΡΩΣΕΙΣ ΓΙΑ ΤΗ ΛΕΙΤΟΥΡΓΙΑ "ΕΠΟΜΕΝΟ" --- */
-    // Δημιουργούμε έναν wrapper ώστε κάθε φορά που καλείται η updateBalloonPosition να αποθηκεύεται το τρέχον στοιχείο
-    var currentElement = null;
-    var originalUpdateBalloonPosition = updateBalloonPosition;
-    updateBalloonPosition = function(element) {
-      currentElement = element;
-      originalUpdateBalloonPosition(element);
+    // Ορίζουμε τη συνάρτηση updateBalloonPosition στο global scope (μέσω του window)
+    window.updateBalloonPosition = function(element) {
+      // Αποθήκευση του τρέχοντος στοιχείου για δυναμική ενημέρωση
+      window.currentElement = element;
+      let block = element.block;
+      let pos = calculatePosition(element, block); // Χρήση της ήδη υπάρχουσας calculatePosition
+      let canvasElem = document.getElementById("canvas" + block.toUpperCase());
+      if(!canvasElem) return;
+      let rect = canvasElem.getBoundingClientRect();
+      // Τοποθέτηση: 40px δεξιά και 40px κάτω από το κελί του στοιχείου
+      let offsetX = 40, offsetY = 40;
+      let newLeft = rect.left + pos.x + offsetX;
+      let newTop = rect.top + pos.y + offsetY;
+      let balloon = document.getElementById("canvasSubshells");
+      if(balloon) {
+        balloon.style.left = newLeft + "px";
+        balloon.style.top = newTop + "px";
+        // ΔΕΝ αλλάζουμε τις διαστάσεις, διατηρώντας τις τρέχουσες
+      }
     };
-    // Ενημέρωση δυναμικής θέσης του balloon σε περίπτωση αλλαγής μεγέθους/θέσης του παραθύρου
+    // Ενημέρωση του balloon κατά την αλλαγή μεγέθους του παραθύρου
     window.addEventListener("resize", function() {
-      if(currentElement) {
-        updateBalloonPosition(currentElement);
+      if(window.currentElement) {
+        window.updateBalloonPosition(window.currentElement);
       }
     });
     
@@ -370,14 +383,14 @@
       if(canvasS && canvasS_groups) {
         var sRect = canvasS.getBoundingClientRect();
         var groupsRect = canvasS_groups.getBoundingClientRect();
-        // Τοποθετούμε το balloon δεξιά του s τομέα (στο τέλος του) και κάτω από τις ομάδες
+        // Τοποθέτηση: δεξιά του s τομέα (στο τέλος του) και κάτω από τις ομάδες
         var newLeft = sRect.right;
         var newTop = groupsRect.bottom;
         var balloon = document.getElementById("canvasSubshells");
         if(balloon) {
           balloon.style.left = newLeft + "px";
           balloon.style.top = newTop + "px";
-          // ΔΕΝ αλλάζουμε το μέγεθος του καμβά, διατηρώντας τις τρέχουσες διαστάσεις
+          // Δεν επηρεάζουμε το μέγεθος του καμβά
         }
       }
     }
@@ -464,7 +477,7 @@
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                     updateInfo(candidate.number);
-                    updateBalloonPosition(candidate);
+                    window.updateBalloonPosition(candidate);
                     if(candidate.number === currentZ) {
                       flashActive = true;
                       setTimeout(() => { flashActive = false; redrawAll(); }, 200);
@@ -594,7 +607,7 @@
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                     updateInfo(candidate.number);
-                    updateBalloonPosition(candidate);
+                    window.updateBalloonPosition(candidate);
                     if(candidate.number === currentZ) {
                       flashActive = true;
                       setTimeout(() => { flashActive = false; redrawAll(); }, 200);
