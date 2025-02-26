@@ -44,7 +44,7 @@
     }
     body.collapsed #infoPanel {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;  /* Οι πληροφορίες τώρα θα είναι σε δύο στήλες: το αριστερό και το δεξιό */
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       border-radius: 8px;
@@ -57,9 +57,22 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Τα τμήματα μέσα στο infoPanel παραμένουν σταθερά */
-    #leftPanel, #middlePanel, #rightPanel {
-      padding: 5px;
+    /* Στυλ για τα κελιά του πίνακα πληροφοριών */
+    #leftPanel {
+      width: 220px; /* Σταθερό και μικρότερο πλάτος */
+    }
+    #middlePanel {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* Κεντρική στοίχιση οριζόντια και κατακόρυφα */
+      text-align: center;
+    }
+    /* Δεν θέλουμε την ετικέτα "Παρατηρήσεις" */
+    #remarks {
+      /* Αδειάζουμε τυχόν προκαθορισμένο κείμενο */
+      margin: 0;
+      padding: 0;
     }
     /* Fixed κουμπιά στην κάτω δεξιά γωνία */
     #rightPanel {
@@ -89,30 +102,17 @@
       z-index: 5;
     }
     /* Καμβάδες Ομάδων */
-    #canvasS_groups {
-      position: absolute;
-      width: 82px;
-      height: 40px;
-      background: #f0f0f0;
-      display: none;
-      z-index: 11;
-    }
-    #canvasD_groups {
-      position: absolute;
-      width: 418px;
-      height: 40px;
-      background: #f0f0f0;
-      display: none;
-      z-index: 11;
-    }
+    #canvasS_groups,
+    #canvasD_groups,
     #canvasP_groups {
       position: absolute;
-      width: 250px;
-      height: 40px;
       background: #f0f0f0;
       display: none;
       z-index: 11;
     }
+    #canvasS_groups { width: 82px; height: 40px; }
+    #canvasD_groups { width: 418px; height: 40px; }
+    #canvasP_groups { width: 250px; height: 40px; }
     /* Χρώματα blocks για τους κύριους τομείς */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
@@ -122,20 +122,15 @@
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     /* Στο full view, αρχικά οι καμβάδες d και p ξεκινούν στο left = 134px.
-       Καθώς προχωράει ο μετρητής, αρχικά μετακινείται ο canvasP και μετά, από currentZ=57 και μετά, μετακινείται και ο canvasD,
+       Με την εξέλιξη του currentZ, αρχικά μετακινείται ο canvasP και μετά (από currentZ=57) ο canvasD μετακινείται,
        ώστε τελικά να φτάσουν στο left = 722px (για d) και left = 1142px (για p). */
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων όπως στο αρχικό αρχείο, με τις επιθυμητές προσαρμογές:
-         canvasS: left = 50px,
-         canvasF: left = 154px,
-         canvasD: left = 139px (δηλαδή 5px κενό από το canvasS, αφού το canvasS έχει left = 50px και πλάτος 84px → 50+84=134px),
-         canvasP: left = 559px (δηλαδή +5px σε σχέση με την αρχική θέση 554px, ώστε να μην "καβαλλάει" ο d).
-    */
+    /* Collapsed view – θέσεις καμβάδων στοιχείων όπως πριν με τις προσθήκες */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
-    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; }
-    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; }
+    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* 5px κενό από το canvasS */
+    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; } /* +5px από την αρχική θέση 554px */
     /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
     .period-label {
       position: absolute;
@@ -176,10 +171,12 @@
       <div id="subshells"></div>
       <div id="shells"></div>
       <div id="outerShell"></div>
+      <!-- Νέο στοιχείο για το σχόλιο (remarks) με μικρότερη γραμματοσειρά -->
+      <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
     </div>
     <div id="middlePanel">
-      <div id="explanation"></div>
-      <div id="remarks"></div>
+      <!-- Σε αυτήν την περιοχή, αντί για "Παρατηρήσεις", εμφανίζονται οι 3 σειρές (προηγούμενο, τρέχον, επόμενο) της δόμησης σε υποστιβάδες -->
+      <div id="remarks" style="display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:0.9em;"></div>
     </div>
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
@@ -406,7 +403,28 @@
         }
         elements.filter(filter).forEach(e => {
           const pos = calculatePosition(e, block);
-          if(pos.x >= 0 && pos.x < p.width && pos.y >= 0 && pos.y < p.height){
+          // Αν είναι το τρέχον στοιχείο, το δείχνουμε με ιδιαίτερη εμφάνιση:
+          if(e.number === currentZ) {
+            // Καθορισμός χρώματος για τον αριθμό, ανάλογα με το block
+            let numberColor = "";
+            switch(e.block) {
+              case "s": numberColor = "red"; break;
+              case "p": numberColor = "darkgreen"; break;
+              case "d": numberColor = "darkblue"; break;
+              case "f": numberColor = "orange"; break;
+              default: numberColor = "black";
+            }
+            p.fill(numberColor);
+            p.textSize(16);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(e.number.toString(), pos.x + 20, pos.y + 20);
+            // "Ζωντανεύει" το περίγραμμα
+            p.noFill();
+            p.stroke(numberColor);
+            p.strokeWeight(3);
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.strokeWeight(1);
+          } else {
             p.fill(BLOCK_COLORS[block]);
             p.rect(pos.x, pos.y, 40, 40, 5);
             p.fill(0);
@@ -467,19 +485,15 @@
             shiftP = 0;
             shiftD = 0;
           } else if(currentZ >= 21 && currentZ <= 30){
-            // Μετακινείται μόνο ο canvasP
             shiftP = 42 * (currentZ - 20);
             shiftD = 0;
           } else if(currentZ >= 31 && currentZ <= 56){
-            // Ο canvasP παραμένει σταθερός στο 134 + 420 = 554, ενώ ο canvasD δεν έχει ξεκινήσει
             shiftP = 42 * 10;
             shiftD = 0;
           } else if(currentZ >= 57 && currentZ <= 70){
-            // Από εδώ και μετά, μετακινείται και ο canvasD, μαζί με τον canvasP
             shiftP = 42 * 10 + 42 * (currentZ - 56);
             shiftD = 42 * (currentZ - 56);
           } else {
-            // Τελικές θέσεις: canvasD φτάνει στο 134 + 42*14 = 722, canvasP στο 134 + 42*10 + 42*14 = 1142
             shiftP = 42 * 10 + 42 * 14;
             shiftD = 42 * 14;
           }
@@ -498,7 +512,7 @@
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          /* Μετατοπισμός των groups καμβάδων: top 58px → 108px (δηλαδή +50px) */
+          /* Μετατοπισμός των groups: top 58px → 108px (δηλαδή +50px) */
           document.getElementById('canvasS_groups').style.top = "108px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -525,19 +539,43 @@
           document.getElementById('subshells').textContent = "";
           document.getElementById('shells').textContent = "";
           document.getElementById('outerShell').textContent = "";
-          document.getElementById('explanation').textContent = "";
+          document.getElementById('comments').textContent = "";
           document.getElementById('remarks').textContent = "";
           return;
         }
         const element = elements.find(e => e.number === z);
         if(!element) return;
+  
+        // Επιλογή χρώματος για το σύμβολο βάσει του block
+        let symbolColor = "";
+        switch(element.block) {
+          case "s": symbolColor = "red"; break;
+          case "p": symbolColor = "darkgreen"; break;
+          case "d": symbolColor = "darkblue"; break;
+          case "f": symbolColor = "orange"; break;
+          default: symbolColor = "black";
+        }
+  
+        // Εμφάνιση βασικών στοιχείων με το σύμβολο σε μεγαλύτερη, έντονη γραφή και στο επιθυμητό χρώμα
         document.getElementById('elementInfo').innerHTML =
-          `<strong>${element.name} (${element.symbol})</strong> [Z=${z}]`;
-        document.getElementById('subshells').textContent = `Υποστιβάδες: ${element.subshells}`;
+          `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${z}]`;
+  
+        // Εμφάνιση 3 σειρών στη θέση των υποστιβάδων:
+        let prev = elements.find(e => e.number === (z - 1));
+        let next = elements.find(e => e.number === (z + 1));
+        document.getElementById('subshells').innerHTML =
+          (prev ? prev.subshells : "") + "<br>" +
+          "<strong>" + element.subshells + "</strong>" + "<br>" +
+          (next ? next.subshells : "");
+  
         document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
         document.getElementById('outerShell').textContent = `Εξωτερική: ${element.outerShell}`;
-        document.getElementById('explanation').textContent = `Επεξήγηση: ${element.explanation}`;
-        document.getElementById('remarks').textContent = `Παρατηρήσεις: ${element.remarks}`;
+  
+        // Μετακίνηση του σχόλιου (remarks) στο αριστερό κελί, με μικρότερη γραμματοσειρά
+        document.getElementById('comments').innerHTML = `<span>${element.remarks}</span>`;
+  
+        // Στο middlePanel, αντί για "Παρατηρήσεις", μπορούμε να το κεντράρουμε (χωρίς ετικέτα)
+        document.getElementById('remarks').textContent = element.explanation;
       }
   
       document.getElementById('nextElement').addEventListener('click', () => {
