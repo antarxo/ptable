@@ -419,7 +419,8 @@
       };
   
       let elements = [];
-      let currentZ = 0;
+      // Αρχική τιμή από 3 ώστε να εμφανίζεται το στοιχείο με αριθμό 3 (σύμφωνα με το μήνυμα στο JSON)
+      let currentZ = 3;
       let flashActive = false;
   
       function updateToggleButton() {
@@ -430,6 +431,7 @@
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
+          // Τα στοιχεία φορτώθηκαν, ξεκινάμε την αρχικοποίηση
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
