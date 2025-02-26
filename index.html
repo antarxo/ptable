@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel: δύο στήλες: αριστερή (elementInfo, comments, explanation) και δεξιά (subshells + remarks) */
+    /* InfoPanel: δύο στήλες: αριστερή (elementInfo, comments, explanation) και δεξιά (remarks) */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -44,7 +44,7 @@
       top: 100px;
       width: calc(100vw - 920px);
     }
-    /* Αριστερή στήλη: elementInfo, comments, explanation */
+    /* Αριστερή στήλη */
     #leftPanel {
       width: 220px;
       display: flex;
@@ -73,16 +73,19 @@
     .subshell-current {
       font-weight: bold;
     }
-    /* Νέος καμβάς για τις υποστιβάδες */
+    /* Νέος καμβάς για τις υποστιβάδες – εμφάνιση τύπου balloon */
     #canvasSubshells {
       position: absolute;
-      top: 300px;
-      left: 134px;
-      width: 300px;
-      height: 90px;
-      z-index: 100;
+      /* Η αρχική θέση θα ενημερωθεί δυναμικά */
       background: rgba(255,255,255,0.95);
       border: 1px solid #333;
+      border-radius: 10px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+      padding: 10px;
+      /* Αρχικές διαστάσεις */
+      width: 300px;
+      height: 90px;
+      z-index: 150;
     }
     /* Button panel: fixed στο κάτω δεξί μέρος */
     #buttonPanel {
@@ -106,7 +109,7 @@
     button:hover {
       background-color: #005f75;
     }
-    /* Toggle button: όταν το body είναι collapsed εμφανίζει "Ανάπτυξη", αλλιώς "Σύμπτυξη" */
+    /* Toggle button */
     #toggleFBlock.active {
       background-color: #e68a00;
     }
@@ -143,7 +146,7 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view: οι καμβάδες τοποθετούνται αρχικά στο left = 134px (εκτός της s που έχει left=50px) */
+    /* Full view: τοποθετήσεις καμβάδων */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
@@ -194,7 +197,7 @@
     <div id="remarks"></div>
   </div>
   
-  <!-- Νέος καμβάς για τον πίνακα υποστιβάδων -->
+  <!-- Νέος καμβάς για τις υποστιβάδες (balloon) -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Το div με τα κουμπιά -->
@@ -324,7 +327,7 @@
       });
       window.subshellsInitialized = true;
     }
-    // Συνάρτηση για σχεδίαση των υποστιβάδων στον καμβά υποστιβάδων
+    // Συνάρτηση σχεδίασης των υποστιβάδων στο canvasSubshells (ως balloon)
     function drawSubshells(subshellsData) {
       if(!subshellsP) return;
       subshellsP.clear();
@@ -343,6 +346,24 @@
       if(subshellsData.next) {
         subshellsP.fill(0);
         subshellsP.text(subshellsData.next, subshellsP.width/2, 5*subshellsP.height/6);
+      }
+    }
+    // Νέα συνάρτηση για ενημέρωση θέσης του "balloon" ανάλογα με το στοιχείο
+    function updateBalloonPosition(element) {
+      // Χρησιμοποιούμε την calculatePosition για το block του στοιχείου
+      let block = element.block;
+      let pos = calculatePosition(element, block); // θέση στο σχετικό canvas
+      let canvasElem = document.getElementById("canvas" + block.toUpperCase());
+      if(!canvasElem) return;
+      let rect = canvasElem.getBoundingClientRect();
+      // Προσαρμόζουμε offset ώστε το balloon να εμφανίζεται δεξιά και κάτω από το κελί του στοιχείου
+      let offsetX = 40, offsetY = 40;
+      let newLeft = rect.left + pos.x + offsetX;
+      let newTop = rect.top + pos.y + offsetY;
+      let balloon = document.getElementById("canvasSubshells");
+      if(balloon) {
+        balloon.style.left = newLeft + "px";
+        balloon.style.top = newTop + "px";
       }
     }
   </script>
@@ -471,7 +492,7 @@
           filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
         }
         elements.filter(filter).forEach(e => {
-          const pos = calculatePosition(e, block);
+          const pos = calculatePosition(e, e.block);
           let displayNumber = e.number;
           if(e.number === 119) displayNumber = 1;
           if(e.number === 120) displayNumber = 2;
@@ -501,7 +522,7 @@
             }
             p.strokeWeight(1);
           } else {
-            p.fill(BLOCK_COLORS[block]);
+            p.fill(BLOCK_COLORS[ e.block]);
             p.rect(pos.x, pos.y, 40, 40, 5);
             p.fill(0);
             p.textSize(e.number > 99 ? 10 : 12);
@@ -551,7 +572,7 @@
                   }
                 });
                 for(let candidate of candidates) {
-                  let pos = calculatePosition(candidate, block);
+                  let pos = calculatePosition(candidate, candidate.block);
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                     updateInfo(candidate.number);
@@ -624,7 +645,6 @@
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
-          // Στην περίπτωση αυτή δεν ενημερώνουμε ούτε τον καμβά υποστιβάδων ούτε τον πίνακα δεξιά
           if(subshellsP) subshellsP.clear();
           document.getElementById('remarks').innerHTML = "";
           return;
@@ -636,7 +656,7 @@
         document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${z}]`;
   
-        // Ετοιμάζουμε τα δεδομένα για τις υποστιβάδες: 3 σειρές (προηγούμενη, τρέχουσα (Bold), επόμενη)
+        // Ετοιμάζουμε τα δεδομένα για τις υποστιβάδες: προηγούμενη, τρέχουσα (Bold), επόμενη
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         let subshellsData = {
@@ -646,8 +666,10 @@
         };
         // Σχεδιάζουμε τις υποστιβάδες στον νέο καμβά
         drawSubshells(subshellsData);
+        // Ενημερώνουμε τη θέση του "balloon" ανάλογα με τη θέση του στοιχείου
+        updateBalloonPosition(element);
   
-        // Εμφάνιση στον πίνακα πληροφοριών δεξιά
+        // Εμφάνιση στον πίνακα πληροφοριών (δεξιά) των υποστιβάδων και των remarks
         let subshellsHTML = "";
         if(prev)
           subshellsHTML += `<div class="subshell-line subshell-prev" style="color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
@@ -658,7 +680,6 @@
         document.getElementById('remarks').innerHTML = subshellsHTML + "<br>" + remarksHTML;
   
         document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
-  
         document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
       }
   
