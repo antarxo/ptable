@@ -348,58 +348,40 @@
       }
     }
     
-    // --- ΝΕΕΣ ΣΥΜΠΛΗΡΩΣΕΙΣ ΓΙΑ ΤΗ ΛΕΙΤΟΥΡΓΙΑ "ΕΠΟΜΕΝΟ" ---
-    var currentElement = null; // Αποθήκευση τρέχοντος επιλεγμένου στοιχείου
-    function updateBalloonPosition(element) {
-      currentElement = element; // Αποθήκευση για δυναμική ενημέρωση
-      let block = element.block;
-      let pos = calculatePosition(element, block); // Υπολογισμός θέσης στο σχετικό canvas
-      let canvasElem = document.getElementById("canvas" + block.toUpperCase());
-      if(!canvasElem) return;
-      let rect = canvasElem.getBoundingClientRect();
-      // Τοποθέτηση: 40px δεξιά και 40px κάτω από το κελί του στοιχείου
-      let offsetX = 40, offsetY = 40;
-      let newLeft = rect.left + pos.x + offsetX;
-      let newTop = rect.top + pos.y + offsetY;
-      let balloon = document.getElementById("canvasSubshells");
-      if(balloon) {
-        balloon.style.left = newLeft + "px";
-        balloon.style.top = newTop + "px";
-        // Διατήρηση τρέχοντος μεγέθους
-        balloon.style.width = balloon.offsetWidth + "px";
-        balloon.style.height = balloon.offsetHeight + "px";
-      }
-    }
-    // Ενημέρωση του balloon κατά την αλλαγή μεγέθους του παραθύρου
+    /* --- ΣΥΜΠΛΗΡΩΣΕΙΣ ΓΙΑ ΤΗ ΛΕΙΤΟΥΡΓΙΑ "ΕΠΟΜΕΝΟ" --- */
+    // Δημιουργούμε έναν wrapper ώστε κάθε φορά που καλείται η updateBalloonPosition να αποθηκεύεται το τρέχον στοιχείο
+    var currentElement = null;
+    var originalUpdateBalloonPosition = updateBalloonPosition;
+    updateBalloonPosition = function(element) {
+      currentElement = element;
+      originalUpdateBalloonPosition(element);
+    };
+    // Ενημέρωση δυναμικής θέσης του balloon σε περίπτωση αλλαγής μεγέθους/θέσης του παραθύρου
     window.addEventListener("resize", function() {
       if(currentElement) {
         updateBalloonPosition(currentElement);
       }
     });
     
-    // --- ΝΕΑ ΣΥΝΑΡΤΗΣΗ ΓΙΑ ΤΗ ΛΕΙΤΟΥΡΓΙΑ "ΣΥΜΠΛΗΡΩΣΕ" ---
+    /* --- ΣΥΜΠΛΗΡΩΣΗ ΓΙΑ ΤΗ ΛΕΙΤΟΥΡΓΙΑ "ΣΥΜΠλήρωσε" --- */
     function updateBalloonPositionFill() {
-      let canvasS = document.getElementById("canvasS");
-      let canvasS_groups = document.getElementById("canvasS_groups");
+      var canvasS = document.getElementById("canvasS");
+      var canvasS_groups = document.getElementById("canvasS_groups");
       if(canvasS && canvasS_groups) {
-        let sRect = canvasS.getBoundingClientRect();
-        let groupsRect = canvasS_groups.getBoundingClientRect();
-        // Τοποθέτηση: δεξιά του s τομέα και κάτω από τις ομάδες
-        let newLeft = sRect.right;
-        let newTop = groupsRect.bottom;
-        let balloon = document.getElementById("canvasSubshells");
+        var sRect = canvasS.getBoundingClientRect();
+        var groupsRect = canvasS_groups.getBoundingClientRect();
+        // Τοποθετούμε το balloon δεξιά του s τομέα (στο τέλος του) και κάτω από τις ομάδες
+        var newLeft = sRect.right;
+        var newTop = groupsRect.bottom;
+        var balloon = document.getElementById("canvasSubshells");
         if(balloon) {
           balloon.style.left = newLeft + "px";
           balloon.style.top = newTop + "px";
-          // Διατήρηση τρέχοντος μεγέθους
-          balloon.style.width = balloon.offsetWidth + "px";
-          balloon.style.height = balloon.offsetHeight + "px";
+          // ΔΕΝ αλλάζουμε το μέγεθος του καμβά, διατηρώντας τις τρέχουσες διαστάσεις
         }
       }
     }
-    document.getElementById("fillAll").addEventListener("click", function() {
-      updateBalloonPositionFill();
-    });
+    document.getElementById("fillAll").addEventListener("click", updateBalloonPositionFill);
   </script>
   
   <script>
@@ -419,7 +401,7 @@
       };
   
       let elements = [];
-      // Ορίζουμε currentZ = 3 ώστε να ξεκινάμε από το στοιχείο με αριθμό 3
+      // Ορίζουμε αρχικά currentZ = 3 ώστε να εμφανίζεται το στοιχείο με αριθμό 3
       let currentZ = 3;
       let flashActive = false;
   
@@ -431,7 +413,7 @@
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
-          // Αρχικοποίηση καμβάδων και εμφάνιση πληροφοριών
+          // Αρχικοποίηση καμβάδων και ενημέρωση στοιχείων
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
@@ -626,7 +608,6 @@
         });
       }
   
-      // Ενημέρωση πληροφοριών στο infoPanel με βάση το στοιχείο
       function updateInfo(number) {
         let infoPanel = document.getElementById("elementInfo");
         let element = elements.find(e => e.number === number);
@@ -637,7 +618,7 @@
         }
       }
   
-      // --- Event listeners για τα κουμπιά ---
+      // Event listeners για τα κουμπιά "Επόμενο" και "Reset"
       document.getElementById("nextElement").addEventListener("click", function() {
         currentZ++;
         updateInfo(currentZ);
