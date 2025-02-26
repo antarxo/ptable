@@ -6,9 +6,8 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
     :root {
-      --rightPanelWidth: 150px; /* Αρχική προεπιλεγμένη τιμή, ενημερώνεται δυναμικά */
+      --rightPanelWidth: 150px;
     }
-    /* Βασικές ρυθμίσεις */
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
@@ -24,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* infoPanel: Full view & Collapsed view – διατηρείται η αρχική μορφοποίηση */
+    /* InfoPanel styling */
     body:not(.collapsed) #infoPanel {
       display: flex;
       flex-direction: row;
@@ -37,15 +36,13 @@
       position: absolute;
       left: 20px;
       top: 500px;
-      /* Αφαιρούμε δυναμικά το πλάτος των fixed κουμπιών και 120px επιπλέον */
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Σε collapsed mode διατηρούμε το infoPanel ως 2 στήλες */
     body.collapsed #infoPanel {
       display: flex;
-      flex-direction: row;
+      flex-direction: row; /* Δύο στήλες */
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       border-radius: 8px;
@@ -58,11 +55,9 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Στυλ για τα κελιά του infoPanel */
     #leftPanel {
-      width: 220px; /* Σταθερό και μικρότερο πλάτος */
+      width: 220px;
     }
-    /* Αναδιαμόρφωση του middlePanel: τα remarks κεντραρισμένα και το explanation στο κάτω μέρος με μικρότερη γραμματοσειρά */
     #middlePanel {
       flex-grow: 1;
       display: flex;
@@ -79,35 +74,43 @@
       text-align: center;
       margin-top: 10px;
     }
-    /* Fixed κουμπιά στην κάτω δεξιά γωνία */
-    #rightPanel {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+    /* Button styling */
+    button {
+      background-color: #008CBA;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s;
     }
-    /* Το div #subshells εμφανίζεται σε ξεχωριστό πλαίσιο στο αριστερό infoPanel,
-       τοποθετημένο σε σχέση με την κορυφή της σελίδας (top:300px, left:120px) και με font-size:1.1em */
+    button:hover {
+      background-color: #005f75;
+    }
+    /* Toggle button: θα αλλάζει μεταξύ "Ανάπτυξη" και "Σύμπτυξη" με εναλλασσόμενο χρώμα */
+    #toggleFBlock.active {
+      background-color: #e68a00;
+    }
+    /* Το div #subshells ως overlay, τοποθετημένο μετά τον s τομέα, κάτω από τα ονόματα στιβάδων */
     #subshells {
       position: absolute;
       top: 300px;
-      left: 120px;
+      left: 134px; /* Ακριβώς μετά τον s τομέα */
+      z-index: 100;
       border: 1px solid #333;
       padding: 5px;
-      background: #fff;
+      background: rgba(255,255,255,0.95);
       font-size: 1.1em;
       line-height: 1.4em;
     }
-    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) */
+    /* Καμβάδες */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: τώρα τα labels γράφονται στη μορφή K(2), L(8), ... */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -118,7 +121,6 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες Ομάδων */
     #canvasS_groups,
     #canvasD_groups,
     #canvasP_groups {
@@ -130,23 +132,21 @@
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Χρώματα blocks για τους τομείς */
+    /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – θέσεις για τους καμβάδες στοιχείων */
+    /* Full view θέσεις */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
-    /* Στο full view, αρχικά οι καμβάδες d και p ξεκινούν στο 134px και μετακινούνται δυναμικά */
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων */
+    /* Collapsed view θέσεις */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
-    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* 5px κενό από το canvasS */
-    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; } /* +5px από την αρχική θέση 554px */
-    /* (Οι ετικέτες περιόδων παραμένουν ως έχουν) */
+    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; }
+    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; }
     .period-label {
       position: absolute;
       left: 15px;
@@ -183,7 +183,7 @@
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
-      <!-- Το div subshells εμφανίζεται ως ξεχωριστό πλαίσιο -->
+      <!-- Το overlay για τις υποστιβάδες -->
       <div id="subshells"></div>
       <div id="shells"></div>
       <div id="outerShell"></div>
@@ -196,14 +196,14 @@
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
       <button id="fillAll">Συμπλήρωσε</button>
-      <button id="toggleFBlock">Εναλλαγή f-στοιχείων</button>
+      <button id="toggleFBlock">Ανάπτυξη</button>
       <button id="reset">Reset</button>
     </div>
   </div>
   
   <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
   <script>
-    // Συνάρτηση επιστροφής χρώματος βάσει block
+    // Συνάρτηση για επιλογή χρώματος βάσει block
     function getBlockColor(b) {
       switch(b) {
         case "s": return "red";
@@ -213,8 +213,7 @@
         default: return "black";
       }
     }
-  
-    // Global: Καμβάς Περιόδων - ενημερωμένα labels
+    // Init καμβάς περιόδων με ενημερωμένα labels (π.χ., K(2), L(8), …)
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -237,10 +236,9 @@
       });
       window.periodsInitialized = true;
     }
-    // Global: Καμβάδες Ομάδων – δύο σειρές (πάνω: νέα, κάτω: παλιά)
+    // Init καμβάδες ομάδων (όπως πριν)
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Για s:
       new p5(p => {
         p.setup = () => {
           let canvas = p.createCanvas(82, 40);
@@ -257,7 +255,6 @@
           p.text("IIA", 62, 32);
         };
       });
-      // Για d:
       new p5(p => {
         p.setup = () => {
           let canvas = p.createCanvas(418, 40);
@@ -284,7 +281,6 @@
           }
         };
       });
-      // Για p:
       new p5(p => {
         p.setup = () => {
           let canvas = p.createCanvas(250, 40);
@@ -315,7 +311,7 @@
     }
   </script>
   
-  <!-- Κύριος κώδικας (IIFE) -->
+  <!-- Κύριος κώδικας -->
   <script>
     (function() {
       const BLOCK_COLORS = {
@@ -333,11 +329,7 @@
   
       let elements = [];
       let currentZ = 0;
-      /* Μετρητής:
-         120: full view χωρίς ομάδες,
-         121: εμφάνιση μόνο των παλαιών ονομάτων ομάδων,
-         122: εμφάνιση και των δύο σειρών (πάνω: νέα, κάτω: παλιά).
-      */
+      let flashActive = false;  // Για το εφέ του τρέχοντος στοιχείου
   
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 122);
@@ -386,6 +378,10 @@
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                     updateInfo(candidate.number);
+                    if(candidate.number === currentZ) {
+                      flashActive = true;
+                      setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                    }
                     break;
                   }
                 }
@@ -439,6 +435,13 @@
             p.strokeWeight(4);
             p.strokeJoin(p.ROUND);
             p.rect(pos.x, pos.y, 40, 40, 5);
+            // Εφέ flash: αν flashActive, προσθέτουμε σκιά
+            if(flashActive) {
+              p.drawingContext.shadowBlur = 10;
+              p.drawingContext.shadowColor = "yellow";
+              p.rect(pos.x, pos.y, 40, 40, 5);
+              p.drawingContext.shadowBlur = 0;
+            }
             p.strokeWeight(1);
           } else {
             p.fill(BLOCK_COLORS[block]);
@@ -485,6 +488,10 @@
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                     updateInfo(candidate.number);
+                    if(candidate.number === currentZ) {
+                      flashActive = true;
+                      setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                    }
                     break;
                   }
                 }
@@ -561,12 +568,11 @@
         const element = elements.find(e => e.number === z);
         if(!element) return;
   
-        // Εμφάνιση του στοιχείου με το σύμβολο σε μεγαλύτερη, έντονη γραφή και με το χρώμα του τομέα
         let symbolColor = getBlockColor(element.block);
         document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${z}]`;
   
-        // Εμφάνιση στο div subshells ως ξεχωριστό πλαίσιο, με 3 σειρές: προηγούμενο, τρέχον (έντονο) και επόμενο, με τα χρώματα του κάθε τομέα
+        // Overlay για τις υποστιβάδες (3 σειρές: προηγούμενο, τρέχον με έντονη γραφή, επόμενο)
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         let prevSub = prev ? `<span style="color:${getBlockColor(prev.block)};">${prev.subshells}</span>` : "";
@@ -575,13 +581,10 @@
         document.getElementById('subshells').innerHTML = prevSub + "<br>" + currSub + "<br>" + nextSub;
   
         document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
-        // Ενημέρωση για την εξωτερική: τώρα ως "e- Εξωτερικής:" ακολουθούμενο από την πληροφορία
         document.getElementById('outerShell').textContent = `e- Εξωτερικής: ${element.outerShell}`;
-  
-        // Μετακίνηση του σχόλιου στο leftPanel
         document.getElementById('comments').innerHTML = `<span>${element.remarks}</span>`;
   
-        // Στο middlePanel, τα remarks εμφανίζονται κεντραρισμένα και το explanation στο κάτω μέρος (με μικρότερη γραμματοσειρά)
+        // Middle panel: remarks (πρώτη γραμμή) και explanation (κάτω)
         document.getElementById('remarks').textContent = element.explanation ? element.explanation.split("\n")[0] : "";
         let expParts = element.explanation ? element.explanation.split("\n").slice(1).join(" ") : "";
         document.getElementById('explanation').textContent = expParts;
@@ -597,9 +600,9 @@
         } else if(currentZ === 119){
           currentZ = 120;
         } else if(currentZ === 120){
-          currentZ = 121;  // πρώτα εμφανίζονται τα παλιά ονόματα ομάδων
+          currentZ = 121;
         } else if(currentZ === 121){
-          currentZ = 122;  // μετά εμφανίζονται και οι νέες αριθμήσεις (και old)
+          currentZ = 122;
         } else {
           currentZ++;
         }
@@ -628,6 +631,15 @@
       document.getElementById('toggleFBlock').addEventListener('click', () => {
         if(currentZ < 122) return;
         document.body.classList.toggle('collapsed');
+        // Εναλλαγή κειμένου και χρώματος στο κουμπί
+        let toggleBtn = document.getElementById('toggleFBlock');
+        if(document.body.classList.contains('collapsed')){
+          toggleBtn.textContent = "Σύμπτυξη";
+          toggleBtn.classList.add("active");
+        } else {
+          toggleBtn.textContent = "Ανάπτυξη";
+          toggleBtn.classList.remove("active");
+        }
         redrawAll();
       });
   
@@ -635,7 +647,6 @@
     })();
   </script>
   
-  <!-- Script για δυναμικό υπολογισμό του πλάτους των fixed κουμπιών -->
   <script>
     function updateRightPanelWidth() {
       const rp = document.getElementById('rightPanel');
