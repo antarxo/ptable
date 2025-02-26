@@ -419,7 +419,7 @@
       };
   
       let elements = [];
-      // Αρχική τιμή από 3 ώστε να εμφανίζεται το στοιχείο με αριθμό 3 (σύμφωνα με το μήνυμα στο JSON)
+      // Ορίζουμε currentZ = 3 ώστε να ξεκινάμε από το στοιχείο με αριθμό 3
       let currentZ = 3;
       let flashActive = false;
   
@@ -431,7 +431,7 @@
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
-          // Τα στοιχεία φορτώθηκαν, ξεκινάμε την αρχικοποίηση
+          // Αρχικοποίηση καμβάδων και εμφάνιση πληροφοριών
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
@@ -626,10 +626,29 @@
         });
       }
   
+      // Ενημέρωση πληροφοριών στο infoPanel με βάση το στοιχείο
       function updateInfo(number) {
-        // Ενημέρωση πληροφοριών στο infoPanel.
-        // Εισάγετε εδώ τον υπάρχοντα κώδικα ενημέρωσης αν υπάρχει.
+        let infoPanel = document.getElementById("elementInfo");
+        let element = elements.find(e => e.number === number);
+        if(element) {
+          infoPanel.innerHTML = `<h3>${element.symbol} - ${element.name}</h3>
+            <p>${element.explanation}</p>
+            <p><em>${element.subshells}</em></p>`;
+        }
       }
+  
+      // --- Event listeners για τα κουμπιά ---
+      document.getElementById("nextElement").addEventListener("click", function() {
+        currentZ++;
+        updateInfo(currentZ);
+        redrawAll();
+      });
+  
+      document.getElementById("reset").addEventListener("click", function() {
+        currentZ = 3;
+        updateInfo(currentZ);
+        redrawAll();
+      });
   
       // Εκκίνηση φόρτωσης στοιχείων και αρχικοποίησης καμβάδων
       loadElements();
