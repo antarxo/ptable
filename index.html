@@ -42,9 +42,10 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
+    /* Σε collapsed mode διατηρούμε το infoPanel ως 2 στήλες */
     body.collapsed #infoPanel {
       display: flex;
-      flex-direction: row;  /* Οι πληροφορίες τώρα θα είναι σε δύο στήλες: το αριστερό και το δεξιό */
+      flex-direction: row;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       border-radius: 8px;
@@ -57,22 +58,26 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Στυλ για τα κελιά του πίνακα πληροφοριών */
+    /* Στυλ για τα κελιά του infoPanel */
     #leftPanel {
       width: 220px; /* Σταθερό και μικρότερο πλάτος */
     }
+    /* Αναδιαμορφώνουμε το middlePanel: πάνω τα remarks κεντραρισμένα και κάτω το explanation με μικρότερη γραμματοσειρά */
     #middlePanel {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
-      justify-content: center; /* Κεντρική στοίχιση οριζόντια και κατακόρυφα */
+      justify-content: space-between;
+      align-items: center;
+    }
+    #remarks {
+      font-size: 1em;
       text-align: center;
     }
-    /* Δεν θέλουμε την ετικέτα "Παρατηρήσεις" */
-    #remarks {
-      /* Αδειάζουμε τυχόν προκαθορισμένο κείμενο */
-      margin: 0;
-      padding: 0;
+    #explanation {
+      font-size: 0.8em;
+      text-align: center;
+      margin-top: 10px;
     }
     /* Fixed κουμπιά στην κάτω δεξιά γωνία */
     #rightPanel {
@@ -83,14 +88,25 @@
       flex-direction: column;
       gap: 5px;
     }
-    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) έχουν εφέ "υπερυψωμένων" */
+    /* Το div subshells εμφανίζεται σε ξεχωριστό πλαίσιο στη θέση top:300, left:120 */
+    #subshells {
+      position: absolute;
+      top: 300px;
+      left: 120px;
+      border: 1px solid #333;
+      padding: 5px;
+      background: #fff;
+      font-size: 1.2em;
+      line-height: 1.4em;
+    }
+    /* Όλοι οι καμβάδες (στοιχείων, περιόδων, ομάδων) */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: μετατοπισμένος κατά 50px (top από 100px σε 150px) */
+    /* Καμβάς Περιόδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -113,25 +129,23 @@
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Χρώματα blocks για τους κύριους τομείς */
+    /* Χρώματα blocks για τους τομείς */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view – αρχικές θέσεις για τους καμβάδες στοιχείων */
+    /* Full view – θέσεις για τους καμβάδες στοιχείων */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
-    /* Στο full view, αρχικά οι καμβάδες d και p ξεκινούν στο left = 134px.
-       Με την εξέλιξη του currentZ, αρχικά μετακινείται ο canvasP και μετά (από currentZ=57) ο canvasD μετακινείται,
-       ώστε τελικά να φτάσουν στο left = 722px (για d) και left = 1142px (για p). */
+    /* Στο full view, αρχικά οι καμβάδες d και p ξεκινούν στο 134px και μετακινούνται δυναμικά */
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view – θέσεις καμβάδων στοιχείων όπως πριν με τις προσθήκες */
+    /* Collapsed view – θέσεις καμβάδων */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
     .collapsed #canvasD { top: 150px; left: 139px; width: 420px; } /* 5px κενό από το canvasS */
     .collapsed #canvasP { top: 150px; left: 559px; width: 252px; } /* +5px από την αρχική θέση 554px */
-    /* (Οι παλαιές ετικέτες περιόδων παραμένουν όπως ήταν) */
+    /* (Οι ετικέτες περιόδων παραμένουν ως έχουν) */
     .period-label {
       position: absolute;
       left: 15px;
@@ -168,15 +182,16 @@
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
+      <!-- Το div subshells εμφανίζεται ως ξεχωριστό πλαίσιο -->
       <div id="subshells"></div>
       <div id="shells"></div>
       <div id="outerShell"></div>
-      <!-- Νέο στοιχείο για το σχόλιο (remarks) με μικρότερη γραμματοσειρά -->
+      <!-- Comments μετακινείται επίσης στο αριστερό κελί -->
       <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
     </div>
     <div id="middlePanel">
-      <!-- Σε αυτήν την περιοχή, αντί για "Παρατηρήσεις", εμφανίζονται οι 3 σειρές (προηγούμενο, τρέχον, επόμενο) της δόμησης σε υποστιβάδες -->
-      <div id="remarks" style="display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:0.9em;"></div>
+      <div id="remarks" style="text-align:center;"></div>
+      <div id="explanation" style="text-align:center; margin-top:10px;"></div>
     </div>
     <div id="rightPanel">
       <button id="nextElement">Επόμενο</button>
@@ -188,6 +203,17 @@
   
   <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
   <script>
+    // Συνάρτηση επιστροφής χρώματος βάσει block
+    function getBlockColor(b) {
+      switch(b) {
+        case "s": return "red";
+        case "p": return "darkgreen";
+        case "d": return "darkblue";
+        case "f": return "orange";
+        default: return "black";
+      }
+    }
+  
     // Global: Καμβάς Περιόδων
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
@@ -403,25 +429,18 @@
         }
         elements.filter(filter).forEach(e => {
           const pos = calculatePosition(e, block);
-          // Αν είναι το τρέχον στοιχείο, το δείχνουμε με ιδιαίτερη εμφάνιση:
           if(e.number === currentZ) {
-            // Καθορισμός χρώματος για τον αριθμό, ανάλογα με το block
-            let numberColor = "";
-            switch(e.block) {
-              case "s": numberColor = "red"; break;
-              case "p": numberColor = "darkgreen"; break;
-              case "d": numberColor = "darkblue"; break;
-              case "f": numberColor = "orange"; break;
-              default: numberColor = "black";
-            }
+            // Εάν είναι το τρέχον στοιχείο, εμφανίζουμε τον αριθμό με μεγαλύτερη γραμματοσειρά (16px)
+            // και με stroke "ζωντανό": strokeWeight 4 και strokeJoin ROUND
+            let numberColor = getBlockColor(e.block);
             p.fill(numberColor);
             p.textSize(16);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(e.number.toString(), pos.x + 20, pos.y + 20);
-            // "Ζωντανεύει" το περίγραμμα
             p.noFill();
             p.stroke(numberColor);
-            p.strokeWeight(3);
+            p.strokeWeight(4);
+            p.strokeJoin(p.ROUND);
             p.rect(pos.x, pos.y, 40, 40, 5);
             p.strokeWeight(1);
           } else {
@@ -477,7 +496,6 @@
           });
         });
         if(!document.body.classList.contains('collapsed')){
-          // Στο full view, οι καμβάδες f, d, p ξεκινούν όλοι από 134px.
           let base = 134;
           let shiftP = 0;
           let shiftD = 0;
@@ -512,7 +530,6 @@
           document.getElementById('canvasS_groups').style.display = "block";
           document.getElementById('canvasD_groups').style.display = "block";
           document.getElementById('canvasP_groups').style.display = "block";
-          /* Μετατοπισμός των groups: top 58px → 108px (δηλαδή +50px) */
           document.getElementById('canvasS_groups').style.top = "108px";
           document.getElementById('canvasS_groups').style.left = "50px";
           let dLeft = document.getElementById('canvasD').style.left;
@@ -541,41 +558,36 @@
           document.getElementById('outerShell').textContent = "";
           document.getElementById('comments').textContent = "";
           document.getElementById('remarks').textContent = "";
+          document.getElementById('explanation').textContent = "";
           return;
         }
         const element = elements.find(e => e.number === z);
         if(!element) return;
   
-        // Επιλογή χρώματος για το σύμβολο βάσει του block
-        let symbolColor = "";
-        switch(element.block) {
-          case "s": symbolColor = "red"; break;
-          case "p": symbolColor = "darkgreen"; break;
-          case "d": symbolColor = "darkblue"; break;
-          case "f": symbolColor = "orange"; break;
-          default: symbolColor = "black";
-        }
-  
-        // Εμφάνιση βασικών στοιχείων με το σύμβολο σε μεγαλύτερη, έντονη γραφή και στο επιθυμητό χρώμα
+        // Εμφάνιση του στοιχείου με το σύμβολο σε μεγαλύτερη, έντονη γραφή και με το χρώμα του τομέα
+        let symbolColor = getBlockColor(element.block);
         document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${z}]`;
   
-        // Εμφάνιση 3 σειρών στη θέση των υποστιβάδων:
+        // Εμφάνιση στο div subshells σε ξεχωριστό πλαίσιο (3 σειρές)
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
-        document.getElementById('subshells').innerHTML =
-          (prev ? prev.subshells : "") + "<br>" +
-          "<strong>" + element.subshells + "</strong>" + "<br>" +
-          (next ? next.subshells : "");
+        let prevSub = prev ? `<span style="color:${getBlockColor(prev.block)};">${prev.subshells}</span>` : "";
+        let currSub = `<span style="color:${getBlockColor(element.block)};"><strong>${element.subshells}</strong></span>`;
+        let nextSub = next ? `<span style="color:${getBlockColor(next.block)};">${next.subshells}</span>` : "";
+        document.getElementById('subshells').innerHTML = prevSub + "<br>" + currSub + "<br>" + nextSub;
   
         document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
         document.getElementById('outerShell').textContent = `Εξωτερική: ${element.outerShell}`;
   
-        // Μετακίνηση του σχόλιου (remarks) στο αριστερό κελί, με μικρότερη γραμματοσειρά
+        // Μετακίνηση του σχόλιου στο leftPanel
         document.getElementById('comments').innerHTML = `<span>${element.remarks}</span>`;
   
-        // Στο middlePanel, αντί για "Παρατηρήσεις", μπορούμε να το κεντράρουμε (χωρίς ετικέτα)
-        document.getElementById('remarks').textContent = element.explanation;
+        // Στο middlePanel: τα remarks (χωρίς την ετικέτα "Παρατηρήσεις") και το explanation στο κάτω μέρος, με μικρότερη γραμματοσειρά
+        document.getElementById('remarks').textContent = element.explanation ? element.explanation.split("\n")[0] : "";
+        // Αν υπάρχει περισσότερη εξήγηση, η υπόλοιπη πηγαίνει στο explanation (μικρότερα γράμματα)
+        let expParts = element.explanation ? element.explanation.split("\n").slice(1).join(" ") : "";
+        document.getElementById('explanation').textContent = expParts;
       }
   
       document.getElementById('nextElement').addEventListener('click', () => {
