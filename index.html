@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Ο πίνακας πληροφοριών διαρθρώνεται σε 2 στήλες: αριστερό και δεξί */
+    /* InfoPanel: διαρθρώνεται σε 2 στήλες */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -40,7 +40,6 @@
       transition: all 1.5s ease;
     }
     body.collapsed #infoPanel {
-      /* Στη collapsed mode διατηρούμε τις ίδιες διαστάσεις, χωρίς αλλαγή στη δομή */
       display: flex;
       flex-direction: row;
       background: rgba(255,255,255,0.95);
@@ -55,7 +54,7 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Left column: περιέχει τα elementInfo, comments και explanation στο κάτω μέρος */
+    /* Left column: περιέχει elementInfo, comments και στο κάτω μέρος το explanation */
     #leftPanel {
       width: 220px;
       display: flex;
@@ -71,7 +70,19 @@
       font-size: 1em;
       text-align: center;
     }
-    /* Button panel: παραμένει fixed στο κάτω δεξί μέρος */
+    /* Το div με id="subshells" ως overlay */
+    #subshells {
+      position: absolute;
+      top: 300px;
+      left: 134px;
+      z-index: 100;
+      border: 1px solid #333;
+      padding: 5px;
+      background: rgba(255,255,255,0.95);
+      font-size: 1em;
+      line-height: 1.4em;
+    }
+    /* Button panel: fixed στο κάτω δεξί μέρος */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -94,23 +105,11 @@
     button:hover {
       background-color: #005f75;
     }
-    /* Toggle button: αλλάζει κείμενο και εναλλασσόμενο χρώμα μέσω της κλάσης active */
+    /* Toggle button: εναλλασσόμενο κείμενο και χρώμα */
     #toggleFBlock.active {
       background-color: #e68a00;
     }
-    /* Overlay για τις υποστιβάδες: εμφανίζεται ως overlay, top:300px, left:134px, font-size:1em */
-    #subshells {
-      position: absolute;
-      top: 300px;
-      left: 134px;
-      z-index: 100;
-      border: 1px solid #333;
-      padding: 5px;
-      background: rgba(255,255,255,0.95);
-      font-size: 1em;
-      line-height: 1.4em;
-    }
-    /* Καμβάδες στοιχείων, περιόδων και ομάδων */
+    /* Καμβάδες στοιχείων/περιόδων/ομάδων */
     .canvas {
       position: absolute;
       background: transparent;
@@ -138,17 +137,17 @@
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Χρώματα blocks για τους τομείς */
+    /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view θέσεις: αρχικά οι καμβάδες ξεκινούν όλοι από left = 134px */
+    /* Full view: αρχικά όλοι οι καμβάδες ξεκινούν στο left = 134px */
     .full #canvasS { top: 150px; left: 50px; width: 84px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view θέσεις */
+    /* Collapsed view */
     .collapsed #canvasS { top: 150px; left: 50px; }
     .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
     .collapsed #canvasD { top: 150px; left: 139px; width: 420px; }
@@ -185,7 +184,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας πληροφοριών (2 στήλες) -->
+  <!-- Πίνακας πληροφοριών: 2 στήλες -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -195,7 +194,7 @@
     <div id="remarks"></div>
   </div>
   
-  <!-- Το div για τα κουμπιά παραμένει σταθερό -->
+  <!-- Το div με τα κουμπιά παραμένει fixed στο κάτω δεξί μέρος -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -203,7 +202,7 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Global functions για Καμβάδες Περιόδων και Ομάδων -->
+  <!-- Global functions για καμβάδες περιόδων και ομάδων -->
   <script>
     function getBlockColor(b) {
       switch(b) {
@@ -338,6 +337,7 @@
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
+          // Τα στοιχεία 1 και 2 έχουν πλέον αριθμούς 119 και 120 στο JSON
           initializeCanvases();
           updateInfo(currentZ);
           updateToggleButton();
@@ -424,7 +424,7 @@
         elements.filter(filter).forEach(e => {
           const pos = calculatePosition(e, block);
           if(e.number === currentZ) {
-            // Ειδική εμφάνιση για το τρέχον στοιχείο
+            // Ειδική εμφάνιση για το τρέχον στοιχείο:
             if(e.number === 119) {
               p.fill("yellow");
             } else if(e.number === 120) {
@@ -566,7 +566,8 @@
           document.getElementById('shells').textContent = "";
           document.getElementById('outerShell').textContent = "";
           document.getElementById('comments').textContent = "";
-          document.getElementById('remarks').textContent = "";
+          /* Ενσωματώνουμε οδηγίες στα remarks όταν ο μετρητής είναι 0 (πριν το πρώτο click) */
+          document.getElementById('remarks').textContent = "Οδηγίες: Πατήστε 'Επόμενο' για να ξεκινήσετε την εμφάνιση των στοιχείων.";
           document.getElementById('explanation').textContent = "";
           return;
         }
@@ -577,7 +578,6 @@
         document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${z}]`;
   
-        // Overlay για τις υποστιβάδες
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         let prevSub = prev ? `<span style="color:${getBlockColor(prev.block)};">${prev.subshells}</span>` : "";
@@ -590,10 +590,8 @@
   
         document.getElementById('comments').innerHTML = `<span>${element.remarks}</span>`;
   
-        // Στο leftPanel, στο κάτω μέρος εμφανίζεται το explanation
         document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
   
-        // Στο δεξί panel εμφανίζονται τα remarks με κεντραρισμένη στοίχιση
         document.getElementById('remarks').textContent = element.remarks ? element.remarks : "";
       }
   
