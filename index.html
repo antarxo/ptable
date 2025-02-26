@@ -76,18 +76,17 @@
     /* Νέος καμβάς για τις υποστιβάδες – εμφάνιση τύπου balloon */
     #canvasSubshells {
       position: absolute;
-      /* Η αρχική θέση θα ενημερωθεί δυναμικά */
+      /* Η θέση θα οριστεί δυναμικά */
       background: rgba(255,255,255,0.95);
       border: 1px solid #333;
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Αρχικές διαστάσεις */
       width: 300px;
       height: 90px;
       z-index: 150;
     }
-    /* Button panel: fixed στο κάτω δεξί μέρος */
+    /* Button panel */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -197,7 +196,7 @@
     <div id="remarks"></div>
   </div>
   
-  <!-- Νέος καμβάς για τις υποστιβάδες (balloon) -->
+  <!-- Νέος καμβάς για το balloon των υποστιβάδων -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Το div με τα κουμπιά -->
@@ -348,18 +347,17 @@
         subshellsP.text(subshellsData.next, subshellsP.width/2, 5*subshellsP.height/6);
       }
     }
-    // Νέα συνάρτηση για ενημέρωση θέσης του "balloon" ανάλογα με το στοιχείο
+    // Συνάρτηση για ενημέρωση θέσης του "balloon"
     function updateBalloonPosition(element) {
-      // Χρησιμοποιούμε την calculatePosition για το block του στοιχείου
       let block = element.block;
-      let pos = calculatePosition(element, block); // θέση στο σχετικό canvas
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
       let rect = canvasElem.getBoundingClientRect();
-      // Προσαρμόζουμε offset ώστε το balloon να εμφανίζεται δεξιά και κάτω από το κελί του στοιχείου
-      let offsetX = 40, offsetY = 40;
-      let newLeft = rect.left + pos.x + offsetX;
-      let newTop = rect.top + pos.y + offsetY;
+      // Υπολογίζουμε τη θέση του κελιού του στοιχείου
+      let pos = calculatePosition(element, block);
+      // Τοποθετούμε το balloon 40px δεξιά και 40px κάτω από το κελί
+      let newLeft = rect.left + pos.x + 40;
+      let newTop = rect.top + pos.y + 40;
       let balloon = document.getElementById("canvasSubshells");
       if(balloon) {
         balloon.style.left = newLeft + "px";
@@ -443,7 +441,7 @@
                   }
                 });
                 for(let candidate of candidates) {
-                  let pos = calculatePosition(candidate, block);
+                  let pos = calculatePosition(candidate, candidate.block);
                   if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                      p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                     updateInfo(candidate.number);
@@ -522,7 +520,7 @@
             }
             p.strokeWeight(1);
           } else {
-            p.fill(BLOCK_COLORS[ e.block]);
+            p.fill(BLOCK_COLORS[e.block]);
             p.rect(pos.x, pos.y, 40, 40, 5);
             p.fill(0);
             p.textSize(e.number > 99 ? 10 : 12);
@@ -666,7 +664,7 @@
         };
         // Σχεδιάζουμε τις υποστιβάδες στον νέο καμβά
         drawSubshells(subshellsData);
-        // Ενημερώνουμε τη θέση του "balloon" ανάλογα με τη θέση του στοιχείου
+        // Ενημερώνουμε τη θέση του balloon με offset 40px δεξιά και 40px κάτω από το κελί του στοιχείου
         updateBalloonPosition(element);
   
         // Εμφάνιση στον πίνακα πληροφοριών (δεξιά) των υποστιβάδων και των remarks
