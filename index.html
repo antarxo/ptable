@@ -70,7 +70,7 @@
       font-size: 1em;
       text-align: center;
     }
-    /* Το overlay για τις υποστιβάδες (div id="subshells") */
+    /* Overlay για τις υποστιβάδες */
     #subshells {
       position: absolute;
       top: 300px;
@@ -106,6 +106,7 @@
       background-color: #005f75;
     }
     /* Toggle button: εναλλασσόμενο κείμενο και χρώμα */
+    /* Διορθώσαμε εδώ το κείμενο ώστε όταν είναι collapsed να δείχνει "Ανάπτυξη" */
     #toggleFBlock.active {
       background-color: #e68a00;
     }
@@ -194,11 +195,14 @@
     <div id="remarks"></div>
   </div>
   
+  <!-- Overlay για τις υποστιβάδες -->
+  <div id="subshells"></div>
+  
   <!-- Το div με τα κουμπιά παραμένει fixed στο κάτω δεξί μέρος -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Ανάπτυξη</button>
+    <button id="toggleFBlock">Σύμπτυξη</button>
     <button id="reset">Reset</button>
   </div>
   
@@ -586,7 +590,7 @@
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           document.getElementById('subshells').textContent = "";
-          // Αν δεν υπάρχουν τα στοιχεία shells και outerShell, παραλείπουμε την ανάθεση
+          // Ελέγχουμε αν υπάρχουν τα στοιχεία shells και outerShell, αλλιώς παραλείπουμε
           if(document.getElementById('shells'))
             document.getElementById('shells').textContent = "";
           if(document.getElementById('outerShell'))
@@ -610,7 +614,6 @@
         let nextSub = next ? `<span style="color:${getBlockColor(next.block)};">${next.subshells}</span>` : "";
         document.getElementById('subshells').innerHTML = prevSub + "<br>" + currSub + "<br>" + nextSub;
   
-        // Μόνο αν υπάρχουν τα στοιχεία shells και outerShell, ανατίθεται η τιμή τους
         if(document.getElementById('shells'))
           document.getElementById('shells').textContent = `Στιβάδες: ${element.shells}`;
         if(document.getElementById('outerShell'))
@@ -665,12 +668,13 @@
         if(currentZ < 122) return;
         document.body.classList.toggle('collapsed');
         let toggleBtn = document.getElementById('toggleFBlock');
+        // Διορθώσαμε το κείμενο: όταν το body έχει την κλάση collapsed, το κουμπί δείχνει "Ανάπτυξη"
         if(document.body.classList.contains('collapsed')){
-          toggleBtn.textContent = "Σύμπτυξη";
-          toggleBtn.classList.add("active");
-        } else {
           toggleBtn.textContent = "Ανάπτυξη";
           toggleBtn.classList.remove("active");
+        } else {
+          toggleBtn.textContent = "Σύμπτυξη";
+          toggleBtn.classList.add("active");
         }
         redrawAll();
       });
