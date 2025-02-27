@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel: δύο στήλες */
+    /* InfoPanel: δύο στήλες – ο πίνακας ανεβαίνει 42px ψηλότερα */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -34,17 +34,17 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 500px;
+      top: 458px; /* 42px ψηλότερα από 500px */
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
       transition: all 1.5s ease;
     }
     body.collapsed #infoPanel {
       left: 848px;
-      top: 100px;
+      top: 58px; /* 42px ψηλότερα από 100px */
       width: calc(100vw - 920px);
     }
-    /* Αριστερή στήλη – τώρα θεωρούμε πλάτος περίπου 240px */
+    /* Αριστερή στήλη – σταθερό πλάτος 240px */
     #leftPanel {
       width: 240px;
       display: flex;
@@ -690,8 +690,7 @@
   
         // Για στοιχεία 1 και 2 (119,120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Διαμόρφωση του στοιχείου: εμφανίζεται το σύμβολο από το JSON (π.χ. "Θι") με font‑size:3em, bold και με το χρώμα του τομέα,
-        // μαζί με το όνομα του στοιχείου.
+        // Εμφάνιση στοιχείου: το σύμβολο από το JSON με font‑size:3em, bold και με το χρώμα του τομέα, μαζί με το όνομα.
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
@@ -707,11 +706,15 @@
         drawSubshells(subshellsData);
         updateBalloonPosition(element);
   
-        // Διαμόρφωση δεξιού κελιού (δεύτερης στήλης) του infoPanel σε δύο σειρές:
-        // • Η πάνω σειρά χωρίζεται σε δύο στήλες (ίσου πλάτους) όπου:
-        //   - η αριστερή στήλη δείχνει τις υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη) με αριστερή στοίχιση,
-        //   - η δεξιά στήλη δείχνει τα shells και outerShell με τους τίτλους "Στιβάδες:" και "Εξωτερική:" με αριστερή στοίχιση.
-        // • Η κάτω σειρά εμφανίζει το remarks από το JSON με στοίχιση στο κέντρο.
+        // Διαμόρφωση δεξιού κελιού (δεύτερης στήλης) του infoPanel:
+        // Η πάνω σειρά χωρίζεται σε δύο στήλες ίσου πλάτους:
+        //  • Στην αριστερή στήλη εμφανίζονται οι υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη) με αριστερή στοίχιση.
+        //  • Στην δεξιά στήλη εμφανίζονται τα shells με τίτλο "Στιβάδες:" και, στη θέση του "Εξωτερική:",
+        //    εμφανίζεται μήνυμα βάσει του αριθμού ηλεκτρονίων της εξωτερικής στιβάδας:
+        //       - Αν < 3: "Θέλει να δώσει X ηλεκτρόνια"
+        //       - Αν = 4: "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια"
+        //       - Αν 5-7: "Θέλει να πάρει X ηλεκτρόνια"
+        //       - Αν = 8: "Ευγενές αέριο-Χημικά αδρανές"
         let leftSubshellHTML = "";
         if(prev)
           leftSubshellHTML += `<div style="text-align:left; color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
@@ -721,7 +724,18 @@
   
         let rightShellHTML = "";
         rightShellHTML += `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${element.shells || ""}</div>`;
-        rightShellHTML += `<div style="text-align:left;"><strong>Εξωτερική:</strong> ${element.outerShell || ""}</div>`;
+        let outerElectrons = parseInt(element.outerShell) || 0;
+        let outerMessage = "";
+        if(outerElectrons < 3) {
+          outerMessage = "Θέλει να δώσει " + outerElectrons + " ηλεκτρόνια";
+        } else if(outerElectrons === 4) {
+          outerMessage = "Θέλει να δώσει ή να πάρει " + outerElectrons + " ηλεκτρόνια";
+        } else if(outerElectrons >= 5 && outerElectrons <= 7) {
+          outerMessage = "Θέλει να πάρει " + outerElectrons + " ηλεκτρόνια";
+        } else if(outerElectrons === 8) {
+          outerMessage = "Ευγενές αέριο-Χημικά αδρανές";
+        }
+        rightShellHTML += `<div style="text-align:left;">${outerMessage}</div>`;
   
         let upperRowHTML = `<div style="display: flex;">` +
                            `<div style="width: 50%; text-align: left;">${leftSubshellHTML}</div>` +
