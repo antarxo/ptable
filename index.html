@@ -43,16 +43,16 @@
       left: 848px;
       top: 58px;
       width: calc(100vw - 920px);
-      flex-direction: column;  /* Στήλη με 3 "κελία" */
+      flex-direction: column;  /* 1 στήλη με 3 "κελία" */
     }
-    /* Αριστερή στήλη στην αναπτυγμένη μορφή – σταθερό πλάτος */
+    /* Στην αναπτυγμένη μορφή η πρώτη στήλη παραμένει όπως είχε οριστεί */
     #leftPanel {
       width: 240px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Δεξιά στήλη στην αναπτυγμένη μορφή */
+    /* Στην αναπτυγμένη μορφή η δεξιά "στήλη" περιέχει τα στοιχεία του Balloon και τα Remarks */
     #remarks {
       flex-grow: 1;
       display: flex;
@@ -116,7 +116,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Ο καμβάς των Περιόδων: Οι ετικέτες έχουν την επιθυμητή μορφή */
+    /* Καμβάς Περιόδων: νέες ετικέτες "1η Κ", "2η L", ... "7η Q" */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -127,7 +127,6 @@
       display: none;
       z-index: 5;
     }
-    /* Οι ομάδες */
     #canvasS_groups,
     #canvasD_groups,
     #canvasP_groups {
@@ -244,7 +243,7 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Νέες ετικέτες: "1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"
+          // Ετικέτες: "1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"
           const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
@@ -373,7 +372,7 @@
         subshellsP.text(subshellsData.next, 10, 5*subshellsP.height/6);
       }
     }
-    // Νέα λογική τοποθέτησης του Balloon:
+    // Λογική τοποθέτησης του Balloon
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
@@ -690,16 +689,16 @@
         updateToggleButton();
       }
   
-      // Ενημέρωση του InfoPanel σύμφωνα με τις νέες απαιτήσεις:
-      // Στην αναπτυγμένη μορφή:
-      // • Αριστερή στήλη: στοιχείο (Ζ, σύμβολο, όνομα)
-      // • Δεξιά στήλη: στην πάνω σειρά, αριστεία στήλη με τις υποστιβάδες (prev, current, next) και δεξιά στήλη με τις στιβάδες και το μήνυμα.
-      // Στη συνεπτυγμένη μορφή (body.collapsed):
-      // Ο πίνακας χωρίζεται σε 1 στήλη και 3 γραμμές:
-      //  α. Πάνω κελί: τα περιεχόμενα της πρώτης στήλης (elementInfo, explanation, comments)
-      //  β. Μεσαίο κελί: οι στιβάδες (με την μορφή της συνάρτησης formatShells) και το μήνυμα,
-      //     όπου στο μήνυμα οι λέξεις <strong>πάρει</strong> και <strong>δώσει</strong> εμφανίζονται με έντονα γράμματα.
-      //  γ. Κάτω κελί: τα Remarks.
+      // Ενημέρωση του InfoPanel με τις νέες απαιτήσεις:
+      // 1. Για το Balloon: Αν το στοιχείο είναι 1, τότε "prev" εμφανίζεται ως "-" .
+      //    Αν το στοιχείο είναι 2 και δεν βρέθηκε "next", τότε ανατίθεται το στοιχείο 3.
+      //    Αν το στοιχείο είναι 3 και δεν βρέθηκε "prev", τότε ανατίθεται το στοιχείο 2.
+      // 2. Στη συνεπτυγμένη μορφή (collapsed): Στο μεσαίο κελί εμφανίζεται η γραμμή με τις στιβάδες,
+      //    η οποία ακολουθεί τη μορφή "Στιβάδες: K(2), L(8), M(9), N(2)" και κάτω από αυτήν, σε νέα γραμμή,
+      //    το μήνυμα (με πλάγια γραμματοσειρά).
+      // 3. Στην αναπτυγμένη μορφή (χωρίς collapsed): Το περιεχόμενο του Balloon συνδυάζεται σε ένα κελί
+      //    όπου πρώτα εμφανίζονται οι πληροφορίες των υποστιβάδων (prev, current, next) και αμέσως κάτω,
+      //    μετά με νέα γραμμή, εμφανίζονται οι στιβάδες με το μήνυμα.
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -712,18 +711,27 @@
         const element = elements.find(e => e.number === z);
         if(!element) return;
   
-        // Για στοιχεία 1 και 2 (στο JSON ως 119, 120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Αριστερή στήλη: εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
+        // Αριστερή στήλη: στοιχείο (Ζ, σύμβολο, όνομα)
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
         document.getElementById('elementInfo').innerHTML = infoHTML;
   
+        // Υπολογισμός prev και next με ειδικές περιπτώσεις για τα στοιχεία 1, 2, 3
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
+        if(z === 1) {
+          prev = { subshells: "-" };
+        }
+        if(z === 2 && !next) {
+          next = elements.find(e => e.number === 3);
+        }
+        if(z === 3 && !prev) {
+          prev = elements.find(e => e.number === 2);
+        }
   
-        // Υπολογισμός μηνύματος με έντονους χαρακτήρες στις λέξεις "πάρει" και "δώσει":
+        // Υπολογισμός μηνύματος με έντονους χαρακτήρες στις λέξεις "πάρει" και "δώσει"
         let message = "";
         if(element.block === 'f') {
           message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -750,29 +758,28 @@
           }
         }
   
-        // Σε συνεπτυγμένη μορφή αναδιατάσσεται το InfoPanel σε 3 γραμμές:
+        // Σχεδιασμός του περιεχομένου του Balloon
         if(document.body.classList.contains('collapsed')){
-          // Η πρώτη γραμμή είναι ήδη το περιεχόμενο του leftPanel (elementInfo, explanation, comments)
-          // Στη δεύτερη γραμμή τοποθετούνται οι στιβάδες και το μήνυμα κάθετα
-          let middleCell = `<div style="text-align:left;">${formatShells(element.shells || '')}</div>` +
+          // Συνεπτυγμένη μορφή: μεσαίο κελί περιέχει τις στιβάδες με το μήνυμα κάτω (κάθετα)
+          let middleCell = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
                            `<div style="text-align:left; font-style: italic;">${message}</div>`;
-          // Στην τρίτη γραμμή εμφανίζονται τα Remarks
           let bottomCell = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
           document.getElementById('remarks').innerHTML = `<div>${middleCell}</div><div>${bottomCell}</div>`;
         } else {
-          // Αναπτυγμένη μορφή: στην πάνω σειρά εμφανίζονται δίπλα οι υποστιβάδες (με prev, current, next) και το μήνυμα,
-          // ενώ στην χαμηλότερη σειρά τα Remarks.
-          let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
+          // Αναπτυγμένη μορφή: όλα τα δεδομένα του Balloon εμφανίζονται σε ένα κελί, 
+          // πρώτα οι πληροφορίες για τις υποστιβάδες (prev, current, next) και στη συνέχεια (με νέα γραμμή)
+          // οι στιβάδες και το μήνυμα.
+          let prevStr = prev ? `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">` +
+                                `Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>` : '';
           let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-          let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : ''}</div>`;
-          let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
-                             `<div style="text-align:left; font-style: italic;">${message}</div>`;
-          let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${shellsAndMsg}</div>`;
+          let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
+          let upperCell = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}</div>` +
+                          `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
+                          `<div style="text-align:left; font-style: italic;">${message}</div>`;
           let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
-          document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
+          document.getElementById('remarks').innerHTML = upperCell + remarksRowHTML;
         }
   
-        // Ενημέρωση του Balloon με τα δεδομένα των υποστιβάδων
         let subshellsData = {
           prev: prev ? prev.subshells : "",
           current: element.subshells,
