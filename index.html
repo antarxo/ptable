@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Περιοδικός Πίνακας – Ομάδες, Περιόδους & Info</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-  <!-- Φόρτωση της p5.js βιβλιοθήκης -->
+  <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     :root { --rightPanelWidth: 150px; }
@@ -172,7 +172,7 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Οι ακόλουθες συναρτήσεις ορίζονται στο global scope -->
+  <!-- Global script: Όλες οι συναρτήσεις ορίζονται στο global scope -->
   <script>
     // Global constants
     const BLOCKS_CONFIG = {
@@ -189,15 +189,15 @@
     };
     
     let elements = [];
-    // currentZ ξεκινά από 3 (τα στοιχεία 1 και 2 δεν εμφανίζονται)
-    let currentZ = 3;
+    let currentZ = 3; // Ξεκινάμε από το στοιχείο με Ζ=3, έτσι τα 1 και 2 δεν εμφανίζονται αρχικά
     let flashActive = false;
+    let subshellsP;
     
-    // Αποθήκευση αρχικών περιεχομένων για collapsed mode
+    // Αποθήκευση default περιεχομένων για collapsed mode
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Συνάρτηση φόρτωσης στοιχείων από το JSON
+    // Συνάρτηση φόρτωσης στοιχείων
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -211,7 +211,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Συνάρτηση για την αρχικοποίηση των καμβάδων (canvases)
+    // Συνάρτηση για την αρχικοποίηση των καμβάδων
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -220,13 +220,13 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')){
-              if(block==='s') { canvas.elt.style.left = "50px"; }
-              else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
-              else if(block==='p') { canvas.elt.style.left = "559px"; }
+            if(document.body.classList.contains('collapsed')) {
+              if(block === 's') { canvas.elt.style.left = "50px"; }
+              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "154px" : "139px"); }
+              else if(block === 'p') { canvas.elt.style.left = "559px"; }
             } else {
-              if(block==='s') { canvas.elt.style.left = "50px"; }
-              else if(block==='f' || block==='d' || block==='p') { canvas.elt.style.left = "134px"; }
+              if(block === 's') { canvas.elt.style.left = "50px"; }
+              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
             p.mouseClicked = function() {
@@ -275,20 +275,20 @@
       window.subshellsInitialized = true;
     }
     
-    // Συνάρτηση υπολογισμού θέσης για κάθε στοιχείο
+    // Συνάρτηση υπολογισμού θέσης
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
-      if(block==='s') { x = (e.col - 1) * 42; }
-      else if(block==='f') { x = (e.col - 3) * 42; }
-      else if(block==='d') { x = (e.col - 3) * 42; }
-      else if(block==='p') {
+      if(block === 's') { x = (e.col - 1) * 42; }
+      else if(block === 'f') { x = (e.col - 3) * 42; }
+      else if(block === 'd') { x = (e.col - 3) * 42; }
+      else if(block === 'p') {
         if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
         else { x = (e.col - 13) * 42; }
       }
       return { x: x, y: y };
     }
     
-    // Συνάρτηση σχεδίασης στοιχείων (elements) στον καμβά
+    // Συνάρτηση σχεδίασης στοιχείων
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -344,7 +344,7 @@
       });
     }
     
-    // Συνάρτηση redrawAll για ανασχεδίαση όλων των καμβάδων
+    // Συνάρτηση redrawAll
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         const canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -355,13 +355,13 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')){
-              if(block==='s') { canvas.elt.style.left = "50px"; }
-              else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
-              else if(block==='p') { canvas.elt.style.left = "559px"; }
+            if(document.body.classList.contains('collapsed')) {
+              if(block === 's') { canvas.elt.style.left = "50px"; }
+              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "154px" : "139px"); }
+              else if(block === 'p') { canvas.elt.style.left = "559px"; }
             } else {
-              if(block==='s') { canvas.elt.style.left = "50px"; }
-              else if(block==='f' || block==='d' || block==='p') { canvas.elt.style.left = "134px"; }
+              if(block === 's') { canvas.elt.style.left = "50px"; }
+              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
             p.mouseClicked = function() {
@@ -394,12 +394,12 @@
           };
         });
       });
-      if(!document.body.classList.contains('collapsed')){
+      if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
-        if(currentZ <= 20){ shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30){ shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56){ shiftP = 42 * 10; shiftD = 0; }
-        else if(currentZ >= 57 && currentZ <= 70){ shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
+        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
+        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
         else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
         let cF = document.getElementById('canvasF');
         if(cF) { cF.style.left = base + "px"; }
@@ -417,7 +417,7 @@
         let cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = "559px"; }
       }
-      if(currentZ >= 121){
+      if(currentZ >= 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
@@ -450,7 +450,43 @@
       updateToggleButton();
     }
     
-    // Συνάρτηση messageForElement για το μήνυμα στο InfoPanel
+    // Συνάρτηση initPeriodsCanvas
+    function initPeriodsCanvas() {
+      if(window.periodsInitialized) return;
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(40, 292);
+          canvas.parent("canvasPeriods");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+          for (let i = 0; i < 7; i++) {
+            p.fill(240);
+            p.rect(0, i * 42, 40, 40);
+            p.fill(0);
+            p.text(periodLabels[i], 20, i * 42 + 20);
+          }
+        };
+      });
+      window.periodsInitialized = true;
+    }
+    
+    function updateToggleButton() {
+      document.getElementById('toggleFBlock').disabled = (currentZ < 118);
+    }
+    
+    function updateRightPanelWidth() {
+      let rp = document.getElementById('buttonPanel');
+      if(rp) {
+        let width = rp.offsetWidth;
+        document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
+      }
+    }
+    
+    // Συνάρτηση messageForElement
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -515,7 +551,7 @@
       if(currentZ < 118) return;
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
-      if(document.body.classList.contains('collapsed')){
+      if(document.body.classList.contains('collapsed')) {
         toggleBtn.textContent = "Ανάπτυξη";
       } else {
         toggleBtn.textContent = "Σύμπτυξη";
@@ -525,24 +561,13 @@
       redrawAll();
     });
     
-    // Εξαγωγή των βασικών συναρτήσεων στο global scope
+    window.updateInfo = updateInfo;
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
-    window.updateInfo = updateInfo;
     window.redrawAll = redrawAll;
+    window.initPeriodsCanvas = initPeriodsCanvas;
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
-    function updateToggleButton() {
-      document.getElementById('toggleFBlock').disabled = (currentZ < 118);
-    }
-    
-    function updateRightPanelWidth() {
-      let rp = document.getElementById('buttonPanel');
-      if(rp) {
-        let width = rp.offsetWidth;
-        document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
-      }
-    }
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('resize', updateRightPanelWidth);
     
