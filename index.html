@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Expanded mode: 2 στήλες, συνολικό πλάτος calc(100vw - var(--rightPanelWidth) - 105px) */
+    /* Expanded mode: 2 στήλες, συνολικό πλάτος = calc(100vw - var(--rightPanelWidth) - 105px) */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -58,12 +58,7 @@
       flex-grow: 1;
       padding-left: 20px;
     }
-    /* Δομή expanded: στην δεξιά στήλη (remarks) υπάρχει wrapper με δύο γραμμές:
-       - Η πρώτη γραμμή (upper-right) χωρίζεται σε 2 υποστήλες:
-            • 67% για τις υποστιβάδες
-            • 33% (με margin-left:20px) για τις στιβάδες+μήνυμα
-       - Η δεύτερη γραμμή εμφανίζει τα Remarks.
-    */
+    /* Στοιχεία δομής στα expanded */
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
     .subshells-col { width: 67%; text-align: left; }
@@ -195,6 +190,11 @@
       if(exp) initialExplanation = exp.innerHTML;
       if(comm) initialComments = comm.innerHTML;
     });
+    
+    // Λειτουργία μετατροπής: Αν clickedZ > 118, τότε currentNum = clickedZ - 118, αλλιώς currentNum = clickedZ.
+    function convertClickedToCurrent(clickedZ) {
+      return (clickedZ > 118 ? clickedZ - 118 : clickedZ);
+    }
     
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -394,6 +394,7 @@
       };
       
       let elements = [];
+      // currentZ here represents the clicked value (π.χ. 3..120)
       let currentZ = 0;
       let flashActive = false;
       
@@ -423,12 +424,19 @@
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
               if(document.body.classList.contains('collapsed')){
-                if(block==='s'){ canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d'){ canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
-                else if(block==='p'){ canvas.elt.style.left = "559px"; }
+                if(block==='s'){
+                  canvas.elt.style.left = "50px";
+                } else if(block==='f' || block==='d'){
+                  canvas.elt.style.left = (block==='f' ? "154px" : "139px");
+                } else if(block==='p'){
+                  canvas.elt.style.left = "559px";
+                }
               } else {
-                if(block==='s'){ canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d' || block==='p'){ canvas.elt.style.left = "134px"; }
+                if(block==='s'){
+                  canvas.elt.style.left = "50px";
+                } else if(block==='f' || block==='d' || block==='p'){
+                  canvas.elt.style.left = "134px";
+                }
               }
               drawElements(p, block);
               p.mouseClicked = () => {
@@ -463,12 +471,18 @@
       
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
-        if(block==='s'){ x = (e.col - 1) * 42; }
-        else if(block==='f'){ x = (e.col - 3) * 42; }
-        else if(block==='d'){ x = (e.col - 3) * 42; }
-        else if(block==='p'){
-          if(currentZ < 20 && e.row === 1){ x = (e.col - 18) * 42; }
-          else { x = (e.col - 13) * 42; }
+        if(block==='s'){
+          x = (e.col - 1) * 42;
+        } else if(block==='f'){
+          x = (e.col - 3) * 42;
+        } else if(block==='d'){
+          x = (e.col - 3) * 42;
+        } else if(block==='p'){
+          if(currentZ < 20 && e.row === 1){
+            x = (e.col - 18) * 42;
+          } else {
+            x = (e.col - 13) * 42;
+          }
         }
         return { x, y };
       }
@@ -617,10 +631,11 @@
         updateToggleButton();
       }
       
-      // Η updateInfo ενημερώνει το InfoPanel σύμφωνα με τη συμφωνημένη διάταξη.
-      // Ειδική προσαρμογή για στοιχεία με Ζ=1,2,3 ώστε οι υποστιβάδες να εμφανίζονται όπως ζητήθηκε.
-      function updateInfo(z) {
-        if(z < 3) {
+      // Η updateInfo τώρα λαμβάνει ως παράμετρο το clickedZ (που αποθηκεύεται στο currentZ) 
+      // και υπολογίζει το currentNum = (currentZ > 118 ? currentZ - 118 : currentZ)
+      // ώστε να αντλεί τα δεδομένα από το JSON και να εμφανίζει το Ζ σωστά (1,2,3 αντί για 119,120,121)
+      function updateInfo(clickedZ) {
+        if(clickedZ < 3) {
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           if(subshellsP) subshellsP.clear();
@@ -628,39 +643,38 @@
           document.getElementById('remarks').innerHTML = "";
           return;
         }
-        const element = elements.find(e => e.number === z);
+        let currentNum = convertClickedToCurrent(clickedZ);
+        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentNum}</span> ` +
+                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${/* Θα ανακτηθεί παρακάτω */""}</span> ` +
+                       `<span style="font-style: italic;">${/* θα ανακτηθεί παρακάτω */""}</span>`;
+        // Αντλούμε το στοιχείο με βάση το currentNum (που έχει τιμές 1–118)
+        const element = elements.find(e => e.number === currentNum);
         if(!element) return;
-        let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
-                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
-                       `<span style="font-style: italic;">${element.name}</span>`;
+        // Ενημέρωση του infoHTML με τα δεδομένα του στοιχείου
+        infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentNum}</span> ` +
+                   `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                   `<span style="font-style: italic;">${element.name}</span>`;
         if(!document.body.classList.contains('collapsed')) {
           document.getElementById('leftPanel').innerHTML = infoHTML;
         }
-        // Ανάκτηση προγενέστερου και επόμενου στοιχείου με ασφαλείς default τιμές
-        let prev = elements.find(e => e.number === (z - 1));
-        let next = elements.find(e => e.number === (z + 1));
-        // Κανονικές ειδικές περιπτώσεις βάσει του z (αλλά για τα στοιχεία 1,2,3 βασιζόμαστε στο displayZ)
-        if(!prev) { prev = { subshells: "-", number: "", block: "dummy" }; }
-        if(!next) { next = { subshells: "-", number: "", block: "dummy" }; }
-        // Ειδική προσαρμογή για Ζ=1,2,3 (δηλαδή για στοιχεία 119,120,121)
-        if(displayZ === 1) {
-          prev = { subshells: "-", number: "", block: "dummy" };
+        // Ειδικές περιπτώσεις για στοιχεία 1, 2, 3 με βάση το currentNum
+        let prev = elements.find(e => e.number === (currentNum - 1));
+        let next = elements.find(e => e.number === (currentNum + 1));
+        if(currentNum === 1) {
+          prev = { subshells: "-" , number:"", block:"dummy" };
           element.subshells = "1s1";
-          next = { subshells: "1s2", number: "", block: "dummy" };
-        } else if(displayZ === 2) {
-          prev = { subshells: "1s1", number: "", block: "dummy" };
+          next = { subshells: "1s2", number:"", block:"dummy" };
+        } else if(currentNum === 2) {
+          prev = { subshells: "1s1", number:"", block:"dummy" };
           element.subshells = "1s2";
-          next = { subshells: "1s2, 2s1", number: "", block: "dummy" };
-        } else if(displayZ === 3) {
-          prev = { subshells: "1s2", number: "", block: "dummy" };
+          next = { subshells: "1s2, 2s1", number:"", block:"dummy" };
+        } else if(currentNum === 3) {
+          prev = { subshells: "1s2", number:"", block:"dummy" };
           element.subshells = "1s2,2s1";
-          next = { subshells: "1s2,2s2", number: "", block: "dummy" };
+          next = { subshells: "1s2,2s2", number:"", block:"dummy" };
         } else {
-          if(z === 1) { prev = { subshells: "-", number: "", block: "dummy" }; }
-          if(z === 2) { next = elements.find(e => e.number === 3) || { subshells: "-", number: "", block: "dummy" }; }
-          if(z === 3) { prev = elements.find(e => e.number === 2) || { subshells: "-", number: "", block: "dummy" }; }
-          if(z === 118) { next = { subshells: "-", number: "", block: "dummy" }; }
+          if(!prev) { prev = { subshells: "-" , number:"", block:"dummy" }; }
+          if(!next) { next = { subshells: "-" , number:"", block:"dummy" }; }
         }
         
         let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
