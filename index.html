@@ -58,7 +58,7 @@
       flex-grow: 1;
       padding-left: 20px;
     }
-    /* Στοιχεία δομής στα expanded */
+    /* Δομή στα expanded */
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
     .subshells-col { width: 67%; text-align: left; }
@@ -136,7 +136,7 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Στο collapsed mode, μετακινούμε το canvasF 100px πιο κάτω (top: 250px) */
+    /* Collapsed mode: μετακίνηση του canvasF 100px προς τα κάτω (top: 250px) */
     body.collapsed #canvasF { top: 250px; }
     body.collapsed #infoPanel { flex-direction: column; }
   </style>
@@ -157,7 +157,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας Πληροφοριών – Διατηρούμε την αρχική δομή -->
+  <!-- Πίνακας Πληροφοριών – Η αρχική δομή παραμένει -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -191,7 +191,7 @@
       if(comm) initialComments = comm.innerHTML;
     });
     
-    // Λειτουργία μετατροπής: Αν clickedZ > 118, τότε currentNum = clickedZ - 118, αλλιώς currentNum = clickedZ.
+    // Συνάρτηση μετατροπής: Αν clickedZ > 118, currentNum = clickedZ - 118, αλλιώς currentNum = clickedZ
     function convertClickedToCurrent(clickedZ) {
       return (clickedZ > 118 ? clickedZ - 118 : clickedZ);
     }
@@ -394,7 +394,7 @@
       };
       
       let elements = [];
-      // currentZ here represents the clicked value (π.χ. 3..120)
+      // currentZ αντιστοιχεί στο clickedZ (τιμές 3..120)
       let currentZ = 0;
       let flashActive = false;
       
@@ -424,28 +424,21 @@
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
               if(document.body.classList.contains('collapsed')){
-                if(block==='s'){
-                  canvas.elt.style.left = "50px";
-                } else if(block==='f' || block==='d'){
-                  canvas.elt.style.left = (block==='f' ? "154px" : "139px");
-                } else if(block==='p'){
-                  canvas.elt.style.left = "559px";
-                }
+                if(block==='s') { canvas.elt.style.left = "50px"; }
+                else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
+                else if(block==='p') { canvas.elt.style.left = "559px"; }
               } else {
-                if(block==='s'){
-                  canvas.elt.style.left = "50px";
-                } else if(block==='f' || block==='d' || block==='p'){
-                  canvas.elt.style.left = "134px";
-                }
+                if(block==='s') { canvas.elt.style.left = "50px"; }
+                else if(block==='f' || block==='d' || block==='p') { canvas.elt.style.left = "134px"; }
               }
               drawElements(p, block);
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => {
-                  if(currentZ < 118){
+                  if(currentZ < 118) {
                     return e.block === block && e.number >= 3 && e.number <= currentZ;
-                  } else if(currentZ === 118){
+                  } else if(currentZ === 118) {
                     return e.block === block && e.number >= 3 && e.number <= 118;
-                  } else if(currentZ === 119){
+                  } else if(currentZ === 119) {
                     return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
                   } else {
                     return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
@@ -471,18 +464,12 @@
       
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
-        if(block==='s'){
-          x = (e.col - 1) * 42;
-        } else if(block==='f'){
-          x = (e.col - 3) * 42;
-        } else if(block==='d'){
-          x = (e.col - 3) * 42;
-        } else if(block==='p'){
-          if(currentZ < 20 && e.row === 1){
-            x = (e.col - 18) * 42;
-          } else {
-            x = (e.col - 13) * 42;
-          }
+        if(block==='s') { x = (e.col - 1) * 42; }
+        else if(block==='f') { x = (e.col - 3) * 42; }
+        else if(block==='d') { x = (e.col - 3) * 42; }
+        else if(block==='p') {
+          if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
+          else { x = (e.col - 13) * 42; }
         }
         return { x, y };
       }
@@ -491,11 +478,11 @@
         p.stroke(150);
         p.strokeWeight(1);
         let filter;
-        if(currentZ < 118){
+        if(currentZ < 118) {
           filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
-        } else if(currentZ === 118){
+        } else if(currentZ === 118) {
           filter = e => e.block === block && e.number >= 3 && e.number <= 118;
-        } else if(currentZ === 119){
+        } else if(currentZ === 119) {
           filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
         } else {
           filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
@@ -508,10 +495,7 @@
           if(e.number === currentZ) {
             if(e.number === 119) { p.fill("yellow"); }
             else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
-            else {
-              let numberColor = getBlockColor(e.block);
-              p.fill(numberColor);
-            }
+            else { p.fill(getBlockColor(e.block)); }
             p.textSize(16);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
@@ -552,21 +536,21 @@
               canvas.parent(`canvas${block.toUpperCase()}`);
               canvas.elt.style.height = `${config.rows * 42}px`;
               if(document.body.classList.contains('collapsed')){
-                if(block==='s'){ canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d'){ canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
-                else if(block==='p'){ canvas.elt.style.left = "559px"; }
+                if(block==='s') { canvas.elt.style.left = "50px"; }
+                else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
+                else if(block==='p') { canvas.elt.style.left = "559px"; }
               } else {
-                if(block==='s'){ canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d' || block==='p'){ canvas.elt.style.left = "134px"; }
+                if(block==='s') { canvas.elt.style.left = "50px"; }
+                else if(block==='f' || block==='d' || block==='p') { canvas.elt.style.left = "134px"; }
               }
               drawElements(p, block);
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => {
-                  if(currentZ < 118){
+                  if(currentZ < 118) {
                     return e.block === block && e.number >= 3 && e.number <= currentZ;
-                  } else if(currentZ === 118){
+                  } else if(currentZ === 118) {
                     return e.block === block && e.number >= 3 && e.number <= 118;
-                  } else if(currentZ === 119){
+                  } else if(currentZ === 119) {
                     return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
                   } else {
                     return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
@@ -631,9 +615,7 @@
         updateToggleButton();
       }
       
-      // Η updateInfo τώρα λαμβάνει ως παράμετρο το clickedZ (που αποθηκεύεται στο currentZ) 
-      // και υπολογίζει το currentNum = (currentZ > 118 ? currentZ - 118 : currentZ)
-      // ώστε να αντλεί τα δεδομένα από το JSON και να εμφανίζει το Ζ σωστά (1,2,3 αντί για 119,120,121)
+      // updateInfo: τώρα πρώτα μετατρέπει το clickedZ σε currentNum και μετά ανακτά το στοιχείο από το JSON.
       function updateInfo(clickedZ) {
         if(clickedZ < 3) {
           document.getElementById('elementInfo').innerHTML =
@@ -644,20 +626,15 @@
           return;
         }
         let currentNum = convertClickedToCurrent(clickedZ);
-        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentNum}</span> ` +
-                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${/* Θα ανακτηθεί παρακάτω */""}</span> ` +
-                       `<span style="font-style: italic;">${/* θα ανακτηθεί παρακάτω */""}</span>`;
-        // Αντλούμε το στοιχείο με βάση το currentNum (που έχει τιμές 1–118)
         const element = elements.find(e => e.number === currentNum);
         if(!element) return;
-        // Ενημέρωση του infoHTML με τα δεδομένα του στοιχείου
-        infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentNum}</span> ` +
-                   `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
-                   `<span style="font-style: italic;">${element.name}</span>`;
+        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentNum}</span> ` +
+                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                       `<span style="font-style: italic;">${element.name}</span>`;
         if(!document.body.classList.contains('collapsed')) {
           document.getElementById('leftPanel').innerHTML = infoHTML;
         }
-        // Ειδικές περιπτώσεις για στοιχεία 1, 2, 3 με βάση το currentNum
+        // Ειδική λογική για τα στοιχεία 1,2,3
         let prev = elements.find(e => e.number === (currentNum - 1));
         let next = elements.find(e => e.number === (currentNum + 1));
         if(currentNum === 1) {
@@ -676,7 +653,6 @@
           if(!prev) { prev = { subshells: "-" , number:"", block:"dummy" }; }
           if(!next) { next = { subshells: "-" , number:"", block:"dummy" }; }
         }
-        
         let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
         let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
