@@ -42,7 +42,7 @@
       top: 58px;
       width: calc(100vw - 920px);
     }
-    /* Αριστερή στήλη */
+    /* Αριστερή στήλη – σταθερό πλάτος 240px */
     #leftPanel {
       width: 240px;
       display: flex;
@@ -78,7 +78,7 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* Καμβάδες */
+    /* Καμβάδες (π.χ. για περιόδους, ομάδες, τομέα, κλπ) – διατηρείστε τα όπως ήταν στην αρχική έκδοση */
     .canvas {
       position: absolute;
       background: transparent;
@@ -97,7 +97,7 @@
       z-index: 150;
       display: none;
     }
-    /* Τα υπόλοιπα div (π.χ. canvasPeriods, canvasS, canvasF, canvasD, canvasP, canvasS_groups, canvasD_groups, canvasP_groups) διατηρούνται όπως στην αρχική έκδοση */
+    /* Τα υπόλοιπα στυλ για τα canvases (canvasPeriods, canvasS, canvasF, canvasD, canvasP, canvasS_groups, canvasD_groups, canvasP_groups) παραμένουν όπως στην αρχική έκδοση */
     /* ... */
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -120,7 +120,7 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Τα div για τα διάφορα canvases (Periods, Groups, και τομέα) όπως στην αρχική έκδοση -->
+  <!-- Divs για τα διάφορα canvases -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -168,7 +168,6 @@
       return result.join(", ");
     }
     
-    // p5.js για canvasSubshells (Balloon)
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(p => {
@@ -194,11 +193,15 @@
       let bElem = document.getElementById("canvasSubshells");
       if(bElem) { bElem.style.width = maxW + "px"; }
       if(data.prev) { window.subshellsP.fill(0); window.subshellsP.text(data.prev, 10, window.subshellsP.height/6); }
-      if(data.current) { window.subshellsP.fill(0); window.subshellsP.textStyle(window.subshellsP.BOLD); window.subshellsP.text(data.current, 10, window.subshellsP.height/2); window.subshellsP.textStyle(window.subshellsP.NORMAL); }
-      if(data.next) { window.subshellsP.fill(0); window.subshellsP.text(data.next, 10, 5 * window.subshellsP.height / 6); }
+      if(data.current) {
+        window.subshellsP.fill(0);
+        window.subshellsP.textStyle(window.subshellsP.BOLD);
+        window.subshellsP.text(data.current, 10, window.subshellsP.height/2);
+        window.subshellsP.textStyle(window.subshellsP.NORMAL);
+      }
+      if(data.next) { window.subshellsP.fill(0); window.subshellsP.text(data.next, 10, 5*window.subshellsP.height/6); }
     }
     
-    // Η λειτουργία τοποθέτησης του Balloon, χωρίς να αλλάζει η βασική λογική του πίνακα
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
@@ -207,10 +210,11 @@
       let cellRect = canvasElem.getBoundingClientRect();
       let cellX = cellRect.left + pos.x, cellY = cellRect.top + pos.y;
       let cellRight = cellX + 40, cellBottom = cellY + 40;
-      let desiredLeft = cellRight, desiredTop = cellBottom + 10; // 10px χαμηλότερα
+      // Default θέση: 10px χαμηλότερα από την κάτω δεξιά γωνία
+      let desiredLeft = cellRight, desiredTop = cellBottom + 10;
       let balloon = document.getElementById("canvasSubshells");
       let bWidth = balloon.offsetWidth, bHeight = balloon.offsetHeight;
-      if (desiredLeft > window.innerWidth / 2) { desiredLeft -= (bWidth + 42); }
+      if(desiredLeft > window.innerWidth / 2) { desiredLeft -= (bWidth + 42); }
       let infoPanel = document.getElementById("infoPanel");
       if(infoPanel && (desiredTop + bHeight > infoPanel.getBoundingClientRect().top)) { desiredTop -= (bHeight + 42); }
       balloon.style.left = Math.max(desiredLeft, 0) + "px";
@@ -228,7 +232,6 @@
       return { x, y };
     }
     
-    // Global μεταβλητές
     let currentZ = 0, flashActive = false, elements = [];
     
     async function loadElements() {
@@ -257,7 +260,6 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = `${config.rows * 42}px`;
-            // Ο positioning παραμένει όπως στην αρχική έκδοση.
             if(document.body.classList.contains('collapsed')){
               if(block==='s') { canvas.elt.style.left = "50px"; }
               else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
@@ -350,10 +352,9 @@
                      `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                      `<span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('elementInfo').innerHTML = infoHTML;
-  
+      
       let prev = elements.find(e => e.number === (z - 1));
       let next = elements.find(e => e.number === (z + 1));
-      
       let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
       let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
       let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
@@ -378,7 +379,7 @@
           message = "Ευγενές αέριο-Χημικά αδρανές";
         }
       }
-  
+      
       let shellsHTML = `<div style="display:inline-block; vertical-align:middle;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>`;
       let messageHTML = `<div style="display:inline-block; vertical-align:middle; margin-left:10px;">${message}</div>`;
       let rightColumn = `<div style="width:50%; text-align:left;">${shellsHTML}${messageHTML}</div>`;
@@ -386,7 +387,7 @@
       let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${rightColumn}</div>`;
       let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
       document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
-  
+      
       let subshellsData = { prev: prev ? prev.subshells : "", current: element.subshells, next: next ? next.subshells : "" };
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
@@ -408,15 +409,10 @@
             drawElements(p, block);
             p.mouseClicked = () => {
               let candidates = elements.filter(e => {
-                if(currentZ < 118){
-                  return e.block === block && e.number >= 3 && e.number <= currentZ;
-                } else if(currentZ === 118){
-                  return e.block === block && e.number >= 3 && e.number <= 118;
-                } else if(currentZ === 119){
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
-                } else {
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
-                }
+                if(currentZ < 118){ return e.block === block && e.number >= 3 && e.number <= currentZ; }
+                else if(currentZ === 118){ return e.block === block && e.number >= 3 && e.number <= 118; }
+                else if(currentZ === 119){ return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119); }
+                else { return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120)); }
               });
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -439,12 +435,12 @@
     }
     
     document.getElementById('nextElement').addEventListener('click', () => {
-      if(currentZ < 3) { currentZ = 3; }
-      else if(currentZ < 118) { currentZ++; }
-      else if(currentZ === 118) { currentZ = 119; }
-      else if(currentZ === 119) { currentZ = 120; }
-      else if(currentZ === 120) { currentZ = 121; }
-      else if(currentZ === 121) { currentZ = 122; }
+      if(currentZ < 3){ currentZ = 3; }
+      else if(currentZ < 118){ currentZ++; }
+      else if(currentZ === 118){ currentZ = 119; }
+      else if(currentZ === 119){ currentZ = 120; }
+      else if(currentZ === 120){ currentZ = 121; }
+      else if(currentZ === 121){ currentZ = 122; }
       else { currentZ++; }
       redrawAll();
     });
