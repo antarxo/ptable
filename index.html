@@ -690,7 +690,8 @@
       // Ενημέρωση του InfoPanel σύμφωνα με τις νέες απαιτήσεις:
       // - Αριστερή στήλη: εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
       // - Δεξιά κελία:
-      //    • Πάνω σειρά: Αριστερή στήλη με υποστιβάδες και Δεξιά στήλη με στιβάδες και το μήνυμα
+      //    • Πάνω σειρά: Αριστερή στήλη με υποστιβάδες και Δεξιά στήλη με τις στιβάδες και το μήνυμα,
+      //      όπου το μήνυμα εμφανίζεται σε ξεχωριστή γραμμή με πλάγιους χαρακτήρες.
       //    • Χαμηλότερη σειρά: τα remarks
       function updateInfo(z) {
         if(z < 3){
@@ -718,17 +719,21 @@
         // Αριστερή στήλη της πάνω σειράς: εμφάνιση υποστιβάδων
         let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-        let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
-        let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
+        let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : ''}</div>`;
   
         // Υπολογισμός μηνύματος:
         let message = "";
         if(element.block === 'f') {
           message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
         } else {
-          // Διάβασμα της ομάδας από την ιδιότητα col
           let group = parseInt(element.col);
-          if(group === 1 || group === 2){
+          if(group === 1){
+            if(element.number === 1){
+              message = "Θέλει να πάρει 1 ηλεκτρόνιο";
+            } else {
+              message = "Θέλει να δώσει 1 ηλεκτρόνιο";
+            }
+          } else if(group === 2){
             message = `Θέλει να δώσει ${group} ηλεκτρόνια`;
           } else if(group === 13){
             message = `Θέλει να δώσει ${group - 10} ηλεκτρόνια`;
@@ -743,9 +748,10 @@
           }
         }
   
-        // Δεξιά στήλη της πάνω σειράς: εμφάνιση των στιβάδων και του μηνύματος
-        let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}` +
-                           ` <span style="margin-left:10px;">${message}</span></div>`;
+        // Δεξιά στήλη της πάνω σειράς: εμφάνιση των στιβάδων και του μηνύματος,
+        // όπου οι στιβάδες εμφανίζονται πρώτα και στη συνέχεια το μήνυμα σε ξεχωριστή γραμμή με πλάγιους χαρακτήρες.
+        let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
+                           `<div style="text-align:left; font-style: italic;">${message}</div>`;
   
         let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${shellsAndMsg}</div>`;
   
