@@ -76,13 +76,12 @@
     /* Νέος καμβάς για τις υποστιβάδες – εμφάνιση τύπου balloon */
     #canvasSubshells {
       position: absolute;
-      /* Η αρχική θέση θα ενημερωθεί δυναμικά */
-      background: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.8); /* Αυξημένη διαφάνεια */
       border: 1px solid #333;
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Αρχικές διαστάσεις – αρχικό πλάτος, θα προσαρμοστεί δυναμικά */
+      /* Αρχικές διαστάσεις – πλάτος θα προσαρμοστεί δυναμικά */
       width: 300px;
       height: 90px;
       z-index: 150;
@@ -335,18 +334,10 @@
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.textSize(16);
       
-      // Υπολογισμός δυναμικού πλάτους με βάση το μέγιστο πλάτος των κειμένων
-      let texts = [];
-      if(subshellsData.prev) texts.push(subshellsData.prev);
-      if(subshellsData.current) texts.push(subshellsData.current);
-      if(subshellsData.next) texts.push(subshellsData.next);
-      let maxW = 0;
-      texts.forEach(t => {
-        let w = subshellsP.textWidth(t);
-        if(w > maxW) maxW = w;
-      });
-      // Προσθέτουμε padding 20px (10px αριστερά και 10px δεξιά)
-      maxW += 20;
+      // Υπολογισμός δυναμικού πλάτους με βάση το μέγιστο textWidth των κειμένων
+      let texts = [subshellsData.prev, subshellsData.current, subshellsData.next].filter(t => t);
+      let maxW = texts.length > 0 ? Math.max(...texts.map(t => subshellsP.textWidth(t))) : 0;
+      maxW += 20; // padding 10px αριστερά και 10px δεξιά
       subshellsP.resizeCanvas(maxW, subshellsP.height);
       
       // Σχεδίαση κειμένων με padding 10px
@@ -373,15 +364,22 @@
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
       let rect = canvasElem.getBoundingClientRect();
-      // Αρχικά offset, προσθέτουμε 10px επιπλέον στο ύψος (offsetY)
-      let offsetX = 40, offsetY = 40 + 10;
+      // Αρχικά offset: 40px + 10px επιπλέον στο ύψος
+      let offsetX = 40, offsetY = 50;
       let newLeft = rect.left + pos.x + offsetX;
       let newTop = rect.top + pos.y + offsetY;
       let balloon = document.getElementById("canvasSubshells");
-      if(balloon) {
-        balloon.style.left = newLeft + "px";
-        balloon.style.top = newTop + "px";
+      
+      // Έλεγχος αν ο καμβάς ξεπερνά το δεξιό όριο της οθόνης
+      let screenWidth = window.innerWidth;
+      let balloonWidth = balloon.offsetWidth;
+      if(newLeft + balloonWidth > screenWidth) {
+        newLeft -= (balloonWidth + 42); // μετακίνηση αριστερότερα κατά (42px + πλάτος του καμβά)
       }
+  
+      balloon.style.left = newLeft + "px";
+      balloon.style.top = newTop + "px";
+      balloon.style.background = "rgba(255,255,255,0.8)"; // αυξημένη διαφάνεια στο φόντο
     }
   </script>
   
@@ -675,13 +673,12 @@
         const element = elements.find(e => e.number === z);
         if(!element) return;
   
-        // Υπολογίζουμε το εμφανιζόμενο Z: για τα στοιχεία 1 και 2 (εσωτερικά 119 και 120) εμφανίζεται το Z-118
+        // Για τα στοιχεία 1 και 2 (εσωτερικά 119 και 120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
         let symbolColor = getBlockColor(element.block);
         document.getElementById('elementInfo').innerHTML =
           `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${displayZ}]`;
   
-        // Ετοιμάζουμε τα δεδομένα για τις υποστιβάδες: προηγούμενη, τρέχουσα (Bold), επόμενη
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         let subshellsData = {
@@ -689,12 +686,9 @@
           current: element.subshells,
           next: next ? next.subshells : ""
         };
-        // Σχεδιάζουμε τις υποστιβάδες στον νέο καμβά
         drawSubshells(subshellsData);
-        // Ενημερώνουμε τη θέση του "balloon" ανάλογα με τη θέση του στοιχείου
         updateBalloonPosition(element);
   
-        // Εμφάνιση στον πίνακα πληροφοριών (δεξιά) των υποστιβάδων και των remarks
         let subshellsHTML = "";
         if(prev)
           subshellsHTML += `<div class="subshell-line subshell-prev" style="color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
@@ -736,7 +730,7 @@
         currentZ = 0;
         window.groupsInitialized = false;
         window.periodsInitialized = false;
-        window.subshellsInitialized = false;  // Επαναφορά του subshells
+        window.subshellsInitialized = false;
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
         document.getElementById('canvasPeriods').style.display = "none";
@@ -744,7 +738,7 @@
         document.getElementById('canvasD_groups').style.display = "none";
         document.getElementById('canvasP_groups').style.display = "none";
         initializeCanvases();
-        initSubshellsCanvas();  // Επανεκκίνηση του subshells canvas
+        initSubshellsCanvas();
         updateInfo(currentZ);
       });
   
@@ -764,7 +758,7 @@
   
       loadElements();
   
-      // ★ Εξάγουμε την calculatePosition στο global scope για να είναι προσβάσιμη από updateBalloonPosition
+      // Εξάγουμε την calculatePosition στο global scope για πρόσβαση στο updateBalloonPosition
       window.calculatePosition = calculatePosition;
     })();
   </script>
