@@ -44,9 +44,9 @@
       top: 100px;
       width: calc(100vw - 920px);
     }
-    /* Αριστερή στήλη */
+    /* Αριστερή στήλη – τώρα θεωρούμε πλάτος περίπου 240px */
     #leftPanel {
-      width: 220px;
+      width: 240px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -57,9 +57,6 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      align-items: center;
-      font-size: 0.9em;
-      text-align: center;
       padding-left: 20px;
     }
     /* Στυλ για τις γραμμές των υποστιβάδων */
@@ -357,36 +354,37 @@
         subshellsP.text(subshellsData.next, 10, 5*subshellsP.height/6);
       }
     }
-    // Ενημέρωση θέσης του balloon
+    // Ενημέρωση θέσης του balloon με τις νέες συνθήκες:
+    // - Default θέση: κάτω και δεξιά του τρέχοντος κελιού.
+    // - Αν (desiredLeft + balloon width) > 1250, αφαιρείται (balloon width + 42px).
+    // - Αν (desiredTop + balloon height) υπερβαίνει το πάνω όριο του infoPanel, ανεβαίνει κατά (42px + balloon height).
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
       let rect = canvasElem.getBoundingClientRect();
-      let offsetX = 40, offsetY = 50; // 40px + 10px επιπλέον
+      let offsetX = 40, offsetY = 50; 
       let desiredLeft = rect.left + pos.x + offsetX;
       let desiredTop = rect.top + pos.y + offsetY;
       
       let balloon = document.getElementById("canvasSubshells");
-      // Χρησιμοποιούμε getBoundingClientRect() για το balloon για ακριβές μέγεθος
       let balloonRect = balloon.getBoundingClientRect();
       let balloonEffectiveWidth = balloonRect.width;
       let balloonEffectiveHeight = balloonRect.height;
       
-      // Αν desiredLeft + (balloon width) υπερβαίνει το όριο του δεξιού άκρου του p τομέα, τότε αφαιρούμε (balloon width + 42px)
+      // Έλεγχος οριζόντιας θέσης: αν (desiredLeft + πλάτος του balloon) > 1250
       let horizontalAdjustment = 0;
-      let canvasRight = rect.right;
-      if (desiredLeft + balloonEffectiveWidth > canvasRight) {
-        horizontalAdjustment = balloonEffectiveWidth + 42;
+      if (desiredLeft + balloonEffectiveWidth > 1250) {
+         horizontalAdjustment = balloonEffectiveWidth + 42;
       }
       
-      // Κατακόρυφος έλεγχος έναντι του infoPanel
+      // Έλεγχος κατακόρυφης θέσης: αν (desiredTop + ύψος του balloon) υπερβαίνει το πάνω όριο του infoPanel
+      let verticalAdjustment = 0;
       let infoPanel = document.getElementById("infoPanel");
       let infoPanelRect = infoPanel.getBoundingClientRect();
-      let verticalAdjustment = 0;
       if (desiredTop + balloonEffectiveHeight > infoPanelRect.top) {
-        verticalAdjustment = balloonEffectiveHeight + 42;
+         verticalAdjustment = balloonEffectiveHeight + 42;
       }
       
       let newLeft = desiredLeft - horizontalAdjustment;
@@ -395,7 +393,6 @@
       balloon.style.left = newLeft + "px";
       balloon.style.top = newTop + "px";
       balloon.style.background = "rgba(255,255,255,0.8)";
-      // Εμφάνιση του balloon
       balloon.style.display = "block";
     }
   </script>
@@ -693,7 +690,8 @@
   
         // Για στοιχεία 1 και 2 (119,120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Διαμόρφωση: "Ζ=81 ΤΙ Θάλλιο" αλλά τώρα με το σύμβολο από το json (π.χ. "Θι") που εμφανίζεται με font‑size:3em, bold και με το χρώμα του τομέα
+        // Διαμόρφωση του στοιχείου: εμφανίζεται το σύμβολο από το JSON (π.χ. "Θι") με font‑size:3em, bold και με το χρώμα του τομέα,
+        // μαζί με το όνομα του στοιχείου.
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
@@ -709,28 +707,28 @@
         drawSubshells(subshellsData);
         updateBalloonPosition(element);
   
-        // Δημιουργία νέας διάταξης για το κελί "remarks":
-        // - Η πάνω σειρά χωρίζεται σε δύο στήλες:
-        //     α) Αριστερή στήλη: οι υποστιβάδες σε τρεις σειρές (προηγούμενη, τρέχουσα, επόμενη)
-        //     β) Δεξιά στήλη: οι τιμές των shells και outerShell με τίτλους "Στιβάδες:" και "Εξωτερική:" που λαμβάνονται από το json
-        // - Η κάτω σειρά περιέχει το remarks από το json.
+        // Διαμόρφωση δεξιού κελιού (δεύτερης στήλης) του infoPanel σε δύο σειρές:
+        // • Η πάνω σειρά χωρίζεται σε δύο στήλες (ίσου πλάτους) όπου:
+        //   - η αριστερή στήλη δείχνει τις υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη) με αριστερή στοίχιση,
+        //   - η δεξιά στήλη δείχνει τα shells και outerShell με τους τίτλους "Στιβάδες:" και "Εξωτερική:" με αριστερή στοίχιση.
+        // • Η κάτω σειρά εμφανίζει το remarks από το JSON με στοίχιση στο κέντρο.
         let leftSubshellHTML = "";
         if(prev)
-          leftSubshellHTML += `<div style="color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
-        leftSubshellHTML += `<div style="color:${getBlockColor(element.block)}; font-weight:bold;">${element.subshells}</div>`;
+          leftSubshellHTML += `<div style="text-align:left; color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
+        leftSubshellHTML += `<div style="text-align:left; color:${getBlockColor(element.block)}; font-weight:bold;">${element.subshells}</div>`;
         if(next)
-          leftSubshellHTML += `<div style="color:${getBlockColor(next.block)};">${next.subshells}</div>`;
+          leftSubshellHTML += `<div style="text-align:left; color:${getBlockColor(next.block)};">${next.subshells}</div>`;
   
         let rightShellHTML = "";
-        rightShellHTML += `<div><strong>Στιβάδες:</strong> ${element.shells || ""}</div>`;
-        rightShellHTML += `<div><strong>Εξωτερική:</strong> ${element.outerShell || ""}</div>`;
+        rightShellHTML += `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${element.shells || ""}</div>`;
+        rightShellHTML += `<div style="text-align:left;"><strong>Εξωτερική:</strong> ${element.outerShell || ""}</div>`;
   
-        let upperRowHTML = `<div style="display: flex; justify-content: space-between;">` +
-                           `<div style="flex: 1;">${leftSubshellHTML}</div>` +
-                           `<div style="flex: 1;">${rightShellHTML}</div>` +
+        let upperRowHTML = `<div style="display: flex;">` +
+                           `<div style="width: 50%; text-align: left;">${leftSubshellHTML}</div>` +
+                           `<div style="width: 50%; text-align: left;">${rightShellHTML}</div>` +
                            `</div>`;
   
-        let lowerRowHTML = `<div>${element.remarks || ""}</div>`;
+        let lowerRowHTML = `<div style="text-align: center;">${element.remarks || ""}</div>`;
   
         document.getElementById('remarks').innerHTML = upperRowHTML + lowerRowHTML;
   
