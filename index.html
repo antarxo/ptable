@@ -216,14 +216,20 @@
       }
     }
     // Συνάρτηση για μετατροπή των shells σε μορφή "K(2), L(8), M(3)"
+    // Η τελευταία στιβάδα εμφανίζεται με έντονη γραφή.
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
       const labels = ["K", "L", "M", "N", "O", "P", "Q"];
-      let formatted = shellNumbers.map((num, idx) => {
-        return labels[idx] + "(" + num + ")";
-      });
-      return formatted.join(", ");
+      let result = [];
+      for(let i = 0; i < shellNumbers.length; i++){
+        let text = labels[i] + "(" + shellNumbers[i] + ")";
+        if(i === shellNumbers.length - 1) {
+          text = "<strong>" + text + "</strong>";
+        }
+        result.push(text);
+      }
+      return result.join(", ");
     }
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
@@ -691,9 +697,17 @@
       // Στην αριστερή στήλη εμφανίζεται το στοιχείο (Ζ, σύμβολο, όνομα).
       // Στο δεξί κελί:
       //  - Η πάνω σειρά χωρίζεται σε δύο στήλες:
-      //       αριστερή: υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη)
-      //       δεξιά: στιβάδες σε μορφή "K(2), L(8), M(3)"
-      //  - Μία γραμμή πιο κάτω εμφανίζεται το μήνυμα που υπολογίζεται βάσει του στοιχείου.
+      //       αριστερή: πρώτα εμφανίζεται "Ζ=<ατομικός αριθμός>" και μετά οι υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη)
+      //       δεξιά: οι στιβάδες σε μορφή "K(2), L(8), M(3)" με την τελευταία με έντονη γραφή
+      //  - Ακολουθεί η ίδια σειρά (πιο κάτω) όπου εμφανίζεται το μήνυμα που υπολογίζεται βάσει:
+      //       Αν το στοιχείο ανήκει στον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) εμφανίζεται "Λανθανίδα", αλλιώς "Ακτινίδα"
+      //       Αλλιώς, με βάση την ομάδα (element.group):
+      //         Αν η ομάδα είναι 1, 2: "Θέλει να δώσει X ηλεκτρόνια"
+      //         Αν η ομάδα είναι 13: "Θέλει να δώσει X-10 ηλεκτρόνια"
+      //         Αν η ομάδα είναι 3–12: "Στοιχείο μετάπτωσης"
+      //         Αν η ομάδα είναι 14: "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια"
+      //         Αν η ομάδα είναι 15–17: "Θέλει να πάρει 18-X ηλεκτρόνια"
+      //         Αν η ομάδα είναι 18: "Ευγενές αέριο-Χημικά αδρανές"
       //  - Τέλος, η χαμηλότερη σειρά εμφανίζει τα remarks με κεντρική στοίχιση.
       function updateInfo(z) {
         if(z < 3){
@@ -718,35 +732,40 @@
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
   
-        // Αριστερή στήλη του δεξιού κελιού: υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη)
-        let subshellsHTML = `<div style="text-align:left;">` +
+        // Στην αριστερή στήλη του δεξιού κελιού: πρώτα εμφανίζεται "Ζ=<ατομικός αριθμός>" και μετά οι υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη)
+        let leftUpperHTML = `<div style="width:50%; text-align:left;">` +
+                              `<div style="margin-bottom:5px;">Ζ=${displayZ}</div>` +
                               `<div>${prev ? prev.subshells : ''}</div>` +
                               `<div>${element.subshells}</div>` +
                               `<div>${next ? next.subshells : ''}</div>` +
                             `</div>`;
-        // Δεξιά στήλη του δεξιού κελιού: στιβάδες σε μορφή "K(2), L(8), M(3)"
-        let shellsHTML = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>`;
+        // Στη δεξιά στήλη του δεξιού κελιού: οι στιβάδες σε μορφή "K(2), L(8), M(3)" με την τελευταία με έντονη γραφή
+        let shellsHTML = `<div style="width:50%; text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>`;
   
-        let upperRowHTML = `<div style="display: flex;">` +
-                              `<div style="width:50%;">${subshellsHTML}</div>` +
-                              `<div style="width:50%;">${shellsHTML}</div>` +
-                           `</div>`;
+        let upperRowHTML = `<div style="display: flex;">${leftUpperHTML}${shellsHTML}</div>`;
   
         // Μήνυμα που υπολογίζεται βάσει του στοιχείου:
         let message = "";
         if(element.block === 'f') {
-          message = "Λανθανίδα";
+          // Για τον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) εμφανίζεται "Λανθανίδα", αλλιώς "Ακτινίδα"
+          if(element.row === 6) {
+            message = "Λανθανίδα";
+          } else {
+            message = "Ακτινίδα";
+          }
         } else {
           let group = parseInt(element.group);
           let outer = parseInt(element.outerShell) || 0;
-          if(group === 1 || group === 2 || group === 13) {
+          if(group === 1 || group === 2) {
             message = `Θέλει να δώσει ${outer} ηλεκτρόνια`;
+          } else if(group === 13) {
+            message = `Θέλει να δώσει ${outer - 10} ηλεκτρόνια`;
           } else if(group >= 3 && group <= 12) {
             message = "Στοιχείο μετάπτωσης";
           } else if(group === 14) {
             message = "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια";
           } else if(group >= 15 && group <= 17) {
-            message = `Θέλει να πάρει ${8 - outer} ηλεκτρόνια`;
+            message = `Θέλει να πάρει ${18 - outer} ηλεκτρόνια`;
           } else if(group === 18) {
             message = "Ευγενές αέριο-Χημικά αδρανές";
           }
