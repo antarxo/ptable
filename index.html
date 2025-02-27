@@ -196,7 +196,7 @@
       if(comm) initialComments = comm.innerHTML;
     });
     
-    // Τώρα, δεν εφαρμόζουμε μετατροπή – το clickedZ (τιμές 1..118) χρησιμοποιείται απευθείας
+    // Καθώς ξεκινάμε από το 3 σύμφωνα με τη συμφωνημένη λογική, ορίζουμε αρχική τιμή currentZ = 3.
     function convertClickedToCurrent(clickedZ) {
       return clickedZ;
     }
@@ -399,8 +399,8 @@
       };
       
       let elements = [];
-      // currentZ εδώ αντιπροσωπεύει το clickedZ (τιμές 1..118)
-      let currentZ = 0;
+      // Ορίζουμε αρχική τιμή currentZ = 3, όπως συμφωνήσαμε.
+      let currentZ = 3;
       let flashActive = false;
       
       function updateToggleButton() {
@@ -622,7 +622,7 @@
       
       // updateInfo: χρησιμοποιεί το clickedZ (που είναι το currentZ, τιμές 1..118) για να αντλήσει το στοιχείο από το JSON.
       function updateInfo(clickedZ) {
-        if(clickedZ < 1) {
+        if(clickedZ < 3) {
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           if(subshellsP) subshellsP.clear();
@@ -633,7 +633,7 @@
         let currentNum = convertClickedToCurrent(clickedZ);
         const element = elements.find(e => e.number === currentNum);
         if(!element) return;
-        // Εμφάνιση: αν το e.number >= 119, τότε εμφανίζουμε Ζ = e.number - 118, αλλιώς Ζ = e.number.
+        // Εμφάνιση: αν το e.number >= 119, τότε Ζ = e.number - 118, αλλιώς Ζ = e.number.
         let displayZ = (element.number >= 119 ? element.number - 118 : element.number);
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
@@ -710,7 +710,7 @@
       }
       
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ < 1) { currentZ = 1; }
+        if(currentZ < 3) { currentZ = 3; }
         else if(currentZ < 118) { currentZ++; }
         else { currentZ = 118; }
         redrawAll();
@@ -722,7 +722,7 @@
       });
       
       document.getElementById('reset').addEventListener('click', () => {
-        currentZ = 0;
+        currentZ = 3;
         window.groupsInitialized = false;
         window.periodsInitialized = false;
         window.subshellsInitialized = false;
