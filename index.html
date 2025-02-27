@@ -82,7 +82,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Αρχικές διαστάσεις */
+      /* Αρχικές διαστάσεις – αρχικό πλάτος, θα προσαρμοστεί δυναμικά */
       width: 300px;
       height: 90px;
       z-index: 150;
@@ -331,33 +331,50 @@
     function drawSubshells(subshellsData) {
       if(!subshellsP) return;
       subshellsP.clear();
-      subshellsP.textAlign(subshellsP.CENTER, subshellsP.CENTER);
+      // Αριστερή στοίχιση με padding 10px
+      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.textSize(16);
+      
+      // Υπολογισμός δυναμικού πλάτους με βάση το μέγιστο πλάτος των κειμένων
+      let texts = [];
+      if(subshellsData.prev) texts.push(subshellsData.prev);
+      if(subshellsData.current) texts.push(subshellsData.current);
+      if(subshellsData.next) texts.push(subshellsData.next);
+      let maxW = 0;
+      texts.forEach(t => {
+        let w = subshellsP.textWidth(t);
+        if(w > maxW) maxW = w;
+      });
+      // Προσθέτουμε padding 20px (10px αριστερά και 10px δεξιά)
+      maxW += 20;
+      subshellsP.resizeCanvas(maxW, subshellsP.height);
+      
+      // Σχεδίαση κειμένων με padding 10px
       if(subshellsData.prev) {
         subshellsP.fill(0);
-        subshellsP.text(subshellsData.prev, subshellsP.width/2, subshellsP.height/6);
+        subshellsP.text(subshellsData.prev, 10, subshellsP.height/6);
       }
       if(subshellsData.current) {
         subshellsP.fill(0);
         subshellsP.textStyle(subshellsP.BOLD);
-        subshellsP.text(subshellsData.current, subshellsP.width/2, subshellsP.height/2);
+        subshellsP.text(subshellsData.current, 10, subshellsP.height/2);
         subshellsP.textStyle(subshellsP.NORMAL);
       }
       if(subshellsData.next) {
         subshellsP.fill(0);
-        subshellsP.text(subshellsData.next, subshellsP.width/2, 5*subshellsP.height/6);
+        subshellsP.text(subshellsData.next, 10, 5*subshellsP.height/6);
       }
     }
     // Νέα συνάρτηση για ενημέρωση θέσης του "balloon" ανάλογα με το στοιχείο
     function updateBalloonPosition(element) {
       // Χρησιμοποιούμε την calculatePosition για το block του στοιχείου
       let block = element.block;
-      let pos = calculatePosition(element, block); // Η calculatePosition θα είναι διαθέσιμη παγκοσμίως
+      let pos = calculatePosition(element, block);
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
       let rect = canvasElem.getBoundingClientRect();
-      // Προσαρμόζουμε offset ώστε το balloon να εμφανίζεται δεξιά και κάτω από το κελί του στοιχείου
-      let offsetX = 40, offsetY = 40;
+      // Αρχικά offset, προσθέτουμε 10px επιπλέον στο ύψος (offsetY)
+      let offsetX = 40, offsetY = 40 + 10;
       let newLeft = rect.left + pos.x + offsetX;
       let newTop = rect.top + pos.y + offsetY;
       let balloon = document.getElementById("canvasSubshells");
@@ -719,6 +736,7 @@
         currentZ = 0;
         window.groupsInitialized = false;
         window.periodsInitialized = false;
+        window.subshellsInitialized = false;  // Επαναφορά του subshells
         document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
         document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
         document.getElementById('canvasPeriods').style.display = "none";
@@ -726,6 +744,7 @@
         document.getElementById('canvasD_groups').style.display = "none";
         document.getElementById('canvasP_groups').style.display = "none";
         initializeCanvases();
+        initSubshellsCanvas();  // Επανεκκίνηση του subshells canvas
         updateInfo(currentZ);
       });
   
