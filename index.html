@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel: στην αναπτυγμένη μορφή έχει 2 στήλες, ενώ στη συνεπτυγμένη έχει 1 στήλη με 3 γραμμές */
+    /* InfoPanel: στην αναπτυγμένη μορφή παραμένει η διάταξη 2 στηλών */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -35,7 +35,8 @@
       position: absolute;
       left: 20px;
       top: 458px;
-      width: calc(100vw - var(--rightPanelWidth) - 120px);
+      /* αυξάνουμε το πλάτος κατά 10px: από  ... -120px σε ... -110px */
+      width: calc(100vw - var(--rightPanelWidth) - 110px);
       z-index: 40;
       transition: all 1.5s ease;
     }
@@ -45,14 +46,14 @@
       width: calc(100vw - 920px);
       flex-direction: column;  /* 1 στήλη με 3 "κελία" */
     }
-    /* Στην αναπτυγμένη μορφή η πρώτη στήλη παραμένει όπως είχε οριστεί */
+    /* Στην αναπτυγμένη μορφή, η πρώτη στήλη (στο elementInfo) μικραίνει από 240px σε 180px */
     #leftPanel {
-      width: 240px;
+      width: 180px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Στην αναπτυγμένη μορφή η δεξιά "στήλη" περιέχει τα στοιχεία του Balloon και τα Remarks */
+    /* Η δεξιά στήλη παραμένει με flex-grow, αλλά το εσωτερικό της περιεχόμενο θα το τυλίξουμε με wrapper που έχει μειωμένο πλάτος κατά 120px */
     #remarks {
       flex-grow: 1;
       display: flex;
@@ -116,7 +117,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: νέες ετικέτες "1η Κ", "2η L", ... "7η Q" */
+    /* Καμβάς Περιόδων: Ετικέτες "1η Κ", "2η L", ... "7η Q" */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -690,15 +691,15 @@
       }
   
       // Ενημέρωση του InfoPanel με τις νέες απαιτήσεις:
-      // 1. Για το Balloon: Αν το στοιχείο είναι 1, τότε "prev" εμφανίζεται ως "-" .
-      //    Αν το στοιχείο είναι 2 και δεν βρέθηκε "next", τότε ανατίθεται το στοιχείο 3.
-      //    Αν το στοιχείο είναι 3 και δεν βρέθηκε "prev", τότε ανατίθεται το στοιχείο 2.
-      // 2. Στη συνεπτυγμένη μορφή (collapsed): Στο μεσαίο κελί εμφανίζεται η γραμμή με τις στιβάδες,
-      //    η οποία ακολουθεί τη μορφή "Στιβάδες: K(2), L(8), M(9), N(2)" και κάτω από αυτήν, σε νέα γραμμή,
-      //    το μήνυμα (με πλάγια γραμματοσειρά).
-      // 3. Στην αναπτυγμένη μορφή (χωρίς collapsed): Το περιεχόμενο του Balloon συνδυάζεται σε ένα κελί
-      //    όπου πρώτα εμφανίζονται οι πληροφορίες των υποστιβάδων (prev, current, next) και αμέσως κάτω,
-      //    μετά με νέα γραμμή, εμφανίζονται οι στιβάδες με το μήνυμα.
+      // 1. Στην αναπτυγμένη μορφή διατηρείται η προηγούμενη δομή (δύο στήλες)
+      //    όπου στην δεξιά στήλη οι στιβάδες εμφανίζονται και το μήνυμα τοποθετείται κάτω από αυτές,
+      //    ενώ όλο το σύνολο (στιβάδες + μήνυμα) τοποθετείται δεξιότερα από τις υποστιβάδες.
+      // 2. Αν το στοιχείο είναι 118, τότε στο Balloon το "next" εμφανίζεται ως "-".
+      // 3. Ο πίνακας πληροφοριών στην αναπτυγμένη μορφή:
+      //    α. Αυξάνει το πλάτος του κατά 10px (μέσω αλλαγής της width στο #infoPanel).
+      //    β. Η πρώτη στήλη μειώνεται σε 180px (από 240px).
+      //    γ. Το περιεχόμενο της δεύτερης στήλης (που φιλοξενεί τις στιβάδες και το μήνυμα)
+      //       τυλίγεται σε wrapper με πλάτος μειωμένο κατά 120px (με style="width: calc(100% - 120px); margin-left:20px;").
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -712,13 +713,13 @@
         if(!element) return;
   
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Αριστερή στήλη: στοιχείο (Ζ, σύμβολο, όνομα)
+        // Αριστερή στήλη: εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
         document.getElementById('elementInfo').innerHTML = infoHTML;
   
-        // Υπολογισμός prev και next με ειδικές περιπτώσεις για τα στοιχεία 1, 2, 3
+        // Υπολογισμός prev και next με ειδικές περιπτώσεις
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) {
@@ -729,6 +730,9 @@
         }
         if(z === 3 && !prev) {
           prev = elements.find(e => e.number === 2);
+        }
+        if(z === 118) {
+          next = { subshells: "-" };
         }
   
         // Υπολογισμός μηνύματος με έντονους χαρακτήρες στις λέξεις "πάρει" και "δώσει"
@@ -758,27 +762,21 @@
           }
         }
   
-        // Σχεδιασμός του περιεχομένου του Balloon
-        if(document.body.classList.contains('collapsed')){
-          // Συνεπτυγμένη μορφή: μεσαίο κελί περιέχει τις στιβάδες με το μήνυμα κάτω (κάθετα)
-          let middleCell = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
-                           `<div style="text-align:left; font-style: italic;">${message}</div>`;
-          let bottomCell = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
-          document.getElementById('remarks').innerHTML = `<div>${middleCell}</div><div>${bottomCell}</div>`;
-        } else {
-          // Αναπτυγμένη μορφή: όλα τα δεδομένα του Balloon εμφανίζονται σε ένα κελί, 
-          // πρώτα οι πληροφορίες για τις υποστιβάδες (prev, current, next) και στη συνέχεια (με νέα γραμμή)
-          // οι στιβάδες και το μήνυμα.
-          let prevStr = prev ? `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">` +
+        // Αναπτυγμένη μορφή (χωρίς collapsed): διατηρείται η προηγούμενη διάταξη σε δύο στήλες
+        // Η δεξιά στήλη εμφανίζει τις στιβάδες και το μήνυμα (το μήνυμα τοποθετείται κάτω από τις στιβάδες)
+        let prevStr = prev ? `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">` +
                                 `Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>` : '';
-          let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-          let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
-          let upperCell = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}</div>` +
-                          `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
-                          `<div style="text-align:left; font-style: italic;">${message}</div>`;
-          let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
-          document.getElementById('remarks').innerHTML = upperCell + remarksRowHTML;
-        }
+        let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+        let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>` : '';
+        let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
+        // Η δεξιά στήλη: οι στιβάδες και το μήνυμα τοποθετούνται σε ένα wrapper με μειωμένο πλάτος κατά 120px και ευθυγραμμίζονται δεξιότερα από τις υποστιβάδες.
+        let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
+                           `<div style="text-align:left; font-style: italic;">${message}</div>`;
+        let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}` +
+                           `<div style="width: calc(100% - 120px); margin-left:20px;">${shellsAndMsg}</div></div>`;
+        let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
+  
+        document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
   
         let subshellsData = {
           prev: prev ? prev.subshells : "",
