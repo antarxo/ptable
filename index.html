@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Αναπτυγμένη μορφή: 2 στήλες με συνολικό πλάτος αυξημένο κατά 15px */
+    /* Αναπτυγμένη μορφή: 2 στήλες, με αύξηση του συνολικού πλάτους κατά 15px */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -46,18 +46,36 @@
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Στήλη 1 (στο στοιχείο) μειώνεται σε 180px */
+    /* Στήλη 1 (στο elementInfo): στην αναπτυγμένη μορφή έχουμε 220px */
     #leftPanel {
-      width: 180px;
+      width: 220px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Στήλη 2 για την αναπτυγμένη μορφή – δεξιά στήλη */
+    /* Στήλη 2 (remarks) στην αναπτυγμένη μορφή θα εμφανίζει τα περιεχόμενα σε δύο γραμμές:
+       - Πρώτη γραμμή: ένα wrapper με δύο υποστήλες (67% για υποστιβάδες, 33% με margin-left 20px για στιβάδες+μήνυμα)
+       - Δεύτερη γραμμή: τα Remarks */
     #remarks {
       flex-grow: 1;
       padding-left: 20px;
     }
+    /* Στιλ για το wrapper των υποστηλών στην αναπτυγμένη μορφή */
+    .right-wrapper {
+      display: flex;
+      flex-direction: row;
+    }
+    .subshells-col {
+      width: 67%;
+      text-align: left;
+    }
+    .shells-msg-col {
+      width: 33%;
+      text-align: left;
+      margin-left: 20px;
+    }
+    /* Όπως ήταν προηγουμένως, σε collapsed δεν θέλουμε οριζόντια διάταξη στο μεσαίο κελί */
+    /* (η συμφωνημένη διάταξη collapsed έχει 1 στήλη με 3 γραμμές) */
     /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line {
       width: 100%;
@@ -114,7 +132,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων: Ετικέτες "1η Κ", "2η L", ... "7η Q" */
+    /* Καμβάς Περιόδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -146,7 +164,10 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Σε collapsed δεν αλλάζουμε τη δομή που είχαμε συμφωνήσει (1 στήλη με 3 γραμμές) */
+    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές (χωρίς επιπλέον οριζόντια διάταξη στο μεσαίο κελί) */
+    body.collapsed #infoPanel {
+      flex-direction: column;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -650,114 +671,6 @@
         }
         updateInfo(currentZ);
         updateToggleButton();
-      }
-      
-      // Η updateInfo εφαρμόζει τη συμφωνημένη δομή:
-      // • Σε αναπτυγμένη μορφή (χωρίς collapsed) ο πίνακας πληροφοριών έχει 2 στήλες:
-      //    - Στην πρώτη στήλη (leftPanel) εμφανίζεται το στοιχείο.
-      //    - Στη δεύτερη στήλη (remarks) εμφανίζεται ένα wrapper που, σε δύο γραμμές:
-      //         1η γραμμή: Δύο κελιά – στο αριστερό (67%) τα δεδομένα των υποστιβάδων (prev, current, next) και στο δεξί (33% + margin-left:20px) οι στιβάδες μαζί με το μήνυμα.
-      //         2η γραμμή: Τα Remarks.
-      // • Σε συνεπτυγμένη μορφή (collapsed) ο πίνακας πληροφοριών εμφανίζεται ως 1 στήλη με 3 γραμμές:
-      //         1η: Περιεχόμενα της πρώτης στήλης (elementInfo, explanation, comments).
-      //         2η: Οι υποστιβάδες και κάτω από αυτές οι στιβάδες με το μήνυμα.
-      //         3η: Τα Remarks.
-      function updateInfo(z) {
-        if(z < 3){
-          document.getElementById('elementInfo').innerHTML =
-            "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
-          if(subshellsP) subshellsP.clear();
-          document.getElementById('canvasSubshells').style.display = "none";
-          document.getElementById('remarks').innerHTML = "";
-          return;
-        }
-        const element = elements.find(e => e.number === z);
-        if(!element) return;
-        
-        let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
-                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
-                       `<span style="font-style: italic;">${element.name}</span>`;
-        
-        // Ειδικές περιπτώσεις για στοιχεία 1,2,3 και 118
-        let prev = elements.find(e => e.number === (z - 1));
-        let next = elements.find(e => e.number === (z + 1));
-        if(z === 1) {
-          prev = { subshells: "-" };
-        }
-        if(z === 2) {
-          next = elements.find(e => e.number === 3);
-        }
-        if(z === 3) {
-          prev = elements.find(e => e.number === 2);
-        }
-        if(z === 118) {
-          next = { subshells: "-" };
-        }
-        
-        let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">` +
-                      `Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>`;
-        let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-        let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
-        let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
-                           `<div style="font-style: italic;">${messageForElement(element)}</div>`;
-        
-        if(!document.body.classList.contains('collapsed')){
-          // Αναπτυγμένη μορφή: 2 στήλες
-          document.getElementById('leftPanel').innerHTML = infoHTML;
-          let rightContent = `<div style="display:flex; flex-direction:column;">` +
-                             `<div style="display:flex; align-items:center;">` +
-                             `<div style="width:67%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>` +
-                             `<div style="width:33%; text-align:left; margin-left:20px;">${shellsAndMsg}</div>` +
-                             `</div>` +
-                             `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>` +
-                             `</div>`;
-          document.getElementById('remarks').innerHTML = rightContent;
-        } else {
-          // Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές
-          let row1 = `<div>${infoHTML}<br>${document.getElementById('explanation').innerHTML}<br>${document.getElementById('comments').innerHTML}</div>`;
-          let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>` +
-                     `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
-                     `<div style="font-style: italic;">${messageForElement(element)}</div></div>`;
-          let row3 = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
-          document.getElementById('infoPanel').innerHTML = row1 + row2 + row3;
-        }
-        
-        let subshellsData = {
-          prev: prev ? prev.subshells : "",
-          current: element.subshells,
-          next: next ? next.subshells : ""
-        };
-        drawSubshells(subshellsData);
-        setTimeout(() => { updateBalloonPosition(element); }, 10);
-        
-        if(!document.body.classList.contains('collapsed')){
-          // Σε αναπτυγμένη μορφή έχουμε ήδη ενημερωμένα leftPanel και remarks.
-        }
-      }
-      
-      function messageForElement(element) {
-        if(element.block === 'f') {
-          return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
-        } else {
-          let group = parseInt(element.col);
-          if(group === 1){
-            return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
-          } else if(group === 2){
-            return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
-          } else if(group === 13){
-            return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
-          } else if(group >= 3 && group <= 12){
-            return "Στοιχείο μετάπτωσης";
-          } else if(group === 14){
-            return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
-          } else if(group >= 15 && group <= 17){
-            return `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
-          } else if(group === 18){
-            return "Ευγενές αέριο-Χημικά αδρανές";
-          }
-          return "";
-        }
       }
       
       document.getElementById('nextElement').addEventListener('click', () => {
