@@ -5,130 +5,78 @@
   <title>Περιοδικός Πίνακας – Ομάδες, Περιόδους & Info</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --rightPanelWidth: 150px;
-    }
+    :root { --rightPanelWidth: 150px; }
     body {
       font-family: 'Roboto', sans-serif;
-      margin: 0;
-      overflow: hidden;
+      margin: 0; overflow: hidden;
       background: #f7f7f7;
     }
     #title {
-      position: absolute;
-      top: 20px;
-      left: 50%;
+      position: absolute; top: 20px; left: 50%;
       transform: translateX(-50%);
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 50;
+      font-size: 24px; font-weight: bold; z-index: 50;
     }
-    /* Expanded mode: 2 στήλες, συνολικό πλάτος = calc(100vw - var(--rightPanelWidth) - 105px) */
+    /* Expanded mode */
     #infoPanel {
-      display: flex;
-      flex-direction: row;
+      display: flex; flex-direction: row;
       background: rgba(255,255,255,0.95);
-      border: 2px solid #333;
-      border-radius: 8px;
+      border: 2px solid #333; border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      padding: 20px;
-      position: absolute;
-      left: 20px;
-      top: 458px;
+      padding: 20px; position: absolute;
+      left: 20px; top: 458px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
-      z-index: 40;
-      transition: all 1.5s ease;
+      z-index: 40; transition: all 1.5s ease;
     }
-    /* Collapsed mode: 1 στήλη με 3 γραμμές */
+    /* Collapsed mode */
     body.collapsed #infoPanel {
-      left: 848px;
-      top: 58px;
+      left: 848px; top: 58px;
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Left column στα expanded: πλάτος 220px */
+    /* Left column */
     #leftPanel {
-      width: 220px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      width: 220px; display: flex; flex-direction: column; justify-content: space-between;
     }
-    /* Right column στα expanded */
-    #remarks {
-      flex-grow: 1;
-      padding-left: 20px;
-    }
-    /* Δομή στα expanded: στην δεξιά στήλη υπάρχει wrapper με δύο γραμμές:
-       - Η πρώτη γραμμή (upper-right) χωρίζεται σε 2 υποστήλες:
-            • 67% για τις υποστιβάδες
-            • 33% (με margin-left:20px) για τις στιβάδες+μήνυμα
-       - Η δεύτερη γραμμή εμφανίζει τα Remarks.
-    */
+    /* Right column */
+    #remarks { flex-grow: 1; padding-left: 20px; }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
     .subshells-col { width: 67%; text-align: left; }
     .shells-msg-col { width: 33%; text-align: left; margin-left: 20px; }
-    /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line { width: 100%; }
     .subshell-prev, .subshell-next { color: #333; }
     .subshell-current { font-weight: bold; }
-    /* Καμβάς υποστιβάδων (Balloon) */
+    /* Balloon */
     #canvasSubshells {
-      position: absolute;
-      background: rgba(255,255,255,0.8);
-      border: 1px solid #333;
-      border-radius: 10px;
+      position: absolute; background: rgba(255,255,255,0.8);
+      border: 1px solid #333; border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-      padding: 10px;
-      width: 300px;
-      height: 90px;
-      z-index: 150;
-      display: none;
+      padding: 10px; width: 300px; height: 90px;
+      z-index: 150; display: none;
     }
-    /* Κουμπιά */
+    /* Buttons */
     #buttonPanel {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+      position: fixed; bottom: 20px; right: 20px;
+      display: flex; flex-direction: column; gap: 5px;
     }
     button {
-      background-color: #008CBA;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1em;
-      transition: background-color 0.3s;
+      background-color: #008CBA; color: white; border: none;
+      padding: 10px 15px; border-radius: 5px; cursor: pointer;
+      font-size: 1em; transition: background-color 0.3s;
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
     .canvas {
-      position: absolute;
-      background: transparent;
-      transition: all 0.5s ease-in-out;
-      transform: translateY(-10px);
+      position: absolute; background: transparent;
+      transition: all 0.5s ease-in-out; transform: translateY(-10px);
     }
     #canvasPeriods {
-      position: absolute;
-      left: 6px;
-      top: 150px;
-      width: 42px;
-      height: 292px;
-      background: #f0f0f0;
-      display: none;
-      z-index: 5;
+      position: absolute; left: 6px; top: 150px;
+      width: 42px; height: 292px;
+      background: #f0f0f0; display: none; z-index: 5;
     }
-    #canvasS_groups,
-    #canvasD_groups,
-    #canvasP_groups {
-      position: absolute;
-      background: #f0f0f0;
-      display: none;
-      z-index: 11;
+    #canvasS_groups, #canvasD_groups, #canvasP_groups {
+      position: absolute; background: #f0f0f0; display: none; z-index: 11;
     }
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
@@ -141,7 +89,7 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Στο collapsed mode, μετακινούμε το canvasF 100px πιο κάτω (top: 250px) */
+    /* Στο collapsed mode, canvasF μετακινείται 100px πιο κάτω */
     body.collapsed #canvasF { top: 250px; }
     body.collapsed #infoPanel { flex-direction: column; }
   </style>
@@ -162,7 +110,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας Πληροφοριών – Αρχική δομή -->
+  <!-- Πίνακας Πληροφοριών -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -184,9 +132,9 @@
   </div>
   
   <script>
-    // Global declarations για updateInfo και redrawAll
+    // Global declarations
     var updateInfo, redrawAll;
-    // Αποθήκευση αρχικών περιεχομένων explanation και comments για collapsed mode
+    // Αποθήκευση αρχικών περιεχομένων explanation και comments
     var initialExplanation = "";
     var initialComments = "";
     window.addEventListener('load', function() {
@@ -196,9 +144,13 @@
       if(comm) initialComments = comm.innerHTML;
     });
     
-    // Καθώς ξεκινάμε από το 3 σύμφωνα με τη συμφωνημένη λογική, ορίζουμε αρχική τιμή currentZ = 3.
+    // Με βάση τη συμφωνημένη λογική:
+    // - Εμφανίζουμε τα στοιχεία με αριθμούς 3 έως 118.
+    // - Όταν currentZ = 119 εμφανίζεται το στοιχείο 1.
+    // - Όταν currentZ = 120 εμφανίζεται το στοιχείο 2.
+    // - Όταν currentZ >= 121 εμφανίζονται οι καμβάδες περιόδων και ομάδων.
     function convertClickedToCurrent(clickedZ) {
-      return clickedZ;
+      return clickedZ; // Δεν απαιτείται επιπλέον μετατροπή εδώ.
     }
     
     function getBlockColor(b) {
@@ -399,11 +351,12 @@
       };
       
       let elements = [];
-      // Ορίζουμε αρχική τιμή currentZ = 3, όπως συμφωνήσαμε.
+      // Ορίζουμε αρχική τιμή currentZ = 3 ώστε να ξεκινάμε από το στοιχείο με Ζ=3
       let currentZ = 3;
       let flashActive = false;
       
       function updateToggleButton() {
+        // Όταν φτάσουμε στο 118, μετά από το 2 (δηλαδή currentZ 119 και 120) εμφανίζονται οι καμβάδες
         document.getElementById('toggleFBlock').disabled = (currentZ < 118);
       }
       
@@ -439,14 +392,19 @@
               drawElements(p, block);
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => {
+                  // Αν currentZ είναι μεταξύ 3 και 118, εμφανίζουμε αυτά τα στοιχεία.
+                  // Αν currentZ = 119, εμφανίζεται το στοιχείο 1.
+                  // Αν currentZ = 120, εμφανίζεται το στοιχείο 2.
                   if(currentZ < 118) {
-                    return e.block === block && e.number >= 1 && e.number <= currentZ;
+                    return e.block === block && e.number >= 3 && e.number <= currentZ;
                   } else if(currentZ === 118) {
-                    return e.block === block && e.number >= 1 && e.number <= 118;
+                    return e.block === block && e.number >= 3 && e.number <= 118;
                   } else if(currentZ === 119) {
-                    return e.block === block && ((e.number >= 1 && e.number <= 118) || e.number === 119);
+                    return e.block === block && e.number === 1;
+                  } else if(currentZ === 120) {
+                    return e.block === block && e.number === 2;
                   } else {
-                    return e.block === block && ((e.number >= 1 && e.number <= 118) || (e.number === 119 || e.number === 120));
+                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
                   }
                 });
                 for(let candidate of candidates) {
@@ -484,20 +442,24 @@
         p.strokeWeight(1);
         let filter;
         if(currentZ < 118) {
-          filter = e => e.block === block && e.number >= 1 && e.number <= currentZ;
+          filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
         } else if(currentZ === 118) {
-          filter = e => e.block === block && e.number >= 1 && e.number <= 118;
+          filter = e => e.block === block && e.number >= 3 && e.number <= 118;
         } else if(currentZ === 119) {
-          filter = e => e.block === block && ((e.number >= 1 && e.number <= 118) || e.number === 119);
+          filter = e => e.block === block && e.number === 1;
+        } else if(currentZ === 120) {
+          filter = e => e.block === block && e.number === 2;
         } else {
-          filter = e => e.block === block && ((e.number >= 1 && e.number <= 118) || (e.number === 119 || e.number === 120));
+          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
         }
         elements.filter(filter).forEach(e => {
           const pos = calculatePosition(e, e.block);
           let displayNumber = e.number;
           if(e.number === 119) displayNumber = 1;
           if(e.number === 120) displayNumber = 2;
-          if(e.number === currentZ) {
+          if(e.number === currentZ ||
+            ((currentZ === 119) && e.number === 1) ||
+            ((currentZ === 120) && e.number === 2)) {
             if(e.number === 119) { p.fill("yellow"); }
             else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
             else { p.fill(getBlockColor(e.block)); }
@@ -552,13 +514,15 @@
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => {
                   if(currentZ < 118) {
-                    return e.block === block && e.number >= 1 && e.number <= currentZ;
+                    return e.block === block && e.number >= 3 && e.number <= currentZ;
                   } else if(currentZ === 118) {
-                    return e.block === block && e.number >= 1 && e.number <= 118;
+                    return e.block === block && e.number >= 3 && e.number <= 118;
                   } else if(currentZ === 119) {
-                    return e.block === block && ((e.number >= 1 && e.number <= 118) || e.number === 119);
+                    return e.block === block && e.number === 1;
+                  } else if(currentZ === 120) {
+                    return e.block === block && e.number === 2;
                   } else {
-                    return e.block === block && ((e.number >= 1 && e.number <= 118) || (e.number === 119 || e.number === 120));
+                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
                   }
                 });
                 for(let candidate of candidates) {
@@ -578,9 +542,7 @@
           });
         });
         if(!document.body.classList.contains('collapsed')){
-          let base = 134;
-          let shiftP = 0;
-          let shiftD = 0;
+          let base = 134; let shiftP = 0; let shiftD = 0;
           if(currentZ <= 20){ shiftP = 0; shiftD = 0; }
           else if(currentZ >= 21 && currentZ <= 30){ shiftP = 42 * (currentZ - 20); shiftD = 0; }
           else if(currentZ >= 31 && currentZ <= 56){ shiftP = 42 * 10; shiftD = 0; }
@@ -595,7 +557,7 @@
           document.getElementById('canvasD').style.left = "139px";
           document.getElementById('canvasP').style.left = "559px";
         }
-        if(currentZ >= 120){
+        if(currentZ >= 121){
           document.getElementById('canvasPeriods').style.display = "block";
           initPeriodsCanvas();
           document.getElementById('canvasS_groups').style.display = "block";
@@ -620,7 +582,8 @@
         updateToggleButton();
       }
       
-      // updateInfo: χρησιμοποιεί το clickedZ (που είναι το currentZ, τιμές 1..118) για να αντλήσει το στοιχείο από το JSON.
+      // updateInfo: χρησιμοποιεί το clickedZ (currentZ) για ανάκτηση στοιχείου από το JSON.
+      // Μετά την ανάκτηση, αν το e.number είναι 119 ή 120 εμφανίζουμε το 1 ή το 2 αντίστοιχα.
       function updateInfo(clickedZ) {
         if(clickedZ < 3) {
           document.getElementById('elementInfo').innerHTML =
@@ -630,11 +593,18 @@
           document.getElementById('remarks').innerHTML = "";
           return;
         }
-        let currentNum = convertClickedToCurrent(clickedZ);
+        let currentNum;
+        if(clickedZ === 119) { currentNum = 1; }
+        else if(clickedZ === 120) { currentNum = 2; }
+        else { currentNum = convertClickedToCurrent(clickedZ); }
+        
         const element = elements.find(e => e.number === currentNum);
         if(!element) return;
-        // Εμφάνιση: αν το e.number >= 119, τότε Ζ = e.number - 118, αλλιώς Ζ = e.number.
         let displayZ = (element.number >= 119 ? element.number - 118 : element.number);
+        // Σε περίπτωση που currentNum είναι 1 ή 2, εμφανίζουμε το 1 ή το 2 αντίστοιχα.
+        if(clickedZ === 119) { displayZ = 1; }
+        else if(clickedZ === 120) { displayZ = 2; }
+        
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
@@ -710,14 +680,20 @@
       }
       
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ < 3) { currentZ = 3; }
-        else if(currentZ < 118) { currentZ++; }
-        else { currentZ = 118; }
+        if(currentZ < 118) {
+          currentZ++;
+        } else if(currentZ === 118) {
+          currentZ = 119; // μετά το 118, εμφανίζεται το στοιχείο 1
+        } else if(currentZ === 119) {
+          currentZ = 120; // στη συνέχεια, εμφανίζεται το στοιχείο 2
+        } else {
+          currentZ++; // και όταν φτάσουμε στο 121 και πάνω, εμφανίζονται οι καμβάδες περιόδων/ομάδων
+        }
         redrawAll();
       });
       
       document.getElementById('fillAll').addEventListener('click', () => {
-        currentZ = 118;
+        currentZ = 121;
         redrawAll();
       });
       
