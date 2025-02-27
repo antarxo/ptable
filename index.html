@@ -141,7 +141,7 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed mode: μετακίνηση του canvasF 100px πιο κάτω (top: 250px) */
+    /* Στο collapsed mode, μετακινούμε το canvasF 100px πιο κάτω (top: 250px) */
     body.collapsed #canvasF { top: 250px; }
     body.collapsed #infoPanel { flex-direction: column; }
   </style>
@@ -196,7 +196,7 @@
       if(comm) initialComments = comm.innerHTML;
     });
     
-    // Σημειώστε: Δεν εφαρμόζουμε πλέον κάποια μετατροπή – χρησιμοποιούμε το clickedZ απευθείας για την αναζήτηση στο JSON.
+    // Τώρα, δεν εφαρμόζουμε μετατροπή – το clickedZ (τιμές 1..118) χρησιμοποιείται απευθείας
     function convertClickedToCurrent(clickedZ) {
       return clickedZ;
     }
@@ -399,12 +399,12 @@
       };
       
       let elements = [];
-      // currentZ εδώ αντιπροσωπεύει το clickedZ (τιμές 3..120)
+      // currentZ εδώ αντιπροσωπεύει το clickedZ (τιμές 1..118)
       let currentZ = 0;
       let flashActive = false;
       
       function updateToggleButton() {
-        document.getElementById('toggleFBlock').disabled = (currentZ < 122);
+        document.getElementById('toggleFBlock').disabled = (currentZ < 118);
       }
       
       async function loadElements() {
@@ -440,13 +440,13 @@
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => {
                   if(currentZ < 118) {
-                    return e.block === block && e.number >= 3 && e.number <= currentZ;
+                    return e.block === block && e.number >= 1 && e.number <= currentZ;
                   } else if(currentZ === 118) {
-                    return e.block === block && e.number >= 3 && e.number <= 118;
+                    return e.block === block && e.number >= 1 && e.number <= 118;
                   } else if(currentZ === 119) {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
+                    return e.block === block && ((e.number >= 1 && e.number <= 118) || e.number === 119);
                   } else {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
+                    return e.block === block && ((e.number >= 1 && e.number <= 118) || (e.number === 119 || e.number === 120));
                   }
                 });
                 for(let candidate of candidates) {
@@ -484,13 +484,13 @@
         p.strokeWeight(1);
         let filter;
         if(currentZ < 118) {
-          filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
+          filter = e => e.block === block && e.number >= 1 && e.number <= currentZ;
         } else if(currentZ === 118) {
-          filter = e => e.block === block && e.number >= 3 && e.number <= 118;
+          filter = e => e.block === block && e.number >= 1 && e.number <= 118;
         } else if(currentZ === 119) {
-          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
+          filter = e => e.block === block && ((e.number >= 1 && e.number <= 118) || e.number === 119);
         } else {
-          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
+          filter = e => e.block === block && ((e.number >= 1 && e.number <= 118) || (e.number === 119 || e.number === 120));
         }
         elements.filter(filter).forEach(e => {
           const pos = calculatePosition(e, e.block);
@@ -552,13 +552,13 @@
               p.mouseClicked = () => {
                 let candidates = elements.filter(e => {
                   if(currentZ < 118) {
-                    return e.block === block && e.number >= 3 && e.number <= currentZ;
+                    return e.block === block && e.number >= 1 && e.number <= currentZ;
                   } else if(currentZ === 118) {
-                    return e.block === block && e.number >= 3 && e.number <= 118;
+                    return e.block === block && e.number >= 1 && e.number <= 118;
                   } else if(currentZ === 119) {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
+                    return e.block === block && ((e.number >= 1 && e.number <= 118) || e.number === 119);
                   } else {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
+                    return e.block === block && ((e.number >= 1 && e.number <= 118) || (e.number === 119 || e.number === 120));
                   }
                 });
                 for(let candidate of candidates) {
@@ -620,10 +620,9 @@
         updateToggleButton();
       }
       
-      // updateInfo: χρησιμοποιεί το clickedZ χωρίς μετατροπή, και αντλεί το στοιχείο από το JSON με βάση το clickedZ.
-      // Εμφανίζει το Ζ ως: αν e.number ≥ 119, τότε Ζ = e.number - 118, αλλιώς Ζ = e.number.
+      // updateInfo: χρησιμοποιεί το clickedZ (που είναι το currentZ, τιμές 1..118) για να αντλήσει το στοιχείο από το JSON.
       function updateInfo(clickedZ) {
-        if(clickedZ < 3) {
+        if(clickedZ < 1) {
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           if(subshellsP) subshellsP.clear();
@@ -634,6 +633,7 @@
         let currentNum = convertClickedToCurrent(clickedZ);
         const element = elements.find(e => e.number === currentNum);
         if(!element) return;
+        // Εμφάνιση: αν το e.number >= 119, τότε εμφανίζουμε Ζ = e.number - 118, αλλιώς Ζ = e.number.
         let displayZ = (element.number >= 119 ? element.number - 118 : element.number);
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
@@ -710,18 +710,14 @@
       }
       
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ < 3) { currentZ = 3; }
+        if(currentZ < 1) { currentZ = 1; }
         else if(currentZ < 118) { currentZ++; }
-        else if(currentZ === 118) { currentZ = 119; }
-        else if(currentZ === 119) { currentZ = 120; }
-        else if(currentZ === 120) { currentZ = 121; }
-        else if(currentZ === 121) { currentZ = 122; }
-        else { currentZ++; }
+        else { currentZ = 118; }
         redrawAll();
       });
       
       document.getElementById('fillAll').addEventListener('click', () => {
-        currentZ = 122;
+        currentZ = 118;
         redrawAll();
       });
       
@@ -743,7 +739,7 @@
       });
       
       document.getElementById('toggleFBlock').addEventListener('click', () => {
-        if(currentZ < 122) return;
+        if(currentZ < 118) return;
         document.body.classList.toggle('collapsed');
         let toggleBtn = document.getElementById('toggleFBlock');
         if(document.body.classList.contains('collapsed')){
