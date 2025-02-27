@@ -141,7 +141,7 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Στο collapsed mode, μετακινούμε το canvasF 100px πιο κάτω (top: 250px) */
+    /* Collapsed mode: μετακίνηση του canvasF 100px πιο κάτω (top: 250px) */
     body.collapsed #canvasF { top: 250px; }
     body.collapsed #infoPanel { flex-direction: column; }
   </style>
@@ -196,9 +196,9 @@
       if(comm) initialComments = comm.innerHTML;
     });
     
-    // Συνάρτηση μετατροπής: Αν clickedZ > 118, τότε currentNum = clickedZ - 118, αλλιώς currentNum = clickedZ.
+    // Σημειώστε: Δεν εφαρμόζουμε πλέον κάποια μετατροπή – χρησιμοποιούμε το clickedZ απευθείας για την αναζήτηση στο JSON.
     function convertClickedToCurrent(clickedZ) {
-      return (clickedZ > 118 ? clickedZ - 118 : clickedZ);
+      return clickedZ;
     }
     
     function getBlockColor(b) {
@@ -620,7 +620,8 @@
         updateToggleButton();
       }
       
-      // updateInfo: τώρα χρησιμοποιεί τη μετατροπή ώστε να αντλεί το στοιχείο με βάση το currentNum
+      // updateInfo: χρησιμοποιεί το clickedZ χωρίς μετατροπή, και αντλεί το στοιχείο από το JSON με βάση το clickedZ.
+      // Εμφανίζει το Ζ ως: αν e.number ≥ 119, τότε Ζ = e.number - 118, αλλιώς Ζ = e.number.
       function updateInfo(clickedZ) {
         if(clickedZ < 3) {
           document.getElementById('elementInfo').innerHTML =
@@ -633,19 +634,18 @@
         let currentNum = convertClickedToCurrent(clickedZ);
         const element = elements.find(e => e.number === currentNum);
         if(!element) return;
-        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentNum}</span> ` +
+        let displayZ = (element.number >= 119 ? element.number - 118 : element.number);
+        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
         if(!document.body.classList.contains('collapsed')) {
           document.getElementById('leftPanel').innerHTML = infoHTML;
         }
-        // Για όλα τα στοιχεία, χρησιμοποιούμε τα δεδομένα από το JSON.
         let prev = elements.find(e => e.number === (currentNum - 1));
         let next = elements.find(e => e.number === (currentNum + 1));
         if(!prev) { prev = { subshells: "-", number:"", block:"dummy" }; }
         if(!next) { next = { subshells: "-", number:"", block:"dummy" }; }
-        
-        let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
+        let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${prev.subshells === "-" ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
         let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
         let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
