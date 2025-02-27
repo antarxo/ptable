@@ -371,39 +371,34 @@
       }
     }
     // Νέα λογική τοποθέτησης του Balloon:
-    // Default: το balloon τοποθετείται έτσι ώστε η πάνω αριστερή του γωνία να αγγίζει την κάτω δεξιά γωνία του κελιού.
-    // Στη συνέχεια, ελέγχουμε αν το bounding box του balloon βγαίνει εκτός ορίων (π.χ. πάνω από το infoPanel ή πέρα από 1250)
+    // Το balloon τοποθετείται με default θέση ώστε η πάνω αριστερή του γωνία να αγγίζει την κάτω δεξιά γωνία του κελιού.
+    // Στη συνέχεια, ελέγχουμε αν το bounding box του balloon βγαίνει εκτός ορίων (π.χ. πέρα από 1250 ή πάνω από το infoPanel).
+    // Ο προσδιορισμός γίνεται αφού έχει αποδοθεί η ανανεωμένη διάσταση (με setTimeout).
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
       let cellRect = canvasElem.getBoundingClientRect();
-      // Υπολογίζουμε τη θέση του κελιού μέσα στον καμβά:
       let cellX = cellRect.left + pos.x;
       let cellY = cellRect.top + pos.y;
-      // Υποθέτουμε μέγεθος κελιού 40x40:
       let cellRight = cellX + 40;
       let cellBottom = cellY + 40;
-      // Default: το balloon τοποθετείται στην κάτω δεξιά γωνία του κελιού
       let desiredLeft = cellRight;
       let desiredTop = cellBottom;
       
       let balloon = document.getElementById("canvasSubshells");
       let balloonRect = balloon.getBoundingClientRect();
       
-      // Έλεγχος: αν desiredLeft + balloon.width > 1250, μετατοπίζουμε οριζόντια
       if (desiredLeft + balloonRect.width > 1250) {
          desiredLeft = desiredLeft - (balloonRect.width + 42);
       }
       
-      // Έλεγχος: αν desiredTop + balloon.height υπερβαίνει το πάνω όριο του infoPanel, μετατοπίζουμε κατακόρυφα προς τα πάνω
       let infoPanel = document.getElementById("infoPanel");
       if(infoPanel && (desiredTop + balloonRect.height > infoPanel.getBoundingClientRect().top)) {
          desiredTop = desiredTop - (balloonRect.height + 42);
       }
       
-      // Τελική προσαρμογή: clamp ώστε οι τιμές να μην είναι αρνητικές
       let newLeft = Math.max(desiredLeft, 0);
       let newTop = Math.max(desiredTop, 0);
       
@@ -697,17 +692,20 @@
       // Στην αριστερή στήλη εμφανίζεται το στοιχείο (Ζ, σύμβολο, όνομα).
       // Στο δεξί κελί:
       //  - Η πάνω σειρά χωρίζεται σε δύο στήλες:
-      //       αριστερή: πρώτα εμφανίζεται "Ζ=<ατομικός αριθμός>" και μετά οι υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη)
-      //       δεξιά: οι στιβάδες σε μορφή "K(2), L(8), M(3)" με την τελευταία με έντονη γραφή
-      //  - Ακολουθεί η ίδια σειρά (πιο κάτω) όπου εμφανίζεται το μήνυμα που υπολογίζεται βάσει:
-      //       Αν το στοιχείο ανήκει στον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) εμφανίζεται "Λανθανίδα", αλλιώς "Ακτινίδα"
-      //       Αλλιώς, με βάση την ομάδα (element.group):
-      //         Αν η ομάδα είναι 1, 2: "Θέλει να δώσει X ηλεκτρόνια"
-      //         Αν η ομάδα είναι 13: "Θέλει να δώσει X-10 ηλεκτρόνια"
-      //         Αν η ομάδα είναι 3–12: "Στοιχείο μετάπτωσης"
-      //         Αν η ομάδα είναι 14: "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια"
-      //         Αν η ομάδα είναι 15–17: "Θέλει να πάρει 18-X ηλεκτρόνια"
-      //         Αν η ομάδα είναι 18: "Ευγενές αέριο-Χημικά αδρανές"
+      //       αριστερή: πρώτα εμφανίζεται "Ζ=<ατομικός αριθμός>" και μετά οι υποστιβάδες σε μορφή:
+      //            προηγούμενη: "Ζ=" + (προηγούμενο Ζ) + " " + (υποστιβάδα) με το χρώμα του τομέα
+      //            τρέχουσα: "Ζ=" + (τρέχων Ζ) + " " + (υποστιβάδα) με έντονη γραμματοσειρά και το χρώμα του τομέα
+      //            επόμενη: "Ζ=" + (επόμενο Ζ) + " " + (υποστιβάδα) με το χρώμα του τομέα
+      //       δεξιά: οι στιβάδες σε μορφή "K(2), L(8), M(3)" με την τελευταία με έντονη γραμματοσειρά
+      //  - Ακολουθεί η ίδια πάνω σειρά (πιο κάτω) όπου εμφανίζεται το μήνυμα σύμφωνα με:
+      //         Αν το στοιχείο ανήκει στον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) εμφανίζεται "Λανθανίδα", αλλιώς "Ακτινίδα"
+      //         Αλλιώς, με βάση την ομάδα:
+      //           Αν η ομάδα είναι 1 ή 2: "Θέλει να δώσει X ηλεκτρόνια"
+      //           Αν η ομάδα είναι 13: "Θέλει να δώσει X-10 ηλεκτρόνια"
+      //           Αν η ομάδα είναι 3–12: "Στοιχείο μετάπτωσης"
+      //           Αν η ομάδα είναι 14: "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια"
+      //           Αν η ομάδα είναι 15–17: "Θέλει να πάρει 18-X ηλεκτρόνια"
+      //           Αν η ομάδα είναι 18: "Ευγενές αέριο-Χημικά αδρανές"
       //  - Τέλος, η χαμηλότερη σειρά εμφανίζει τα remarks με κεντρική στοίχιση.
       function updateInfo(z) {
         if(z < 3){
@@ -732,14 +730,17 @@
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
   
-        // Στην αριστερή στήλη του δεξιού κελιού: πρώτα εμφανίζεται "Ζ=<ατομικός αριθμός>" και μετά οι υποστιβάδες (προηγούμενη, τρέχουσα, επόμενη)
-        let leftUpperHTML = `<div style="width:50%; text-align:left;">` +
-                              `<div style="margin-bottom:5px;">Ζ=${displayZ}</div>` +
-                              `<div>${prev ? prev.subshells : ''}</div>` +
-                              `<div>${element.subshells}</div>` +
-                              `<div>${next ? next.subshells : ''}</div>` +
-                            `</div>`;
-        // Στη δεξιά στήλη του δεξιού κελιού: οι στιβάδες σε μορφή "K(2), L(8), M(3)" με την τελευταία με έντονη γραφή
+        // Στην αριστερή στήλη του δεξιού κελιού: 
+        // πρώτα εμφανίζεται "Ζ=<ατομικός αριθμός>" και μετά οι υποστιβάδες με τη μορφή:
+        //    προηγούμενη: "Ζ=" + prev.number + " " + prev.subshells (με το χρώμα του τομέα)
+        //    τρέχουσα: "Ζ=" + element.number + " " + element.subshells (με έντονη γραμματοσειρά και το χρώμα του τομέα)
+        //    επόμενη: "Ζ=" + next.number + " " + next.subshells (με το χρώμα του τομέα)
+        let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
+        let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+        let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
+        let leftUpperHTML = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
+  
+        // Στη δεξιά στήλη του δεξιού κελιού: οι στιβάδες σε μορφή "K(2), L(8), M(3)" με την τελευταία με έντονη γραμματοσειρά.
         let shellsHTML = `<div style="width:50%; text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>`;
   
         let upperRowHTML = `<div style="display: flex;">${leftUpperHTML}${shellsHTML}</div>`;
@@ -747,7 +748,6 @@
         // Μήνυμα που υπολογίζεται βάσει του στοιχείου:
         let message = "";
         if(element.block === 'f') {
-          // Για τον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) εμφανίζεται "Λανθανίδα", αλλιώς "Ακτινίδα"
           if(element.row === 6) {
             message = "Λανθανίδα";
           } else {
@@ -779,15 +779,16 @@
         document.getElementById('remarks').innerHTML = rightCellHTML;
   
         // Ενημέρωση του balloon με τα δεδομένα των υποστιβάδων
-        let prevSubshells = prev ? prev.subshells : "";
-        let nextSubshells = next ? next.subshells : "";
         let subshellsData = {
-          prev: prevSubshells,
+          prev: prev ? prev.subshells : "",
           current: element.subshells,
-          next: nextSubshells
+          next: next ? next.subshells : ""
         };
         drawSubshells(subshellsData);
-        updateBalloonPosition(element);
+        // Αναμονή για να αποδοθούν οι νέες διαστάσεις του balloon και στη συνέχεια ο προσδιορισμός της θέσης.
+        setTimeout(() => {
+          updateBalloonPosition(element);
+        }, 10);
   
         document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
         document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
