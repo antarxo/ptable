@@ -172,9 +172,36 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Global Script: Ορισμοί στο global scope -->
+  <!-- Global Script: Όλες οι συναρτήσεις ορίζονται στο global scope -->
   <script>
-    // Global constants
+    // Ορισμοί helper functions
+    function convertClickedToCurrent(clickedZ) {
+      return clickedZ;
+    }
+    function getBlockColor(b) {
+      if(b === "dummy") return "gray";
+      switch(b) {
+        case "s": return "red";
+        case "p": return "darkgreen";
+        case "d": return "darkblue";
+        case "f": return "orange";
+        default: return "black";
+      }
+    }
+    function formatShells(shellsStr) {
+      if(!shellsStr) return "";
+      let shellNumbers = shellsStr.split(",").map(s => s.trim());
+      const labels = ["K", "L", "M", "N", "O", "P", "Q"];
+      let result = [];
+      for(let i = 0; i < shellNumbers.length; i++){
+        let text = labels[i] + "(" + shellNumbers[i] + ")";
+        if(i === shellNumbers.length - 1) { text = "<strong>" + text + "</strong>"; }
+        result.push(text);
+      }
+      return result.join(", ");
+    }
+    
+    // Global μεταβλητές
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -187,7 +214,6 @@
       d: '#ccccff',
       f: '#ffe5cc'
     };
-    
     let elements = [];
     let currentZ = 3; // Ξεκινάμε από το στοιχείο με Ζ=3 (τα 1 και 2 παραλείπονται)
     let flashActive = false;
@@ -220,7 +246,7 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')) {
+            if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "50px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "154px" : "139px"); }
               else if(block === 'p') { canvas.elt.style.left = "559px"; }
@@ -721,7 +747,7 @@
       redrawAll();
     });
     
-    // Εξαγωγή στο global scope
+    // Εξαγωγή στο global scope για πρόσβαση από p5 callbacks
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
