@@ -23,34 +23,54 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel styling */
+    /* InfoPanel: δύο στήλες – μετακινημένος 42px ψηλότερα */
     #infoPanel {
       display: flex;
       flex-direction: row;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 458px;
+      top: 458px; /* 42px ψηλότερα από 500px */
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
       transition: all 1.5s ease;
     }
     body.collapsed #infoPanel {
       left: 848px;
-      top: 58px;
+      top: 58px; /* 42px ψηλότερα από 100px */
       width: calc(100vw - 920px);
     }
+    /* Αριστερή στήλη – σταθερό πλάτος 240px */
     #leftPanel {
       width: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
+    /* Δεξιά στήλη */
     #remarks {
       flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
       padding-left: 20px;
     }
-    /* Balloon (CanvasSubshells) */
+    /* Στυλ για τις γραμμές των υποστιβάδων */
+    .subshell-line {
+      width: 100%;
+    }
+    .subshell-prev,
+    .subshell-next {
+      color: #333;
+    }
+    .subshell-current {
+      font-weight: bold;
+    }
+    /* Καμβάς υποστιβάδων (balloon) */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -58,12 +78,12 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px;
+      width: 300px; /* αρχικό πλάτος */
       height: 90px;
       z-index: 150;
       display: none;
     }
-    /* Button Panel */
+    /* Κουμπιά */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -88,46 +108,80 @@
     #toggleFBlock.active {
       background-color: #e68a00;
     }
-    /* Ένδειξη για τα canvases */
+    /* Καμβάδες στοιχείων/περιόδων/ομάδων */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* (Εδώ συμπεριλαμβάνονται τα υπόλοιπα styling για canvasPeriods, canvasS_groups, canvasD_groups, canvasP_groups, canvasS, canvasF, canvasD, canvasP – μπορείς να τα προσθέσεις όπως στις προηγούμενες εκδόσεις) */
+    #canvasPeriods {
+      position: absolute;
+      left: 6px;
+      top: 150px;
+      width: 42px;
+      height: 292px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 5;
+    }
+    #canvasS_groups,
+    #canvasD_groups,
+    #canvasP_groups {
+      position: absolute;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+    }
+    #canvasS_groups { width: 82px; height: 40px; }
+    #canvasD_groups { width: 418px; height: 40px; }
+    #canvasP_groups { width: 250px; height: 40px; }
+    /* Χρώματα blocks */
+    .s-block { background: #ffcccc !important; }
+    .p-block { background: #ccffcc !important; }
+    .d-block { background: #ccccff !important; }
+    .f-block { background: #ffe5cc !important; }
+    /* Full view */
+    .full #canvasS { top: 150px; left: 50px; z-index: 1; }
+    .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
+    .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
+    .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
+    /* Collapsed view */
+    .collapsed #canvasS { top: 150px; left: 50px; }
+    .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
+    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; }
+    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; }
+    .period-label {
+      position: absolute;
+      left: 15px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #333;
+      background: rgba(200,200,200,0.9);
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: none;
+      line-height: 13px !important;
+      z-index: 30;
+    }
   </style>
-  <!-- Συμπερίληψη p5.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-  <!-- Global μεταβλητές -->
-  <script>
-    const BLOCK_COLORS = {
-      's': '#ffcccc',
-      'p': '#ccffcc',
-      'd': '#ccccff',
-      'f': '#ffe5cc'
-    };
-    const BLOCKS_CONFIG = {
-      s: { cols: 2, rows: 7 },
-      p: { cols: 6, rows: 7 },
-      d: { cols: 10, rows: 7 },
-      f: { cols: 14, rows: 7 }
-    };
-  </script>
 </head>
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Divs για τα διάφορα canvases -->
+  <!-- Καμβάδες περιόδων και ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
+  <!-- Καμβάδες τομέων -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
+  
+  <!-- Καμβάς υποστιβάδων (Balloon) -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Πίνακας πληροφοριών -->
@@ -148,9 +202,25 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Όλα τα script στο τέλος του body για να φορτωθεί το DOM -->
+  <!-- Όλα τα script τοποθετούνται στο τέλος του body ώστε να φορτωθεί το DOM -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <!-- Global μεταβλητές -->
   <script>
-    // Βοηθητικές συναρτήσεις
+    const BLOCK_COLORS = {
+      's': '#ffcccc',
+      'p': '#ccffcc',
+      'd': '#ccccff',
+      'f': '#ffe5cc'
+    };
+    const BLOCKS_CONFIG = {
+      s: { cols: 2, rows: 7 },
+      p: { cols: 6, rows: 7 },
+      d: { cols: 10, rows: 7 },
+      f: { cols: 14, rows: 7 }
+    };
+  </script>
+  <!-- Βοηθητικές συναρτήσεις και p5.js related functions -->
+  <script>
     function getBlockColor(b) {
       return BLOCK_COLORS[b] || "black";
     }
@@ -170,7 +240,6 @@
       return result.join(", ");
     }
     
-    // p5.js instance για το canvasSubshells
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(p => {
@@ -213,7 +282,6 @@
       }
     }
     
-    // Λειτουργία τοποθέτησης του Balloon
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
@@ -230,11 +298,11 @@
       let balloon = document.getElementById("canvasSubshells");
       let balloonWidth = balloon.offsetWidth;
       let balloonHeight = balloon.offsetHeight;
-      // Ελέγχουμε αν η νέα θέση είναι πάνω από το μισό του πλάτους της σελίδας
+      // Έλεγχος οριζόντιας μετατόπισης: αν desiredLeft > μισό του πλάτους, μετατόπιση αριστερά.
       if (desiredLeft > window.innerWidth / 2) {
          desiredLeft = desiredLeft - (balloonWidth + 42);
       }
-      // Ελέγχουμε κάθετα αν το κάτω όριο επικαλύπτει το InfoPanel
+      // Έλεγχος κάθετης μετατόπισης: αν desiredTop + balloonHeight επικαλύπτει το InfoPanel.
       let infoPanel = document.getElementById("infoPanel");
       if(infoPanel && (desiredTop + balloonHeight > infoPanel.getBoundingClientRect().top)) {
          desiredTop = desiredTop - (balloonHeight + 42);
@@ -265,7 +333,6 @@
       return { x, y };
     }
     
-    // Global μεταβλητές για στοιχεία και τρέχον Z
     let currentZ = 0;
     let flashActive = false;
     let elements = [];
@@ -410,15 +477,15 @@
                      `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                      `<span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('elementInfo').innerHTML = infoHTML;
-      
+  
       let prev = elements.find(e => e.number === (z - 1));
       let next = elements.find(e => e.number === (z + 1));
-      
+  
       let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
       let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
       let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
       let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
-      
+  
       let message = "";
       if(element.block === 'f') {
         message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -438,15 +505,15 @@
           message = "Ευγενές αέριο-Χημικά αδρανές";
         }
       }
-      
+  
       let shellsHTML = `<div style="display:inline-block; vertical-align:middle;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>`;
       let messageHTML = `<div style="display:inline-block; vertical-align:middle; margin-left:10px;">${message}</div>`;
       let rightColumn = `<div style="width:50%; text-align:left;">${shellsHTML}${messageHTML}</div>`;
-      
+  
       let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${rightColumn}</div>`;
       let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
       document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
-      
+  
       let subshellsData = {
         prev: prev ? prev.subshells : "",
         current: element.subshells,
@@ -456,7 +523,7 @@
       setTimeout(() => {
         updateBalloonPosition(element);
       }, 10);
-      
+  
       document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
       document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
     }
@@ -562,7 +629,6 @@
     loadElements();
     window.calculatePosition = calculatePosition;
   </script>
-  
   <script>
     function updateRightPanelWidth() {
       const rp = document.getElementById('buttonPanel');
