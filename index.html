@@ -58,7 +58,7 @@
       flex-grow: 1;
       padding-left: 20px;
     }
-    /* Wrapper για τη δεξιά στήλη στην αναπτυγμένη μορφή */
+    /* Στοιχεία δομής στη αναπτυγμένη διάταξη */
     .right-wrapper {
       display: flex;
       flex-direction: column;
@@ -76,7 +76,7 @@
       text-align: left;
       margin-left: 20px;
     }
-    /* Σε συνεπτυγμένη μορφή, τα περιεχόμενα στοιβάζονται κάθετα (1 στήλη με 3 γραμμές) */
+    /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line {
       width: 100%;
     }
@@ -160,7 +160,7 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Στο collapsed mode, μετακινούμε το canvasF 100px πιο κάτω (250px αντί για 150px) */
+    /* Στο collapsed mode, μετακινούμε το canvasF 100px πιο κάτω (top: 250px) */
     body.collapsed #canvasF {
       top: 250px;
     }
@@ -209,7 +209,7 @@
   <script>
     // Global declarations για updateInfo και redrawAll
     var updateInfo, redrawAll;
-    // Αποθήκευση των αρχικών περιεχομένων explanation και comments
+    // Αποθήκευση αρχικών περιεχομένων explanation και comments ώστε να χρησιμοποιούνται στο collapsed mode
     var initialExplanation = "";
     var initialComments = "";
     window.addEventListener('load', function() {
@@ -685,7 +685,7 @@
         updateToggleButton();
       }
       
-      // Η updateInfo εφαρμόζει τη συμφωνημένη διάταξη.
+      // Η updateInfo ενημερώνει τα περιεχόμενα του infoPanel.
       function updateInfo(z) {
         if(z < 3) {
           document.getElementById('elementInfo').innerHTML =
@@ -704,7 +704,6 @@
         if(!document.body.classList.contains('collapsed')) {
           document.getElementById('leftPanel').innerHTML = infoHTML;
         }
-        // Ειδικές περιπτώσεις: ορίζουμε dummy αντικείμενα αν δεν βρεθούν
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) { prev = { subshells: "-", number: "", block: "dummy" }; }
@@ -728,12 +727,23 @@
                               </div>`;
           document.getElementById('remarks').innerHTML = rightContent;
         } else {
+          // Στο collapsed mode, χρησιμοποιούμε τα αποθηκευμένα αρχικά περιεχόμενα
           let row1 = `<div>${infoHTML}<br>${initialExplanation}<br>${initialComments}</div>`;
           let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>
                       <div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
                       <div style="font-style: italic;">${messageForElement(element)}</div></div>`;
           let row3 = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
-          document.getElementById('infoPanel').innerHTML = row1 + row2 + row3;
+          // Ενημερώνουμε τα ήδη υπάρχοντα containers: leftPanel και remarks.
+          document.getElementById('leftPanel').innerHTML = row1;
+          // Αν δεν υπάρχει container για τη μέση γραμμή, τον δημιουργούμε
+          let collapsedMiddle = document.getElementById("collapsedMiddle");
+          if(!collapsedMiddle) {
+            collapsedMiddle = document.createElement("div");
+            collapsedMiddle.id = "collapsedMiddle";
+            document.getElementById("infoPanel").insertBefore(collapsedMiddle, document.getElementById("remarks"));
+          }
+          collapsedMiddle.innerHTML = row2;
+          document.getElementById('remarks').innerHTML = row3;
         }
         let subshellsData = {
           prev: prev ? prev.subshells : "",
@@ -815,10 +825,11 @@
         let toggleBtn = document.getElementById('toggleFBlock');
         if(document.body.classList.contains('collapsed')){
           toggleBtn.textContent = "Ανάπτυξη";
-          toggleBtn.classList.remove("active");
         } else {
           toggleBtn.textContent = "Σύμπτυξη";
-          toggleBtn.classList.add("active");
+          // Αν υπάρχει το collapsedMiddle, το αφαιρούμε για να επανέλθει η αρχική δομή
+          var cm = document.getElementById('collapsedMiddle');
+          if(cm) cm.remove();
         }
         redrawAll();
       });
