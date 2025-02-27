@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Αναπτυγμένη μορφή: 2 στήλες, με αύξηση του συνολικού πλάτους κατά 15px */
+    /* Αναπτυγμένη μορφή: 2 στήλες, με συνολικό πλάτος αυξημένο κατά 15px */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -46,21 +46,21 @@
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Στήλη 1 (στο elementInfo): στην αναπτυγμένη μορφή έχουμε 220px */
+    /* Στήλη 1 (στο elementInfo): στην αναπτυγμένη μορφή έχει πλάτος 220px (αύξηση κατά 40px από τα 180px) */
     #leftPanel {
       width: 220px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Στήλη 2 (remarks) στην αναπτυγμένη μορφή θα εμφανίζει τα περιεχόμενα σε δύο γραμμές:
-       - Πρώτη γραμμή: ένα wrapper με δύο υποστήλες (67% για υποστιβάδες, 33% με margin-left 20px για στιβάδες+μήνυμα)
-       - Δεύτερη γραμμή: τα Remarks */
+    /* Στήλη 2 (remarks) στην αναπτυγμένη μορφή εμφανίζεται ως περιεχόμενο σε δύο γραμμές:
+       - Πρώτη γραμμή: ένα wrapper που χωρίζεται σε δύο υποστήλες (67% για υποστιβάδες και 33% για στιβάδες+μήνυμα, με margin-left:20px).
+       - Δεύτερη γραμμή: τα Remarks.
+    */
     #remarks {
       flex-grow: 1;
       padding-left: 20px;
     }
-    /* Στιλ για το wrapper των υποστηλών στην αναπτυγμένη μορφή */
     .right-wrapper {
       display: flex;
       flex-direction: row;
@@ -74,8 +74,9 @@
       text-align: left;
       margin-left: 20px;
     }
-    /* Όπως ήταν προηγουμένως, σε collapsed δεν θέλουμε οριζόντια διάταξη στο μεσαίο κελί */
-    /* (η συμφωνημένη διάταξη collapsed έχει 1 στήλη με 3 γραμμές) */
+    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές, όπου στο μεσαίο κελί οι πληροφορίες στοιβάζονται κάθετα */
+    /* (Δεν υπάρχει οριζόντια διάταξη στο μεσαίο κελί) */
+    
     /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line {
       width: 100%;
@@ -164,7 +165,7 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές (χωρίς επιπλέον οριζόντια διάταξη στο μεσαίο κελί) */
+    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές – όπως είχαμε συμφωνήσει */
     body.collapsed #infoPanel {
       flex-direction: column;
     }
@@ -731,6 +732,9 @@
       loadElements();
       
       window.calculatePosition = calculatePosition;
+      // Εξασφαλίζουμε ότι η updateInfo είναι προσβάσιμη global:
+      window.updateInfo = updateInfo;
+      window.redrawAll = redrawAll;
     })();
   </script>
   
