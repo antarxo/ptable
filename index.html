@@ -44,12 +44,14 @@
       top: 58px;
       width: calc(100vw - 920px);
     }
+    /* Left panel */
     #leftPanel {
       width: 240px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
+    /* Right panel */
     #remarks {
       flex-grow: 1;
       display: flex;
@@ -57,14 +59,9 @@
       justify-content: flex-start;
       padding-left: 20px;
     }
-    /* Canvas elements for subshells, periods, groups, etc. */
-    .canvas {
-      position: absolute;
-      background: transparent;
-      transition: all 0.5s ease-in-out;
-      transform: translateY(-10px);
-    }
+    /* Καμβάς υποστιβάδων (Balloon) */
     #canvasSubshells {
+      position: absolute;
       background: rgba(255,255,255,0.8);
       border: 1px solid #333;
       border-radius: 10px;
@@ -100,13 +97,53 @@
     #toggleFBlock.active {
       background-color: #e68a00;
     }
-    /* (Τα υπόλοιπα div για canvasPeriods, canvasS_groups, canvasD_groups, canvasP_groups, canvasS, canvasF, canvasD, canvasP υπάρχουν όπως πριν) */
+    /* Άλλα div (καμβάδες για περιόδους, ομάδες, τομέα, κλπ) */
+    .canvas {
+      position: absolute;
+      background: transparent;
+      transition: all 0.5s ease-in-out;
+      transform: translateY(-10px);
+    }
+    /* (Εδώ ακολουθούν τα στυλ για τα canvasPeriods, canvasS_groups, canvasD_groups, canvasP_groups, canvasS, canvasF, canvasD, canvasP – μπορείς να τα διατηρήσεις όπως στην προηγούμενη έκδοση) */
   </style>
-  <!-- Συμπερίληψη p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-  <!-- Ορισμός όλων των helper συναρτήσεων πριν την κλήση του loadElements -->
+</head>
+<body class="full">
+  <div id="title">Περιοδικός Πίνακας</div>
+  
+  <!-- Τα div για τα διάφορα canvases -->
+  <div id="canvasPeriods" class="canvas"></div>
+  <div id="canvasS_groups" class="canvas"></div>
+  <div id="canvasD_groups" class="canvas"></div>
+  <div id="canvasP_groups" class="canvas"></div>
+  
+  <div id="canvasS" class="canvas"></div>
+  <div id="canvasF" class="canvas"></div>
+  <div id="canvasD" class="canvas"></div>
+  <div id="canvasP" class="canvas"></div>
+  <div id="canvasSubshells" class="canvas"></div>
+  
+  <!-- Πίνακας πληροφοριών -->
+  <div id="infoPanel">
+    <div id="leftPanel">
+      <div id="elementInfo"></div>
+      <div id="explanation" style="font-size:0.7em; margin-top:10px;"></div>
+      <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
+    </div>
+    <div id="remarks"></div>
+  </div>
+  
+  <!-- Κουμπιά -->
+  <div id="buttonPanel">
+    <button id="nextElement">Επόμενο</button>
+    <button id="fillAll">Συμπλήρωσε</button>
+    <button id="toggleFBlock">Σύμπτυξη</button>
+    <button id="reset">Reset</button>
+  </div>
+  
+  <!-- Όλα τα script στο τέλος του body -->
   <script>
-    // Βασική συνάρτηση για επιλογή χρώματος τομέα
+    // Βοηθητικές συναρτήσεις
     function getBlockColor(b) {
       switch(b) {
         case "s": return "red";
@@ -116,7 +153,7 @@
         default: return "black";
       }
     }
-    // Συνάρτηση για μετατροπή των shells σε μορφή "K(2), L(8), M(3)" με την τελευταία σε έντονη γραμματοσειρά.
+    
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -131,7 +168,7 @@
       }
       return result.join(", ");
     }
-    // initPeriodsCanvas, initGroupsCanvases, initSubshellsCanvas και drawSubshells
+    
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(p => {
@@ -154,11 +191,13 @@
       });
       window.periodsInitialized = true;
     }
+    
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Παρόμοιες ρυθμίσεις για τις ομάδες...
+      // Για απλότητα, μπορείς να προσθέσεις εδώ τον αντίστοιχο κώδικα ή να αφήσεις κενό
       window.groupsInitialized = true;
     }
+    
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(p => {
@@ -171,6 +210,7 @@
       });
       window.subshellsInitialized = true;
     }
+    
     function drawSubshells(subshellsData) {
       if(!window.subshellsP) return;
       window.subshellsP.clear();
@@ -196,10 +236,10 @@
       }
       if(subshellsData.next) {
         window.subshellsP.fill(0);
-        window.subshellsP.text(subshellsData.next, 10, 5*window.subshellsP.height/6);
+        window.subshellsP.text(subshellsData.next, 10, 5 * window.subshellsP.height / 6);
       }
     }
-    // Νέα λογική τοποθέτησης του Balloon:
+    
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
@@ -216,11 +256,11 @@
       let balloon = document.getElementById("canvasSubshells");
       let balloonWidth = balloon.offsetWidth;
       let balloonHeight = balloon.offsetHeight;
-      // Αν η νέα θέση (desiredLeft) είναι > window.innerWidth/2, μετατοπίζεται αριστερά.
+      // Έλεγχος οριζόντιας μετατόπισης: αν desiredLeft > window.innerWidth/2, μετατόπιση αριστερά κατά (42px + balloonWidth)
       if (desiredLeft > window.innerWidth / 2) {
          desiredLeft = desiredLeft - (balloonWidth + 42);
       }
-      // Κάθετη μετατόπιση: αν το κάτω του όριο επικαλύπτει το InfoPanel, μετατοπίζεται προς τα πάνω.
+      // Κάθετη μετατόπιση: αν desiredTop + balloonHeight επικαλύπτει το InfoPanel, μετατόπιση προς τα πάνω.
       let infoPanel = document.getElementById("infoPanel");
       if(infoPanel && (desiredTop + balloonHeight > infoPanel.getBoundingClientRect().top)) {
          desiredTop = desiredTop - (balloonHeight + 42);
@@ -232,351 +272,320 @@
       balloon.style.background = "rgba(255,255,255,0.8)";
       balloon.style.display = "block";
     }
-  </script>
-</head>
-<body class="full">
-  <!-- HTML δομή (div για title, canvases, infoPanel, buttonPanel κλπ) -->
-  <div id="title">Περιοδικός Πίνακας</div>
-  
-  <!-- Τα div για canvasPeriods, canvasS_groups, canvasD_groups, canvasP_groups, canvasS, canvasF, canvasD, canvasP, canvasSubshells -->
-  <!-- ... (είναι παρόμοια με τις προηγούμενες εκδόσεις και πρέπει να υπάρχουν) ... -->
-  
-  <!-- Πίνακας πληροφοριών -->
-  <div id="infoPanel">
-    <div id="leftPanel">
-      <div id="elementInfo"></div>
-      <div id="explanation" style="font-size:0.7em; margin-top:10px;"></div>
-      <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
-    </div>
-    <div id="remarks"></div>
-  </div>
-  
-  <!-- Κουμπιά -->
-  <div id="buttonPanel">
-    <button id="nextElement">Επόμενο</button>
-    <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξη</button>
-    <button id="reset">Reset</button>
-  </div>
-  
-  <!-- Κύριος κώδικας -->
-  <script>
-    (function() {
-      const BLOCK_COLORS = {
-        's': '#ffcccc',
-        'p': '#ccffcc',
-        'd': '#ccccff',
-        'f': '#ffe5cc'
-      };
-      const BLOCKS_CONFIG = {
+    
+    function calculatePosition(e, block) {
+      let x = 0, y = (e.row - 1) * 42;
+      if(block === 's') {
+        x = (e.col - 1) * 42;
+      } else if(block === 'f') {
+        x = (e.col - 3) * 42;
+      } else if(block === 'd') {
+        x = (e.col - 3) * 42;
+      } else if(block === 'p') {
+        if(currentZ < 20 && e.row === 1) {
+          x = (e.col - 18) * 42;
+        } else {
+          x = (e.col - 13) * 42;
+        }
+      }
+      return { x, y };
+    }
+    
+    let currentZ = 0;
+    let flashActive = false;
+    let elements = [];
+    
+    async function loadElements() {
+      try {
+        const response = await fetch('elements.json');
+        elements = await response.json();
+        initializeCanvases();
+        initSubshellsCanvas();
+        updateInfo(currentZ);
+        updateToggleButton();
+      } catch (err) {
+        console.error('Error loading elements:', err);
+      }
+    }
+    
+    function updateToggleButton() {
+      document.getElementById('toggleFBlock').disabled = (currentZ < 122);
+    }
+    
+    function initializeCanvases() {
+      const configData = {
         s: { cols: 2, rows: 7 },
         p: { cols: 6, rows: 7 },
         d: { cols: 10, rows: 7 },
         f: { cols: 14, rows: 7 }
       };
-      let elements = [];
-      let currentZ = 0;
-      let flashActive = false;
-  
-      function updateToggleButton() {
-        document.getElementById('toggleFBlock').disabled = (currentZ < 122);
-      }
-  
-      async function loadElements() {
-        try {
-          const response = await fetch('elements.json');
-          elements = await response.json();
-          initializeCanvases();
-          initSubshellsCanvas();
-          updateInfo(currentZ);
-          updateToggleButton();
-        } catch (err) {
-          console.error('Σφάλμα φόρτωσης:', err);
-        }
-      }
-  
-      function initializeCanvases() {
-        Object.keys(BLOCKS_CONFIG).forEach(block => {
-          new p5(p => {
-            p.setup = () => {
-              const config = BLOCKS_CONFIG[block];
-              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-              canvas.parent(`canvas${block.toUpperCase()}`);
-              canvas.elt.style.height = `${config.rows * 42}px`;
-              // Positioning του canvas (όπως προηγουμένως)
-              drawElements(p, block);
-              p.mouseClicked = () => {
-                let candidates = elements.filter(e => {
-                  if(currentZ < 118){
-                    return e.block === block && e.number >= 3 && e.number <= currentZ;
-                  } else if(currentZ === 118){
-                    return e.block === block && e.number >= 3 && e.number <= 118;
-                  } else if(currentZ === 119){
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
-                  } else {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
-                  }
-                });
-                for(let candidate of candidates) {
-                  let pos = calculatePosition(candidate, candidate.block);
-                  if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
-                     p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                    updateInfo(candidate.number);
-                    if(candidate.number === currentZ) {
-                      flashActive = true;
-                      setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                    }
-                    break;
-                  }
-                }
-              };
-            };
-          });
-        });
-      }
-  
-      function calculatePosition(e, block) {
-        let x = 0, y = (e.row - 1) * 42;
-        if(block==='s'){
-          x = (e.col - 1) * 42;
-        } else if(block==='f'){
-          x = (e.col - 3) * 42;
-        } else if(block==='d'){
-          x = (e.col - 3) * 42;
-        } else if(block==='p'){
-          if(currentZ < 20 && e.row === 1){
-            x = (e.col - 18) * 42;
-          } else {
-            x = (e.col - 13) * 42;
-          }
-        }
-        return { x, y };
-      }
-  
-      function drawElements(p, block) {
-        p.stroke(150);
-        p.strokeWeight(1);
-        let filter;
-        if(currentZ < 118){
-          filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
-        } else if(currentZ === 118){
-          filter = e => e.block === block && e.number >= 3 && e.number <= 118;
-        } else if(currentZ === 119){
-          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
-        } else {
-          filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
-        }
-        elements.filter(filter).forEach(e => {
-          const pos = calculatePosition(e, e.block);
-          let displayNumber = e.number;
-          if(e.number === 119) displayNumber = 1;
-          if(e.number === 120) displayNumber = 2;
-  
-          if(e.number === currentZ) {
-            if(e.number === 119) {
-              p.fill("yellow");
-            } else if(e.number === 120) {
-              p.fill(BLOCK_COLORS["s"]);
+      Object.keys(configData).forEach(block => {
+        new p5(p => {
+          p.setup = () => {
+            const config = configData[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+            canvas.parent("canvas" + block.toUpperCase());
+            canvas.elt.style.height = `${config.rows * 42}px`;
+            if(document.body.classList.contains('collapsed')){
+              if(block==='s'){
+                canvas.elt.style.left = "50px";
+              } else if(block==='f' || block==='d'){
+                canvas.elt.style.left = (block==='f' ? "154px" : "139px");
+              } else if(block==='p'){
+                canvas.elt.style.left = "559px";
+              }
             } else {
-              p.fill(getBlockColor(e.block));
+              if(block==='s'){
+                canvas.elt.style.left = "50px";
+              } else if(block==='f' || block==='d' || block==='p'){
+                canvas.elt.style.left = "134px";
+              }
             }
-            p.textSize(16);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-            p.noFill();
-            p.stroke(getBlockColor(e.block));
-            p.strokeWeight(4);
-            p.strokeJoin(p.ROUND);
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            if(flashActive) {
-              p.drawingContext.shadowBlur = 10;
-              p.drawingContext.shadowColor = "yellow";
-              p.rect(pos.x, pos.y, 40, 40, 5);
-              p.drawingContext.shadowBlur = 0;
-            }
-            p.strokeWeight(1);
-          } else {
-            p.fill(BLOCK_COLORS[e.block]);
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            p.fill(0);
-            p.textSize(e.number > 99 ? 10 : 12);
-            p.textStyle(p.BOLD);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          }
-        });
-      }
-  
-      function redrawAll() {
-        Object.keys(BLOCKS_CONFIG).forEach(block => {
-          const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
-          canvasDiv.innerHTML = '';
-          new p5(p => {
-            p.setup = () => {
-              const config = BLOCKS_CONFIG[block];
-              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-              canvas.parent(`canvas${block.toUpperCase()}`);
-              canvas.elt.style.height = `${config.rows * 42}px`;
-              drawElements(p, block);
-              p.mouseClicked = () => {
-                let candidates = elements.filter(e => {
-                  if(currentZ < 118){
-                    return e.block === block && e.number >= 3 && e.number <= currentZ;
-                  } else if(currentZ === 118){
-                    return e.block === block && e.number >= 3 && e.number <= 118;
-                  } else if(currentZ === 119){
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
-                  } else {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
-                  }
-                });
-                for(let candidate of candidates) {
-                  let pos = calculatePosition(candidate, candidate.block);
-                  if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
-                     p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                    updateInfo(candidate.number);
-                    if(candidate.number === currentZ) {
-                      flashActive = true;
-                      setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                    }
-                    break;
-                  }
+            drawElements(p, block);
+            p.mouseClicked = () => {
+              let candidates = elements.filter(e => {
+                if(currentZ < 118){
+                  return e.block === block && e.number >= 3 && e.number <= currentZ;
+                } else if(currentZ === 118){
+                  return e.block === block && e.number >= 3 && e.number <= 118;
+                } else if(currentZ === 119){
+                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
+                } else {
+                  return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
                 }
-              };
+              });
+              for(let candidate of candidates) {
+                let pos = calculatePosition(candidate, candidate.block);
+                if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
+                   p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  updateInfo(candidate.number);
+                  if(candidate.number === currentZ) {
+                    flashActive = true;
+                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                  }
+                  break;
+                }
+              }
             };
-          });
+          };
         });
-        updateInfo(currentZ);
-        updateToggleButton();
+      });
+    }
+    
+    function drawElements(p, block) {
+      p.stroke(150);
+      p.strokeWeight(1);
+      let filter;
+      if(currentZ < 118){
+        filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
+      } else if(currentZ === 118){
+        filter = e => e.block === block && e.number >= 3 && e.number <= 118;
+      } else if(currentZ === 119){
+        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
+      } else {
+        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
       }
-  
-      function updateInfo(z) {
-        if(z < 3){
-          document.getElementById('elementInfo').innerHTML =
-            "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
-          if(window.subshellsP) window.subshellsP.clear();
-          document.getElementById('canvasSubshells').style.display = "none";
-          document.getElementById('remarks').innerHTML = "";
-          return;
-        }
-        const element = elements.find(e => e.number === z);
-        if(!element) return;
-        let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
-                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
-                       `<span style="font-style: italic;">${element.name}</span>`;
-        document.getElementById('elementInfo').innerHTML = infoHTML;
-  
-        let prev = elements.find(e => e.number === (z - 1));
-        let next = elements.find(e => e.number === (z + 1));
-  
-        let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
-        let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-        let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
-        let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
-  
-        let message = "";
-        if(element.block === 'f') {
-          message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
-        } else {
-          let group = parseInt(element.group);
-          if(group === 1 || group === 2){
-            message = `Θέλει να δώσει ${group} ηλεκτρόνια`;
-          } else if(group === 13){
-            message = `Θέλει να δώσει ${group - 10} ηλεκτρόνια`;
-          } else if(group >= 3 && group <= 12){
-            message = "Στοιχείο μετάπτωσης";
-          } else if(group === 14){
-            message = "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια";
-          } else if(group >= 15 && group <= 17){
-            message = `Θέλει να πάρει ${18 - group} ηλεκτρόνια`;
-          } else if(group === 18){
-            message = "Ευγενές αέριο-Χημικά αδρανές";
+      elements.filter(filter).forEach(e => {
+        const pos = calculatePosition(e, e.block);
+        let displayNumber = e.number;
+        if(e.number === 119) displayNumber = 1;
+        if(e.number === 120) displayNumber = 2;
+        if(e.number === currentZ) {
+          p.fill(getBlockColor(e.block));
+          p.textSize(16);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          p.noFill();
+          p.stroke(getBlockColor(e.block));
+          p.strokeWeight(4);
+          p.strokeJoin(p.ROUND);
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          if(flashActive) {
+            p.drawingContext.shadowBlur = 10;
+            p.drawingContext.shadowColor = "yellow";
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.drawingContext.shadowBlur = 0;
           }
+          p.strokeWeight(1);
+        } else {
+          p.fill(BLOCK_COLORS[e.block]);
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          p.fill(0);
+          p.textSize(e.number > 99 ? 10 : 12);
+          p.textStyle(p.BOLD);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
         }
+      });
+    }
+    
+    function updateInfo(z) {
+      if(z < 3){
+        document.getElementById('elementInfo').innerHTML =
+          "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
+        if(window.subshellsP) window.subshellsP.clear();
+        document.getElementById('canvasSubshells').style.display = "none";
+        document.getElementById('remarks').innerHTML = "";
+        return;
+      }
+      const element = elements.find(e => e.number === z);
+      if(!element) return;
+      let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
+      let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
+                     `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                     `<span style="font-style: italic;">${element.name}</span>`;
+      document.getElementById('elementInfo').innerHTML = infoHTML;
   
-        let shellsHTML = `<div style="display:inline-block; vertical-align:middle;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>`;
-        let messageHTML = `<div style="display:inline-block; vertical-align:middle; margin-left:10px;">${message}</div>`;
-        let rightColumn = `<div style="width:50%; text-align:left;">${shellsHTML}${messageHTML}</div>`;
+      let prev = elements.find(e => e.number === (z - 1));
+      let next = elements.find(e => e.number === (z + 1));
   
-        let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${rightColumn}</div>`;
+      let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
+      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+      let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
+      let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
   
-        let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
-  
-        document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
-  
-        let subshellsData = {
-          prev: prev ? prev.subshells : "",
-          current: element.subshells,
-          next: next ? next.subshells : ""
-        };
-        drawSubshells(subshellsData);
-        setTimeout(() => {
-          updateBalloonPosition(element);
-        }, 10);
-  
-        document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
-        document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
+      let message = "";
+      if(element.block === 'f') {
+        message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+      } else {
+        let group = parseInt(element.group);
+        if(group === 1 || group === 2){
+          message = `Θέλει να δώσει ${group} ηλεκτρόνια`;
+        } else if(group === 13){
+          message = `Θέλει να δώσει ${group - 10} ηλεκτρόνια`;
+        } else if(group >= 3 && group <= 12){
+          message = "Στοιχείο μετάπτωσης";
+        } else if(group === 14){
+          message = "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια";
+        } else if(group >= 15 && group <= 17){
+          message = `Θέλει να πάρει ${18 - group} ηλεκτρόνια`;
+        } else if(group === 18){
+          message = "Ευγενές αέριο-Χημικά αδρανές";
+        }
       }
   
-      document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ < 3){
-          currentZ = 3;
-        } else if(currentZ < 118){
-          currentZ++;
-        } else if(currentZ === 118){
-          currentZ = 119;
-        } else if(currentZ === 119){
-          currentZ = 120;
-        } else if(currentZ === 120){
-          currentZ = 121;
-        } else if(currentZ === 121){
-          currentZ = 122;
-        } else {
-          currentZ++;
-        }
-        redrawAll();
-      });
+      let shellsHTML = `<div style="display:inline-block; vertical-align:middle;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>`;
+      let messageHTML = `<div style="display:inline-block; vertical-align:middle; margin-left:10px;">${message}</div>`;
+      let rightColumn = `<div style="width:50%; text-align:left;">${shellsHTML}${messageHTML}</div>`;
   
-      document.getElementById('fillAll').addEventListener('click', () => {
+      let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${rightColumn}</div>`;
+      let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
+      document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
+  
+      let subshellsData = {
+        prev: prev ? prev.subshells : "",
+        current: element.subshells,
+        next: next ? next.subshells : ""
+      };
+      drawSubshells(subshellsData);
+      setTimeout(() => {
+        updateBalloonPosition(element);
+      }, 10);
+  
+      document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
+      document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
+    }
+    
+    function redrawAll() {
+      Object.keys({ s:1, p:1, d:1, f:1 }).forEach(block => {
+        const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
+        canvasDiv.innerHTML = '';
+        new p5(p => {
+          p.setup = () => {
+            const config = { s: {cols:2,rows:7}, p: {cols:6,rows:7}, d: {cols:10,rows:7}, f: {cols:14,rows:7} }[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+            canvas.parent(`canvas${block.toUpperCase()}`);
+            canvas.elt.style.height = `${config.rows * 42}px`;
+            drawElements(p, block);
+            p.mouseClicked = () => {
+              let candidates = elements.filter(e => {
+                if(currentZ < 118){
+                  return e.block === block && e.number >= 3 && e.number <= currentZ;
+                } else if(currentZ === 118){
+                  return e.block === block && e.number >= 3 && e.number <= 118;
+                } else if(currentZ === 119){
+                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 119);
+                } else {
+                  return e.block === block && ((e.number >= 3 && e.number <= 118) || (e.number === 119 || e.number === 120));
+                }
+              });
+              for(let candidate of candidates) {
+                let pos = calculatePosition(candidate, candidate.block);
+                if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
+                   p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  updateInfo(candidate.number);
+                  if(candidate.number === currentZ) {
+                    flashActive = true;
+                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                  }
+                  break;
+                }
+              }
+            };
+          };
+        });
+      });
+      updateInfo(currentZ);
+      updateToggleButton();
+    }
+    
+    document.getElementById('nextElement').addEventListener('click', () => {
+      if(currentZ < 3){
+        currentZ = 3;
+      } else if(currentZ < 118){
+        currentZ++;
+      } else if(currentZ === 118){
+        currentZ = 119;
+      } else if(currentZ === 119){
+        currentZ = 120;
+      } else if(currentZ === 120){
+        currentZ = 121;
+      } else if(currentZ === 121){
         currentZ = 122;
-        redrawAll();
-      });
-  
-      document.getElementById('reset').addEventListener('click', () => {
-        currentZ = 0;
-        window.groupsInitialized = false;
-        window.periodsInitialized = false;
-        window.subshellsInitialized = false;
-        document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
-        document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
-        document.getElementById('canvasPeriods').style.display = "none";
-        document.getElementById('canvasS_groups').style.display = "none";
-        document.getElementById('canvasD_groups').style.display = "none";
-        document.getElementById('canvasP_groups').style.display = "none";
-        initializeCanvases();
-        initSubshellsCanvas();
-        document.getElementById('canvasSubshells').style.display = "none";
-        updateInfo(currentZ);
-      });
-  
-      document.getElementById('toggleFBlock').addEventListener('click', () => {
-        if(currentZ < 122) return;
-        document.body.classList.toggle('collapsed');
-        let toggleBtn = document.getElementById('toggleFBlock');
-        if(document.body.classList.contains('collapsed')){
-          toggleBtn.textContent = "Ανάπτυξη";
-          toggleBtn.classList.remove("active");
-        } else {
-          toggleBtn.textContent = "Σύμπτυξη";
-          toggleBtn.classList.add("active");
-        }
-        redrawAll();
-      });
-  
-      loadElements();
-      window.calculatePosition = calculatePosition;
-    })();
+      } else {
+        currentZ++;
+      }
+      redrawAll();
+    });
+    
+    document.getElementById('fillAll').addEventListener('click', () => {
+      currentZ = 122;
+      redrawAll();
+    });
+    
+    document.getElementById('reset').addEventListener('click', () => {
+      currentZ = 0;
+      window.groupsInitialized = false;
+      window.periodsInitialized = false;
+      window.subshellsInitialized = false;
+      document.querySelectorAll('.canvas').forEach(canvas => canvas.innerHTML = '');
+      document.querySelectorAll('.period-label').forEach(el => el.style.display = 'none');
+      document.getElementById('canvasPeriods').style.display = "none";
+      document.getElementById('canvasS_groups').style.display = "none";
+      document.getElementById('canvasD_groups').style.display = "none";
+      document.getElementById('canvasP_groups').style.display = "none";
+      initializeCanvases();
+      initSubshellsCanvas();
+      document.getElementById('canvasSubshells').style.display = "none";
+      updateInfo(currentZ);
+    });
+    
+    document.getElementById('toggleFBlock').addEventListener('click', () => {
+      if(currentZ < 122) return;
+      document.body.classList.toggle('collapsed');
+      let toggleBtn = document.getElementById('toggleFBlock');
+      if(document.body.classList.contains('collapsed')){
+        toggleBtn.textContent = "Ανάπτυξη";
+        toggleBtn.classList.remove("active");
+      } else {
+        toggleBtn.textContent = "Σύμπτυξη";
+        toggleBtn.classList.add("active");
+      }
+      redrawAll();
+    });
+    
+    loadElements();
+    window.calculatePosition = calculatePosition;
   </script>
   
   <script>
