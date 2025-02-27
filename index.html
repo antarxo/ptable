@@ -58,9 +58,7 @@
       flex-grow: 1;
       padding-left: 20px;
     }
-    /* Στυλ για το wrapper της δεξιάς στήλης στην αναπτυγμένη μορφή (2 γραμμές):
-       Πρώτη γραμμή: wrapper χωρισμένο σε 2 υποστήλες (67% για υποστιβάδες, 33% για στιβάδες+μήνυμα)
-       Δεύτερη γραμμή: τα Remarks */
+    /* Wrapper για τη δεξιά στήλη στην αναπτυγμένη μορφή */
     .right-wrapper {
       display: flex;
       flex-direction: column;
@@ -78,8 +76,7 @@
       text-align: left;
       margin-left: 20px;
     }
-    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές – χωρίς οριζόντια διάταξη στο μεσαίο κελί */
-    /* (Τα περιεχόμενα στοιβάζονται κάθετα) */
+    /* Σε συνεπτυγμένη μορφή δεν υπάρχει οριζόντια διάταξη στο μεσαίο κελί */
     
     .subshell-line {
       width: 100%;
@@ -164,7 +161,6 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Σε collapsed διατηρούμε τη συμφωνημένη διάταξη 1 στήλης με 3 γραμμές */
     body.collapsed #infoPanel {
       flex-direction: column;
     }
@@ -208,6 +204,9 @@
   </div>
   
   <script>
+    // Δίνουμε global ορισμό για updateInfo και redrawAll ώστε να είναι προσβάσιμα από όλους τους p5 callbacks.
+    var updateInfo, redrawAll;
+    
     function getBlockColor(b) {
       switch(b) {
         case "s": return "red";
@@ -673,18 +672,104 @@
         updateToggleButton();
       }
       
+      // Η updateInfo εφαρμόζει τη συμφωνημένη διάταξη
+      function updateInfo(z) {
+        if(z < 3){
+          document.getElementById('elementInfo').innerHTML =
+            "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
+          if(subshellsP) subshellsP.clear();
+          document.getElementById('canvasSubshells').style.display = "none";
+          document.getElementById('remarks').innerHTML = "";
+          return;
+        }
+        const element = elements.find(e => e.number === z);
+        if(!element) return;
+        let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
+        let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
+                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                       `<span style="font-style: italic;">${element.name}</span>`;
+        document.getElementById('elementInfo').innerHTML = infoHTML;
+        
+        // Ειδικές περιπτώσεις για στοιχεία 1,2,3 και 118
+        let prev = elements.find(e => e.number === (z - 1));
+        let next = elements.find(e => e.number === (z + 1));
+        if(z === 1) { prev = { subshells: "-" }; }
+        if(z === 2) { next = elements.find(e => e.number === 3); }
+        if(z === 3) { prev = elements.find(e => e.number === 2); }
+        if(z === 118) { next = { subshells: "-" }; }
+        
+        let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>`;
+        let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+        let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+        let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
+                           `<div style="font-style: italic;">${messageForElement(element)}</div>`;
+        
+        if(!document.body.classList.contains('collapsed')){
+          // Αναπτυγμένη μορφή: 2 στήλες
+          document.getElementById('leftPanel').innerHTML = infoHTML;
+          let rightContent = `<div class="right-wrapper">
+                                <div class="upper-right">
+                                  <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+                                  <div class="shells-msg-col">${shellsAndMsg}</div>
+                                </div>
+                                <div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>
+                              </div>`;
+          document.getElementById('remarks').innerHTML = rightContent;
+        } else {
+          // Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές
+          let row1 = `<div>${infoHTML}<br>${document.getElementById('explanation').innerHTML}<br>${document.getElementById('comments').innerHTML}</div>`;
+          let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>
+                      <div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
+                      <div style="font-style: italic;">${messageForElement(element)}</div></div>`;
+          let row3 = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
+          document.getElementById('infoPanel').innerHTML = row1 + row2 + row3;
+        }
+        
+        let subshellsData = {
+          prev: prev ? prev.subshells : "",
+          current: element.subshells,
+          next: next ? next.subshells : ""
+        };
+        drawSubshells(subshellsData);
+        setTimeout(() => { updateBalloonPosition(element); }, 10);
+      }
+      
+      function messageForElement(element) {
+        if(element.block === 'f') {
+          return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+        } else {
+          let group = parseInt(element.col);
+          if(group === 1) {
+            return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
+          } else if(group === 2) {
+            return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
+          } else if(group === 13) {
+            return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
+          } else if(group >= 3 && group <= 12) {
+            return "Στοιχείο μετάπτωσης";
+          } else if(group === 14) {
+            return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
+          } else if(group >= 15 && group <= 17) {
+            return `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
+          } else if(group === 18) {
+            return "Ευγενές αέριο-Χημικά αδρανές";
+          }
+          return "";
+        }
+      }
+      
       document.getElementById('nextElement').addEventListener('click', () => {
-        if(currentZ < 3){
+        if(currentZ < 3) {
           currentZ = 3;
-        } else if(currentZ < 118){
+        } else if(currentZ < 118) {
           currentZ++;
-        } else if(currentZ === 118){
+        } else if(currentZ === 118) {
           currentZ = 119;
-        } else if(currentZ === 119){
+        } else if(currentZ === 119) {
           currentZ = 120;
-        } else if(currentZ === 120){
+        } else if(currentZ === 120) {
           currentZ = 121;
-        } else if(currentZ === 121){
+        } else if(currentZ === 121) {
           currentZ = 122;
         } else {
           currentZ++;
@@ -731,7 +816,6 @@
       loadElements();
       
       window.calculatePosition = calculatePosition;
-      // Εξασφαλίζουμε την πρόσβαση στη συνάρτηση updateInfo global:
       window.updateInfo = updateInfo;
       window.redrawAll = redrawAll;
     })();
