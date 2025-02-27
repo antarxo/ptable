@@ -371,9 +371,6 @@
       }
     }
     // Νέα λογική τοποθέτησης του Balloon:
-    // 1. Η default θέση ορίζεται έτσι ώστε η πάνω αριστερή γωνία του Balloon να τοποθετείται 10px χαμηλότερα από την κάτω δεξιά γωνία του κελιού.
-    // 2. Εάν το δεξιό όριό του (desiredLeft + offsetWidth) είναι εκτός (π.χ. >1250), μετατοπίζεται αριστερά κατά (42px + offsetWidth).
-    // 3. Εάν το κάτω όριό του επικαλύπτει το InfoPanel ή τα κουμπιά, μετατοπίζεται προς τα πάνω κατά (42px + offsetHeight).
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
@@ -389,16 +386,13 @@
       let desiredTop = cellBottom + 10;
       
       let balloon = document.getElementById("canvasSubshells");
-      // Χρησιμοποιούμε offsetWidth και offsetHeight για τις διαστάσεις
       let balloonWidth = balloon.offsetWidth;
       let balloonHeight = balloon.offsetHeight;
       
-      // Οριζόντια μετατόπιση: εάν (desiredLeft + balloonWidth > 1250)
       if (desiredLeft + balloonWidth > 1250) {
          desiredLeft = desiredLeft - (balloonWidth + 42);
       }
       
-      // Κάθετη μετατόπιση: εάν (desiredTop + balloonHeight) επικαλύπτει το InfoPanel ή τα κουμπιά
       let infoPanel = document.getElementById("infoPanel");
       if(infoPanel && (desiredTop + balloonHeight > infoPanel.getBoundingClientRect().top)) {
          desiredTop = desiredTop - (balloonHeight + 42);
@@ -418,10 +412,10 @@
   <script>
     (function() {
       const BLOCK_COLORS = {
-        's': '#ffcccc',
-        'p': '#ccffcc',
-        'd': '#ccccff',
-        'f': '#ffe5cc'
+        s: '#ffcccc',
+        p: '#ccffcc',
+        d: '#ccccff',
+        f: '#ffe5cc'
       };
       const BLOCKS_CONFIG = {
         s: { cols: 2, rows: 7 },
@@ -694,24 +688,10 @@
       }
   
       // Ενημέρωση του InfoPanel σύμφωνα με τις νέες απαιτήσεις:
-      // Στην αριστερή στήλη εμφανίζεται το στοιχείο (Ζ, σύμβολο, όνομα).
-      // Στο δεξί κελί:
-      //  - Η πάνω σειρά αποτελείται από δύο στήλες:
-      //       • Αριστερή στήλη: Εμφάνιση των υποστιβάδων με τη μορφή:
-      //             "Ζ=" + (προηγούμενο Ζ) + " " + (υποστιβάδα)  (με το χρώμα του τομέα)
-      //             "Ζ=" + (τρέχων Ζ) + " " + (υποστιβάδα)  (με έντονη γραμματοσειρά και το χρώμα του τομέα)
-      //             "Ζ=" + (επόμενο Ζ) + " " + (υποστιβάδα)  (με το χρώμα του τομέα)
-      //       • Δεξιά στήλη: Εμφάνιση των στιβάδων σε μορφή "Στιβάδες: K(2), L(8), M(18), N(8), O(2)" (με την τελευταία σε έντονη γραμματοσειρά)
-      //               και αμέσως μετά το μήνυμα σύμφωνα με:
-      //         – Αν το στοιχείο ανήκει στον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) → "Λανθανίδα", αλλιώς → "Ακτινίδα"
-      //         – Αλλιώς, με βάση την ομάδα (νέα αρίθμηση 1–18):
-      //               • Αν η ομάδα είναι 1 ή 2 → "Θέλει να δώσει [ομάδα] ηλεκτρόνια"
-      //               • Αν η ομάδα είναι 13 → "Θέλει να δώσει [ομάδα–10] ηλεκτρόνια"
-      //               • Αν η ομάδα είναι 3–12 → "Στοιχείο μετάπτωσης"
-      //               • Αν η ομάδα είναι 14 → "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια"
-      //               • Αν η ομάδα είναι 15–17 → "Θέλει να πάρει [18–ομάδα] ηλεκτρόνια"
-      //               • Αν η ομάδα είναι 18 → "Ευγενές αέριο-Χημικά αδρανές"
-      //  - Τέλος, η χαμηλότερη σειρά εμφανίζει τα remarks με κεντρική στοίχιση.
+      // - Αριστερή στήλη: εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
+      // - Δεξιά κελία:
+      //    • Πάνω σειρά: Αριστερή στήλη με υποστιβάδες και Δεξιά στήλη με στιβάδες και το μήνυμα
+      //    • Χαμηλότερη σειρά: τα remarks
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -741,12 +721,13 @@
         let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
         let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
   
-        // Υπολογισμός μηνύματος σύμφωνα με τους κανόνες:
+        // Υπολογισμός μηνύματος:
         let message = "";
         if(element.block === 'f') {
           message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
         } else {
-          let group = parseInt(element.group);
+          // Διάβασμα της ομάδας από την ιδιότητα col
+          let group = parseInt(element.col);
           if(group === 1 || group === 2){
             message = `Θέλει να δώσει ${group} ηλεκτρόνια`;
           } else if(group === 13){
@@ -762,7 +743,7 @@
           }
         }
   
-        // Δεξιά στήλη της πάνω σειράς: εμφάνιση των στιβάδων και του μηνύματος στο ίδιο πλαίσιο
+        // Δεξιά στήλη της πάνω σειράς: εμφάνιση των στιβάδων και του μηνύματος
         let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}` +
                            ` <span style="margin-left:10px;">${message}</span></div>`;
   
@@ -781,7 +762,6 @@
           next: next ? next.subshells : ""
         };
         drawSubshells(subshellsData);
-        // Με setTimeout ώστε να αποδοθούν οι νέες διαστάσεις του Balloon πριν τον προσδιορισμό της θέσης.
         setTimeout(() => {
           updateBalloonPosition(element);
         }, 10);
