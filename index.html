@@ -174,7 +174,7 @@
   
   <!-- Global Script: Όλες οι συναρτήσεις ορίζονται στο global scope -->
   <script>
-    // Ορισμοί helper functions
+    // Helper functions
     function convertClickedToCurrent(clickedZ) {
       return clickedZ;
     }
@@ -201,7 +201,7 @@
       return result.join(", ");
     }
     
-    // Global μεταβλητές
+    // Global variables
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -219,11 +219,10 @@
     let flashActive = false;
     let subshellsP;
     
-    // Αποθήκευση default περιεχομένων για collapsed mode
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Συνάρτηση φόρτωσης στοιχείων
+    // Load elements
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -237,7 +236,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Συνάρτηση initializeCanvases
+    // Initialize canvases
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -262,10 +261,8 @@
                 } else if(currentZ === 118) {
                   return e.block === block && e.number >= 3 && e.number <= 118;
                 } else if(currentZ === 119) {
-                  // Τώρα συμπεριλαμβάνει και τα στοιχεία 3 έως 118 μαζί με το 1
                   return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
                 } else if(currentZ === 120) {
-                  // Τώρα συμπεριλαμβάνει και τα στοιχεία 3 έως 118 μαζί με το 2
                   return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 2);
                 } else {
                   return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
@@ -289,7 +286,7 @@
       });
     }
     
-    // Συνάρτηση initSubshellsCanvas
+    // Init subshells canvas
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -303,7 +300,7 @@
       window.subshellsInitialized = true;
     }
     
-    // Συνάρτηση initGroupsCanvases (εκτελείται μόνο μία φορά)
+    // Init groups canvases (once)
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -377,7 +374,7 @@
       window.groupsInitialized = true;
     }
     
-    // Συνάρτηση calculatePosition
+    // Calculate position relative to the canvas of the given block
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -390,7 +387,7 @@
       return { x: x, y: y };
     }
     
-    // Συνάρτηση drawElements
+    // Draw elements on the canvas
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -446,32 +443,35 @@
       });
     }
     
-    // Συνάρτηση drawSubshells - Απεικονίζει τα δεδομένα υποστιβάδων
+    // Draw subshells in the balloon: εμφανίζει τα δεδομένα σε 3 σειρές
     function drawSubshells(data) {
       if (!subshellsP) return;
       subshellsP.clear();
       subshellsP.textSize(16);
       subshellsP.textAlign(subshellsP.CENTER, subshellsP.CENTER);
-      let colWidth = 300 / 3;
       subshellsP.fill(0);
-      subshellsP.text(data.prev || "-", colWidth/2, 45);
-      subshellsP.text(data.current || "-", colWidth + colWidth/2, 45);
-      subshellsP.text(data.next || "-", 2*colWidth + colWidth/2, 45);
+      let rowHeight = 90 / 3; // 30 px ανά γραμμή
+      subshellsP.text(data.prev || "-", 300/2, rowHeight/2);
+      subshellsP.text(data.current || "-", 300/2, rowHeight + rowHeight/2);
+      subshellsP.text(data.next || "-", 300/2, 2*rowHeight + rowHeight/2);
     }
     
-    // Συνάρτηση updateBalloonPosition - Τοποθετεί το balloon δίπλα στο επιλεγμένο στοιχείο
+    // Update balloon position: βρίσκει τον καμβά του στοιχείου και υπολογίζει την απόλυτη θέση
     function updateBalloonPosition(element) {
-      let cs = document.getElementById('canvasSubshells');
+      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
+      if(!blockCanvas) return;
+      let rect = blockCanvas.getBoundingClientRect();
       let pos = calculatePosition(element, element.block);
+      let cs = document.getElementById('canvasSubshells');
       if(cs) {
         cs.style.display = "block";
-        // Τοποθετούμε το balloon δίπλα (π.χ. δεξιά) από το στοιχείο με κάποια μετατόπιση
-        cs.style.left = (pos.x + 40 + 10) + "px";
-        cs.style.top = (pos.y - 45) + "px";
+        // Υπολογισμός απόλυτης θέσης: πρόσθεση της θέσης του καμβά
+        cs.style.left = (rect.left + pos.x + 40 + 10) + "px";
+        cs.style.top = (rect.top + pos.y - 45) + "px";
       }
     }
     
-    // Συνάρτηση updateInfo
+    // Update info on click
     function updateInfo(clickedZ) {
       if(clickedZ < 3) {
         let elemInfo = document.getElementById('elementInfo');
@@ -554,11 +554,10 @@
         next: next ? next.subshells : ""
       };
       drawSubshells(subshellsData);
-      // Τοποθετούμε το balloon δίπλα στο επιλεγμένο στοιχείο
       setTimeout(function() { updateBalloonPosition(element); }, 10);
     }
     
-    // Συνάρτηση redrawAll
+    // Redraw all canvases
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -664,7 +663,7 @@
       updateToggleButton();
     }
     
-    // Συνάρτηση initPeriodsCanvas
+    // Init periods canvas
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -688,12 +687,12 @@
       window.periodsInitialized = true;
     }
     
-    // Συνάρτηση updateToggleButton
+    // Update toggle button
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = (currentZ < 118);
     }
     
-    // Συνάρτηση updateRightPanelWidth
+    // Update right panel width
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -702,7 +701,7 @@
       }
     }
     
-    // Συνάρτηση messageForElement
+    // Message for element
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -727,7 +726,7 @@
       }
     }
     
-    // Event listeners για τα κουμπιά
+    // Event listeners
     document.getElementById('nextElement').addEventListener('click', function() {
       if(currentZ < 118) { currentZ++; }
       else if(currentZ === 118) { currentZ = 119; }
@@ -777,7 +776,7 @@
       redrawAll();
     });
     
-    // Εξαγωγή στο global scope για πρόσβαση από p5 callbacks
+    // Export to global scope
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
@@ -789,7 +788,7 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('resize', updateRightPanelWidth);
     
-    // Εκκίνηση φόρτωσης στοιχείων
+    // Start loading elements
     loadElements();
   </script>
 </body>
