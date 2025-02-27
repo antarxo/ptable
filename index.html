@@ -58,7 +58,9 @@
       flex-grow: 1;
       padding-left: 20px;
     }
-    /* Wrapper για τη δεξιά στήλη στην αναπτυγμένη μορφή */
+    /* Wrapper για τη δεξιά στήλη στην αναπτυγμένη μορφή: 
+       η πρώτη γραμμή χωρίζεται σε 2 υποστήλες (67% και 33% + margin-left:20px)
+       και η δεύτερη γραμμή δείχνει τα Remarks */
     .right-wrapper {
       display: flex;
       flex-direction: column;
@@ -76,7 +78,7 @@
       text-align: left;
       margin-left: 20px;
     }
-    /* Σε συνεπτυγμένη μορφή, τα περιεχόμενα στοιβάζονται κάθετα (1 στήλη με 3 γραμμές) */
+    /* Σε συνεπτυγμένη μορφή, δεν γίνεται οριζόντια διάταξη στο μεσαίο κελί */
     
     .subshell-line {
       width: 100%;
@@ -204,7 +206,7 @@
   </div>
   
   <script>
-    // Δηλώνουμε global μεταβλητές updateInfo και redrawAll
+    // Global declarations για updateInfo και redrawAll ώστε να μην εμφανίζονται σφάλματα scope.
     var updateInfo, redrawAll;
     
     function getBlockColor(b) {
@@ -672,9 +674,20 @@
         updateToggleButton();
       }
       
-      // Η updateInfo εφαρμόζει τη συμφωνημένη διάταξη
+      // Η updateInfo εφαρμόζει τη συμφωνημένη διάταξη:
+      // Αναπτυγμένη: 2 στήλες με:
+      //   - Αριστερή στήλη: elementInfo (220px)
+      //   - Δεξιά στήλη: δύο γραμμές, όπου η πρώτη γραμμή έχει δύο υποστήλες:
+      //         (α) 67%: πληροφορίες για τις υποστιβάδες (prev, current, next)
+      //         (β) 33% (με margin-left:20px): στιβάδες + μήνυμα.
+      //   Η δεύτερη γραμμή εμφανίζει τα Remarks.
+      // Συνεπτυγμένη: 1 στήλη με 3 γραμμές:
+      //   1. Τα περιεχόμενα του leftPanel.
+      //   2. Μία νέα σειρά (container με id "collapsedMiddle") όπου στοιβάζονται κάθετα:
+      //         οι υποστιβάδες και κάτω από αυτές οι στιβάδες με το μήνυμα.
+      //   3. Τα Remarks.
       function updateInfo(z) {
-        if(z < 3){
+        if(z < 3) {
           document.getElementById('elementInfo').innerHTML =
             "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
           if(subshellsP) subshellsP.clear();
@@ -688,12 +701,13 @@
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
-        // Στην αναπτυγμένη μορφή, ενημερώνουμε το leftPanel
+        
+        // Σε αναπτυγμένη μορφή, ενημερώνουμε το leftPanel χωρίς να το αντικαθιστούμε πλήρως
         if(!document.body.classList.contains('collapsed')) {
           document.getElementById('leftPanel').innerHTML = infoHTML;
         }
         
-        // Ειδικές περιπτώσεις για στοιχεία 1,2,3 και 118
+        // Ειδικές περιπτώσεις για στοιχεία 1, 2, 3 και 118
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) { prev = { subshells: "-" }; }
@@ -718,21 +732,21 @@
                               </div>`;
           document.getElementById('remarks').innerHTML = rightContent;
         } else {
-          // Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές
-          // Αποθηκεύουμε το περιεχόμενο των "explanation" και "comments" πριν αντικαταστήσουμε το innerHTML
-          let explanationContent = "";
-          let commentsContent = "";
-          let expElem = document.getElementById('explanation');
-          let commElem = document.getElementById('comments');
-          if(expElem) explanationContent = expElem.innerHTML;
-          if(commElem) commentsContent = commElem.innerHTML;
-          
-          let row1 = `<div>${infoHTML}<br>${explanationContent}<br>${commentsContent}</div>`;
+          // Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές.
+          // Διατηρούμε το υπάρχον περιεχόμενο του leftPanel ως πρώτη γραμμή.
+          // Ελέγχουμε αν υπάρχει container με id "collapsedMiddle". Αν όχι, τον δημιουργούμε.
+          let middle = document.getElementById("collapsedMiddle");
+          if(!middle) {
+            middle = document.createElement("div");
+            middle.id = "collapsedMiddle";
+            let infoPanel = document.getElementById("infoPanel");
+            infoPanel.insertBefore(middle, document.getElementById("remarks"));
+          }
           let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>
                       <div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
                       <div style="font-style: italic;">${messageForElement(element)}</div></div>`;
-          let row3 = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
-          document.getElementById('infoPanel').innerHTML = row1 + row2 + row3;
+          middle.innerHTML = row2;
+          document.getElementById('remarks').innerHTML = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
         }
         
         let subshellsData = {
