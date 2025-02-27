@@ -442,6 +442,19 @@
       });
     }
     
+    // Συνάρτηση drawSubshells - Προστέθηκε για να διορθώσει το σφάλμα
+    function drawSubshells(data) {
+      if (!subshellsP) return;
+      subshellsP.clear();
+      subshellsP.textSize(16);
+      subshellsP.textAlign(subshellsP.CENTER, subshellsP.CENTER);
+      let colWidth = 300 / 3;
+      subshellsP.fill(0);
+      subshellsP.text(data.prev || "-", colWidth/2, 45);
+      subshellsP.text(data.current || "-", colWidth + colWidth/2, 45);
+      subshellsP.text(data.next || "-", 2*colWidth + colWidth/2, 45);
+    }
+    
     // Συνάρτηση updateInfo
     function updateInfo(clickedZ) {
       if(clickedZ < 3) {
