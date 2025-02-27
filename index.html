@@ -136,19 +136,18 @@
   </div>
   
   <script>
-    // Δεν χρησιμοποιούμε πλέον ξεχωριστές δηλώσεις "var updateInfo, redrawAll"
-    // οι συναρτήσεις θα οριστούν ως function declarations και μετά θα εξάγουμε στο window.
-
+    // Αποθηκεύουμε τα αρχικά περιεχόμενα για collapsed mode
+    window.initialExplanation = "";
+    window.initialComments = "";
     window.addEventListener('load', function() {
       var exp = document.getElementById('explanation');
       var comm = document.getElementById('comments');
-      window.initialExplanation = exp ? exp.innerHTML : "";
-      window.initialComments = comm ? comm.innerHTML : "";
+      if(exp) { window.initialExplanation = exp.innerHTML; }
+      if(comm) { window.initialComments = comm.innerHTML; }
     });
   </script>
   
   <script>
-    // Η συνάρτηση convertClickedToCurrent εδώ επιστρέφει το clickedZ όπως είναι.
     function convertClickedToCurrent(clickedZ) {
       return clickedZ;
     }
@@ -292,8 +291,8 @@
       subshellsP.clear();
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.textSize(16);
-      let texts = [subshellsData.prev, subshellsData.current, subshellsData.next].filter(t => t);
-      let maxW = texts.length > 0 ? Math.max(...texts.map(t => subshellsP.textWidth(t))) : 0;
+      let texts = [subshellsData.prev, subshellsData.current, subshellsData.next].filter(function(t){ return t; });
+      let maxW = texts.length > 0 ? Math.max(...texts.map(function(t){ return subshellsP.textWidth(t); })) : 0;
       maxW += 30;
       subshellsP.resizeCanvas(maxW, subshellsP.height);
       let balloonElem = document.getElementById("canvasSubshells");
@@ -339,345 +338,344 @@
       balloon.style.background = "rgba(255,255,255,0.8)";
       balloon.style.display = "block";
     }
-  </script>
-  
-  <script>
-    (function() {
-      const BLOCK_COLORS = {
-        s: '#ffcccc',
-        p: '#ccffcc',
-        d: '#ccccff',
-        f: '#ffe5cc'
-      };
-      const BLOCKS_CONFIG = {
-        s: { cols: 2, rows: 7 },
-        p: { cols: 6, rows: 7 },
-        d: { cols: 10, rows: 7 },
-        f: { cols: 14, rows: 7 }
-      };
-      
-      let elements = [];
-      // Αρχική τιμή currentZ = 3, ώστε να ξεκινάμε από το στοιχείο με Ζ=3 (τα 1 και 2 δεν εμφανίζονται)
-      let currentZ = 3;
-      let flashActive = false;
-      
-      function updateToggleButton() {
-        document.getElementById('toggleFBlock').disabled = (currentZ < 118);
-      }
-      
-      async function loadElements() {
-        try {
-          const response = await fetch('elements.json');
-          elements = await response.json();
-          initializeCanvases();
-          initSubshellsCanvas();
-          updateInfo(currentZ);
-          updateToggleButton();
-        } catch (err) {
-          console.error('Σφάλμα φόρτωσης:', err);
+    
+    // Ορισμός των updateInfo, calculatePosition, redrawAll ως function declarations
+    function updateInfo(clickedZ) {
+      if(clickedZ < 3) {
+        var elemInfo = document.getElementById('elementInfo');
+        if(elemInfo) {
+          elemInfo.innerHTML = "Παρακαλώ επιλέξτε 'Επόμενο' ή 'Συμπλήρωσε' για εμφάνιση στοιχείων και οδηγιών.";
         }
-      }
-      
-      function initializeCanvases() {
-        Object.keys(BLOCKS_CONFIG).forEach(function(block) {
-          new p5(function(p) {
-            p.setup = function() {
-              const config = BLOCKS_CONFIG[block];
-              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-              canvas.parent("canvas" + block.toUpperCase());
-              canvas.elt.style.height = config.rows * 42 + "px";
-              if(document.body.classList.contains('collapsed')){
-                if(block==='s') { canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
-                else if(block==='p') { canvas.elt.style.left = "559px"; }
-              } else {
-                if(block==='s') { canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d' || block==='p') { canvas.elt.style.left = "134px"; }
-              }
-              drawElements(p, block);
-              p.mouseClicked = function() {
-                let candidates = elements.filter(function(e) {
-                  if(currentZ < 118) {
-                    return e.block === block && e.number >= 3 && e.number <= currentZ;
-                  } else if(currentZ === 118) {
-                    return e.block === block && e.number >= 3 && e.number <= 118;
-                  } else if(currentZ === 119) {
-                    return e.block === block && e.number === 1;
-                  } else if(currentZ === 120) {
-                    return e.block === block && e.number === 2;
-                  } else {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
-                  }
-                });
-                for(let candidate of candidates) {
-                  let pos = calculatePosition(candidate, candidate.block);
-                  if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
-                     p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                    updateInfo(candidate.number);
-                    if(candidate.number === currentZ) {
-                      flashActive = true;
-                      setTimeout(function() { flashActive = false; redrawAll(); }, 200);
-                    }
-                    break;
-                  }
-                }
-              };
-            };
-          });
-        });
-      }
-      
-      function calculatePosition(e, block) {
-        let x = 0, y = (e.row - 1) * 42;
-        if(block==='s') { x = (e.col - 1) * 42; }
-        else if(block==='f') { x = (e.col - 3) * 42; }
-        else if(block==='d') { x = (e.col - 3) * 42; }
-        else if(block==='p') {
-          if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
-          else { x = (e.col - 13) * 42; }
-        }
-        return { x: x, y: y };
-      }
-      
-      function drawElements(p, block) {
-        p.stroke(150);
-        p.strokeWeight(1);
-        let filter;
-        if(currentZ < 118) {
-          filter = function(e) { return e.block === block && e.number >= 3 && e.number <= currentZ; };
-        } else if(currentZ === 118) {
-          filter = function(e) { return e.block === block && e.number >= 3 && e.number <= 118; };
-        } else if(currentZ === 119) {
-          filter = function(e) { return e.block === block && e.number === 1; };
-        } else if(currentZ === 120) {
-          filter = function(e) { return e.block === block && e.number === 2; };
-        } else {
-          filter = function(e) { return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2); };
-        }
-        elements.filter(filter).forEach(function(e) {
-          const pos = calculatePosition(e, e.block);
-          let displayNumber = e.number;
-          if(e.number === 119) displayNumber = 1;
-          if(e.number === 120) displayNumber = 2;
-          if(e.number === currentZ ||
-             ((currentZ === 119) && e.number === 1) ||
-             ((currentZ === 120) && e.number === 2)) {
-            if(e.number === 119) { p.fill("yellow"); }
-            else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
-            else { p.fill(getBlockColor(e.block)); }
-            p.textSize(16);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-            p.noFill();
-            p.stroke(getBlockColor(e.block));
-            p.strokeWeight(4);
-            p.strokeJoin(p.ROUND);
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            if(flashActive) {
-              p.drawingContext.shadowBlur = 10;
-              p.drawingContext.shadowColor = "yellow";
-              p.rect(pos.x, pos.y, 40, 40, 5);
-              p.drawingContext.shadowBlur = 0;
-            }
-            p.strokeWeight(1);
-          } else {
-            if(e.number === 119) { p.fill("yellow"); }
-            else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
-            else { p.fill(BLOCK_COLORS[e.block]); }
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            p.fill(0);
-            p.textSize(e.number > 99 ? 10 : 12);
-            p.textStyle(p.BOLD);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          }
-        });
-      }
-      
-      function redrawAll() {
-        Object.keys(BLOCKS_CONFIG).forEach(function(block) {
-          const canvasDiv = document.getElementById("canvas" + block.toUpperCase());
-          if(canvasDiv) { canvasDiv.innerHTML = ""; }
-          new p5(function(p) {
-            p.setup = function() {
-              const config = BLOCKS_CONFIG[block];
-              const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-              canvas.parent("canvas" + block.toUpperCase());
-              canvas.elt.style.height = config.rows * 42 + "px";
-              if(document.body.classList.contains('collapsed')){
-                if(block==='s') { canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
-                else if(block==='p') { canvas.elt.style.left = "559px"; }
-              } else {
-                if(block==='s') { canvas.elt.style.left = "50px"; }
-                else if(block==='f' || block==='d' || block==='p') { canvas.elt.style.left = "134px"; }
-              }
-              drawElements(p, block);
-              p.mouseClicked = function() {
-                let candidates = elements.filter(function(e) {
-                  if(currentZ < 118) {
-                    return e.block === block && e.number >= 3 && e.number <= currentZ;
-                  } else if(currentZ === 118) {
-                    return e.block === block && e.number >= 3 && e.number <= 118;
-                  } else if(currentZ === 119) {
-                    return e.block === block && e.number === 1;
-                  } else if(currentZ === 120) {
-                    return e.block === block && e.number === 2;
-                  } else {
-                    return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
-                  }
-                });
-                for(let candidate of candidates) {
-                  let pos = calculatePosition(candidate, candidate.block);
-                  if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
-                     p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                    updateInfo(candidate.number);
-                    if(candidate.number === currentZ) {
-                      flashActive = true;
-                      setTimeout(function() { flashActive = false; redrawAll(); }, 200);
-                    }
-                    break;
-                  }
-                }
-              };
-            };
-          });
-        });
-        if(!document.body.classList.contains('collapsed')){
-          let base = 134, shiftP = 0, shiftD = 0;
-          if(currentZ <= 20){ shiftP = 0; shiftD = 0; }
-          else if(currentZ >= 21 && currentZ <= 30){ shiftP = 42 * (currentZ - 20); shiftD = 0; }
-          else if(currentZ >= 31 && currentZ <= 56){ shiftP = 42 * 10; shiftD = 0; }
-          else if(currentZ >= 57 && currentZ <= 70){ shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-          else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-          let cF = document.getElementById('canvasF');
-          if(cF) { cF.style.left = base + "px"; }
-          let cD = document.getElementById('canvasD');
-          if(cD) { cD.style.left = (base + shiftD) + "px"; }
-          let cP = document.getElementById('canvasP');
-          if(cP) { cP.style.left = (base + shiftP) + "px"; }
-        } else {
-          let cS = document.getElementById('canvasS');
-          if(cS) { cS.style.left = "50px"; }
-          let cF = document.getElementById('canvasF');
-          if(cF) { cF.style.left = "154px"; }
-          let cD = document.getElementById('canvasD');
-          if(cD) { cD.style.left = "139px"; }
-          let cP = document.getElementById('canvasP');
-          if(cP) { cP.style.left = "559px"; }
-        }
-        if(currentZ >= 121){
-          let cp = document.getElementById('canvasPeriods');
-          if(cp) { cp.style.display = "block"; }
-          initPeriodsCanvas();
-          let csg = document.getElementById('canvasS_groups');
-          if(csg) { csg.style.display = "block"; }
-          let cdg = document.getElementById('canvasD_groups');
-          if(cdg) { cdg.style.display = "block"; }
-          let cpg = document.getElementById('canvasP_groups');
-          if(cpg) { cpg.style.display = "block"; }
-          let csgLeft = document.getElementById('canvasS_groups');
-          if(csgLeft) { csgLeft.style.top = "108px"; csgLeft.style.left = "50px"; }
-          let dLeft = document.getElementById('canvasD').style.left;
-          let cdgLeft = document.getElementById('canvasD_groups');
-          if(cdgLeft) { cdgLeft.style.top = "108px"; cdgLeft.style.left = dLeft; }
-          let pLeft = document.getElementById('canvasP').style.left;
-          let cpgLeft = document.getElementById('canvasP_groups');
-          if(cpgLeft) { cpgLeft.style.top = "108px"; cpgLeft.style.left = pLeft; }
-          initGroupsCanvases();
-        } else {
-          let cp = document.getElementById('canvasPeriods');
-          if(cp) { cp.style.display = "none"; }
-          let csg = document.getElementById('canvasS_groups');
-          if(csg) { csg.style.display = "none"; }
-          let cdg = document.getElementById('canvasD_groups');
-          if(cdg) { cdg.style.display = "none"; }
-          let cpg = document.getElementById('canvasP_groups');
-          if(cpg) { cpg.style.display = "none"; }
-        }
-        updateInfo(currentZ);
-        updateToggleButton();
-      }
-      
-      function messageForElement(element) {
-        if(element.block === 'f') {
-          return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
-        } else {
-          let group = parseInt(element.col);
-          if(group === 1) {
-            return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
-          } else if(group === 2) {
-            return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
-          } else if(group === 13) {
-            return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
-          } else if(group >= 3 && group <= 12) {
-            return "Στοιχείο μετάπτωσης";
-          } else if(group === 14) {
-            return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
-          } else if(group >= 15 && group <= 17) {
-            return `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
-          } else if(group === 18) {
-            return "Ευγενές αέριο-Χημικά αδρανές";
-          }
-          return "";
-        }
-      }
-      
-      document.getElementById('nextElement').addEventListener('click', function() {
-        if(currentZ < 118) { currentZ++; }
-        else if(currentZ === 118) { currentZ = 119; }
-        else if(currentZ === 119) { currentZ = 120; }
-        else { currentZ++; }
-        redrawAll();
-      });
-      
-      document.getElementById('fillAll').addEventListener('click', function() {
-        currentZ = 121;
-        redrawAll();
-      });
-      
-      document.getElementById('reset').addEventListener('click', function() {
-        currentZ = 3;
-        window.groupsInitialized = false;
-        window.periodsInitialized = false;
-        window.subshellsInitialized = false;
-        document.querySelectorAll('.canvas').forEach(function(canvas) { canvas.innerHTML = ""; });
-        document.querySelectorAll('.period-label').forEach(function(el) { el.style.display = 'none'; });
-        var cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "none"; }
-        var csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "none"; }
-        var cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "none"; }
-        var cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "none"; }
-        initializeCanvases();
-        initSubshellsCanvas();
+        if(subshellsP) subshellsP.clear();
         var cs = document.getElementById('canvasSubshells');
         if(cs) { cs.style.display = "none"; }
-        updateInfo(currentZ);
-      });
+        var rem = document.getElementById('remarks');
+        if(rem) { rem.innerHTML = ""; }
+        return;
+      }
+      let currentNum;
+      if(clickedZ === 119) { currentNum = 1; }
+      else if(clickedZ === 120) { currentNum = 2; }
+      else { currentNum = convertClickedToCurrent(clickedZ); }
       
-      document.getElementById('toggleFBlock').addEventListener('click', function() {
-        if(currentZ < 118) return;
-        document.body.classList.toggle('collapsed');
-        let toggleBtn = document.getElementById('toggleFBlock');
-        if(document.body.classList.contains('collapsed')){
-          toggleBtn.textContent = "Ανάπτυξη";
-        } else {
-          toggleBtn.textContent = "Σύμπτυξη";
-          var cm = document.getElementById('collapsedMiddle');
-          if(cm) cm.remove();
+      const element = elements.find(function(e) { return e.number === currentNum; });
+      if(!element) return;
+      
+      let displayZ = (element.number >= 119 ? element.number - 118 : element.number);
+      if(clickedZ === 119) { displayZ = 1; }
+      else if(clickedZ === 120) { displayZ = 2; }
+      
+      let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
+                     `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                     `<span style="font-style: italic;">${element.name}</span>`;
+      var leftPanel = document.getElementById('leftPanel');
+      if(!document.body.classList.contains('collapsed') && leftPanel) {
+        leftPanel.innerHTML = infoHTML;
+      }
+      
+      let prev = elements.find(function(e) { return e.number === (currentNum - 1); });
+      let next = elements.find(function(e) { return e.number === (currentNum + 1); });
+      if(!prev) { prev = { subshells: "-", number:"", block:"dummy" }; }
+      if(!next) { next = { subshells: "-", number:"", block:"dummy" }; }
+      
+      let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
+      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+      let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
+                         `<div style="font-style: italic;">${messageForElement(element)}</div>`;
+      
+      if(!document.body.classList.contains('collapsed')) {
+        var rem = document.getElementById('remarks');
+        if(rem) {
+          rem.innerHTML = `<div class="right-wrapper">
+                              <div class="upper-right">
+                                <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+                                <div class="shells-msg-col">${shellsAndMsg}</div>
+                              </div>
+                              <div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>
+                            </div>`;
         }
-        redrawAll();
+      } else {
+        let row1 = `<div>${infoHTML}<br>${window.initialExplanation}<br>${window.initialComments}</div>`;
+        let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>
+                    <div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
+                    <div style="font-style: italic;">${messageForElement(element)}</div></div>`;
+        let row3 = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
+        var leftPanel = document.getElementById('leftPanel');
+        if(leftPanel) { leftPanel.innerHTML = row1; }
+        var collapsedMiddle = document.getElementById("collapsedMiddle");
+        if(!collapsedMiddle) {
+          collapsedMiddle = document.createElement("div");
+          collapsedMiddle.id = "collapsedMiddle";
+          var infoPanel = document.getElementById("infoPanel");
+          var rem = document.getElementById("remarks");
+          if(infoPanel && rem) { infoPanel.insertBefore(collapsedMiddle, rem); }
+        }
+        collapsedMiddle.innerHTML = row2;
+        var rem = document.getElementById('remarks');
+        if(rem) { rem.innerHTML = row3; }
+      }
+      
+      let subshellsData = {
+        prev: prev ? prev.subshells : "",
+        current: element.subshells,
+        next: next ? next.subshells : ""
+      };
+      drawSubshells(subshellsData);
+      setTimeout(function() { updateBalloonPosition(element); }, 10);
+    }
+    
+    function calculatePosition(e, block) {
+      let x = 0, y = (e.row - 1) * 42;
+      if(block==='s') { x = (e.col - 1) * 42; }
+      else if(block==='f') { x = (e.col - 3) * 42; }
+      else if(block==='d') { x = (e.col - 3) * 42; }
+      else if(block==='p') {
+        if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
+        else { x = (e.col - 13) * 42; }
+      }
+      return { x: x, y: y };
+    }
+    
+    function drawElements(p, block) {
+      p.stroke(150);
+      p.strokeWeight(1);
+      let filter;
+      if(currentZ < 118) {
+        filter = function(e) { return e.block === block && e.number >= 3 && e.number <= currentZ; };
+      } else if(currentZ === 118) {
+        filter = function(e) { return e.block === block && e.number >= 3 && e.number <= 118; };
+      } else if(currentZ === 119) {
+        filter = function(e) { return e.block === block && e.number === 1; };
+      } else if(currentZ === 120) {
+        filter = function(e) { return e.block === block && e.number === 2; };
+      } else {
+        filter = function(e) { return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2); };
+      }
+      elements.filter(filter).forEach(function(e) {
+        const pos = calculatePosition(e, e.block);
+        let displayNumber = e.number;
+        if(e.number === 119) displayNumber = 1;
+        if(e.number === 120) displayNumber = 2;
+        if(e.number === currentZ ||
+           ((currentZ === 119) && e.number === 1) ||
+           ((currentZ === 120) && e.number === 2)) {
+          if(e.number === 119) { p.fill("yellow"); }
+          else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
+          else { p.fill(getBlockColor(e.block)); }
+          p.textSize(16);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          p.noFill();
+          p.stroke(getBlockColor(e.block));
+          p.strokeWeight(4);
+          p.strokeJoin(p.ROUND);
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          if(flashActive) {
+            p.drawingContext.shadowBlur = 10;
+            p.drawingContext.shadowColor = "yellow";
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.drawingContext.shadowBlur = 0;
+          }
+          p.strokeWeight(1);
+        } else {
+          if(e.number === 119) { p.fill("yellow"); }
+          else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
+          else { p.fill(BLOCK_COLORS[e.block]); }
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          p.fill(0);
+          p.textSize(e.number > 99 ? 10 : 12);
+          p.textStyle(p.BOLD);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+        }
       });
-      
-      loadElements();
-      
-      window.calculatePosition = calculatePosition;
-      window.updateInfo = updateInfo;
-      window.redrawAll = redrawAll;
-    })();
+    }
+    
+    function redrawAll() {
+      Object.keys(BLOCKS_CONFIG).forEach(function(block) {
+        const canvasDiv = document.getElementById("canvas" + block.toUpperCase());
+        if(canvasDiv) { canvasDiv.innerHTML = ""; }
+        new p5(function(p) {
+          p.setup = function() {
+            const config = BLOCKS_CONFIG[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+            canvas.parent("canvas" + block.toUpperCase());
+            canvas.elt.style.height = config.rows * 42 + "px";
+            if(document.body.classList.contains('collapsed')){
+              if(block==='s') { canvas.elt.style.left = "50px"; }
+              else if(block==='f' || block==='d') { canvas.elt.style.left = (block==='f' ? "154px" : "139px"); }
+              else if(block==='p') { canvas.elt.style.left = "559px"; }
+            } else {
+              if(block==='s') { canvas.elt.style.left = "50px"; }
+              else if(block==='f' || block==='d' || block==='p') { canvas.elt.style.left = "134px"; }
+            }
+            drawElements(p, block);
+            p.mouseClicked = function() {
+              let candidates = elements.filter(function(e) {
+                if(currentZ < 118) {
+                  return e.block === block && e.number >= 3 && e.number <= currentZ;
+                } else if(currentZ === 118) {
+                  return e.block === block && e.number >= 3 && e.number <= 118;
+                } else if(currentZ === 119) {
+                  return e.block === block && e.number === 1;
+                } else if(currentZ === 120) {
+                  return e.block === block && e.number === 2;
+                } else {
+                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
+                }
+              });
+              for(let candidate of candidates) {
+                let pos = calculatePosition(candidate, candidate.block);
+                if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
+                   p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  // Χρησιμοποιούμε window.updateInfo για να εξασφαλίσουμε την προσβασιμότητα
+                  window.updateInfo(candidate.number);
+                  if(candidate.number === currentZ) {
+                    flashActive = true;
+                    setTimeout(function() { flashActive = false; redrawAll(); }, 200);
+                  }
+                  break;
+                }
+              }
+            };
+          };
+        });
+      });
+      if(!document.body.classList.contains('collapsed')){
+        let base = 134, shiftP = 0, shiftD = 0;
+        if(currentZ <= 20){ shiftP = 0; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30){ shiftP = 42 * (currentZ - 20); shiftD = 0; }
+        else if(currentZ >= 31 && currentZ <= 56){ shiftP = 42 * 10; shiftD = 0; }
+        else if(currentZ >= 57 && currentZ <= 70){ shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.left = base + "px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.left = (base + shiftD) + "px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.left = (base + shiftP) + "px"; }
+      } else {
+        let cS = document.getElementById('canvasS');
+        if(cS) { cS.style.left = "50px"; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.left = "154px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.left = "139px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.left = "559px"; }
+      }
+      if(currentZ >= 121){
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "block"; }
+        initPeriodsCanvas();
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "block"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "block"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "block"; }
+        let csgLeft = document.getElementById('canvasS_groups');
+        if(csgLeft) { csgLeft.style.top = "108px"; csgLeft.style.left = "50px"; }
+        let dLeft = document.getElementById('canvasD').style.left;
+        let cdgLeft = document.getElementById('canvasD_groups');
+        if(cdgLeft) { cdgLeft.style.top = "108px"; cdgLeft.style.left = dLeft; }
+        let pLeft = document.getElementById('canvasP').style.left;
+        let cpgLeft = document.getElementById('canvasP_groups');
+        if(cpgLeft) { cpgLeft.style.top = "108px"; cpgLeft.style.left = pLeft; }
+        initGroupsCanvases();
+      } else {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "none"; }
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "none"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "none"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "none"; }
+      }
+      window.updateInfo(currentZ);
+      updateToggleButton();
+    }
+    
+    function messageForElement(element) {
+      if(element.block === 'f') {
+        return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+      } else {
+        let group = parseInt(element.col);
+        if(group === 1) {
+          return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
+        } else if(group === 2) {
+          return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
+        } else if(group === 13) {
+          return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
+        } else if(group >= 3 && group <= 12) {
+          return "Στοιχείο μετάπτωσης";
+        } else if(group === 14) {
+          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
+        } else if(group >= 15 && group <= 17) {
+          return `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
+        } else if(group === 18) {
+          return "Ευγενές αέριο-Χημικά αδρανές";
+        }
+        return "";
+      }
+    }
+    
+    document.getElementById('nextElement').addEventListener('click', function() {
+      if(currentZ < 118) { currentZ++; }
+      else if(currentZ === 118) { currentZ = 119; }
+      else if(currentZ === 119) { currentZ = 120; }
+      else { currentZ++; }
+      redrawAll();
+    });
+    
+    document.getElementById('fillAll').addEventListener('click', function() {
+      currentZ = 121;
+      redrawAll();
+    });
+    
+    document.getElementById('reset').addEventListener('click', function() {
+      currentZ = 3;
+      window.groupsInitialized = false;
+      window.periodsInitialized = false;
+      window.subshellsInitialized = false;
+      document.querySelectorAll('.canvas').forEach(function(canvas) { canvas.innerHTML = ""; });
+      document.querySelectorAll('.period-label').forEach(function(el) { el.style.display = 'none'; });
+      var cp = document.getElementById('canvasPeriods');
+      if(cp) { cp.style.display = "none"; }
+      var csg = document.getElementById('canvasS_groups');
+      if(csg) { csg.style.display = "none"; }
+      var cdg = document.getElementById('canvasD_groups');
+      if(cdg) { cdg.style.display = "none"; }
+      var cpg = document.getElementById('canvasP_groups');
+      if(cpg) { cpg.style.display = "none"; }
+      initializeCanvases();
+      initSubshellsCanvas();
+      var cs = document.getElementById('canvasSubshells');
+      if(cs) { cs.style.display = "none"; }
+      updateInfo(currentZ);
+    });
+    
+    document.getElementById('toggleFBlock').addEventListener('click', function() {
+      if(currentZ < 118) return;
+      document.body.classList.toggle('collapsed');
+      let toggleBtn = document.getElementById('toggleFBlock');
+      if(document.body.classList.contains('collapsed')){
+        toggleBtn.textContent = "Ανάπτυξη";
+      } else {
+        toggleBtn.textContent = "Σύμπτυξη";
+        var cm = document.getElementById('collapsedMiddle');
+        if(cm) cm.remove();
+      }
+      redrawAll();
+    });
+    
+    loadElements();
+    
+    window.calculatePosition = calculatePosition;
+    window.updateInfo = updateInfo;
+    window.redrawAll = redrawAll;
   </script>
   
   <script>
