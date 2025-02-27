@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel: στην αναπτυγμένη μορφή παραμένει η διάταξη 2 στηλών */
+    /* InfoPanel στην αναπτυγμένη μορφή: διατηρείται η διάταξη 2 στηλών */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -35,8 +35,8 @@
       position: absolute;
       left: 20px;
       top: 458px;
-      /* αυξάνουμε το πλάτος κατά 10px: από  ... -120px σε ... -110px */
-      width: calc(100vw - var(--rightPanelWidth) - 110px);
+      /* Αυξήθηκε συνολικά κατά 15px */
+      width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
     }
@@ -44,16 +44,18 @@
       left: 848px;
       top: 58px;
       width: calc(100vw - 920px);
-      flex-direction: column;  /* 1 στήλη με 3 "κελία" */
+      flex-direction: column;  /* 1 στήλη με 3 γραμμές */
     }
-    /* Στην αναπτυγμένη μορφή, η πρώτη στήλη (στο elementInfo) μικραίνει από 240px σε 180px */
+    /* Η πρώτη στήλη μειώνεται από 240px σε 180px */
     #leftPanel {
       width: 180px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Η δεξιά στήλη παραμένει με flex-grow, αλλά το εσωτερικό της περιεχόμενο θα το τυλίξουμε με wrapper που έχει μειωμένο πλάτος κατά 120px */
+    /* Η δεξιά στήλη παραμένει με flex-grow.
+       Στην αναπτυγμένη μορφή το wrapper που περιέχει τις στιβάδες και το μήνυμα έχει σταθερό πλάτος 120px,
+       ώστε να αφήνει περισσότερο χώρο για τις υποστιβάδες (που εμφανίζονται στο Balloon) */
     #remarks {
       flex-grow: 1;
       display: flex;
@@ -218,7 +220,7 @@
         default: return "black";
       }
     }
-    // Συνάρτηση μετατροπής των shells σε μορφή "K(2), L(8), M(3)" όπου η τελευταία στιβάδα εμφανίζεται με έντονη γραμματοσειρά.
+    // Συνάρτηση μετατροπής των shells σε μορφή "K(2), L(8), M(3)" (η τελευταία στιβάδα με έντονα)
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -690,16 +692,13 @@
         updateToggleButton();
       }
   
-      // Ενημέρωση του InfoPanel με τις νέες απαιτήσεις:
-      // 1. Στην αναπτυγμένη μορφή διατηρείται η προηγούμενη δομή (δύο στήλες)
-      //    όπου στην δεξιά στήλη οι στιβάδες εμφανίζονται και το μήνυμα τοποθετείται κάτω από αυτές,
-      //    ενώ όλο το σύνολο (στιβάδες + μήνυμα) τοποθετείται δεξιότερα από τις υποστιβάδες.
-      // 2. Αν το στοιχείο είναι 118, τότε στο Balloon το "next" εμφανίζεται ως "-".
-      // 3. Ο πίνακας πληροφοριών στην αναπτυγμένη μορφή:
-      //    α. Αυξάνει το πλάτος του κατά 10px (μέσω αλλαγής της width στο #infoPanel).
-      //    β. Η πρώτη στήλη μειώνεται σε 180px (από 240px).
-      //    γ. Το περιεχόμενο της δεύτερης στήλης (που φιλοξενεί τις στιβάδες και το μήνυμα)
-      //       τυλίγεται σε wrapper με πλάτος μειωμένο κατά 120px (με style="width: calc(100% - 120px); margin-left:20px;").
+      // Ενημέρωση του InfoPanel με τις απαιτούμενες τροποποιήσεις:
+      // 1. Στην αναπτυγμένη μορφή (χωρίς collapsed) διατηρείται η διάταξη 2 στηλών:
+      //    – Στην αριστερή στήλη εμφανίζεται το στοιχείο (Ζ, σύμβολο, όνομα).
+      //    – Στη δεξιά στήλη, στο πάνω κελί εμφανίζονται οι υποστιβάδες (prev, current, next)
+      //       και αμέσως κάτω, στο ίδιο κελί, οι στιβάδες με την ετικέτα "Στιβάδες:" και το μήνυμα.
+      //       Ο wrapper που περιέχει τις στιβάδες και το μήνυμα έχει οριστεί με width: 120px και margin-left:20px.
+      // 2. Για το στοιχείο 118, στο Balloon το "next" εμφανίζεται ως "-".
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -719,7 +718,7 @@
                        `<span style="font-style: italic;">${element.name}</span>`;
         document.getElementById('elementInfo').innerHTML = infoHTML;
   
-        // Υπολογισμός prev και next με ειδικές περιπτώσεις
+        // Υπολογισμός prev και next με ειδικές περιπτώσεις:
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) {
@@ -735,7 +734,7 @@
           next = { subshells: "-" };
         }
   
-        // Υπολογισμός μηνύματος με έντονους χαρακτήρες στις λέξεις "πάρει" και "δώσει"
+        // Υπολογισμός μηνύματος με τις λέξεις "πάρει" και "δώσει" με <strong>
         let message = "";
         if(element.block === 'f') {
           message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -762,18 +761,17 @@
           }
         }
   
-        // Αναπτυγμένη μορφή (χωρίς collapsed): διατηρείται η προηγούμενη διάταξη σε δύο στήλες
-        // Η δεξιά στήλη εμφανίζει τις στιβάδες και το μήνυμα (το μήνυμα τοποθετείται κάτω από τις στιβάδες)
-        let prevStr = prev ? `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">` +
-                                `Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>` : '';
+        // Αναπτυγμένη μορφή: Η δεξιά στήλη έχει το ίδιο layout όπως προηγουμένως,
+        // όπου στην αριστερή υπο-στήλη (50% του χώρου) εμφανίζονται οι υποστιβάδες (prev, current, next)
+        // και στο δεξί κελί (wrapper με width: 120px και margin-left:20px) εμφανίζονται οι στιβάδες και το μήνυμα (το μήνυμα τοποθετείται κάτω από τις στιβάδες)
+        let prevStr = prev ? `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>` : '';
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
         let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>` : '';
         let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
-        // Η δεξιά στήλη: οι στιβάδες και το μήνυμα τοποθετούνται σε ένα wrapper με μειωμένο πλάτος κατά 120px και ευθυγραμμίζονται δεξιότερα από τις υποστιβάδες.
         let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
                            `<div style="text-align:left; font-style: italic;">${message}</div>`;
-        let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}` +
-                           `<div style="width: calc(100% - 120px); margin-left:20px;">${shellsAndMsg}</div></div>`;
+        let rightWrapper = `<div style="width: 120px; margin-left:20px;">${shellsAndMsg}</div>`;
+        let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${rightWrapper}</div>`;
         let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
   
         document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
