@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel: δύο στήλες – μετακινημένος 42px ψηλότερα */
+    /* InfoPanel: στην αναπτυγμένη μορφή έχει 2 στήλες, ενώ στη συνεπτυγμένη έχει 1 στήλη με 3 γραμμές */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -43,15 +43,16 @@
       left: 848px;
       top: 58px;
       width: calc(100vw - 920px);
+      flex-direction: column;  /* Στήλη με 3 "κελία" */
     }
-    /* Αριστερή στήλη – σταθερό πλάτος 240px */
+    /* Αριστερή στήλη στην αναπτυγμένη μορφή – σταθερό πλάτος */
     #leftPanel {
       width: 240px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Δεξιά στήλη */
+    /* Δεξιά στήλη στην αναπτυγμένη μορφή */
     #remarks {
       flex-grow: 1;
       display: flex;
@@ -78,7 +79,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px; /* αρχικό πλάτος */
+      width: 300px;
       height: 90px;
       z-index: 150;
       display: none;
@@ -115,6 +116,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
+    /* Ο καμβάς των Περιόδων: Οι ετικέτες έχουν την επιθυμητή μορφή */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -125,6 +127,7 @@
       display: none;
       z-index: 5;
     }
+    /* Οι ομάδες */
     #canvasS_groups,
     #canvasD_groups,
     #canvasP_groups {
@@ -170,19 +173,19 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάδες περιόδων και ομάδων -->
+  <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Καμβάδες τομέων -->
+  <!-- Καμβάδες Τομέων -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας πληροφοριών -->
+  <!-- Πίνακας Πληροφοριών -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -215,8 +218,7 @@
         default: return "black";
       }
     }
-    // Συνάρτηση για μετατροπή των shells σε μορφή "K(2), L(8), M(3)"
-    // Η τελευταία στιβάδα εμφανίζεται με έντονη γραμματοσειρά.
+    // Συνάρτηση μετατροπής των shells σε μορφή "K(2), L(8), M(3)" όπου η τελευταία στιβάδα εμφανίζεται με έντονη γραμματοσειρά.
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -242,7 +244,8 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          const periodLabels = ["K(2)", "L(8)", "M(18)", "N(32)", "O(50)", "P(72)", "Q(98)"];
+          // Νέες ετικέτες: "1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"
+          const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
             p.rect(0, i * 42, 40, 40);
@@ -688,11 +691,15 @@
       }
   
       // Ενημέρωση του InfoPanel σύμφωνα με τις νέες απαιτήσεις:
-      // - Αριστερή στήλη: εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
-      // - Δεξιά κελία:
-      //    • Πάνω σειρά: Αριστερή στήλη με υποστιβάδες και Δεξιά στήλη με τις στιβάδες και το μήνυμα,
-      //      όπου το μήνυμα εμφανίζεται σε ξεχωριστή γραμμή με πλάγιους χαρακτήρες.
-      //    • Χαμηλότερη σειρά: τα remarks
+      // Στην αναπτυγμένη μορφή:
+      // • Αριστερή στήλη: στοιχείο (Ζ, σύμβολο, όνομα)
+      // • Δεξιά στήλη: στην πάνω σειρά, αριστεία στήλη με τις υποστιβάδες (prev, current, next) και δεξιά στήλη με τις στιβάδες και το μήνυμα.
+      // Στη συνεπτυγμένη μορφή (body.collapsed):
+      // Ο πίνακας χωρίζεται σε 1 στήλη και 3 γραμμές:
+      //  α. Πάνω κελί: τα περιεχόμενα της πρώτης στήλης (elementInfo, explanation, comments)
+      //  β. Μεσαίο κελί: οι στιβάδες (με την μορφή της συνάρτησης formatShells) και το μήνυμα,
+      //     όπου στο μήνυμα οι λέξεις <strong>πάρει</strong> και <strong>δώσει</strong> εμφανίζονται με έντονα γράμματα.
+      //  γ. Κάτω κελί: τα Remarks.
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -716,12 +723,7 @@
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
   
-        // Αριστερή στήλη της πάνω σειράς: εμφάνιση υποστιβάδων
-        let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
-        let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-        let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : ''}</div>`;
-  
-        // Υπολογισμός μηνύματος:
+        // Υπολογισμός μηνύματος με έντονους χαρακτήρες στις λέξεις "πάρει" και "δώσει":
         let message = "";
         if(element.block === 'f') {
           message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -729,37 +731,46 @@
           let group = parseInt(element.col);
           if(group === 1){
             if(element.number === 1){
-              message = "Θέλει να πάρει 1 ηλεκτρόνιο";
+              message = "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο";
             } else {
-              message = "Θέλει να δώσει 1 ηλεκτρόνιο";
+              message = "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
             }
           } else if(group === 2){
-            message = `Θέλει να δώσει ${group} ηλεκτρόνια`;
+            message = `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
           } else if(group === 13){
-            message = `Θέλει να δώσει ${group - 10} ηλεκτρόνια`;
+            message = `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
           } else if(group >= 3 && group <= 12){
             message = "Στοιχείο μετάπτωσης";
           } else if(group === 14){
-            message = "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια";
+            message = "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
           } else if(group >= 15 && group <= 17){
-            message = `Θέλει να πάρει ${18 - group} ηλεκτρόνια`;
+            message = `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
           } else if(group === 18){
             message = "Ευγενές αέριο-Χημικά αδρανές";
           }
         }
   
-        // Δεξιά στήλη της πάνω σειράς: εμφάνιση των στιβάδων και του μηνύματος,
-        // όπου οι στιβάδες εμφανίζονται πρώτα και στη συνέχεια το μήνυμα σε ξεχωριστή γραμμή με πλάγιους χαρακτήρες.
-        let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
+        // Σε συνεπτυγμένη μορφή αναδιατάσσεται το InfoPanel σε 3 γραμμές:
+        if(document.body.classList.contains('collapsed')){
+          // Η πρώτη γραμμή είναι ήδη το περιεχόμενο του leftPanel (elementInfo, explanation, comments)
+          // Στη δεύτερη γραμμή τοποθετούνται οι στιβάδες και το μήνυμα κάθετα
+          let middleCell = `<div style="text-align:left;">${formatShells(element.shells || '')}</div>` +
                            `<div style="text-align:left; font-style: italic;">${message}</div>`;
-  
-        let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${shellsAndMsg}</div>`;
-  
-        // Χαμηλότερη σειρά: εμφάνιση των remarks με κεντρική στοίχιση
-        let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
-  
-        let rightCellHTML = upperRowHTML + remarksRowHTML;
-        document.getElementById('remarks').innerHTML = rightCellHTML;
+          // Στην τρίτη γραμμή εμφανίζονται τα Remarks
+          let bottomCell = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
+          document.getElementById('remarks').innerHTML = `<div>${middleCell}</div><div>${bottomCell}</div>`;
+        } else {
+          // Αναπτυγμένη μορφή: στην πάνω σειρά εμφανίζονται δίπλα οι υποστιβάδες (με prev, current, next) και το μήνυμα,
+          // ενώ στην χαμηλότερη σειρά τα Remarks.
+          let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
+          let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+          let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : ''}</div>`;
+          let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
+                             `<div style="text-align:left; font-style: italic;">${message}</div>`;
+          let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${shellsAndMsg}</div>`;
+          let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
+          document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
+        }
   
         // Ενημέρωση του Balloon με τα δεδομένα των υποστιβάδων
         let subshellsData = {
