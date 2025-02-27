@@ -189,8 +189,9 @@
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
+      <!-- Το explanation γράφεται με μικρότερη γραμματοσειρά -->
+      <div id="explanation" style="font-size:0.7em; margin-top:10px;"></div>
       <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
-      <div id="explanation" style="font-size:0.8em; margin-top:10px;"></div>
     </div>
     <div id="remarks"></div>
   </div>
@@ -324,7 +325,7 @@
       });
       window.subshellsInitialized = true;
     }
-    // Σχεδίαση υποστιβάδων με δυναμικό πλάτος
+    // Σχεδίαση υποστιβάδων με δυναμικό πλάτος και αυξημένο δεξιό περιθώριο
     function drawSubshells(subshellsData) {
       if(!subshellsP) return;
       subshellsP.clear();
@@ -333,9 +334,10 @@
       
       let texts = [subshellsData.prev, subshellsData.current, subshellsData.next].filter(t => t);
       let maxW = texts.length > 0 ? Math.max(...texts.map(t => subshellsP.textWidth(t))) : 0;
-      maxW += 20; // padding 10px αριστερά και δεξιά
+      maxW += 30; // Αύξηση padding (10px αριστερά + 20px δεξιά) για πρόσθετο δεξιό περιθώριο
       subshellsP.resizeCanvas(maxW, subshellsP.height);
-      // Ενημέρωση του inline style του καμβά
+      
+      // Ενημέρωση inline style του καμβά
       let balloonElem = document.getElementById("canvasSubshells");
       if (balloonElem) {
           balloonElem.style.width = maxW + "px";
@@ -364,28 +366,22 @@
       if(!canvasElem) return;
       let rect = canvasElem.getBoundingClientRect();
       let offsetX = 40, offsetY = 50; // 40px + 10px επιπλέον
-      let newLeft = rect.left + pos.x + offsetX;
-      let newTop = rect.top + pos.y + offsetY;
+      let desiredLeft = rect.left + pos.x + offsetX;
+      let desiredTop = rect.top + pos.y + offsetY;
       let balloon = document.getElementById("canvasSubshells");
       
-      // Έλεγχος οριζόντιας μετατόπισης (δεξιά όρια)
       let screenWidth = window.innerWidth;
       let balloonWidth = balloon.offsetWidth;
-      if(newLeft + balloonWidth > screenWidth) {
-        newLeft -= (balloonWidth + 42);
-      }
-      
-      // Έλεγχος κατακόρυφης μετατόπισης:
-      // Αν το κάτω όριο του καμβά (newTop + ύψος) ξεπερνάει το πάνω όριο του infoPanel,
-      // τότε μετακινείται ψηλότερα κατά (42px + ύψος του καμβά)
       let infoPanel = document.getElementById("infoPanel");
-      if(infoPanel) {
-          let infoPanelTop = infoPanel.getBoundingClientRect().top;
-          let balloonHeight = balloon.offsetHeight;
-          if(newTop + balloonHeight > infoPanelTop) {
-             newTop -= (42 + balloonHeight);
-          }
-      }
+      let infoPanelRect = infoPanel.getBoundingClientRect();
+      let balloonHeight = balloon.offsetHeight;
+      
+      // Υπολογισμός μετατοπίσεων
+      let adjustLeft = (desiredLeft + balloonWidth > screenWidth) ? (balloonWidth + 42) : 0;
+      let adjustTop = (desiredTop + balloonHeight > infoPanelRect.top) ? (balloonHeight + 42) : 0;
+      
+      let newLeft = desiredLeft - adjustLeft;
+      let newTop = desiredTop - adjustTop;
       
       balloon.style.left = newLeft + "px";
       balloon.style.top = newTop + "px";
@@ -421,7 +417,7 @@
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
-          // Τα στοιχεία 1 και 2 (στο εσωτερικό JSON ως 119,120)
+          // Τα στοιχεία 1 και 2 (στο JSON ως 119 και 120)
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
@@ -683,10 +679,11 @@
         const element = elements.find(e => e.number === z);
         if(!element) return;
   
+        // Για στοιχεία 1 και 2 (119 και 120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        let symbolColor = getBlockColor(element.block);
-        document.getElementById('elementInfo').innerHTML =
-          `<strong>${element.name} (<span style="font-size:2em; font-weight:bold; color:${symbolColor};">${element.symbol}</span>)</strong> [Z=${displayZ}]`;
+        // Διαμορφώνουμε τις πληροφορίες ως: "Ζ=81 ΤΙ Θάλλιο"
+        let infoHTML = `<span style="font-size:2em; font-weight:bold; color:black;">Ζ=${displayZ}</span> <span>${element.symbol}</span> <span style="font-style: italic;">${element.name}</span>`;
+        document.getElementById('elementInfo').innerHTML = infoHTML;
   
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
@@ -708,6 +705,7 @@
         document.getElementById('remarks').innerHTML = subshellsHTML + "<br>" + remarksHTML;
   
         document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
+        // Το explanation εμφανίζεται με μικρότερη γραμματοσειρά (0.7em)
         document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
       }
   
