@@ -23,7 +23,8 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel στην αναπτυγμένη μορφή: διατηρείται η διάταξη 2 στηλών */
+    /* InfoPanel στην αναπτυγμένη μορφή παραμένει 2 στήλες,
+       αλλά το πλάτος αυξάνεται συνολικά κατά 15px */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -35,33 +36,46 @@
       position: absolute;
       left: 20px;
       top: 458px;
-      /* Αυξήθηκε συνολικά κατά 15px */
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
     }
+    /* Στην collapsed μορφή, επανέρχεται η προηγούμενη διάταξη 1 στήλης με 3 γραμμές */
     body.collapsed #infoPanel {
       left: 848px;
       top: 58px;
       width: calc(100vw - 920px);
-      flex-direction: column;  /* 1 στήλη με 3 γραμμές */
+      flex-direction: column;
     }
-    /* Η πρώτη στήλη μειώνεται από 240px σε 180px */
+    /* Στην αναπτυγμένη μορφή, η πρώτη στήλη μειώνεται σε 180px */
     #leftPanel {
       width: 180px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Η δεξιά στήλη παραμένει με flex-grow.
-       Στην αναπτυγμένη μορφή το wrapper που περιέχει τις στιβάδες και το μήνυμα έχει σταθερό πλάτος 120px,
-       ώστε να αφήνει περισσότερο χώρο για τις υποστιβάδες (που εμφανίζονται στο Balloon) */
+    /* Η δεξιά στήλη (#remarks) θα περιέχει το wrapper που θα χωρίζεται σε δύο υποστήλες στην αναπτυγμένη μορφή */
     #remarks {
       flex-grow: 1;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       justify-content: flex-start;
       padding-left: 20px;
+    }
+    /* Για το wrapper στη δεξιά στήλη στην αναπτυγμένη μορφή */
+    .right-wrapper {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+    }
+    .subshells-col {
+      width: 67%;
+      text-align: left;
+    }
+    .shells-msg-col {
+      width: 33%;
+      text-align: left;
+      margin-left: 20px;
     }
     /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line {
@@ -151,24 +165,15 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view */
-    .collapsed #canvasS { top: 150px; left: 50px; }
-    .collapsed #canvasF { top: 240px; left: 154px; width: 588px; }
-    .collapsed #canvasD { top: 150px; left: 139px; width: 420px; }
-    .collapsed #canvasP { top: 150px; left: 559px; width: 252px; }
-    .period-label {
-      position: absolute;
-      left: 15px;
-      font-size: 11px;
-      font-weight: bold;
-      color: #333;
-      background: rgba(200,200,200,0.9);
-      padding: 2px 5px;
-      border-radius: 3px;
-      display: none;
-      line-height: 13px !important;
-      z-index: 30;
+    /* Collapsed view: Επαναφορά προηγούμενης διάταξης 1 στήλης με 3 γραμμές */
+    body.collapsed #infoPanel {
+      flex-direction: column;
     }
+    /* Στην collapsed μορφή, θεωρούμε ότι:
+       – Η πρώτη γραμμή είναι το περιεχόμενο του leftPanel (elementInfo, explanation, comments).
+       – Η δεύτερη γραμμή θα περιέχει τις πληροφορίες για τις υποστιβάδες (prev, current, next) και από κάτω τις στιβάδες+μήνυμα (στο ίδιο κελί).
+       – Η τρίτη γραμμή θα εμφανίζει τα Remarks.
+    */
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -191,7 +196,6 @@
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
-      <!-- Το explanation εμφανίζεται με μικρότερη γραμματοσειρά -->
       <div id="explanation" style="font-size:0.7em; margin-top:10px;"></div>
       <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
     </div>
@@ -220,7 +224,6 @@
         default: return "black";
       }
     }
-    // Συνάρτηση μετατροπής των shells σε μορφή "K(2), L(8), M(3)" (η τελευταία στιβάδα με έντονα)
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -246,7 +249,6 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Ετικέτες: "1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"
           const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
@@ -343,7 +345,6 @@
       });
       window.subshellsInitialized = true;
     }
-    // Σχεδίαση υποστιβάδων
     function drawSubshells(subshellsData) {
       if(!subshellsP) return;
       subshellsP.clear();
@@ -357,7 +358,7 @@
       
       let balloonElem = document.getElementById("canvasSubshells");
       if (balloonElem) {
-          balloonElem.style.width = maxW + "px";
+        balloonElem.style.width = maxW + "px";
       }
       
       if(subshellsData.prev) {
@@ -375,7 +376,6 @@
         subshellsP.text(subshellsData.next, 10, 5*subshellsP.height/6);
       }
     }
-    // Λογική τοποθέτησης του Balloon
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
@@ -386,7 +386,6 @@
       let cellY = cellRect.top + pos.y;
       let cellRight = cellX + 40;
       let cellBottom = cellY + 40;
-      // Default θέση: 10px χαμηλότερα από την κάτω δεξιά γωνία του κελιού.
       let desiredLeft = cellRight;
       let desiredTop = cellBottom + 10;
       
@@ -413,7 +412,6 @@
     }
   </script>
   
-  <!-- Κύριος κώδικας -->
   <script>
     (function() {
       const BLOCK_COLORS = {
@@ -428,20 +426,19 @@
         d: { cols: 10, rows: 7 },
         f: { cols: 14, rows: 7 }
       };
-  
+      
       let elements = [];
       let currentZ = 0;
       let flashActive = false;
-  
+      
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 122);
       }
-  
+      
       async function loadElements() {
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
-          // Τα στοιχεία 1 και 2 (στο JSON ως 119 και 120)
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
@@ -450,7 +447,7 @@
           console.error('Σφάλμα φόρτωσης:', err);
         }
       }
-  
+      
       function initializeCanvases() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           new p5(p => {
@@ -504,7 +501,7 @@
           });
         });
       }
-  
+      
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         if(block==='s'){
@@ -522,7 +519,7 @@
         }
         return { x, y };
       }
-  
+      
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
@@ -541,7 +538,7 @@
           let displayNumber = e.number;
           if(e.number === 119) displayNumber = 1;
           if(e.number === 120) displayNumber = 2;
-  
+          
           if(e.number === currentZ) {
             if(e.number === 119) {
               p.fill("yellow");
@@ -583,7 +580,7 @@
           }
         });
       }
-  
+      
       function redrawAll() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
@@ -691,14 +688,7 @@
         updateInfo(currentZ);
         updateToggleButton();
       }
-  
-      // Ενημέρωση του InfoPanel με τις απαιτούμενες τροποποιήσεις:
-      // 1. Στην αναπτυγμένη μορφή (χωρίς collapsed) διατηρείται η διάταξη 2 στηλών:
-      //    – Στην αριστερή στήλη εμφανίζεται το στοιχείο (Ζ, σύμβολο, όνομα).
-      //    – Στη δεξιά στήλη, στο πάνω κελί εμφανίζονται οι υποστιβάδες (prev, current, next)
-      //       και αμέσως κάτω, στο ίδιο κελί, οι στιβάδες με την ετικέτα "Στιβάδες:" και το μήνυμα.
-      //       Ο wrapper που περιέχει τις στιβάδες και το μήνυμα έχει οριστεί με width: 120px και margin-left:20px.
-      // 2. Για το στοιχείο 118, στο Balloon το "next" εμφανίζεται ως "-".
+      
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -710,72 +700,54 @@
         }
         const element = elements.find(e => e.number === z);
         if(!element) return;
-  
+        
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Αριστερή στήλη: εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
         document.getElementById('elementInfo').innerHTML = infoHTML;
-  
-        // Υπολογισμός prev και next με ειδικές περιπτώσεις:
+        
+        // Ειδικές περιπτώσεις για τα στοιχεία 1, 2, 3:
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) {
           prev = { subshells: "-" };
         }
-        if(z === 2 && !next) {
+        if(z === 2) {
           next = elements.find(e => e.number === 3);
         }
-        if(z === 3 && !prev) {
+        if(z === 3) {
           prev = elements.find(e => e.number === 2);
         }
         if(z === 118) {
           next = { subshells: "-" };
         }
-  
-        // Υπολογισμός μηνύματος με τις λέξεις "πάρει" και "δώσει" με <strong>
-        let message = "";
-        if(element.block === 'f') {
-          message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
-        } else {
-          let group = parseInt(element.col);
-          if(group === 1){
-            if(element.number === 1){
-              message = "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο";
-            } else {
-              message = "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
-            }
-          } else if(group === 2){
-            message = `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
-          } else if(group === 13){
-            message = `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
-          } else if(group >= 3 && group <= 12){
-            message = "Στοιχείο μετάπτωσης";
-          } else if(group === 14){
-            message = "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
-          } else if(group >= 15 && group <= 17){
-            message = `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
-          } else if(group === 18){
-            message = "Ευγενές αέριο-Χημικά αδρανές";
-          }
-        }
-  
-        // Αναπτυγμένη μορφή: Η δεξιά στήλη έχει το ίδιο layout όπως προηγουμένως,
-        // όπου στην αριστερή υπο-στήλη (50% του χώρου) εμφανίζονται οι υποστιβάδες (prev, current, next)
-        // και στο δεξί κελί (wrapper με width: 120px και margin-left:20px) εμφανίζονται οι στιβάδες και το μήνυμα (το μήνυμα τοποθετείται κάτω από τις στιβάδες)
-        let prevStr = prev ? `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>` : '';
+        
+        // Δημιουργία strings για τις υποστιβάδες (με prev, current, next)
+        let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">` +
+                      `Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>`;
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-        let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>` : '';
-        let leftColumn = `<div style="width:50%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
-        let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
-                           `<div style="text-align:left; font-style: italic;">${message}</div>`;
-        let rightWrapper = `<div style="width: 120px; margin-left:20px;">${shellsAndMsg}</div>`;
-        let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${rightWrapper}</div>`;
-        let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
-  
-        document.getElementById('remarks').innerHTML = upperRowHTML + remarksRowHTML;
-  
+        let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+        
+        // Αν δεν είμαστε σε collapsed (αναπτυγμένη μορφή):
+        if(!document.body.classList.contains('collapsed')){
+          // Δεξιά στήλη χωρίζεται σε δύο υποστήλες:
+          let leftSubCol = `<div style="width:67%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
+          let rightSubCol = `<div style="width:33%; text-align:left; margin-left:20px;">` +
+                            `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
+                            `<div style="font-style: italic;">${messageForElement(element)}</div>` +
+                            `</div>`;
+          document.getElementById('remarks').innerHTML = `<div style="display:flex; align-items:center;">${leftSubCol}${rightSubCol}</div>` +
+                                                           `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
+        } else {
+          // Σε collapsed μορφή, επαναφέρουμε την προηγούμενη διάταξη 1 στήλης με 3 γραμμές:
+          let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}</div>` +
+                     `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
+                     `<div style="text-align:left; font-style: italic;">${messageForElement(element)}</div>`;
+          let row3 = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
+          document.getElementById('remarks').innerHTML = row2 + row3;
+        }
+        
         let subshellsData = {
           prev: prev ? prev.subshells : "",
           current: element.subshells,
@@ -785,11 +757,35 @@
         setTimeout(() => {
           updateBalloonPosition(element);
         }, 10);
-  
+        
         document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
-        document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
+        document.getElementById('explanation').textContent = element.explanation || "";
       }
-  
+      
+      function messageForElement(element) {
+        if(element.block === 'f') {
+          return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+        } else {
+          let group = parseInt(element.col);
+          if(group === 1){
+            return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
+          } else if(group === 2){
+            return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
+          } else if(group === 13){
+            return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
+          } else if(group >= 3 && group <= 12){
+            return "Στοιχείο μετάπτωσης";
+          } else if(group === 14){
+            return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
+          } else if(group >= 15 && group <= 17){
+            return `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
+          } else if(group === 18){
+            return "Ευγενές αέριο-Χημικά αδρανές";
+          }
+          return "";
+        }
+      }
+      
       document.getElementById('nextElement').addEventListener('click', () => {
         if(currentZ < 3){
           currentZ = 3;
@@ -808,12 +804,12 @@
         }
         redrawAll();
       });
-  
+      
       document.getElementById('fillAll').addEventListener('click', () => {
         currentZ = 122;
         redrawAll();
       });
-  
+      
       document.getElementById('reset').addEventListener('click', () => {
         currentZ = 0;
         window.groupsInitialized = false;
@@ -830,7 +826,7 @@
         document.getElementById('canvasSubshells').style.display = "none";
         updateInfo(currentZ);
       });
-  
+      
       document.getElementById('toggleFBlock').addEventListener('click', () => {
         if(currentZ < 122) return;
         document.body.classList.toggle('collapsed');
@@ -844,9 +840,9 @@
         }
         redrawAll();
       });
-  
+      
       loadElements();
-  
+      
       window.calculatePosition = calculatePosition;
     })();
   </script>
