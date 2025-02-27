@@ -23,8 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel στην αναπτυγμένη μορφή παραμένει 2 στήλες,
-       αλλά το πλάτος αυξάνεται συνολικά κατά 15px */
+    /* Αναπτυγμένη μορφή: 2 στήλες με συνολικό πλάτος αυξημένο κατά 15px */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -40,42 +39,24 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Στην collapsed μορφή, επανέρχεται η προηγούμενη διάταξη 1 στήλης με 3 γραμμές */
+    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές */
     body.collapsed #infoPanel {
       left: 848px;
       top: 58px;
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Στην αναπτυγμένη μορφή, η πρώτη στήλη μειώνεται σε 180px */
+    /* Στήλη 1 (στο στοιχείο) μειώνεται σε 180px */
     #leftPanel {
       width: 180px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Η δεξιά στήλη (#remarks) θα περιέχει το wrapper που θα χωρίζεται σε δύο υποστήλες στην αναπτυγμένη μορφή */
+    /* Στήλη 2 για την αναπτυγμένη μορφή – δεξιά στήλη */
     #remarks {
       flex-grow: 1;
-      display: flex;
-      flex-direction: row;
-      justify-content: flex-start;
       padding-left: 20px;
-    }
-    /* Για το wrapper στη δεξιά στήλη στην αναπτυγμένη μορφή */
-    .right-wrapper {
-      display: flex;
-      flex-direction: row;
-      width: 100%;
-    }
-    .subshells-col {
-      width: 67%;
-      text-align: left;
-    }
-    .shells-msg-col {
-      width: 33%;
-      text-align: left;
-      margin-left: 20px;
     }
     /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line {
@@ -126,7 +107,7 @@
     #toggleFBlock.active {
       background-color: #e68a00;
     }
-    /* Καμβάδες στοιχείων/περιόδων/ομάδων */
+    /* Καμβάδες τομέων, περιόδων, ομάδων */
     .canvas {
       position: absolute;
       background: transparent;
@@ -165,15 +146,7 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed view: Επαναφορά προηγούμενης διάταξης 1 στήλης με 3 γραμμές */
-    body.collapsed #infoPanel {
-      flex-direction: column;
-    }
-    /* Στην collapsed μορφή, θεωρούμε ότι:
-       – Η πρώτη γραμμή είναι το περιεχόμενο του leftPanel (elementInfo, explanation, comments).
-       – Η δεύτερη γραμμή θα περιέχει τις πληροφορίες για τις υποστιβάδες (prev, current, next) και από κάτω τις στιβάδες+μήνυμα (στο ίδιο κελί).
-       – Η τρίτη γραμμή θα εμφανίζει τα Remarks.
-    */
+    /* Σε collapsed δεν αλλάζουμε τη δομή που είχαμε συμφωνήσει (1 στήλη με 3 γραμμές) */
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -213,7 +186,6 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Global functions -->
   <script>
     function getBlockColor(b) {
       switch(b) {
@@ -350,17 +322,14 @@
       subshellsP.clear();
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.textSize(16);
-      
       let texts = [subshellsData.prev, subshellsData.current, subshellsData.next].filter(t => t);
       let maxW = texts.length > 0 ? Math.max(...texts.map(t => subshellsP.textWidth(t))) : 0;
       maxW += 30;
       subshellsP.resizeCanvas(maxW, subshellsP.height);
-      
       let balloonElem = document.getElementById("canvasSubshells");
       if (balloonElem) {
         balloonElem.style.width = maxW + "px";
       }
-      
       if(subshellsData.prev) {
         subshellsP.fill(0);
         subshellsP.text(subshellsData.prev, 10, subshellsP.height/6);
@@ -388,23 +357,18 @@
       let cellBottom = cellY + 40;
       let desiredLeft = cellRight;
       let desiredTop = cellBottom + 10;
-      
       let balloon = document.getElementById("canvasSubshells");
       let balloonWidth = balloon.offsetWidth;
       let balloonHeight = balloon.offsetHeight;
-      
       if (desiredLeft + balloonWidth > 1250) {
          desiredLeft = desiredLeft - (balloonWidth + 42);
       }
-      
       let infoPanel = document.getElementById("infoPanel");
       if(infoPanel && (desiredTop + balloonHeight > infoPanel.getBoundingClientRect().top)) {
          desiredTop = desiredTop - (balloonHeight + 42);
       }
-      
       let newLeft = Math.max(desiredLeft, 0);
       let newTop = Math.max(desiredTop, 0);
-      
       balloon.style.left = newLeft + "px";
       balloon.style.top = newTop + "px";
       balloon.style.background = "rgba(255,255,255,0.8)";
@@ -538,7 +502,6 @@
           let displayNumber = e.number;
           if(e.number === 119) displayNumber = 1;
           if(e.number === 120) displayNumber = 2;
-          
           if(e.number === currentZ) {
             if(e.number === 119) {
               p.fill("yellow");
@@ -689,6 +652,16 @@
         updateToggleButton();
       }
       
+      // Η updateInfo εφαρμόζει τη συμφωνημένη δομή:
+      // • Σε αναπτυγμένη μορφή (χωρίς collapsed) ο πίνακας πληροφοριών έχει 2 στήλες:
+      //    - Στην πρώτη στήλη (leftPanel) εμφανίζεται το στοιχείο.
+      //    - Στη δεύτερη στήλη (remarks) εμφανίζεται ένα wrapper που, σε δύο γραμμές:
+      //         1η γραμμή: Δύο κελιά – στο αριστερό (67%) τα δεδομένα των υποστιβάδων (prev, current, next) και στο δεξί (33% + margin-left:20px) οι στιβάδες μαζί με το μήνυμα.
+      //         2η γραμμή: Τα Remarks.
+      // • Σε συνεπτυγμένη μορφή (collapsed) ο πίνακας πληροφοριών εμφανίζεται ως 1 στήλη με 3 γραμμές:
+      //         1η: Περιεχόμενα της πρώτης στήλης (elementInfo, explanation, comments).
+      //         2η: Οι υποστιβάδες και κάτω από αυτές οι στιβάδες με το μήνυμα.
+      //         3η: Τα Remarks.
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -705,9 +678,8 @@
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
-        document.getElementById('elementInfo').innerHTML = infoHTML;
         
-        // Ειδικές περιπτώσεις για τα στοιχεία 1, 2, 3:
+        // Ειδικές περιπτώσεις για στοιχεία 1,2,3 και 118
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) {
@@ -723,29 +695,32 @@
           next = { subshells: "-" };
         }
         
-        // Δημιουργία strings για τις υποστιβάδες (με prev, current, next)
         let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">` +
                       `Ζ=${(prev.subshells === "-") ? "-" : prev.number + " " + prev.subshells}</div>`;
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
         let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+        let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
+                           `<div style="font-style: italic;">${messageForElement(element)}</div>`;
         
-        // Αν δεν είμαστε σε collapsed (αναπτυγμένη μορφή):
         if(!document.body.classList.contains('collapsed')){
-          // Δεξιά στήλη χωρίζεται σε δύο υποστήλες:
-          let leftSubCol = `<div style="width:67%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>`;
-          let rightSubCol = `<div style="width:33%; text-align:left; margin-left:20px;">` +
-                            `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
-                            `<div style="font-style: italic;">${messageForElement(element)}</div>` +
-                            `</div>`;
-          document.getElementById('remarks').innerHTML = `<div style="display:flex; align-items:center;">${leftSubCol}${rightSubCol}</div>` +
-                                                           `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
+          // Αναπτυγμένη μορφή: 2 στήλες
+          document.getElementById('leftPanel').innerHTML = infoHTML;
+          let rightContent = `<div style="display:flex; flex-direction:column;">` +
+                             `<div style="display:flex; align-items:center;">` +
+                             `<div style="width:67%; text-align:left;">${prevStr}${currentStr}${nextStr}</div>` +
+                             `<div style="width:33%; text-align:left; margin-left:20px;">${shellsAndMsg}</div>` +
+                             `</div>` +
+                             `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>` +
+                             `</div>`;
+          document.getElementById('remarks').innerHTML = rightContent;
         } else {
-          // Σε collapsed μορφή, επαναφέρουμε την προηγούμενη διάταξη 1 στήλης με 3 γραμμές:
-          let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}</div>` +
-                     `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}</div>` +
-                     `<div style="text-align:left; font-style: italic;">${messageForElement(element)}</div>`;
-          let row3 = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
-          document.getElementById('remarks').innerHTML = row2 + row3;
+          // Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές
+          let row1 = `<div>${infoHTML}<br>${document.getElementById('explanation').innerHTML}<br>${document.getElementById('comments').innerHTML}</div>`;
+          let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>` +
+                     `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
+                     `<div style="font-style: italic;">${messageForElement(element)}</div></div>`;
+          let row3 = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
+          document.getElementById('infoPanel').innerHTML = row1 + row2 + row3;
         }
         
         let subshellsData = {
@@ -754,12 +729,11 @@
           next: next ? next.subshells : ""
         };
         drawSubshells(subshellsData);
-        setTimeout(() => {
-          updateBalloonPosition(element);
-        }, 10);
+        setTimeout(() => { updateBalloonPosition(element); }, 10);
         
-        document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
-        document.getElementById('explanation').textContent = element.explanation || "";
+        if(!document.body.classList.contains('collapsed')){
+          // Σε αναπτυγμένη μορφή έχουμε ήδη ενημερωμένα leftPanel και remarks.
+        }
       }
       
       function messageForElement(element) {
