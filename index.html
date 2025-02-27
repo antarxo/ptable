@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* InfoPanel: δύο στήλες – ο πίνακας ανέβηκε 42px ψηλότερα */
+    /* InfoPanel: δύο στήλες – μετακινημένος 42px ψηλότερα */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -34,7 +34,7 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 458px;  /* 42px ψηλότερα από 500px */
+      top: 458px; /* 42px ψηλότερα από 500px */
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
       transition: all 1.5s ease;
@@ -78,7 +78,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px;  /* Αρχικό πλάτος – θα αλλάζει δυναμικά */
+      width: 300px; /* αρχικό πλάτος */
       height: 90px;
       z-index: 150;
       display: none;
@@ -215,7 +215,7 @@
         default: return "black";
       }
     }
-    // Συνάρτηση μετατροπής των shells σε μορφή "K(2), L(8), M(3)"
+    // Συνάρτηση για μετατροπή των shells σε μορφή "K(2), L(8), M(3)"
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(',').map(s => s.trim());
@@ -364,36 +364,49 @@
         subshellsP.text(subshellsData.next, 10, 5*subshellsP.height/6);
       }
     }
-    // Ενημέρωση θέσης του balloon (όπως πριν)
+    // Νέα λογική τοποθέτησης του Balloon:
+    // Default: το balloon τοποθετείται έτσι ώστε η πάνω αριστερή του γωνία να αγγίζει την κάτω δεξιά γωνία του κελιού.
+    // Στη συνέχεια, ελέγχουμε αν το bounding box του balloon βγαίνει εκτός ορίων (π.χ. πάνω από το infoPanel ή πέρα από 1250)
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
-      let rect = canvasElem.getBoundingClientRect();
-      let offsetX = 40, offsetY = 50; 
-      let desiredLeft = rect.left + pos.x + offsetX;
-      let desiredTop = rect.top + pos.y + offsetY;
+      let cellRect = canvasElem.getBoundingClientRect();
+      // Υπολογίζουμε τη θέση του κελιού μέσα στον καμβά:
+      let cellX = cellRect.left + pos.x;
+      let cellY = cellRect.top + pos.y;
+      // Υποθέτουμε μέγεθος κελιού 40x40:
+      let cellRight = cellX + 40;
+      let cellBottom = cellY + 40;
+      // Default: το balloon τοποθετείται στην κάτω δεξιά γωνία του κελιού
+      let desiredLeft = cellRight;
+      let desiredTop = cellBottom;
       
       let balloon = document.getElementById("canvasSubshells");
       let balloonRect = balloon.getBoundingClientRect();
-      let balloonEffectiveWidth = balloonRect.width;
-      let balloonEffectiveHeight = balloonRect.height;
+      let balloonWidth = balloonRect.width;
+      let balloonHeight = balloonRect.height;
       
+      // Έλεγχος: αν desiredLeft + balloonWidth > 1250, μετατοπίζουμε οριζόντια
       let horizontalAdjustment = 0;
-      if (desiredLeft + balloonEffectiveWidth > 1250) {
-         horizontalAdjustment = balloonEffectiveWidth + 42;
+      if(desiredLeft + balloonWidth > 1250) {
+         horizontalAdjustment = balloonWidth + 42;
       }
       
+      // Έλεγχος: αν desiredTop + balloonHeight υπερβαίνει το πάνω όριο του infoPanel,
+      // μετατοπίζουμε κατακόρυφα προς τα πάνω
       let verticalAdjustment = 0;
       let infoPanel = document.getElementById("infoPanel");
       let infoPanelRect = infoPanel.getBoundingClientRect();
-      if (desiredTop + balloonEffectiveHeight > infoPanelRect.top) {
-         verticalAdjustment = balloonEffectiveHeight + 42;
+      if(desiredTop + balloonHeight > infoPanelRect.top) {
+         verticalAdjustment = balloonHeight + 42;
       }
       
       let newLeft = desiredLeft - horizontalAdjustment;
       let newTop = desiredTop - verticalAdjustment;
+      newLeft = Math.max(newLeft, 0);
+      newTop = Math.max(newTop, 0);
       
       balloon.style.left = newLeft + "px";
       balloon.style.top = newTop + "px";
@@ -695,7 +708,7 @@
   
         // Για στοιχεία 1 και 2 (119,120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Εμφάνιση στοιχείου: σύμβολο από το JSON με font‑size:3em, bold και με το χρώμα του τομέα, μαζί με το όνομα.
+        // Εμφάνιση στοιχείου: Z, σύμβολο (με font‑size:3em, bold και το χρώμα του τομέα) και όνομα.
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
@@ -712,10 +725,10 @@
         updateBalloonPosition(element);
   
         // Σύνταξη δεξιού κελιού της πάνω σειράς της δεύτερης στήλης:
-        // Αριστερή στήλη: εμφάνιση των στιβάδων σε μορφή K(2),L(8),M(3) (με χρήση της formatShells)
-        let leftRightCellHTML = `<div style="width:50%; text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>`;
+        // Αριστερή στήλη: εμφάνιση των στιβάδων σε μορφή "K(2), L(8), M(3)" 
+        let leftCellHTML = `<div style="width:50%; text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>`;
   
-        // Δεξιά στήλη: υπολογισμός μηνύματος με βάση την ομάδα και το domain.
+        // Δεξιά στήλη: υπολογισμός μηνύματος βάσει του element.group και του element.outerShell.
         let rightMessage = "";
         if(element.block === 'f') {
           rightMessage = `<div>Λανθανίδα</div><div>Ακτινίδα</div>`;
@@ -731,13 +744,12 @@
           } else if(group >= 15 && group <= 17) {
              rightMessage = `Θέλει να πάρει ${8 - outer} ηλεκτρόνια`;
           } else if(group === 18) {
-             rightMessage = `Ευγενές αέριο-Χημικά αδρανί`
-             +`ες`;
+             rightMessage = `Ευγενές αέριο-Χημικά αδρανές`;
           }
         }
   
         let upperRowHTML = `<div style="display: flex;">` +
-                           `<div style="width:50%; text-align:left;">${leftRightCellHTML}</div>` +
+                           `<div style="width:50%; text-align:left;">${leftCellHTML}</div>` +
                            `<div style="width:50%; text-align:left;">${rightMessage}</div>` +
                            `</div>`;
   
