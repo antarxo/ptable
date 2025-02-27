@@ -34,14 +34,14 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 458px; /* 42px ψηλότερα από 500px */
+      top: 458px;
       width: calc(100vw - var(--rightPanelWidth) - 120px);
       z-index: 40;
       transition: all 1.5s ease;
     }
     body.collapsed #infoPanel {
       left: 848px;
-      top: 58px; /* 42px ψηλότερα από 100px */
+      top: 58px;
       width: calc(100vw - 920px);
     }
     /* Αριστερή στήλη – σταθερό πλάτος 240px */
@@ -372,8 +372,8 @@
     }
     // Νέα λογική τοποθέτησης του Balloon:
     // 1. Η default θέση ορίζεται έτσι ώστε η πάνω αριστερή γωνία του Balloon να τοποθετείται 10px χαμηλότερα από την κάτω δεξιά γωνία του κελιού.
-    // 2. Ελέγχουμε αν το δεξί όριό του είναι εκτός σελίδας: αν ναι, μετατοπίζεται αριστερά κατά (42px + πλάτος Balloon).
-    // 3. Ελέγχουμε αν το κάτω του όριο επικαλύπτει το InfoPanel ή τα κουμπιά: αν ναι, μετατοπίζεται προς τα πάνω κατά (42px + ύψος Balloon).
+    // 2. Εάν το δεξιό όριό του (desiredLeft + offsetWidth) είναι εκτός (π.χ. >1250), μετατοπίζεται αριστερά κατά (42px + offsetWidth).
+    // 3. Εάν το κάτω όριό του επικαλύπτει το InfoPanel ή τα κουμπιά, μετατοπίζεται προς τα πάνω κατά (42px + offsetHeight).
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
@@ -389,17 +389,19 @@
       let desiredTop = cellBottom + 10;
       
       let balloon = document.getElementById("canvasSubshells");
-      let balloonRect = balloon.getBoundingClientRect();
+      // Χρησιμοποιούμε offsetWidth και offsetHeight για τις διαστάσεις
+      let balloonWidth = balloon.offsetWidth;
+      let balloonHeight = balloon.offsetHeight;
       
-      // Αν το δεξί όριο του Balloon βγαίνει εκτός σελίδας, μετατοπίζουμε αριστερά κατά (42px + πλάτος Balloon)
-      if (desiredLeft + balloonRect.width > 1250) {
-         desiredLeft = desiredLeft - (balloonRect.width + 42);
+      // Οριζόντια μετατόπιση: εάν (desiredLeft + balloonWidth > 1250)
+      if (desiredLeft + balloonWidth > 1250) {
+         desiredLeft = desiredLeft - (balloonWidth + 42);
       }
       
-      // Αν το κάτω όριο του Balloon επικαλύπτει το InfoPanel ή τα κουμπιά, μετατοπίζουμε προς τα πάνω κατά (42px + ύψος Balloon)
+      // Κάθετη μετατόπιση: εάν (desiredTop + balloonHeight) επικαλύπτει το InfoPanel ή τα κουμπιά
       let infoPanel = document.getElementById("infoPanel");
-      if(infoPanel && (desiredTop + balloonRect.height > infoPanel.getBoundingClientRect().top)) {
-         desiredTop = desiredTop - (balloonRect.height + 42);
+      if(infoPanel && (desiredTop + balloonHeight > infoPanel.getBoundingClientRect().top)) {
+         desiredTop = desiredTop - (balloonHeight + 42);
       }
       
       let newLeft = Math.max(desiredLeft, 0);
@@ -691,22 +693,24 @@
         updateToggleButton();
       }
   
-      // Νέα λειτουργία ενημέρωσης του InfoPanel σύμφωνα με τις νέες απαιτήσεις:
+      // Ενημέρωση του InfoPanel σύμφωνα με τις νέες απαιτήσεις:
       // Στην αριστερή στήλη εμφανίζεται το στοιχείο (Ζ, σύμβολο, όνομα).
-      // Στο δεξί κελί δημιουργούμε μια πάνω σειρά (flex container) με δύο στήλες:
-      //  - Αριστερή στήλη: Εμφάνιση υποστιβάδων με τη μορφή:
-      //         προηγούμενο: "Ζ=" + prev.number + " " + prev.subshells (με το χρώμα του τομέα)
-      //         τρέχουσα: "Ζ=" + element.number + " " + element.subshells (με έντονη γραμματοσειρά και το χρώμα του τομέα)
-      //         επόμενο: "Ζ=" + next.number + " " + next.subshells (με το χρώμα του τομέα)
-      //  - Δεξιά στήλη: Εμφάνιση των στιβάδων σε μορφή "Στιβάδες: K(2), L(8), M(18), N(8), O(2)" και αμέσως μετά, στο ίδιο πλαίσιο, το μήνυμα που υπολογίζεται σύμφωνα με:
-      //         Αν το στοιχείο ανήκει στον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) → "Λανθανίδα", αλλιώς "Ακτινίδα"
-      //         Αλλιώς, με βάση την ομάδα:
-      //           Αν η ομάδα είναι 1 ή 2 → "Θέλει να δώσει X ηλεκτρόνια"
-      //           Αν η ομάδα είναι 13 → "Θέλει να δώσει X-10 ηλεκτρόνια"
-      //           Αν η ομάδα είναι 3–12 → "Στοιχείο μετάπτωσης"
-      //           Αν η ομάδα είναι 14 → "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια"
-      //           Αν η ομάδα είναι 15–17 → "Θέλει να πάρει 18-X ηλεκτρόνια"
-      //           Αν η ομάδα είναι 18 → "Ευγενές αέριο-Χημικά αδρανές"
+      // Στο δεξί κελί:
+      //  - Η πάνω σειρά αποτελείται από δύο στήλες:
+      //       • Αριστερή στήλη: Εμφάνιση των υποστιβάδων με τη μορφή:
+      //             "Ζ=" + (προηγούμενο Ζ) + " " + (υποστιβάδα)  (με το χρώμα του τομέα)
+      //             "Ζ=" + (τρέχων Ζ) + " " + (υποστιβάδα)  (με έντονη γραμματοσειρά και το χρώμα του τομέα)
+      //             "Ζ=" + (επόμενο Ζ) + " " + (υποστιβάδα)  (με το χρώμα του τομέα)
+      //       • Δεξιά στήλη: Εμφάνιση των στιβάδων σε μορφή "Στιβάδες: K(2), L(8), M(18), N(8), O(2)" (με την τελευταία σε έντονη γραμματοσειρά)
+      //               και αμέσως μετά το μήνυμα σύμφωνα με:
+      //         – Αν το στοιχείο ανήκει στον f τομέα: αν είναι στη σειρά του Λανθανίου (row 6) → "Λανθανίδα", αλλιώς → "Ακτινίδα"
+      //         – Αλλιώς, με βάση την ομάδα (νέα αρίθμηση 1–18):
+      //               • Αν η ομάδα είναι 1 ή 2 → "Θέλει να δώσει [ομάδα] ηλεκτρόνια"
+      //               • Αν η ομάδα είναι 13 → "Θέλει να δώσει [ομάδα–10] ηλεκτρόνια"
+      //               • Αν η ομάδα είναι 3–12 → "Στοιχείο μετάπτωσης"
+      //               • Αν η ομάδα είναι 14 → "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια"
+      //               • Αν η ομάδα είναι 15–17 → "Θέλει να πάρει [18–ομάδα] ηλεκτρόνια"
+      //               • Αν η ομάδα είναι 18 → "Ευγενές αέριο-Χημικά αδρανές"
       //  - Τέλος, η χαμηλότερη σειρά εμφανίζει τα remarks με κεντρική στοίχιση.
       function updateInfo(z) {
         if(z < 3){
@@ -720,9 +724,9 @@
         const element = elements.find(e => e.number === z);
         if(!element) return;
   
-        // Για στοιχεία 1 και 2 (119,120) εμφανίζεται το Z-118
+        // Για στοιχεία 1 και 2 (στο JSON ως 119, 120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Αριστερή στήλη: Εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
+        // Αριστερή στήλη: εμφάνιση στοιχείου (Ζ, σύμβολο, όνομα)
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
@@ -731,6 +735,7 @@
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
   
+        // Αριστερή στήλη της πάνω σειράς: εμφάνιση υποστιβάδων
         let prevStr = prev ? `<div style="color:${getBlockColor(prev.block)};">Ζ=${prev.number} ${prev.subshells}</div>` : '';
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
         let nextStr = next ? `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number} ${next.subshells}</div>` : '';
@@ -742,29 +747,28 @@
           message = (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
         } else {
           let group = parseInt(element.group);
-          let outer = parseInt(element.outerShell) || 0;
-          if(group === 1 || group === 2) {
-            message = `Θέλει να δώσει ${outer} ηλεκτρόνια`;
-          } else if(group === 13) {
-            message = `Θέλει να δώσει ${outer - 10} ηλεκτρόνια`;
-          } else if(group >= 3 && group <= 12) {
+          if(group === 1 || group === 2){
+            message = `Θέλει να δώσει ${group} ηλεκτρόνια`;
+          } else if(group === 13){
+            message = `Θέλει να δώσει ${group - 10} ηλεκτρόνια`;
+          } else if(group >= 3 && group <= 12){
             message = "Στοιχείο μετάπτωσης";
-          } else if(group === 14) {
+          } else if(group === 14){
             message = "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια";
-          } else if(group >= 15 && group <= 17) {
-            message = `Θέλει να πάρει ${18 - outer} ηλεκτρόνια`;
-          } else if(group === 18) {
+          } else if(group >= 15 && group <= 17){
+            message = `Θέλει να πάρει ${18 - group} ηλεκτρόνια`;
+          } else if(group === 18){
             message = "Ευγενές αέριο-Χημικά αδρανές";
           }
         }
   
-        // Δεξιά στήλη: συνδυάζουμε τις στιβάδες και το μήνυμα στην ίδια σειρά
+        // Δεξιά στήλη της πάνω σειράς: εμφάνιση των στιβάδων και του μηνύματος στο ίδιο πλαίσιο
         let shellsAndMsg = `<div style="text-align:left;"><strong>Στιβάδες:</strong> ${formatShells(element.shells || '')}` +
                            ` <span style="margin-left:10px;">${message}</span></div>`;
   
         let upperRowHTML = `<div style="display:flex; align-items:center;">${leftColumn}${shellsAndMsg}</div>`;
   
-        // Χαμηλότερη σειρά: τα remarks με κεντρική στοίχιση
+        // Χαμηλότερη σειρά: εμφάνιση των remarks με κεντρική στοίχιση
         let remarksRowHTML = `<div style="text-align:center; margin-top: 10px;">${element.remarks || ""}</div>`;
   
         let rightCellHTML = upperRowHTML + remarksRowHTML;
