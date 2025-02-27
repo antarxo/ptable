@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Αναπτυγμένη μορφή: 2 στήλες, με συνολικό πλάτος αυξημένο κατά 15px */
+    /* Αναπτυγμένη μορφή: 2 στήλες, συνολικό πλάτος = calc(100vw - var(--rightPanelWidth) - 105px) */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -46,22 +46,26 @@
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Στήλη 1 (στο elementInfo): στην αναπτυγμένη μορφή έχει πλάτος 220px (αύξηση κατά 40px από τα 180px) */
+    /* Στήλη 1 (στο elementInfo) στην αναπτυγμένη μορφή: πλάτος 220px */
     #leftPanel {
       width: 220px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Στήλη 2 (remarks) στην αναπτυγμένη μορφή εμφανίζεται ως περιεχόμενο σε δύο γραμμές:
-       - Πρώτη γραμμή: ένα wrapper που χωρίζεται σε δύο υποστήλες (67% για υποστιβάδες και 33% για στιβάδες+μήνυμα, με margin-left:20px).
-       - Δεύτερη γραμμή: τα Remarks.
-    */
+    /* Στήλη 2 (remarks) στην αναπτυγμένη μορφή */
     #remarks {
       flex-grow: 1;
       padding-left: 20px;
     }
+    /* Στυλ για το wrapper της δεξιάς στήλης στην αναπτυγμένη μορφή (2 γραμμές):
+       Πρώτη γραμμή: wrapper χωρισμένο σε 2 υποστήλες (67% για υποστιβάδες, 33% για στιβάδες+μήνυμα)
+       Δεύτερη γραμμή: τα Remarks */
     .right-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+    .upper-right {
       display: flex;
       flex-direction: row;
     }
@@ -74,10 +78,9 @@
       text-align: left;
       margin-left: 20px;
     }
-    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές, όπου στο μεσαίο κελί οι πληροφορίες στοιβάζονται κάθετα */
-    /* (Δεν υπάρχει οριζόντια διάταξη στο μεσαίο κελί) */
+    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές – χωρίς οριζόντια διάταξη στο μεσαίο κελί */
+    /* (Τα περιεχόμενα στοιβάζονται κάθετα) */
     
-    /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line {
       width: 100%;
     }
@@ -126,14 +129,12 @@
     #toggleFBlock.active {
       background-color: #e68a00;
     }
-    /* Καμβάδες τομέων, περιόδων, ομάδων */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάς Περιόδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -155,17 +156,15 @@
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Χρώματα blocks */
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Full view */
     .full #canvasS { top: 150px; left: 50px; z-index: 1; }
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές – όπως είχαμε συμφωνήσει */
+    /* Σε collapsed διατηρούμε τη συμφωνημένη διάταξη 1 στήλης με 3 γραμμές */
     body.collapsed #infoPanel {
       flex-direction: column;
     }
@@ -732,7 +731,7 @@
       loadElements();
       
       window.calculatePosition = calculatePosition;
-      // Εξασφαλίζουμε ότι η updateInfo είναι προσβάσιμη global:
+      // Εξασφαλίζουμε την πρόσβαση στη συνάρτηση updateInfo global:
       window.updateInfo = updateInfo;
       window.redrawAll = redrawAll;
     })();
