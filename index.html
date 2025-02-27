@@ -51,29 +51,27 @@
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Δεξιό κελί */
+    /* Δεξιά στήλη */
     #remarks {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
+      align-items: center;
+      font-size: 0.9em;
+      text-align: center;
       padding-left: 20px;
     }
-    /* Διάταξη δεξιού κελιού: πάνω σειρά χωρισμένη σε 2 στήλες */
-    .remarks-top {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .remarks-column {
-      flex: 1;
-      text-align: left;
-      padding-right: 10px;
-    }
-    /* Γραμμές υποστιβάδων */
+    /* Στυλ για τις γραμμές των υποστιβάδων */
     .subshell-line {
-      margin: 2px 0;
+      width: 100%;
+    }
+    .subshell-prev,
+    .subshell-next {
+      color: #333;
+    }
+    .subshell-current {
+      font-weight: bold;
     }
     /* Καμβάς υποστιβάδων (balloon) */
     #canvasSubshells {
@@ -83,10 +81,10 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px;  /* αρχικό πλάτος, θα αναπροσαρμόζεται */
+      width: 300px;  /* Αρχικό πλάτος – θα αλλάζει δυναμικά */
       height: 90px;
       z-index: 150;
-      display: none;  /* κρυφό στην εκκίνηση/reset */
+      display: none;  /* Κρυφό στην εκκίνηση/reset */
     }
     /* Κουμπιά */
     #buttonPanel {
@@ -191,17 +189,11 @@
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
+      <!-- Το explanation εμφανίζεται με μικρότερη γραμματοσειρά -->
       <div id="explanation" style="font-size:0.7em; margin-top:10px;"></div>
       <div id="comments" style="font-size:0.8em; margin-top:5px;"></div>
     </div>
-    <!-- Δεξιό κελί χωρισμένο σε δύο σειρές -->
-    <div id="remarks">
-      <div class="remarks-top">
-        <div class="remarks-column" id="subshellsColumn"></div>
-        <div class="remarks-column" id="groupsColumn"></div>
-      </div>
-      <div id="bottomRow"></div>
-    </div>
+    <div id="remarks"></div>
   </div>
   
   <!-- Καμβάς υποστιβάδων (balloon) -->
@@ -215,7 +207,7 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Global Functions -->
+  <!-- Global functions -->
   <script>
     function getBlockColor(b) {
       switch(b) {
@@ -333,20 +325,23 @@
       });
       window.subshellsInitialized = true;
     }
-    // Σχεδίαση υποστιβάδων: υπολογίζεται δυναμικά το πλάτος με πρόσθετο δεξιό padding
+    // Σχεδίαση υποστιβάδων με δυναμικό πλάτος και αυξημένο δεξιό περιθώριο
     function drawSubshells(subshellsData) {
       if(!subshellsP) return;
       subshellsP.clear();
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.textSize(16);
+      
       let texts = [subshellsData.prev, subshellsData.current, subshellsData.next].filter(t => t);
       let maxW = texts.length > 0 ? Math.max(...texts.map(t => subshellsP.textWidth(t))) : 0;
-      maxW += 30; // 10px αριστερά + 20px δεξιά
+      maxW += 30; // padding: 10px αριστερά + 20px δεξιά για πρόσθετο δεξιό περιθώριο
       subshellsP.resizeCanvas(maxW, subshellsP.height);
+      
       let balloonElem = document.getElementById("canvasSubshells");
-      if(balloonElem) {
-        balloonElem.style.width = maxW + "px";
+      if (balloonElem) {
+          balloonElem.style.width = maxW + "px";
       }
+      
       if(subshellsData.prev) {
         subshellsP.fill(0);
         subshellsP.text(subshellsData.prev, 10, subshellsP.height/6);
@@ -362,33 +357,37 @@
         subshellsP.text(subshellsData.next, 10, 5*subshellsP.height/6);
       }
     }
-    // updateBalloonPosition: έλεγχος οριζόντιας μετατόπισης βάσει του δεξιού άκρου του p τομέα (canvasP)
+    // Ενημέρωση θέσης του balloon
     function updateBalloonPosition(element) {
       let block = element.block;
       let pos = calculatePosition(element, block);
       let canvasElem = document.getElementById("canvas" + block.toUpperCase());
       if(!canvasElem) return;
       let rect = canvasElem.getBoundingClientRect();
-      let offsetX = 40, offsetY = 50;
+      let offsetX = 40, offsetY = 50; // 40px + 10px επιπλέον
       let desiredLeft = rect.left + pos.x + offsetX;
       let desiredTop = rect.top + pos.y + offsetY;
       
       let balloon = document.getElementById("canvasSubshells");
+      // Χρησιμοποιούμε getBoundingClientRect() για το balloon για ακριβές μέγεθος
       let balloonRect = balloon.getBoundingClientRect();
-      let balloonW = balloonRect.width;
-      let balloonH = balloonRect.height;
+      let balloonEffectiveWidth = balloonRect.width;
+      let balloonEffectiveHeight = balloonRect.height;
       
-      // Υπολογισμός δεξιού ορίου του p τομέα (χρησιμοποιώντας το canvasP)
-      let pCanvas = document.getElementById("canvasP");
-      let pRight = pCanvas ? pCanvas.getBoundingClientRect().right : window.innerWidth;
-      let threshold = pRight - 10;
-      
-      let horizontalAdjustment = (desiredLeft + balloonW > threshold) ? (balloonW + 42) : 0;
+      // Αν desiredLeft + (balloon width) υπερβαίνει το όριο του δεξιού άκρου του p τομέα, τότε αφαιρούμε (balloon width + 42px)
+      let horizontalAdjustment = 0;
+      let canvasRight = rect.right;
+      if (desiredLeft + balloonEffectiveWidth > canvasRight) {
+        horizontalAdjustment = balloonEffectiveWidth + 42;
+      }
       
       // Κατακόρυφος έλεγχος έναντι του infoPanel
       let infoPanel = document.getElementById("infoPanel");
       let infoPanelRect = infoPanel.getBoundingClientRect();
-      let verticalAdjustment = (desiredTop + balloonH > infoPanelRect.top) ? (balloonH + 42) : 0;
+      let verticalAdjustment = 0;
+      if (desiredTop + balloonEffectiveHeight > infoPanelRect.top) {
+        verticalAdjustment = balloonEffectiveHeight + 42;
+      }
       
       let newLeft = desiredLeft - horizontalAdjustment;
       let newTop = desiredTop - verticalAdjustment;
@@ -396,6 +395,7 @@
       balloon.style.left = newLeft + "px";
       balloon.style.top = newTop + "px";
       balloon.style.background = "rgba(255,255,255,0.8)";
+      // Εμφάνιση του balloon
       balloon.style.display = "block";
     }
   </script>
@@ -415,16 +415,20 @@
         d: { cols: 10, rows: 7 },
         f: { cols: 14, rows: 7 }
       };
+  
       let elements = [];
       let currentZ = 0;
       let flashActive = false;
+  
       function updateToggleButton() {
         document.getElementById('toggleFBlock').disabled = (currentZ < 122);
       }
+  
       async function loadElements() {
         try {
           const response = await fetch('elements.json');
           elements = await response.json();
+          // Τα στοιχεία 1 και 2 (στο JSON ως 119 και 120)
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
@@ -433,6 +437,7 @@
           console.error('Σφάλμα φόρτωσης:', err);
         }
       }
+  
       function initializeCanvases() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           new p5(p => {
@@ -486,6 +491,7 @@
           });
         });
       }
+  
       function calculatePosition(e, block) {
         let x = 0, y = (e.row - 1) * 42;
         if(block==='s'){
@@ -503,6 +509,7 @@
         }
         return { x, y };
       }
+  
       function drawElements(p, block) {
         p.stroke(150);
         p.strokeWeight(1);
@@ -521,6 +528,7 @@
           let displayNumber = e.number;
           if(e.number === 119) displayNumber = 1;
           if(e.number === 120) displayNumber = 2;
+  
           if(e.number === currentZ) {
             if(e.number === 119) {
               p.fill("yellow");
@@ -562,6 +570,7 @@
           }
         });
       }
+  
       function redrawAll() {
         Object.keys(BLOCKS_CONFIG).forEach(block => {
           const canvasDiv = document.getElementById(`canvas${block.toUpperCase()}`);
@@ -669,6 +678,7 @@
         updateInfo(currentZ);
         updateToggleButton();
       }
+  
       function updateInfo(z) {
         if(z < 3){
           document.getElementById('elementInfo').innerHTML =
@@ -680,39 +690,49 @@
         }
         const element = elements.find(e => e.number === z);
         if(!element) return;
+  
+        // Για στοιχεία 1 και 2 (119,120) εμφανίζεται το Z-118
         let displayZ = (element.number >= 119) ? (element.number - 118) : element.number;
-        // Διαμόρφωση στοιχείου:
-        // "Ζ=81" (font-size:1.3em, bold, μαύρο)
-        // Σύμβολο (από JSON) με font-size:3em, bold και το χρώμα του τομέα
-        // Όνομα με font-size:1.1em, italic
+        // Διαμόρφωση: "Ζ=81 ΤΙ Θάλλιο" αλλά τώρα με το σύμβολο από το json (π.χ. "Θι") που εμφανίζεται με font‑size:3em, bold και με το χρώμα του τομέα
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
-                       `<span style="font-size:1.1em; font-style: italic;">${element.name}</span>`;
+                       `<span style="font-style: italic;">${element.name}</span>`;
         document.getElementById('elementInfo').innerHTML = infoHTML;
   
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
-        let subshellsHTML = "";
+        let subshellsData = {
+          prev: prev ? prev.subshells : "",
+          current: element.subshells,
+          next: next ? next.subshells : ""
+        };
+        drawSubshells(subshellsData);
+        updateBalloonPosition(element);
+  
+        // Δημιουργία νέας διάταξης για το κελί "remarks":
+        // - Η πάνω σειρά χωρίζεται σε δύο στήλες:
+        //     α) Αριστερή στήλη: οι υποστιβάδες σε τρεις σειρές (προηγούμενη, τρέχουσα, επόμενη)
+        //     β) Δεξιά στήλη: οι τιμές των shells και outerShell με τίτλους "Στιβάδες:" και "Εξωτερική:" που λαμβάνονται από το json
+        // - Η κάτω σειρά περιέχει το remarks από το json.
+        let leftSubshellHTML = "";
         if(prev)
-          subshellsHTML += `<div class="subshell-line" style="text-align:left; color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
-        subshellsHTML += `<div class="subshell-line" style="text-align:left; color:${getBlockColor(element.block)}; font-weight:bold;">${element.subshells}</div>`;
+          leftSubshellHTML += `<div style="color:${getBlockColor(prev.block)};">${prev.subshells}</div>`;
+        leftSubshellHTML += `<div style="color:${getBlockColor(element.block)}; font-weight:bold;">${element.subshells}</div>`;
         if(next)
-          subshellsHTML += `<div class="subshell-line" style="text-align:left; color:${getBlockColor(next.block)};">${next.subshells}</div>`;
+          leftSubshellHTML += `<div style="color:${getBlockColor(next.block)};">${next.subshells}</div>`;
   
-        // Στήλη για shells και outerShell με τίτλους
-        let groupsHTML = `<div><strong>Στιβάδες:</strong><br>${element.shells || ""}</div>` +
-                         `<div><strong>Εξωτερική:</strong><br>${element.outerShell || ""}</div>`;
+        let rightShellHTML = "";
+        rightShellHTML += `<div><strong>Στιβάδες:</strong> ${element.shells || ""}</div>`;
+        rightShellHTML += `<div><strong>Εξωτερική:</strong> ${element.outerShell || ""}</div>`;
   
-        let remarksTop = `<div class="remarks-top">
-                             <div class="remarks-column" id="subshellsColumn">
-                               ${subshellsHTML}
-                             </div>
-                             <div class="remarks-column" id="groupsColumn">
-                               ${groupsHTML}
-                             </div>
-                           </div>`;
-        let remarksBottom = `<div id="bottomRow">${element.remarks || ""}</div>`;
-        document.getElementById('remarks').innerHTML = remarksTop + remarksBottom;
+        let upperRowHTML = `<div style="display: flex; justify-content: space-between;">` +
+                           `<div style="flex: 1;">${leftSubshellHTML}</div>` +
+                           `<div style="flex: 1;">${rightShellHTML}</div>` +
+                           `</div>`;
+  
+        let lowerRowHTML = `<div>${element.remarks || ""}</div>`;
+  
+        document.getElementById('remarks').innerHTML = upperRowHTML + lowerRowHTML;
   
         document.getElementById('comments').innerHTML = `<span>${element.comments || ""}</span>`;
         document.getElementById('explanation').textContent = element.explanation ? element.explanation : "";
@@ -755,7 +775,7 @@
         document.getElementById('canvasP_groups').style.display = "none";
         initializeCanvases();
         initSubshellsCanvas();
-        document.getElementById('canvasSubshells').style.display = "none";
+        document.getElementById('canvasSubshells').style.display = "none"; // Μη εμφάνιση του balloon μέχρι "Επόμενο"
         updateInfo(currentZ);
       });
   
@@ -774,6 +794,7 @@
       });
   
       loadElements();
+  
       window.calculatePosition = calculatePosition;
     })();
   </script>
