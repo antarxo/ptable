@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών */
+    /* Πίνακας πληροφοριών – περιεχόμενο στοιχείου */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -38,7 +38,6 @@
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
-      /* Στοίχιση αριστερά */
       text-align: left;
     }
     /* Collapsed mode */
@@ -48,7 +47,7 @@
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Left column του infoPanel */
+    /* Στήλη αριστερού infoPanel */
     #leftPanel {
       width: 220px;
       display: flex;
@@ -65,7 +64,7 @@
     .subshell-line { width: 100%; }
     .subshell-prev, .subshell-next { color: #333; }
     .subshell-current { font-weight: bold; }
-    /* Balloon */
+    /* Balloon για τα υποστιβάδες */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -73,6 +72,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
+      /* Αρχικά πλάτος μπορεί να αλλάξει δυναμικά */
       width: 300px;
       height: 90px;
       z-index: 150;
@@ -142,19 +142,19 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάδες Περιόδων και Ομάδων (θα εμφανιστούν μετά το πρώτο "Επόμενο") -->
+  <!-- Καμβάδες περιόδων και ομάδων (θα εμφανιστούν μετά το πρώτο "Επόμενο") -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Καμβάδες Τομέων (θα εμφανιστούν μετά το πρώτο "Επόμενο") -->
+  <!-- Καμβάδες τομέων (θα εμφανιστούν μετά το πρώτο "Επόμενο") -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας Πληροφοριών -->
+  <!-- Πίνακας πληροφοριών -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -164,7 +164,7 @@
     <div id="remarks"></div>
   </div>
   
-  <!-- Καμβάς υποστιβάδων (Balloon) -->
+  <!-- Balloon για τα υποστιβάδες -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Κουμπιά -->
@@ -178,9 +178,7 @@
   <!-- Global Script -->
   <script>
     // Helper functions
-    function convertClickedToCurrent(clickedZ) {
-      return clickedZ;
-    }
+    function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
       switch(b) {
@@ -211,19 +209,14 @@
       d: { cols: 10, rows: 7 },
       f: { cols: 14, rows: 7 }
     };
-    const BLOCK_COLORS = {
-      s: '#ffcccc',
-      p: '#ccffcc',
-      d: '#ccccff',
-      f: '#ffe5cc'
-    };
+    const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
     let elements = [];
-    // Αρχικά, πριν το πρώτο "Επόμενο", currentZ = 0
+    // Αρχικά currentZ = 0 για να εμφανίζεται μόνο το infoPanel (στοιχείο 0)
     let currentZ = 0;
     let flashActive = false;
     let subshellsP;
     
-    // Αρχικές τιμές για το infoPanel (προεπιλεγμένο περιεχόμενο για το στοιχείο 0)
+    // Αρχικές τιμές infoPanel
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
@@ -239,14 +232,15 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Εμφάνιση μόνο του infoPanel για το στοιχείο 0
+    // Ενημέρωση infoPanel
     function updateInfo(clickedZ) {
+      // Αν δεν έχει γίνει ακόμα το πρώτο "Επόμενο" (currentZ == 0)
       if(clickedZ === 0) {
         let elemInfo = document.getElementById('elementInfo');
         if(elemInfo) {
-          // Αν υπάρχει στοιχείο 0 στα δεδομένα, το εμφανίζουμε, αλλιώς προεπιλεγμένο μήνυμα
+          // Εμφάνιση στοιχείου 0 αν υπάρχει ή προεπιλεγμένο μήνυμα
           let element0 = elements.find(e => e.number === 0);
-          if (element0) {
+          if(element0) {
             elemInfo.innerHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=0</span> ` +
                                  `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element0.block)};">${element0.symbol}</span> ` +
                                  `<span style="font-style: italic;">${element0.name}</span>`;
@@ -258,14 +252,14 @@
             if(rem) { rem.innerHTML = "Παρακαλώ πατήστε 'Επόμενο' για να ξεκινήσει ο Περιοδικός Πίνακας."; }
           }
           // Κρύβουμε όλους τους καμβάδες
-          document.querySelectorAll('.canvas').forEach(function(c) { c.style.display = "none"; });
+          document.querySelectorAll('.canvas').forEach(c => { c.style.display = "none"; });
         }
         return;
       }
       
-      // Κανονική ενημέρωση όταν currentZ > 0
-      // Εξασφαλίζουμε εμφάνιση των καμβάδων
-      document.querySelectorAll('.canvas').forEach(function(c) { c.style.display = "block"; });
+      // Κανονική ενημέρωση (currentZ > 0)
+      // Εμφάνιση όλων των καμβάδων (όπως ο αρχικός κώδικας)
+      document.querySelectorAll('.canvas').forEach(c => { c.style.display = "block"; });
       
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -283,9 +277,7 @@
                      `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                      `<span style="font-style: italic;">${element.name}</span>`;
       let leftPanel = document.getElementById('leftPanel');
-      if(leftPanel) {
-        leftPanel.innerHTML = infoHTML;
-      }
+      if(leftPanel) { leftPanel.innerHTML = infoHTML; }
       
       let prev = elements.find(e => e.number === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
       let next = elements.find(e => e.number === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
@@ -299,12 +291,12 @@
       let rem = document.getElementById('remarks');
       if(rem) {
         rem.innerHTML = `<div class="right-wrapper">
-                            <div class="upper-right">
-                              <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
-                              <div class="shells-msg-col">${shellsAndMsg}</div>
-                            </div>
-                            <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
-                          </div>`;
+                           <div class="upper-right">
+                             <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+                             <div class="shells-msg-col">${shellsAndMsg}</div>
+                           </div>
+                           <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                         </div>`;
       }
       
       // Εμφάνιση των υποστιβάδων στο balloon
@@ -314,11 +306,11 @@
         next: next ? next.subshells : ""
       };
       drawSubshells(subshellsData);
-      // Τοποθετούμε το balloon στη κάτω δεξιά γωνία του τρέχοντος στοιχείου
-      setTimeout(function() { updateBalloonPosition(element); }, 10);
+      // Τοποθέτηση του balloon στη "κάτω δεξιά" γωνία του κελιού
+      setTimeout(() => { updateBalloonPosition(element); }, 10);
     }
     
-    // Δημιουργία καμβάδων στοιχείων (καλείται μετά το πρώτο "Επόμενο")
+    // Αρχική δόμηση καμβάδων (αφήνουμε τον κώδικα δόμησης ως έχει)
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -357,7 +349,7 @@
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
                     flashActive = true;
-                    setTimeout(function() { flashActive = false; redrawAll(); }, 200);
+                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   }
                   break;
                 }
@@ -368,7 +360,7 @@
       });
     }
     
-    // Δημιουργία canvas για τα balloon (υποστιβάδες)
+    // Δημιουργία canvas για το balloon
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -382,7 +374,7 @@
       window.subshellsInitialized = true;
     }
     
-    // Δημιουργία canvas για τις ομάδες (εκτελείται μία φορά)
+    // Δημιουργία canvas για τις ομάδες (μία φορά)
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -456,7 +448,7 @@
       window.groupsInitialized = true;
     }
     
-    // Υπολογισμός θέσης του στοιχείου μέσα στον καμβά του αντίστοιχου block
+    // Υπολογισμός θέσης του κελιού μέσα στον αντίστοιχο καμβά
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -469,21 +461,21 @@
       return { x: x, y: y };
     }
     
-    // Σχεδίαση των στοιχείων στον καμβά
+    // Σχεδίαση των στοιχείων στους καμβάδες (αμετάβλητο μέρος)
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
       let filter;
       if(currentZ < 118) {
-        filter = function(e) { return e.block === block && e.number >= 3 && e.number <= currentZ; };
+        filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
       } else if(currentZ === 118) {
-        filter = function(e) { return e.block === block && e.number >= 3 && e.number <= 118; };
+        filter = e => e.block === block && e.number >= 3 && e.number <= 118;
       } else if(currentZ === 119) {
-        filter = function(e) { return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1); };
+        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
       } else if(currentZ === 120) {
-        filter = function(e) { return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 2); };
+        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 2);
       } else {
-        filter = function(e) { return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2); };
+        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
@@ -525,20 +517,28 @@
       });
     }
     
-    // Σχεδίαση των υποστιβάδων μέσα στο balloon σε 3 γραμμές
+    // Σχεδίαση των υποστιβάδων στο balloon με στοίχιση αριστερά και μεταβλητό πλάτος
     function drawSubshells(data) {
       if (!subshellsP) return;
       subshellsP.clear();
       subshellsP.textSize(16);
-      subshellsP.textAlign(subshellsP.CENTER, subshellsP.CENTER);
+      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.fill(0);
-      let rowHeight = 90 / 3; // 30px ανά γραμμή
-      subshellsP.text(data.prev || "-", 300/2, rowHeight/2);
-      subshellsP.text(data.current || "-", 300/2, rowHeight + rowHeight/2);
-      subshellsP.text(data.next || "-", 300/2, 2*rowHeight + rowHeight/2);
+      // Υπολογισμός πλάτους βασισμένος στο κείμενο (με margin 20px)
+      let w1 = subshellsP.textWidth(data.prev || "-");
+      let w2 = subshellsP.textWidth(data.current || "-");
+      let w3 = subshellsP.textWidth(data.next || "-");
+      let newWidth = Math.max(w1, w2, w3) + 20;
+      // Ανανέωση του canvas του balloon
+      subshellsP.resizeCanvas(newWidth, 90);
+      // Σχεδίαση κάθε γραμμής (μία ανά σειρά)
+      let rowHeight = 90 / 3;
+      subshellsP.text(data.prev || "-", 10, rowHeight/2);
+      subshellsP.text(data.current || "-", 10, rowHeight + rowHeight/2);
+      subshellsP.text(data.next || "-", 10, 2*rowHeight + rowHeight/2);
     }
     
-    // Τοποθέτηση του balloon στη "κάτω δεξιά" γωνία του τρέχοντος στοιχείου
+    // Τοποθέτηση του balloon στη "κάτω δεξιά" γωνία του κελιού του τρέχοντος στοιχείου
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -547,13 +547,13 @@
       let cs = document.getElementById('canvasSubshells');
       if(cs) {
         cs.style.display = "block";
-        // Τοποθέτηση στο κάτω δεξί: προσθέτουμε το πλάτος και το ύψος του κελιού (40px) πάνω στην απόλυτη θέση του καμβά
+        // Τοποθέτηση: προσθέτουμε το πλάτος (40px) και το ύψος (40px) του κελιού, με offset 5px
         cs.style.left = (rect.left + pos.x + 40 + 5) + "px";
         cs.style.top = (rect.top + pos.y + 40 + 5) + "px";
       }
     }
     
-    // Επανασχεδίαση όλων των καμβάδων
+    // Επανασχεδίαση όλων των καμβάδων (δεν αλλοιώνεται ο υπάρχων κώδικας δόμησης)
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -594,7 +594,7 @@
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
                     flashActive = true;
-                    setTimeout(function() { flashActive = false; redrawAll(); }, 200);
+                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   }
                   break;
                 }
@@ -603,36 +603,6 @@
           };
         });
       });
-      // Ενημέρωση θέσης των καμβάδων σύμφωνα με το currentZ (ίδια λογική όπως πριν)
-      if(currentZ >= 121) {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "block"; }
-        initPeriodsCanvas();
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "block"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "block"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "block"; }
-        let csgLeft = document.getElementById('canvasS_groups');
-        if(csgLeft) { csgLeft.style.top = "108px"; csgLeft.style.left = "50px"; }
-        let dLeft = document.getElementById('canvasD').style.left;
-        let cdgLeft = document.getElementById('canvasD_groups');
-        if(cdgLeft) { cdgLeft.style.top = "108px"; cdgLeft.style.left = dLeft; }
-        let pLeft = document.getElementById('canvasP').style.left;
-        let cpgLeft = document.getElementById('canvasP_groups');
-        if(cpgLeft) { cpgLeft.style.top = "108px"; cpgLeft.style.left = pLeft; }
-        initGroupsCanvases();
-      } else {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "none"; }
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "none"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "none"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "none"; }
-      }
       updateToggleButton();
     }
     
@@ -660,7 +630,7 @@
       window.periodsInitialized = true;
     }
     
-    // Ενημέρωση του κουμπιού "Σύμπτυξη"
+    // Ενημέρωση κουμπιού "Σύμπτυξη"
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = (currentZ < 118);
     }
@@ -674,7 +644,7 @@
       }
     }
     
-    // Μήνυμα για το στοιχείο (με βάση το group)
+    // Μήνυμα για το στοιχείο
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -701,7 +671,7 @@
     
     // Event listeners
     document.getElementById('nextElement').addEventListener('click', function() {
-      // Αν είναι το πρώτο κλικ (currentZ = 0), ξεκινάμε τη δόμηση
+      // Αν είναι το πρώτο κλικ (currentZ == 0), ξεκινάμε τη δόμηση
       if(currentZ === 0) {
         currentZ = 3;
         initializeCanvases();
@@ -721,7 +691,6 @@
     
     document.getElementById('fillAll').addEventListener('click', function() {
       currentZ = 121;
-      // Εμφάνιση όλων των στοιχείων
       redrawAll();
       updateInfo(currentZ);
     });
@@ -731,17 +700,7 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
-      document.querySelectorAll('.canvas').forEach(function(canvas) { canvas.innerHTML = ""; });
-      document.querySelectorAll('.period-label').forEach(function(el) { el.style.display = 'none'; });
-      let cp = document.getElementById('canvasPeriods');
-      if(cp) { cp.style.display = "none"; }
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) { csg.style.display = "none"; }
-      let cdg = document.getElementById('canvasD_groups');
-      if(cdg) { cdg.style.display = "none"; }
-      let cpg = document.getElementById('canvasP_groups');
-      if(cpg) { cpg.style.display = "none"; }
-      // Μηδενίζουμε την δόμηση των καμβάδων ώστε να εμφανίζεται μόνο το infoPanel για το στοιχείο 0
+      document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
       updateInfo(currentZ);
     });
     
