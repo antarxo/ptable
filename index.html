@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Αναπτυγμένη μορφή: 2 στήλες, συνολικό πλάτος = calc(100vw - var(--rightPanelWidth) - 105px) */
+    /* Expanded mode: 2 στήλες, συνολικό πλάτος calc(100vw - var(--rightPanelWidth) - 105px) */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -39,54 +39,39 @@
       z-index: 40;
       transition: all 1.5s ease;
     }
-    /* Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές */
+    /* Collapsed mode: 1 στήλη με 3 γραμμές */
     body.collapsed #infoPanel {
       left: 848px;
       top: 58px;
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Στήλη 1 (στο elementInfo) στην αναπτυγμένη μορφή: πλάτος 220px */
+    /* Στήλη 1 (στο elementInfo) στα expanded: πλάτος 220px */
     #leftPanel {
       width: 220px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    /* Στήλη 2 (remarks) στην αναπτυγμένη μορφή */
+    /* Στήλη 2 (remarks) στα expanded */
     #remarks {
       flex-grow: 1;
       padding-left: 20px;
     }
-    /* Στοιχεία δομής στη αναπτυγμένη διάταξη */
-    .right-wrapper {
-      display: flex;
-      flex-direction: column;
-    }
-    .upper-right {
-      display: flex;
-      flex-direction: row;
-    }
-    .subshells-col {
-      width: 67%;
-      text-align: left;
-    }
-    .shells-msg-col {
-      width: 33%;
-      text-align: left;
-      margin-left: 20px;
-    }
+    /* Δομή στα expanded: στην δεξιά στήλη (remarks) υπάρχει wrapper με δύο γραμμές:
+       - Η πρώτη γραμμή (upper-right) χωρίζεται σε 2 υποστήλες:
+            • 67% για τις υποστιβάδες
+            • 33% (με margin-left:20px) για τις στιβάδες+μήνυμα
+       - Η δεύτερη γραμμή εμφανίζει τα Remarks.
+    */
+    .right-wrapper { display: flex; flex-direction: column; }
+    .upper-right { display: flex; flex-direction: row; }
+    .subshells-col { width: 67%; text-align: left; }
+    .shells-msg-col { width: 33%; text-align: left; margin-left: 20px; }
     /* Στυλ για τις γραμμές των υποστιβάδων */
-    .subshell-line {
-      width: 100%;
-    }
-    .subshell-prev,
-    .subshell-next {
-      color: #333;
-    }
-    .subshell-current {
-      font-weight: bold;
-    }
+    .subshell-line { width: 100%; }
+    .subshell-prev, .subshell-next { color: #333; }
+    .subshell-current { font-weight: bold; }
     /* Καμβάς υποστιβάδων (Balloon) */
     #canvasSubshells {
       position: absolute;
@@ -119,12 +104,8 @@
       font-size: 1em;
       transition: background-color 0.3s;
     }
-    button:hover {
-      background-color: #005f75;
-    }
-    #toggleFBlock.active {
-      background-color: #e68a00;
-    }
+    button:hover { background-color: #005f75; }
+    #toggleFBlock.active { background-color: #e68a00; }
     .canvas {
       position: absolute;
       background: transparent;
@@ -141,9 +122,7 @@
       display: none;
       z-index: 5;
     }
-    #canvasS_groups,
-    #canvasD_groups,
-    #canvasP_groups {
+    #canvasS_groups, #canvasD_groups, #canvasP_groups {
       position: absolute;
       background: #f0f0f0;
       display: none;
@@ -161,12 +140,8 @@
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
     /* Στο collapsed mode, μετακινούμε το canvasF 100px πιο κάτω (top: 250px) */
-    body.collapsed #canvasF {
-      top: 250px;
-    }
-    body.collapsed #infoPanel {
-      flex-direction: column;
-    }
+    body.collapsed #canvasF { top: 250px; }
+    body.collapsed #infoPanel { flex-direction: column; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 </head>
@@ -185,7 +160,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακας Πληροφοριών -->
+  <!-- Πίνακας Πληροφοριών: Η αρχική δομή παραμένει όπως στο HTML -->
   <div id="infoPanel">
     <div id="leftPanel">
       <div id="elementInfo"></div>
@@ -209,7 +184,7 @@
   <script>
     // Global declarations για updateInfo και redrawAll
     var updateInfo, redrawAll;
-    // Αποθήκευση αρχικών περιεχομένων explanation και comments ώστε να χρησιμοποιούνται στο collapsed mode
+    // Αποθήκευση αρχικών περιεχομένων explanation και comments για χρήση στο collapsed mode
     var initialExplanation = "";
     var initialComments = "";
     window.addEventListener('load', function() {
@@ -360,9 +335,7 @@
       maxW += 30;
       subshellsP.resizeCanvas(maxW, subshellsP.height);
       let balloonElem = document.getElementById("canvasSubshells");
-      if (balloonElem) {
-        balloonElem.style.width = maxW + "px";
-      }
+      if (balloonElem) { balloonElem.style.width = maxW + "px"; }
       if(subshellsData.prev) {
         subshellsP.fill(0);
         subshellsP.text(subshellsData.prev, 10, subshellsP.height/6);
@@ -685,7 +658,7 @@
         updateToggleButton();
       }
       
-      // Η updateInfo ενημερώνει τα περιεχόμενα του infoPanel.
+      // updateInfo ενημερώνει τα περιεχόμενα του InfoPanel σύμφωνα με τη συμφωνημένη δομή
       function updateInfo(z) {
         if(z < 3) {
           document.getElementById('elementInfo').innerHTML =
@@ -704,12 +677,15 @@
         if(!document.body.classList.contains('collapsed')) {
           document.getElementById('leftPanel').innerHTML = infoHTML;
         }
+        // Ανάκτηση προηγούμενου και επόμενου στοιχείου με ασφαλείς default τιμές
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) { prev = { subshells: "-", number: "", block: "dummy" }; }
         if(z === 2) { next = elements.find(e => e.number === 3) || { subshells: "-", number: "", block: "dummy" }; }
         if(z === 3) { prev = elements.find(e => e.number === 2) || { subshells: "-", number: "", block: "dummy" }; }
         if(z === 118) { next = { subshells: "-", number: "", block: "dummy" }; }
+        if(!prev) { prev = { subshells: "-", number: "", block: "dummy" }; }
+        if(!next) { next = { subshells: "-", number: "", block: "dummy" }; }
         
         let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
         let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
@@ -727,22 +703,20 @@
                               </div>`;
           document.getElementById('remarks').innerHTML = rightContent;
         } else {
-          // Στο collapsed mode, χρησιμοποιούμε τα αποθηκευμένα αρχικά περιεχόμενα
           let row1 = `<div>${infoHTML}<br>${initialExplanation}<br>${initialComments}</div>`;
           let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>
                       <div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
                       <div style="font-style: italic;">${messageForElement(element)}</div></div>`;
           let row3 = `<div style="text-align:center; margin-top:10px;">${element.remarks || ""}</div>`;
-          // Ενημερώνουμε τα ήδη υπάρχοντα containers: leftPanel και remarks.
+          // Ενημέρωση των ήδη υπάρχοντων containers
           document.getElementById('leftPanel').innerHTML = row1;
-          // Αν δεν υπάρχει container για τη μέση γραμμή, τον δημιουργούμε
-          let collapsedMiddle = document.getElementById("collapsedMiddle");
-          if(!collapsedMiddle) {
-            collapsedMiddle = document.createElement("div");
-            collapsedMiddle.id = "collapsedMiddle";
-            document.getElementById("infoPanel").insertBefore(collapsedMiddle, document.getElementById("remarks"));
+          let cm = document.getElementById("collapsedMiddle");
+          if(!cm) {
+            cm = document.createElement("div");
+            cm.id = "collapsedMiddle";
+            document.getElementById("infoPanel").insertBefore(cm, document.getElementById("remarks"));
           }
-          collapsedMiddle.innerHTML = row2;
+          cm.innerHTML = row2;
           document.getElementById('remarks').innerHTML = row3;
         }
         let subshellsData = {
@@ -827,7 +801,6 @@
           toggleBtn.textContent = "Ανάπτυξη";
         } else {
           toggleBtn.textContent = "Σύμπτυξη";
-          // Αν υπάρχει το collapsedMiddle, το αφαιρούμε για να επανέλθει η αρχική δομή
           var cm = document.getElementById('collapsedMiddle');
           if(cm) cm.remove();
         }
