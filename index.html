@@ -76,7 +76,7 @@
       text-align: left;
       margin-left: 20px;
     }
-    /* Σε συνεπτυγμένη μορφή δεν υπάρχει οριζόντια διάταξη στο μεσαίο κελί */
+    /* Σε συνεπτυγμένη μορφή, τα περιεχόμενα στοιβάζονται κάθετα (1 στήλη με 3 γραμμές) */
     
     .subshell-line {
       width: 100%;
@@ -204,7 +204,7 @@
   </div>
   
   <script>
-    // Δίνουμε global ορισμό για updateInfo και redrawAll ώστε να είναι προσβάσιμα από όλους τους p5 callbacks.
+    // Δηλώνουμε global μεταβλητές updateInfo και redrawAll
     var updateInfo, redrawAll;
     
     function getBlockColor(b) {
@@ -688,7 +688,10 @@
         let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                        `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                        `<span style="font-style: italic;">${element.name}</span>`;
-        document.getElementById('elementInfo').innerHTML = infoHTML;
+        // Στην αναπτυγμένη μορφή, ενημερώνουμε το leftPanel
+        if(!document.body.classList.contains('collapsed')) {
+          document.getElementById('leftPanel').innerHTML = infoHTML;
+        }
         
         // Ειδικές περιπτώσεις για στοιχεία 1,2,3 και 118
         let prev = elements.find(e => e.number === (z - 1));
@@ -704,9 +707,8 @@
         let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                            `<div style="font-style: italic;">${messageForElement(element)}</div>`;
         
-        if(!document.body.classList.contains('collapsed')){
+        if(!document.body.classList.contains('collapsed')) {
           // Αναπτυγμένη μορφή: 2 στήλες
-          document.getElementById('leftPanel').innerHTML = infoHTML;
           let rightContent = `<div class="right-wrapper">
                                 <div class="upper-right">
                                   <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
@@ -717,7 +719,15 @@
           document.getElementById('remarks').innerHTML = rightContent;
         } else {
           // Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές
-          let row1 = `<div>${infoHTML}<br>${document.getElementById('explanation').innerHTML}<br>${document.getElementById('comments').innerHTML}</div>`;
+          // Αποθηκεύουμε το περιεχόμενο των "explanation" και "comments" πριν αντικαταστήσουμε το innerHTML
+          let explanationContent = "";
+          let commentsContent = "";
+          let expElem = document.getElementById('explanation');
+          let commElem = document.getElementById('comments');
+          if(expElem) explanationContent = expElem.innerHTML;
+          if(commElem) commentsContent = commElem.innerHTML;
+          
+          let row1 = `<div>${infoHTML}<br>${explanationContent}<br>${commentsContent}</div>`;
           let row2 = `<div style="text-align:left;">${prevStr}${currentStr}${nextStr}<br>
                       <div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
                       <div style="font-style: italic;">${messageForElement(element)}</div></div>`;
