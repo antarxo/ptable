@@ -172,7 +172,7 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Global script: Όλες οι συναρτήσεις ορίζονται στο global scope -->
+  <!-- Global Script: Όλες οι συναρτήσεις ορίζονται στο global scope -->
   <script>
     // Global constants
     const BLOCKS_CONFIG = {
@@ -189,11 +189,11 @@
     };
     
     let elements = [];
-    let currentZ = 3; // Ξεκινάμε από το στοιχείο με Ζ=3, έτσι τα 1 και 2 δεν εμφανίζονται αρχικά
+    let currentZ = 3; // Ξεκινάμε από το στοιχείο με Ζ=3 (τα 1 και 2 παραλείπονται)
     let flashActive = false;
     let subshellsP;
     
-    // Αποθήκευση default περιεχομένων για collapsed mode
+    // Αποθήκευση αρχικών περιεχομένων για collapsed mode
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
@@ -211,7 +211,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Συνάρτηση για την αρχικοποίηση των καμβάδων
+    // Συνάρτηση initializeCanvases
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -261,7 +261,7 @@
       });
     }
     
-    // Συνάρτηση για την αρχικοποίηση του καμβά υποστιβάδων
+    // Συνάρτηση initSubshellsCanvas
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -275,7 +275,7 @@
       window.subshellsInitialized = true;
     }
     
-    // Συνάρτηση υπολογισμού θέσης
+    // Συνάρτηση calculatePosition
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -288,7 +288,7 @@
       return { x: x, y: y };
     }
     
-    // Συνάρτηση σχεδίασης στοιχείων
+    // Συνάρτηση drawElements
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -486,6 +486,9 @@
       }
     }
     
+    window.addEventListener('load', updateRightPanelWidth);
+    window.addEventListener('resize', updateRightPanelWidth);
+    
     // Συνάρτηση messageForElement
     function messageForElement(element) {
       if(element.block === 'f') {
@@ -561,9 +564,10 @@
       redrawAll();
     });
     
-    window.updateInfo = updateInfo;
+    // Εξαγωγή στο global scope
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
+    window.updateInfo = updateInfo;
     window.redrawAll = redrawAll;
     window.initPeriodsCanvas = initPeriodsCanvas;
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
