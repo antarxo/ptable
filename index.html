@@ -160,6 +160,10 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
+    /* Προσθέτουμε τον κανόνα για το f block στη collapsed μορφή: μετακίνηση κατά 60px προς τα κάτω */
+    body.collapsed #canvasF {
+      top: 210px;
+    }
     body.collapsed #infoPanel {
       flex-direction: column;
     }
@@ -206,7 +210,7 @@
     // Global declarations για updateInfo και redrawAll
     var updateInfo, redrawAll;
     
-    // Τροποποιούμε τη getBlockColor ώστε να επιστρέφει gray αν η τιμή είναι "dummy"
+    // Τροποποιούμε τη getBlockColor ώστε να επιστρέφει gray για dummy τιμές
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
       switch(b) {
@@ -673,15 +677,6 @@
         updateToggleButton();
       }
       
-      // Η updateInfo εφαρμόζει τη συμφωνημένη διάταξη:
-      // Αναπτυγμένη: 2 στήλες με:
-      //   - Στην πρώτη στήλη (leftPanel): elementInfo (220px)
-      //   - Στη δεύτερη (remarks): μια πρώτη γραμμή με 2 υποστήλες (67% για τις υποστιβάδες, 33% + margin-left:20px για τις στιβάδες + μήνυμα)
-      //     και μια δεύτερη γραμμή με τα Remarks.
-      // Συνεπτυγμένη: 1 στήλη με 3 γραμμές:
-      //   1. Πρώτη γραμμή: περιεχόμενα του leftPanel.
-      //   2. Δεύτερη γραμμή: οι υποστιβάδες και κάτω από αυτές (στο ίδιο κελί) οι στιβάδες + μήνυμα.
-      //   3. Τρίτη γραμμή: τα Remarks.
       function updateInfo(z) {
         if(z < 3) {
           document.getElementById('elementInfo').innerHTML =
@@ -700,7 +695,6 @@
         if(!document.body.classList.contains('collapsed')) {
           document.getElementById('leftPanel').innerHTML = infoHTML;
         }
-        // Ειδικές περιπτώσεις: ορίζουμε dummy αντικείμενα με πεδία subshells, number και block
         let prev = elements.find(e => e.number === (z - 1));
         let next = elements.find(e => e.number === (z + 1));
         if(z === 1) { prev = { subshells: "-", number: "", block: "dummy" }; }
@@ -724,7 +718,6 @@
                               </div>`;
           document.getElementById('remarks').innerHTML = rightContent;
         } else {
-          // Συνεπτυγμένη μορφή: 1 στήλη με 3 γραμμές
           let explanationContent = "";
           let commentsContent = "";
           let expElem = document.getElementById('explanation');
