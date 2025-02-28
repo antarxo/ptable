@@ -72,7 +72,6 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Αρχικό πλάτος – θα ανανεώνεται δυναμικά */
       width: 300px;
       height: 90px;
       z-index: 150;
@@ -142,7 +141,7 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάδες Περιόδων και Ομάδων (θα εμφανιστούν μετά το πρώτο "Επόμενο") -->
+  <!-- Καμβάδες Περιόδων και Ομάδων (θα εμφανιστούν μετά την εμφάνιση των 1 και 2) -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -232,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: πριν το πρώτο "Επόμενο" (currentZ == 0) εμφανίζεται μόνο το infoPanel για το στοιχείο 0
+    // updateInfo: Αν currentZ == 0, εμφανίζεται μόνο το infoPanel για το στοιχείο 0
     function updateInfo(clickedZ) {
       if(clickedZ === 0) {
         let elemInfo = document.getElementById('elementInfo');
@@ -249,13 +248,14 @@
             let rem = document.getElementById('remarks');
             if(rem) { rem.innerHTML = "Παρακαλώ πατήστε 'Επόμενο' για να ξεκινήσει ο Περιοδικός Πίνακας."; }
           }
-          document.querySelectorAll('.canvas').forEach(c => { c.style.display = "none"; });
+          // Εμφάνιση μόνο των καμβάδων των στοιχείων (και όχι των ομαδοποιημένων: periods/groups)
+          document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)').forEach(c => { c.style.display = "none"; });
         }
         return;
       }
       
-      // Για currentZ > 0 εμφανίζονται όλοι οι καμβάδες όπως στην αρχική δόμηση
-      document.querySelectorAll('.canvas').forEach(c => { c.style.display = "block"; });
+      // Για currentZ > 0, εμφανίζουμε μόνο τους καμβάδες των στοιχείων
+      document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)').forEach(c => { c.style.display = "block"; });
       
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -304,7 +304,7 @@
       setTimeout(() => { updateBalloonPosition(element); }, 10);
     }
     
-    // Δόμηση καμβάδων (ακριβώς όπως στο αρχικό αρχείο, χωρίς αλλαγή στη δομή)
+    // Δόμηση καμβάδων (αμετάβλητη λογική δόμησης με shifting)
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -455,7 +455,7 @@
       return { x: x, y: y };
     }
     
-    // Σχεδίαση στοιχείων (αμετάβλητη λογική δόμησης)
+    // Σχεδίαση στοιχείων (χωρίς αλλαγή στη λογική του shifting)
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -543,7 +543,7 @@
       }
     }
     
-    // Επανασχεδίαση όλων των καμβάδων – επαναφορά και shifting (όπως στο αρχικό)
+    // Επανασχεδίαση όλων των καμβάδων με το αρχικό shifting
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -593,29 +593,35 @@
           };
         });
       });
-      // Εισαγωγή shifting (όπως στο αρχικό)
-      if(!document.body.classList.contains('collapsed')) {
-        let base = 134, shiftP = 0, shiftD = 0;
-        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
-        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = base + "px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = (base + shiftP) + "px"; }
+      // Εμφάνιση των καμβάδων για περιόδους και ομάδες μόνο όταν currentZ ≥ 121
+      if(currentZ >= 121) {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "block"; }
+        initPeriodsCanvas();
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "block"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "block"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "block"; }
+        let csgLeft = document.getElementById('canvasS_groups');
+        if(csgLeft) { csgLeft.style.top = "108px"; csgLeft.style.left = "50px"; }
+        let dLeft = document.getElementById('canvasD').style.left;
+        let cdgLeft = document.getElementById('canvasD_groups');
+        if(cdgLeft) { cdgLeft.style.top = "108px"; cdgLeft.style.left = dLeft; }
+        let pLeft = document.getElementById('canvasP').style.left;
+        let cpgLeft = document.getElementById('canvasP_groups');
+        if(cpgLeft) { cpgLeft.style.top = "108px"; cpgLeft.style.left = pLeft; }
+        initGroupsCanvases();
       } else {
-        let cS = document.getElementById('canvasS');
-        if(cS) { cS.style.left = "50px"; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = "154px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = "139px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = "559px"; }
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "none"; }
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "none"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "none"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "none"; }
       }
       updateToggleButton();
     }
