@@ -70,8 +70,8 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px;  /* αρχικό, αλλά θα ρυθμίζεται δυναμικά */
-      height: 75px;  /* νέο ύψος για μικρότερη γραμματοσειρά και διάστιχο */
+      width: 300px; /* αρχικό πλάτος, αλλά θα ρυθμίζεται δυναμικά */
+      height: 75px; /* νέο, μειωμένο ύψος */
       z-index: 150;
       display: none;
     }
@@ -208,7 +208,7 @@
     };
     const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
     let elements = [];
-    function sortElements(data) { return data.sort((a, b) => a.number - b.number); }
+    function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     elements = [];
     let currentZ = 3;
     let flashActive = false;
@@ -217,7 +217,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Load elements, ταξινομημένα ώστε να εμφανίζονται σωστά
+    // Load elements και ταξινόμησή τους ώστε να επιστρέφουν τα σωστά
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -231,17 +231,17 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo – ορίζεται στο global scope
+    // updateInfo – με μετατροπή του e.number σε αριθμό ώστε να βγαίνει το σωστό στοιχείο
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
       else if(clickedZ === 120) { currentNum = 2; }
       else { currentNum = convertClickedToCurrent(clickedZ); }
       
-      const element = elements.find(e => e.number === currentNum);
+      const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       
-      let displayZ = (element.number >= 119 ? element.number - 118 : element.number);
+      let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
       if(clickedZ === 119) { displayZ = 1; }
       else if(clickedZ === 120) { displayZ = 2; }
       
@@ -251,8 +251,8 @@
       let leftPanel = document.getElementById('leftPanel');
       if(leftPanel) { leftPanel.innerHTML = infoHTML; }
       
-      let prev = elements.find(e => e.number === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
-      let next = elements.find(e => e.number === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
+      let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
+      let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
       
       let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
       let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
@@ -281,7 +281,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // initializeCanvases – διατηρείται η αρχική λογική δόμησης και shifting
+    // initializeCanvases – χωρίς αλλαγές στη βασική λογική δόμησης και shifting
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -299,7 +299,7 @@
               else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
-            // MouseClicked: Διατρέχουμε όλα τα στοιχεία του block και ελέγχουμε αν το click πέφτει μέσα στο κελί
+            // MouseClicked: διατρέχουμε όλα τα στοιχεία του block για να βρούμε το κελί στο οποίο έγινε click
             p.mouseClicked = function() {
               let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
@@ -325,7 +325,7 @@
       if(window.subshellsInitialized) return;
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(300, 75);  // νέο ύψος 75px
+          let canvas = p.createCanvas(300, 75);
           canvas.parent("canvasSubshells");
           subshellsP = p;
           p.noLoop();
@@ -427,26 +427,26 @@
       p.strokeWeight(1);
       let filter;
       if(currentZ < 118) {
-        filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
+        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
       } else if(currentZ === 118) {
-        filter = e => e.block === block && e.number >= 3 && e.number <= 118;
+        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
       } else if(currentZ === 119) {
-        filter = e => e.block === block && e.number === 1;
+        filter = e => e.block === block && Number(e.number) === 1;
       } else if(currentZ === 120) {
-        filter = e => e.block === block && e.number === 2;
+        filter = e => e.block === block && Number(e.number) === 2;
       } else {
-        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
-        let displayNumber = e.number;
-        if(e.number === 119) displayNumber = 1;
-        if(e.number === 120) displayNumber = 2;
-        if(e.number === currentZ ||
-           ((currentZ === 119) && e.number === 1) ||
-           ((currentZ === 120) && e.number === 2)) {
-          if(e.number === 119) { p.fill("yellow"); }
-          else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
+        let displayNumber = Number(e.number);
+        if(Number(e.number) === 119) displayNumber = 1;
+        if(Number(e.number) === 120) displayNumber = 2;
+        if(Number(e.number) === currentZ ||
+           ((currentZ === 119) && Number(e.number) === 1) ||
+           ((currentZ === 120) && Number(e.number) === 2)) {
+          if(Number(e.number) === 119) { p.fill("yellow"); }
+          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
           else { p.fill(getBlockColor(e.block)); }
           p.textSize(16);
           p.textAlign(p.CENTER, p.CENTER);
@@ -464,12 +464,12 @@
           }
           p.strokeWeight(1);
         } else {
-          if(e.number === 119) { p.fill("yellow"); }
-          else if(e.number === 120) { p.fill(BLOCK_COLORS["s"]); }
+          if(Number(e.number) === 119) { p.fill("yellow"); }
+          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
           else { p.fill(BLOCK_COLORS[e.block]); }
           p.rect(pos.x, pos.y, 40, 40, 5);
           p.fill(0);
-          p.textSize(e.number > 99 ? 10 : 12);
+          p.textSize(Number(e.number) > 99 ? 10 : 12);
           p.textStyle(p.BOLD);
           p.textAlign(p.CENTER, p.CENTER);
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
@@ -477,21 +477,19 @@
       });
     }
     
-    // drawSubshells – πρώτα υπολογίζει το απαιτούμενο πλάτος χρησιμοποιώντας έναν off‑screen καμβά (μέσω createGraphics δεν χρησιμοποιείται, απλά με textWidth του balloon)
+    // drawSubshells – ρυθμίζει δυναμικά το πλάτος του balloon χρησιμοποιώντας τις μετρήσεις του textWidth του ίδιο του canvas (χωρίς createGraphics)
     function drawSubshells(data) {
       if (!subshellsP) return;
-      // Θέτουμε τις ρυθμίσεις για τη μικρότερη γραμματοσειρά και διάστιχο
-      let balloonHeight = 75;      // νέο ύψος
-      let fontSize = 14;           // νέα γραμματοσειρά
-      let leftMargin = 5;          // μικρότερο left margin
-      let extraMargin = 15;        // μειωμένο επιπλέον padding
+      let balloonHeight = 75;
+      let fontSize = 14;
+      let leftMargin = 5;
+      let extraMargin = 15;
       
       subshellsP.clear();
       subshellsP.textSize(fontSize);
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.fill(0);
       
-      // Υπολογισμός πλάτους με βάση το κείμενο
       let wPrev = subshellsP.textWidth(data.prev || "-");
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
@@ -506,7 +504,7 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
     
-    // updateBalloonPosition – τοποθετεί το balloon στην κάτω δεξιά γωνία του κελιού του τρέχοντος στοιχείου
+    // updateBalloonPosition – τοποθετεί το balloon σύμφωνα με το boundingClientRect του καμβά του τρέχοντος στοιχείου
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -520,7 +518,7 @@
       }
     }
     
-    // redrawAll – διατηρεί ακριβώς την αρχική λογική δόμησης και το shifting
+    // redrawAll – διατηρεί την αρχική λογική δόμησης και το shifting
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -692,8 +690,8 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
-      // Καθαρίζουμε όλους τους καμβάδες και επαναδημιουργούμε τους
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
+      // Πλήρης επαναφορά όλων των καμβάδων
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
@@ -714,7 +712,6 @@
       updateInfo(currentZ);
     });
     
-    // Εκχώρηση στο global scope
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
