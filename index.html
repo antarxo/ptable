@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών – περιεχόμενο στοιχείου */
+    /* Πίνακας πληροφοριών */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -47,7 +47,7 @@
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Στήλη αριστερού infoPanel */
+    /* Left column */
     #leftPanel {
       width: 220px;
       display: flex;
@@ -55,7 +55,7 @@
       justify-content: space-between;
       text-align: left;
     }
-    /* Δεξιά στήλη */
+    /* Right column */
     #remarks { flex-grow: 1; padding-left: 20px; text-align: left; }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
@@ -64,7 +64,7 @@
     .subshell-line { width: 100%; }
     .subshell-prev, .subshell-next { color: #333; }
     .subshell-current { font-weight: bold; }
-    /* Balloon για τα υποστιβάδες */
+    /* Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -72,7 +72,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Αρχικό πλάτος – θα ανανεώνεται δυναμικά βάσει του περιεχομένου */
+      /* Αρχικό πλάτος – θα ρυθμίζεται δυναμικά */
       width: 300px;
       height: 90px;
       z-index: 150;
@@ -105,7 +105,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάδες για περιόδους και ομάδες – εμφανίζονται μόνο όταν currentZ ≥ 121 */
+    /* Καμβάδες Περιόδων και Ομάδων (εμφανίζονται μόνο όταν currentZ ≥ 121) */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -143,13 +143,13 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάδες Περιόδων και Ομάδων (θα εμφανιστούν μετά την εμφάνιση των στοιχείων 1 και 2) -->
+  <!-- Καμβάδες Περιόδων και Ομάδων (δεν εμφανίζονται μέχρι currentZ ≥ 121) -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Καμβάδες Τομέων (θα εμφανιστούν μετά το πρώτο "Επόμενο") -->
+  <!-- Καμβάδες Τομέων (όπως αρχικά) -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -165,7 +165,7 @@
     <div id="remarks"></div>
   </div>
   
-  <!-- Balloon για τα υποστιβάδες -->
+  <!-- Balloon (canvasSubshells) -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Κουμπιά -->
@@ -178,7 +178,7 @@
   
   <!-- Global Script -->
   <script>
-    // Helper functions
+    // Helper functions (χωρίς αλλαγές στη λογική δόμησης)
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -212,8 +212,7 @@
     };
     const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
     let elements = [];
-    // Αρχικά currentZ = 0 ώστε να εμφανίζεται μόνο το infoPanel για το στοιχείο 0
-    let currentZ = 0;
+    let currentZ = 0; // Αρχική κατάσταση: μόνο infoPanel για στοιχείο 0
     let flashActive = false;
     let subshellsP;
     
@@ -232,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: Αν currentZ == 0 εμφανίζεται μόνο το infoPanel για το στοιχείο 0
+    // updateInfo: αν currentZ == 0 εμφανίζεται μόνο το infoPanel για στοιχείο 0
     function updateInfo(clickedZ) {
       if(clickedZ === 0) {
         let elemInfo = document.getElementById('elementInfo');
@@ -249,14 +248,14 @@
             let rem = document.getElementById('remarks');
             if(rem) { rem.innerHTML = "Παρακαλώ πατήστε 'Επόμενο' για να ξεκινήσει ο Περιοδικός Πίνακας."; }
           }
-          // Εμφάνιση μόνο των καμβάδων των στοιχείων (μην εμφανίζονται οι καμβάδες περιόδων/ομάδων)
-          document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)').forEach(c => { c.style.display = "none"; });
+          document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)')
+                   .forEach(c => { c.style.display = "none"; });
         }
         return;
       }
       
-      // Για currentZ > 0, εμφάνιση των καμβάδων των στοιχείων
-      document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)').forEach(c => { c.style.display = "block"; });
+      document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)')
+               .forEach(c => { c.style.display = "block"; });
       
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -305,7 +304,7 @@
       setTimeout(() => { updateBalloonPosition(element); }, 10);
     }
     
-    // Δόμηση των καμβάδων (αμετάβλητη λογική δόμησης με shifting)
+    // Η συνάρτηση initializeCanvases και οι υπόλοιπες παραμένουν όπως στο αρχικό (δεν αλλάζουν)
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -355,7 +354,6 @@
       });
     }
     
-    // Δημιουργία canvas για το balloon
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -369,7 +367,6 @@
       window.subshellsInitialized = true;
     }
     
-    // Δημιουργία canvas για τις ομάδες (μία φορά)
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -443,7 +440,6 @@
       window.groupsInitialized = true;
     }
     
-    // Υπολογισμός θέσης του κελιού στον αντίστοιχο καμβά
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -456,7 +452,6 @@
       return { x: x, y: y };
     }
     
-    // Σχεδίαση στοιχείων (χωρίς αλλαγή στη λογική του shifting)
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -512,11 +507,12 @@
       });
     }
     
-    // drawSubshells: Ρύθμιση πλάτους του balloon και αριστερή στοίχιση χωρίς αλλαγή στη λογική δόμησης
+    // Νέα συνάρτηση drawSubshells – μόνο για το balloon, χωρίς αλλαγές στην αρχική δόμηση
     function drawSubshells(data) {
       if (!subshellsP) return;
       subshellsP.clear();
       subshellsP.textSize(16);
+      // Αριστερή στοίχιση χωρίς αλλαγή στη λογική δόμησης
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.fill(0);
       let leftMargin = 10;
@@ -534,7 +530,6 @@
       subshellsP.text(data.next || "-", leftMargin, 2*rowHeight + rowHeight/2);
     }
     
-    // updateBalloonPosition: Τοποθέτηση του balloon στη κάτω δεξιά γωνία του κελιού του τρέχοντος στοιχείου
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -548,7 +543,6 @@
       }
     }
     
-    // redrawAll: Επανασχεδίαση όλων των καμβάδων με διατήρηση του shifting
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -630,7 +624,6 @@
       updateToggleButton();
     }
     
-    // initPeriodsCanvas: Δημιουργία canvas για περιόδους
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -654,12 +647,10 @@
       window.periodsInitialized = true;
     }
     
-    // updateToggleButton: Ενημέρωση του κουμπιού "Σύμπτυξη"
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = (currentZ < 118);
     }
     
-    // updateRightPanelWidth: Ενημέρωση πλάτους δεξιού panel
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -668,7 +659,6 @@
       }
     }
     
-    // messageForElement: Μήνυμα για το στοιχείο βάσει του group
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -693,7 +683,6 @@
       }
     }
     
-    // Event listeners
     document.getElementById('nextElement').addEventListener('click', function() {
       if(currentZ === 0) {
         currentZ = 3;
@@ -742,7 +731,6 @@
       updateInfo(currentZ);
     });
     
-    // Export στο global scope
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
@@ -754,7 +742,6 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('resize', updateRightPanelWidth);
     
-    // Εκκίνηση φόρτωσης στοιχείων
     loadElements();
   </script>
 </body>
