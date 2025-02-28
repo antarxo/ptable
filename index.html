@@ -105,7 +105,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάδες Περιόδων και Ομάδων (εμφανίζονται μόνο όταν currentZ ≥ 121) */
+    /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -143,13 +143,13 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάδες Περιόδων και Ομάδων (δεν εμφανίζονται μέχρι currentZ ≥ 121) -->
+  <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Καμβάδες Τομέων (όπως αρχικά) -->
+  <!-- Καμβάδες Τομέων -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -165,7 +165,7 @@
     <div id="remarks"></div>
   </div>
   
-  <!-- Balloon (canvasSubshells) -->
+  <!-- Καμβάς υποστιβάδων (Balloon) -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Κουμπιά -->
@@ -176,10 +176,12 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Global Script -->
+  <!-- Global Script: Όλες οι συναρτήσεις ορίζονται στο global scope -->
   <script>
-    // Helper functions (χωρίς αλλαγές στη λογική δόμησης)
-    function convertClickedToCurrent(clickedZ) { return clickedZ; }
+    // Ορισμοί helper functions (χωρίς αλλαγές στη λογική δόμησης)
+    function convertClickedToCurrent(clickedZ) {
+      return clickedZ;
+    }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
       switch(b) {
@@ -203,108 +205,43 @@
       return result.join(", ");
     }
     
-    // Global variables
+    // Global μεταβλητές
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
       d: { cols: 10, rows: 7 },
       f: { cols: 14, rows: 7 }
     };
-    const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
+    const BLOCK_COLORS = {
+      s: '#ffcccc',
+      p: '#ccffcc',
+      d: '#ccccff',
+      f: '#ffe5cc'
+    };
     let elements = [];
-    let currentZ = 0; // Αρχική κατάσταση: μόνο infoPanel για στοιχείο 0
+    let currentZ = 3; // Ξεκινάμε από το στοιχείο με Ζ=3 (τα 1 και 2 παραλείπονται)
     let flashActive = false;
     let subshellsP;
     
+    // Αποθήκευση default περιεχομένων για collapsed mode
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Load elements
+    // Συνάρτηση φόρτωσης στοιχείων
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
         .then(data => {
           elements = data;
+          initializeCanvases();
+          initSubshellsCanvas();
           updateInfo(currentZ);
           updateToggleButton();
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: αν currentZ == 0 εμφανίζεται μόνο το infoPanel για στοιχείο 0
-    function updateInfo(clickedZ) {
-      if(clickedZ === 0) {
-        let elemInfo = document.getElementById('elementInfo');
-        if(elemInfo) {
-          let element0 = elements.find(e => e.number === 0);
-          if(element0) {
-            elemInfo.innerHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=0</span> ` +
-                                 `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element0.block)};">${element0.symbol}</span> ` +
-                                 `<span style="font-style: italic;">${element0.name}</span>`;
-            let rem = document.getElementById('remarks');
-            if(rem) { rem.innerHTML = element0.remarks || ""; }
-          } else {
-            elemInfo.innerHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Καλώς ήρθατε!</span>`;
-            let rem = document.getElementById('remarks');
-            if(rem) { rem.innerHTML = "Παρακαλώ πατήστε 'Επόμενο' για να ξεκινήσει ο Περιοδικός Πίνακας."; }
-          }
-          document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)')
-                   .forEach(c => { c.style.display = "none"; });
-        }
-        return;
-      }
-      
-      document.querySelectorAll('.canvas:not(#canvasPeriods):not(#canvasS_groups):not(#canvasD_groups):not(#canvasP_groups)')
-               .forEach(c => { c.style.display = "block"; });
-      
-      let currentNum;
-      if(clickedZ === 119) { currentNum = 1; }
-      else if(clickedZ === 120) { currentNum = 2; }
-      else { currentNum = convertClickedToCurrent(clickedZ); }
-      
-      const element = elements.find(e => e.number === currentNum);
-      if(!element) return;
-      
-      let displayZ = (element.number >= 119 ? element.number - 118 : element.number);
-      if(clickedZ === 119) { displayZ = 1; }
-      else if(clickedZ === 120) { displayZ = 2; }
-      
-      let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
-                     `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
-                     `<span style="font-style: italic;">${element.name}</span>`;
-      let leftPanel = document.getElementById('leftPanel');
-      if(leftPanel) { leftPanel.innerHTML = infoHTML; }
-      
-      let prev = elements.find(e => e.number === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
-      let next = elements.find(e => e.number === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
-      
-      let prevStr = `<div style="color:${(prev.subshells === "-") ? "gray" : getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number ? prev.number + " " + prev.subshells : prev.subshells)}</div>`;
-      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-      let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
-      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
-                         `<div style="font-style: italic;">${messageForElement(element)}</div>`;
-      
-      let rem = document.getElementById('remarks');
-      if(rem) {
-        rem.innerHTML = `<div class="right-wrapper">
-                           <div class="upper-right">
-                             <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
-                             <div class="shells-msg-col">${shellsAndMsg}</div>
-                           </div>
-                           <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
-                         </div>`;
-      }
-      
-      let subshellsData = {
-        prev: prev ? prev.subshells : "",
-        current: element.subshells,
-        next: next ? next.subshells : ""
-      };
-      drawSubshells(subshellsData);
-      setTimeout(() => { updateBalloonPosition(element); }, 10);
-    }
-    
-    // Η συνάρτηση initializeCanvases και οι υπόλοιπες παραμένουν όπως στο αρχικό (δεν αλλάζουν)
+    // Συνάρτηση initializeCanvases (δεν αλλοιώνεται η λογική δόμησης)
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -329,9 +266,9 @@
                 } else if(currentZ === 118) {
                   return e.block === block && e.number >= 3 && e.number <= 118;
                 } else if(currentZ === 119) {
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
+                  return e.block === block && e.number === 1;
                 } else if(currentZ === 120) {
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 2);
+                  return e.block === block && e.number === 2;
                 } else {
                   return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
                 }
@@ -343,7 +280,7 @@
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
                     flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                    setTimeout(function() { flashActive = false; redrawAll(); }, 200);
                   }
                   break;
                 }
@@ -354,6 +291,7 @@
       });
     }
     
+    // Συνάρτηση initSubshellsCanvas (χωρίς αλλαγές στη λογική δόμησης)
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -367,8 +305,8 @@
       window.subshellsInitialized = true;
     }
     
+    // Συνάρτηση initGroupsCanvases (χωρίς αλλαγές)
     function initGroupsCanvases() {
-      if(window.groupsInitialized) return;
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(82, 40);
@@ -437,9 +375,9 @@
           }
         };
       });
-      window.groupsInitialized = true;
     }
     
+    // Συνάρτηση calculatePosition (όπως αρχικά)
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -452,20 +390,21 @@
       return { x: x, y: y };
     }
     
+    // Συνάρτηση drawElements (όπως αρχικά)
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
       let filter;
       if(currentZ < 118) {
-        filter = e => e.block === block && e.number >= 3 && e.number <= currentZ;
+        filter = function(e) { return e.block === block && e.number >= 3 && e.number <= currentZ; };
       } else if(currentZ === 118) {
-        filter = e => e.block === block && e.number >= 3 && e.number <= 118;
+        filter = function(e) { return e.block === block && e.number >= 3 && e.number <= 118; };
       } else if(currentZ === 119) {
-        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
+        filter = function(e) { return e.block === block && e.number === 1; };
       } else if(currentZ === 120) {
-        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 2);
+        filter = function(e) { return e.block === block && e.number === 2; };
       } else {
-        filter = e => e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
+        filter = function(e) { return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2); };
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
@@ -507,12 +446,11 @@
       });
     }
     
-    // Νέα συνάρτηση drawSubshells – μόνο για το balloon, χωρίς αλλαγές στην αρχική δόμηση
+    // Νέα συνάρτηση drawSubshells που ρυθμίζει το πλάτος του balloon και στοιχίζει αριστερά, χωρίς να αλλάζει την αρχική λογική δόμησης
     function drawSubshells(data) {
       if (!subshellsP) return;
       subshellsP.clear();
       subshellsP.textSize(16);
-      // Αριστερή στοίχιση χωρίς αλλαγή στη λογική δόμησης
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.fill(0);
       let leftMargin = 10;
@@ -530,6 +468,7 @@
       subshellsP.text(data.next || "-", leftMargin, 2*rowHeight + rowHeight/2);
     }
     
+    // Νέα συνάρτηση updateBalloonPosition που τοποθετεί το balloon στη "κάτω δεξιά" γωνία του κελιού του τρέχοντος στοιχείου, χωρίς να επηρεάζει τη λογική δόμησης
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -708,7 +647,7 @@
     });
     
     document.getElementById('reset').addEventListener('click', function() {
-      currentZ = 0;
+      currentZ = 3;
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
