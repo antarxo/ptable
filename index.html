@@ -71,7 +71,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Το πλάτος και το ύψος θα ρυθμίζονται δυναμικά από το script */
+      /* Το πλάτος και το ύψος θα ρυθμίζονται δυναμικά (αρχική τιμή πλάτους 10px) */
       width: auto;
       height: auto;
       z-index: 150;
@@ -221,7 +221,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Φόρτωση και ταξινόμηση στοιχείων
+    // Φόρτωση και ταξινόμηση στοιχείων (για το στοιχείο 3 ενημερώνεται από JSON)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -235,7 +235,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo – ενημερώνει τα δεδομένα και το balloon
+    // updateInfo – ενημερώνει τα δεδομένα και το Balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -275,10 +275,12 @@
                          </div>`;
       }
       
+      // Προσθέτουμε την πληροφορία για το χρώμα (block color) για το Balloon
       let subshellsData = {
         prev: prev ? prev.subshells : "",
         current: element.subshells,
-        next: next ? next.subshells : ""
+        next: next ? next.subshells : "",
+        color: getBlockColor(element.block)
       };
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
@@ -493,36 +495,48 @@
       });
     }
     
-    // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon
+    // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon με αρχικό πλάτος 10px και μορφοποίηση γραμματοσειράς 13,
+    // ενώ ο τρέχων αριθμός εμφανίζεται με έντονα γράμματα και με το χρώμα του τομέα
     function drawSubshells(data) {
       if (!subshellsP) return;
-      // Ορίζουμε το ύψος του Balloon σε 40px και τη γραμματοσειρά στα 12px
       let balloonHeight = 40;
-      let fontSize = 12;
+      let fontSize = 13;
       let leftMargin = 2;
       let extraMargin = 5;
       subshellsP.clear();
       subshellsP.textSize(fontSize);
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
-      subshellsP.fill(0);
+      // Για τις προηγούμενες και επόμενες υποστιβάδες χρησιμοποιούμε απλό χρώμα (π.χ. "black")
+      // ενώ για την τρέχουσα, αν υπάρχει, χρησιμοποιούμε το data.color (το χρώμα του τομέα)
       
       let wPrev = subshellsP.textWidth(data.prev || "-");
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 10; // αρχική τιμή 10px
+      let minWidth = 10;
       let newWidth = Math.max(computedWidth, minWidth);
       
       subshellsP.resizeCanvas(newWidth, balloonHeight);
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
       
       let rowHeight = balloonHeight / 3;
+      // Σχεδιάζουμε τις 3 γραμμές: prev (μαύρο), current (με χρώμα και έντονα), next (μαύρο)
+      subshellsP.fill("black");
       subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
+      subshellsP.textStyle(p5.prototype.NORMAL);
+      // current: έμφαση (έντονα) και το χρώμα του τομέα
+      subshellsP.fill(data.color || "black");
+      subshellsP.textStyle(p5.prototype.BOLD);
       subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
+      // Επαναφέρουμε την κανονική μορφοποίηση για την επόμενη γραμμή
+      subshellsP.fill("black");
+      subshellsP.textStyle(p5.prototype.NORMAL);
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
     
-    // updateBalloonPosition – τοποθετεί το Balloon σύμφωνα με τις νέες συνθήκες
+    // updateBalloonPosition – τοποθετεί το Balloon σύμφωνα με τις συνθήκες:
+    // 1. Αν η αριστερή πλευρά του Balloon ξεπερνάει το μισό της οθόνης, μετατοπίζεται αριστερότερα κατά (38px + το τρέχον πλάτος)
+    // 2. Αν το κάτω περίγραμμα του Balloon επικαλύπτει τον πίνακα πληροφοριών, μετατοπίζεται πάνω κατά (47px + το τρέχον ύψος)
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -530,33 +544,27 @@
       let pos = calculatePosition(element, element.block);
       let cs = document.getElementById('canvasSubshells');
       if(cs) {
-        // Default θέση: από το κελί, προσθέτοντας 40px (μέγεθος κελιού) και 5px, αλλά 5px αριστερότερα
+        // Default θέση: από το κελί, προσθέτοντας 40px (μέγεθος κελιού) και 5px, αλλά με 5px αριστερότερα
         let leftPos = rect.left + pos.x + 40 - 5;
         let topPos = rect.top + pos.y + 40 + 5;
-        
-        // Ελέγχουμε οριζόντια: αν η αριστερή πλευρά του Balloon (leftPos) είναι πάνω από το μισό του πλάτους της οθόνης,
-        // μετατοπίζουμε το Balloon αριστερότερα κατά (42px + το τρέχον πλάτος του)
         let balloonWidth = cs.offsetWidth;
-        if (leftPos > window.innerWidth / 2) {
-          leftPos = leftPos - (42 + balloonWidth);
-        }
-        
-        // Ελέγχουμε κατακόρυφα: αν το κάτω περίγραμμα του Balloon (topPos + ύψος) επικαλύπτει τον πίνακα πληροφοριών,
-        // μετατοπίζουμε το Balloon πάνω κατά (42px + το τρέχον ύψος του)
         let balloonHeight = cs.offsetHeight;
+        // Αν η αριστερή πλευρά του Balloon ξεπερνά το μισό της οθόνης, μετατοπίζεται αριστερότερα
+        if (leftPos > window.innerWidth / 2) {
+          leftPos = leftPos - (38 + balloonWidth);
+        }
+        // Αν το κάτω περίγραμμα του Balloon επικαλύπτει τον πίνακα πληροφοριών
         let infoPanel = document.getElementById('infoPanel');
         if (infoPanel) {
           let infoRect = infoPanel.getBoundingClientRect();
           if (topPos + balloonHeight > infoRect.top) {
-            topPos = infoRect.top - (42 + balloonHeight);
+            topPos = infoRect.top - (47 + balloonHeight);
           }
         }
-        
         // Εξασφαλίζουμε ότι το Balloon δεν ξεφεύγει από το δεξί άκρο της σελίδας
         if (leftPos + balloonWidth > window.innerWidth) {
           leftPos = window.innerWidth - balloonWidth - 5;
         }
-        
         cs.style.display = "block";
         cs.style.left = leftPos + "px";
         cs.style.top = topPos + "px";
@@ -612,6 +620,7 @@
           };
         });
       });
+      // Το shifting παραμένει όπως στο αρχικό
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
