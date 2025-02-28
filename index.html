@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="el">
 <head>
   <meta charset="UTF-8">
@@ -486,36 +486,36 @@
     }
     
     // drawSubshells – υπολογίζει το απαιτούμενο πλάτος βάσει του textWidth και ενημερώνει το canvas και το style
-    function drawSubshells(data) {
-      if (!subshellsP) return;
-      let balloonHeight = 75;
-      let fontSize = 14;
-      let leftMargin = 5;
-      let extraMargin = 15;
-      subshellsP.clear();
-      subshellsP.textSize(fontSize);
-      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
-      subshellsP.fill(0);
-      
-      let wPrev = subshellsP.textWidth(data.prev || "-");
-      let wCurrent = subshellsP.textWidth(data.current || "-");
-      let wNext = subshellsP.textWidth(data.next || "-");
-      let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 60;
-      let newWidth = Math.max(computedWidth, minWidth);
-      
-      console.log("drawSubshells:", { wPrev, wCurrent, wNext, computedWidth, newWidth });
-      
-      subshellsP.resizeCanvas(newWidth, balloonHeight);
-      // Ενημέρωση του DOM στοιχείου του canvas
-      subshellsP.canvas.style.width = newWidth + "px";
-      subshellsP.canvas.style.height = balloonHeight + "px";
-      
-      let rowHeight = balloonHeight / 3;
-      subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
-      subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
-      subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
-    }
+ function drawSubshells(data) {
+  if (!subshellsP) return;
+  let balloonHeight = 75;
+  let fontSize = 14;
+  let leftMargin = 5;
+  let extraMargin = 15;
+  subshellsP.clear();
+  subshellsP.textSize(fontSize);
+  subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
+  subshellsP.fill(0);
+  
+  let wPrev = subshellsP.textWidth(data.prev || "-");
+  let wCurrent = subshellsP.textWidth(data.current || "-");
+  let wNext = subshellsP.textWidth(data.next || "-");
+  let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
+  // Για δοκιμή, θέτουμε το νέο πλάτος σε 10 px
+  let newWidth = 10; // Αντικαταστήστε προσωρινά το computedWidth με 10 για έλεγχο
+  
+  console.log("drawSubshells (test override):", { wPrev, wCurrent, wNext, computedWidth, newWidth });
+  
+  subshellsP.resizeCanvas(newWidth, balloonHeight);
+  subshellsP.canvas.style.width = newWidth + "px";
+  subshellsP.canvas.style.height = balloonHeight + "px";
+  
+  let rowHeight = balloonHeight / 3;
+  subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
+  subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
+  subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
+}
+
     
     // updateBalloonPosition – τοποθετεί το balloon στη θέση του τρέχοντος κελιού
     function updateBalloonPosition(element) {
