@@ -174,7 +174,7 @@
   </div>
   
   <script>
-    // Global variable to αγνοήσουμε canvas clicks μετά από "Next"
+    // Global variable για να αγνοούνται τα clicks στα canvas μετά το "Next"
     let ignoreCanvasClick = false;
     
     // Helper functions
@@ -219,7 +219,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Load and sort elements
+    // Load και ταξινόμηση στοιχείων
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -233,7 +233,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo – ενημερώνει τα στοιχεία και το balloon
+    // updateInfo – ενημερώνει τα δεδομένα και το balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -416,7 +416,7 @@
       window.groupsInitialized = true;
     }
     
-    // calculatePosition – υπολογίζει τη θέση με βάση την αρχική λογική δόμησης
+    // calculatePosition – υπολογίζει τη θέση σύμφωνα με την αρχική λογική δόμησης
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -485,7 +485,7 @@
       });
     }
     
-    // drawSubshells – υπολογίζει το απαιτούμενο πλάτος βάσει του textWidth και ανανεώνει το canvas και το style
+    // drawSubshells – υπολογίζει το απαιτούμενο πλάτος βάσει του textWidth και ενημερώνει το canvas και το style
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 75;
@@ -501,14 +501,13 @@
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      // Ελάχιστο πλάτος για δυναμική ρύθμιση (μπορείτε να το προσαρμόσετε)
       let minWidth = 60;
       let newWidth = Math.max(computedWidth, minWidth);
       
       console.log("drawSubshells:", { wPrev, wCurrent, wNext, computedWidth, newWidth });
       
       subshellsP.resizeCanvas(newWidth, balloonHeight);
-      // Ενημέρωση του style του DOM canvas
+      // Ενημέρωση του DOM στοιχείου του canvas
       subshellsP.canvas.style.width = newWidth + "px";
       subshellsP.canvas.style.height = balloonHeight + "px";
       
@@ -518,7 +517,7 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
     
-    // updateBalloonPosition – τοποθετεί το balloon σύμφωνα με το boundingClientRect του τρέχοντος στοιχείου
+    // updateBalloonPosition – τοποθετεί το balloon στη θέση του τρέχοντος κελιού
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -685,6 +684,7 @@
       }
     }
     
+    // Next: Αυξάνουμε το currentZ μέχρι το 120
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 118) { 
