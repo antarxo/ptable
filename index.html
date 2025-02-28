@@ -72,7 +72,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px; /* αρχικό, αλλά θα ρυθμίζεται δυναμικά */
+      width: 300px; /* αρχικό, αλλά ρυθμίζεται δυναμικά */
       height: 90px;
       z-index: 150;
       display: none;
@@ -122,7 +122,7 @@
       background: #f0f0f0;
       display: none;
       z-index: 11;
-      pointer-events: none;  /* Απενεργοποίηση click για τις ομάδες */
+      pointer-events: none;
     }
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
@@ -177,7 +177,7 @@
   </div>
   
   <script>
-    // Helper functions
+    // Helper functions (χωρίς αλλαγές στη βασική λογική δόμησης)
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -211,18 +211,17 @@
     };
     const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
     let elements = [];
-    // Ταξινομούμε τα στοιχεία κατά αύξουσα σειρά για να διασφαλίζουμε ορθές αναζητήσεις
-    function sortElements(data) {
-      return data.sort((a, b) => a.number - b.number);
-    }
-    let currentZ = 3; // Ξεκινάμε από το στοιχείο με Ζ=3 (τα 1 και 2 παραλείπονται)
+    function sortElements(data) { return data.sort((a, b) => a.number - b.number); }
+    elements = []; 
+    // Ξεκινάμε από το στοιχείο με Ζ=3 όπως στο αρχικό
+    let currentZ = 3;
     let flashActive = false;
     let subshellsP;
     
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Load elements and sort them
+    // Load elements, ταξινομημένα ώστε να βγαίνουν σωστά τα στοιχεία
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -286,7 +285,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // initializeCanvases – χωρίς αλλαγές στη βασική λογική δόμησης και shifting
+    // initializeCanvases – χωρίς αλλαγές στη λογική δόμησης και shifting
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -304,20 +303,9 @@
               else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
+            // Επικεντρώνουμε το click σε όλα τα στοιχεία του block, χωρίς να περιορίζουμε με currentZ
             p.mouseClicked = function() {
-              let candidates = elements.filter(function(e) {
-                if(currentZ < 118) {
-                  return e.block === block && e.number >= 3 && e.number <= currentZ;
-                } else if(currentZ === 118) {
-                  return e.block === block && e.number >= 3 && e.number <= 118;
-                } else if(currentZ === 119) {
-                  return e.block === block && e.number === 1;
-                } else if(currentZ === 120) {
-                  return e.block === block && e.number === 2;
-                } else {
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
-                }
-              });
+              let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -350,7 +338,7 @@
       window.subshellsInitialized = true;
     }
     
-    // initGroupsCanvases – τώρα δημιουργούνται μόνο μία φορά (με έλεγχο μέσω window.groupsInitialized)
+    // initGroupsCanvases – δημιουργούνται μία φορά
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -493,7 +481,7 @@
       });
     }
     
-    // drawSubshells – ρυθμίζει το πλάτος του balloon δυναμικά και στοιχίζει αριστερά
+    // drawSubshells – ρυθμίζει δυναμικά το πλάτος του balloon και στοιχίζει αριστερά
     function drawSubshells(data) {
       if (!subshellsP) return;
       subshellsP.clear();
@@ -509,6 +497,7 @@
       let minWidth = 150;
       let newWidth = Math.max(computedWidth, minWidth);
       subshellsP.resizeCanvas(newWidth, 90);
+      subshellsP.redraw();  // Εξασφαλίζει ότι το νέο πλάτος εφαρμόζεται
       let rowHeight = 90 / 3;
       subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
       subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
@@ -529,7 +518,7 @@
       }
     }
     
-    // redrawAll – διατηρεί την αρχική λογική δόμησης και το shifting
+    // redrawAll – διατηρεί ακριβώς την αρχική λογική δόμησης και το shifting
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -550,19 +539,8 @@
             }
             drawElements(p, block);
             p.mouseClicked = function() {
-              let candidates = elements.filter(function(e) {
-                if(currentZ < 118) {
-                  return e.block === block && e.number >= 3 && e.number <= currentZ;
-                } else if(currentZ === 118) {
-                  return e.block === block && e.number >= 3 && e.number <= 118;
-                } else if(currentZ === 119) {
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1);
-                } else if(currentZ === 120) {
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 2);
-                } else {
-                  return e.block === block && ((e.number >= 3 && e.number <= 118) || e.number === 1 || e.number === 2);
-                }
-              });
+              // Ελέγχουμε όλα τα στοιχεία του block
+              let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -714,6 +692,8 @@
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
+      // Επαναφορά του balloon με κλήση initSubshellsCanvas
+      initSubshellsCanvas();
       updateInfo(currentZ);
     });
     
@@ -732,7 +712,7 @@
       updateInfo(currentZ);
     });
     
-    // Εκχώρηση στο global scope
+    // Εξαγωγή στο global scope για πρόσβαση από όλα τα callbacks
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
