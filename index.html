@@ -71,7 +71,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Το πλάτος και το ύψος θα ρυθμίζονται δυναμικά */
+      /* Το πλάτος και το ύψος θα ρυθμίζονται δυναμικά από το script */
       width: auto;
       height: auto;
       z-index: 150;
@@ -176,7 +176,7 @@
   </div>
   
   <script>
-    // Μεταβλητή για να αγνοούνται τα clicks στα canvas μετά το Next
+    // Αγνοούμε τα canvas clicks μετά το "Επόμενο"
     let ignoreCanvasClick = false;
     
     // Βοηθητικές συναρτήσεις
@@ -336,7 +336,7 @@
       });
     }
     
-    // initSubshellsCanvas – δημιουργεί το canvas για το balloon
+    // initSubshellsCanvas – δημιουργεί το canvas για το Balloon
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -493,12 +493,12 @@
       });
     }
     
-    // drawSubshells – ρυθμίζει το πλάτος και το ύψος του balloon με αρχική τιμή 10px για το πλάτος
+    // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon
     function drawSubshells(data) {
       if (!subshellsP) return;
-      // Μικρότερο ύψος και μικρότερη γραμματοσειρά για το balloon:
+      // Ορίζουμε το ύψος του Balloon σε 40px και τη γραμματοσειρά στα 12px
       let balloonHeight = 40;
-      let fontSize = 10;
+      let fontSize = 12;
       let leftMargin = 2;
       let extraMargin = 5;
       subshellsP.clear();
@@ -510,12 +510,10 @@
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      // Αρχική τιμή πλάτους 10px
-      let minWidth = 10;
+      let minWidth = 10; // αρχική τιμή 10px
       let newWidth = Math.max(computedWidth, minWidth);
       
       subshellsP.resizeCanvas(newWidth, balloonHeight);
-      // Ενημέρωση του DOM στοιχείου με cssText ώστε να εφαρμόζεται το νέο πλάτος/ύψος
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
       
       let rowHeight = balloonHeight / 3;
@@ -524,7 +522,7 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
     
-    // updateBalloonPosition – τοποθετεί το balloon ώστε να μην καλύπτει άλλα στοιχεία
+    // updateBalloonPosition – τοποθετεί το Balloon σύμφωνα με τις νέες συνθήκες
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -532,15 +530,33 @@
       let pos = calculatePosition(element, element.block);
       let cs = document.getElementById('canvasSubshells');
       if(cs) {
-        // Η αρχική θέση: 5px πιο αριστερά από το προεπιλεγμένο (δηλαδή -5px αντί για +5px)
+        // Default θέση: από το κελί, προσθέτοντας 40px (μέγεθος κελιού) και 5px, αλλά 5px αριστερότερα
         let leftPos = rect.left + pos.x + 40 - 5;
         let topPos = rect.top + pos.y + 40 + 5;
-        // Ελέγχουμε αν το balloon ξεφεύγει από το δεξί άκρο της σελίδας
-        let csWidth = cs.offsetWidth;
-        let rightEdge = window.innerWidth;
-        if (leftPos + csWidth > rightEdge) {
-          leftPos = rightEdge - csWidth - 5; // αφήνουμε περιθώριο 5px
+        
+        // Ελέγχουμε οριζόντια: αν η αριστερή πλευρά του Balloon (leftPos) είναι πάνω από το μισό του πλάτους της οθόνης,
+        // μετατοπίζουμε το Balloon αριστερότερα κατά (42px + το τρέχον πλάτος του)
+        let balloonWidth = cs.offsetWidth;
+        if (leftPos > window.innerWidth / 2) {
+          leftPos = leftPos - (42 + balloonWidth);
         }
+        
+        // Ελέγχουμε κατακόρυφα: αν το κάτω περίγραμμα του Balloon (topPos + ύψος) επικαλύπτει τον πίνακα πληροφοριών,
+        // μετατοπίζουμε το Balloon πάνω κατά (42px + το τρέχον ύψος του)
+        let balloonHeight = cs.offsetHeight;
+        let infoPanel = document.getElementById('infoPanel');
+        if (infoPanel) {
+          let infoRect = infoPanel.getBoundingClientRect();
+          if (topPos + balloonHeight > infoRect.top) {
+            topPos = infoRect.top - (42 + balloonHeight);
+          }
+        }
+        
+        // Εξασφαλίζουμε ότι το Balloon δεν ξεφεύγει από το δεξί άκρο της σελίδας
+        if (leftPos + balloonWidth > window.innerWidth) {
+          leftPos = window.innerWidth - balloonWidth - 5;
+        }
+        
         cs.style.display = "block";
         cs.style.left = leftPos + "px";
         cs.style.top = topPos + "px";
@@ -596,7 +612,6 @@
           };
         });
       });
-      // Το shifting παραμένει όπως στο αρχικό
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
