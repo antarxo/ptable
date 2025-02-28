@@ -70,8 +70,8 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px; /* αρχικό πλάτος, αλλά θα ρυθμίζεται δυναμικά */
-      height: 75px; /* νέο, μειωμένο ύψος */
+      width: 300px; /* αρχικό, θα ανανεώνεται δυναμικά */
+      height: 75px; /* νέο ύψος για μικρότερη γραμματοσειρά */
       z-index: 150;
       display: none;
     }
@@ -217,7 +217,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Load elements και ταξινόμησή τους ώστε να επιστρέφουν τα σωστά
+    // Load and sort elements
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -231,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo – με μετατροπή του e.number σε αριθμό ώστε να βγαίνει το σωστό στοιχείο
+    // updateInfo – αν το clickedZ είναι 119 ή 120, τότε εμφανίζονται τα στοιχεία 1 και 2 αντίστοιχα, αλλιώς χρησιμοποιείται το clickedZ
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -281,7 +281,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // initializeCanvases – χωρίς αλλαγές στη βασική λογική δόμησης και shifting
+    // initializeCanvases – διατηρεί την αρχική λογική δόμησης και shifting
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -299,7 +299,6 @@
               else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
-            // MouseClicked: διατρέχουμε όλα τα στοιχεία του block για να βρούμε το κελί στο οποίο έγινε click
             p.mouseClicked = function() {
               let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
@@ -477,26 +476,23 @@
       });
     }
     
-    // drawSubshells – ρυθμίζει δυναμικά το πλάτος του balloon χρησιμοποιώντας τις μετρήσεις του textWidth του ίδιο του canvas (χωρίς createGraphics)
+    // drawSubshells – υπολογίζει πρώτα το απαιτούμενο πλάτος με βάση το textWidth και στη συνέχεια σχεδιάζει το περιεχόμενο
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 75;
       let fontSize = 14;
       let leftMargin = 5;
       let extraMargin = 15;
-      
       subshellsP.clear();
       subshellsP.textSize(fontSize);
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.fill(0);
-      
       let wPrev = subshellsP.textWidth(data.prev || "-");
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
       let minWidth = 120;
       let newWidth = Math.max(computedWidth, minWidth);
-      
       subshellsP.resizeCanvas(newWidth, balloonHeight);
       let rowHeight = balloonHeight / 3;
       subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
@@ -670,11 +666,16 @@
       }
     }
     
+    // Ελέγχουμε το Next ώστε να μην ξεπερνάμε το 120
     document.getElementById('nextElement').addEventListener('click', function() {
-      if(currentZ < 118) { currentZ++; }
-      else if(currentZ === 118) { currentZ = 119; }
-      else if(currentZ === 119) { currentZ = 120; }
-      else { currentZ++; }
+      if(currentZ < 118) { 
+        currentZ++; 
+      } else if(currentZ === 118) { 
+        currentZ = 119; 
+      } else if(currentZ === 119) { 
+        currentZ = 120; 
+      }
+      // Δεν αυξάνουμε παραπάνω
       redrawAll();
       updateInfo(currentZ);
     });
@@ -691,7 +692,7 @@
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      // Πλήρης επαναφορά όλων των καμβάδων
+      // Πλήρης επαναφορά
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
