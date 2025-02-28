@@ -174,7 +174,8 @@
   </div>
   
   <script>
-    // Helper functions
+    // Global variables and helper functions
+    let ignoreCanvasClick = false;
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -199,7 +200,6 @@
       return result.join(", ");
     }
     
-    // Global variables
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -231,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo – ενημερώνει τον πίνακα πληροφοριών και το balloon
+    // updateInfo – ενημερώνει τα στοιχεία και το balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -281,7 +281,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // initializeCanvases – σχεδιάζει τους καμβάδες σύμφωνα με την αρχική λογική δόμησης και shifting
+    // initializeCanvases – σχεδιάζει τους καμβάδες σύμφωνα με την αρχική λογική δόμησης
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -300,9 +300,9 @@
             }
             drawElements(p, block);
             p.mouseClicked = function() {
+              if(ignoreCanvasClick) return;
               let candidates = elements.filter(e => e.block === block);
               console.log("Block", block, "mouseClicked candidates:", candidates);
-              // Προσθέτουμε μια μικρή καθυστέρηση για να αποφύγουμε "αυτόματα" clicks
               setTimeout(() => {
                 if (!p.mouseIsPressed) {
                   for(let candidate of candidates) {
@@ -326,7 +326,7 @@
       });
     }
     
-    // initSubshellsCanvas – δημιουργεί τον καμβά του balloon
+    // initSubshellsCanvas – δημιουργεί το canvas για το balloon
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -414,7 +414,7 @@
       window.groupsInitialized = true;
     }
     
-    // calculatePosition – χρησιμοποιεί την αρχική λογική δόμησης
+    // calculatePosition – υπολογίζει τη θέση με βάση την αρχική λογική
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -427,7 +427,7 @@
       return { x: x, y: y };
     }
     
-    // drawElements – όπως στο αρχικό
+    // drawElements – σχεδιάζει τα στοιχεία σύμφωνα με την αρχική λογική
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -483,7 +483,7 @@
       });
     }
     
-    // drawSubshells – υπολογίζει πρώτα το απαιτούμενο πλάτος βάσει του textWidth και ανανεώνει το canvas του balloon
+    // drawSubshells – με δυναμική ρύθμιση του πλάτους του balloon
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 75;
@@ -494,13 +494,17 @@
       subshellsP.textSize(fontSize);
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.fill(0);
+      
       let wPrev = subshellsP.textWidth(data.prev || "-");
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 120;
+      // Εδώ μειώνουμε το ελάχιστο πλάτος για δυναμική ρύθμιση
+      let minWidth = 60;
       let newWidth = Math.max(computedWidth, minWidth);
+      
       console.log("drawSubshells:", { wPrev, wCurrent, wNext, computedWidth, newWidth });
+      
       subshellsP.resizeCanvas(newWidth, balloonHeight);
       let rowHeight = balloonHeight / 3;
       subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
@@ -508,7 +512,7 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
     
-    // updateBalloonPosition – τοποθετεί το balloon σύμφωνα με το boundingClientRect του καμβά του τρέχοντος στοιχείου
+    // updateBalloonPosition – τοποθετεί το balloon στη θέση του τρέχοντος κελιού
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -675,7 +679,9 @@
       }
     }
     
+    // Next: Δεν αυξάνουμε πάνω από 120
     document.getElementById('nextElement').addEventListener('click', function() {
+      ignoreCanvasClick = true;
       if(currentZ < 118) { 
         currentZ++; 
       } else if(currentZ === 118) { 
@@ -686,6 +692,7 @@
       console.log("Next clicked, currentZ:", currentZ);
       redrawAll();
       updateInfo(currentZ);
+      setTimeout(() => { ignoreCanvasClick = false; }, 100);
     });
     
     document.getElementById('fillAll').addEventListener('click', function() {
