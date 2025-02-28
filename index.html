@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Περιοδικός Πίνακας – Ομάδες, Περιόδους & Info</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-  <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     :root { --rightPanelWidth: 150px; }
@@ -40,7 +39,6 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Collapsed mode */
     body.collapsed #infoPanel {
       left: 848px;
       top: 58px;
@@ -64,7 +62,7 @@
     .subshell-line { width: 100%; }
     .subshell-prev, .subshell-next { color: #333; }
     .subshell-current { font-weight: bold; }
-    /* Balloon – ο καμβάς υποστιβάδων */
+    /* Balloon – το canvas των υποστιβάδων */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -72,9 +70,8 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Αρχικό πλάτος (θα ρυθμίζεται δυναμικά) και νέο ύψος */
-      width: 300px;
-      height: 75px;
+      width: 300px; /* αρχικό πλάτος */
+      height: 75px; /* νέο ύψος */
       z-index: 150;
       display: none;
     }
@@ -105,7 +102,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάδες Περιόδων και Ομάδων (εμφανίζονται όταν currentZ ≥ 121) */
+    /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -136,7 +133,6 @@
     .full #canvasF { top: 150px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 150px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 150px; left: 134px; width: 252px; z-index: 4; }
-    /* Collapsed mode */
     body.collapsed #canvasF { top: 250px; }
     body.collapsed #infoPanel { flex-direction: column; }
   </style>
@@ -144,7 +140,7 @@
 <body class="full">
   <div id="title">Περιοδικός Πίνακας</div>
   
-  <!-- Καμβάδες Περιόδων και Ομάδων -->
+  <!-- Καμβάδες Περιόδων και Ομάδων (εμφανίζονται όταν currentZ ≥ 121) -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -214,7 +210,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => a.number - b.number); }
     elements = [];
-    let currentZ = 3;
+    let currentZ = 3; // Ξεκινάμε από το στοιχείο με Ζ=3 (τα 1 και 2 παραλείπονται)
     let flashActive = false;
     let subshellsP;
     
@@ -235,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo (στο global scope)
+    // updateInfo – ορίζεται στο global scope
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -285,7 +281,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // initializeCanvases – χωρίς αλλαγές στη λογική δόμησης και shifting
+    // initializeCanvases – διατηρείται η αρχική λογική δόμησης και το shifting
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -303,7 +299,7 @@
               else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
-            // Απλοποιημένος mouseClicked: επαναλαμβάνουμε όλα τα στοιχεία του block και ελέγχουμε αν το ποντίκι είναι εντός του κελιού
+            // Σε κάθε mouse click, επαναλαμβάνονται όλα τα στοιχεία του block
             p.mouseClicked = function() {
               let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
@@ -329,7 +325,7 @@
       if(window.subshellsInitialized) return;
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(300, 75);  // Νέο ύψος balloon = 75px
+          let canvas = p.createCanvas(300, 75);
           canvas.parent("canvasSubshells");
           subshellsP = p;
           p.noLoop();
@@ -481,32 +477,35 @@
       });
     }
     
-    // drawSubshells – ρυθμίζει δυναμικά το πλάτος του balloon, μειώνοντας τη γραμματοσειρά και το διάστιχο
+    // drawSubshells – κάνει off‑screen μέτρηση (με createGraphics) για να υπολογίσει το σωστό πλάτος
     function drawSubshells(data) {
       if (!subshellsP) return;
-      let balloonHeight = 75;       // νέο ύψος balloon
-      let balloonFontSize = 14;       // νέα, μικρότερη γραμματοσειρά
-      subshellsP.clear();
-      subshellsP.textSize(balloonFontSize);
-      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
-      subshellsP.fill(0);
-      let leftMargin = 5;             // μειωμένο left margin
-      let extraMargin = 15;           // μειωμένο επιπλέον margin
-      let wPrev = subshellsP.textWidth(data.prev || "-");
-      let wCurrent = subshellsP.textWidth(data.current || "-");
-      let wNext = subshellsP.textWidth(data.next || "-");
+      // Δημιουργούμε έναν προσωρινό καμβά για μέτρηση
+      let pg = createGraphics(500, 75);
+      pg.textSize(14);
+      pg.textAlign(LEFT, CENTER);
+      let leftMargin = 5;
+      let extraMargin = 15;
+      let wPrev = pg.textWidth(data.prev || "-");
+      let wCurrent = pg.textWidth(data.current || "-");
+      let wNext = pg.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 120;             // μειωμένο ελάχιστο πλάτος
+      let minWidth = 120;
       let newWidth = Math.max(computedWidth, minWidth);
-      subshellsP.resizeCanvas(newWidth, balloonHeight);
-      // (προαιρετικά, μπορούμε να καλέσουμε subshellsP.redraw() αλλά στο noLoop δεν χρειάζεται)
-      let rowHeight = balloonHeight / 3;
+      
+      // Ενημερώνουμε το canvas του balloon με τα νέα διαστάσεις
+      subshellsP.resizeCanvas(newWidth, 75);
+      subshellsP.clear();
+      subshellsP.textSize(14);
+      subshellsP.textAlign(LEFT, CENTER);
+      subshellsP.fill(0);
+      let rowHeight = 75 / 3;
       subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
       subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
     
-    // updateBalloonPosition – τοποθετεί το balloon στη "κάτω δεξιά" γωνία του κελιού του τρέχοντος στοιχείου
+    // updateBalloonPosition – τοποθετεί το balloon στη κάτω δεξιά γωνία του κελιού του τρέχοντος στοιχείου
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -541,7 +540,7 @@
             }
             drawElements(p, block);
             p.mouseClicked = function() {
-              // Ελέγχουμε όλα τα στοιχεία του block
+              // Επαναλαμβάνουμε όλα τα στοιχεία του block
               let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -693,8 +692,8 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
+      // Καθαρίζουμε όλους τους καμβάδες και επαναφέρουμε το balloon
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      // Επαναδημιουργούμε όλους τους καμβάδες
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
@@ -715,7 +714,6 @@
       updateInfo(currentZ);
     });
     
-    // Εκχώρηση στο global scope
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
