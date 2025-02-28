@@ -70,8 +70,8 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      width: 300px; /* αρχικό, θα ανανεώνεται δυναμικά */
-      height: 75px; /* νέο ύψος για μικρότερη γραμματοσειρά */
+      width: 300px; /* αρχικό, αλλά θα ρυθμίζεται δυναμικά */
+      height: 75px; /* νέο ύψος για μικρότερη γραμματοσειρά και διάστιχο */
       z-index: 150;
       display: none;
     }
@@ -231,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo – αν το clickedZ είναι 119 ή 120, τότε εμφανίζονται τα στοιχεία 1 και 2 αντίστοιχα, αλλιώς χρησιμοποιείται το clickedZ
+    // updateInfo – χρησιμοποιεί Number(e.number) για σωστή σύγκριση
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -281,7 +281,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // initializeCanvases – διατηρεί την αρχική λογική δόμησης και shifting
+    // initializeCanvases – χωρίς αλλαγές στη βασική λογική δόμησης και shifting
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -301,10 +301,12 @@
             drawElements(p, block);
             p.mouseClicked = function() {
               let candidates = elements.filter(e => e.block === block);
+              console.log("Block", block, "mouseClicked candidates:", candidates);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  console.log("Clicked candidate:", candidate, "at pos:", pos);
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
                     flashActive = true;
@@ -476,7 +478,7 @@
       });
     }
     
-    // drawSubshells – υπολογίζει πρώτα το απαιτούμενο πλάτος με βάση το textWidth και στη συνέχεια σχεδιάζει το περιεχόμενο
+    // drawSubshells – υπολογίζει το απαιτούμενο πλάτος βάσει του textWidth και ανανεώνει το canvas του balloon
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 75;
@@ -487,12 +489,16 @@
       subshellsP.textSize(fontSize);
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
       subshellsP.fill(0);
+      
       let wPrev = subshellsP.textWidth(data.prev || "-");
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
       let minWidth = 120;
       let newWidth = Math.max(computedWidth, minWidth);
+      
+      console.log("drawSubshells:", { wPrev, wCurrent, wNext, computedWidth, newWidth });
+      
       subshellsP.resizeCanvas(newWidth, balloonHeight);
       let rowHeight = balloonHeight / 3;
       subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
@@ -540,6 +546,7 @@
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  console.log("redrawAll click:", candidate);
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
                     flashActive = true;
@@ -666,7 +673,7 @@
       }
     }
     
-    // Ελέγχουμε το Next ώστε να μην ξεπερνάμε το 120
+    // Ο έλεγχος του "Next" ώστε το currentZ να μην ξεπερνάει το 120
     document.getElementById('nextElement').addEventListener('click', function() {
       if(currentZ < 118) { 
         currentZ++; 
@@ -675,13 +682,14 @@
       } else if(currentZ === 119) { 
         currentZ = 120; 
       }
-      // Δεν αυξάνουμε παραπάνω
+      console.log("Next clicked, currentZ:", currentZ);
       redrawAll();
       updateInfo(currentZ);
     });
     
     document.getElementById('fillAll').addEventListener('click', function() {
       currentZ = 121;
+      console.log("FillAll clicked, currentZ set to 121");
       redrawAll();
       updateInfo(currentZ);
     });
@@ -692,7 +700,7 @@
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      // Πλήρης επαναφορά
+      console.log("Reset triggered, currentZ reset to:", currentZ);
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
@@ -709,6 +717,7 @@
         let cm = document.getElementById('collapsedMiddle');
         if(cm) cm.remove();
       }
+      console.log("ToggleFBlock clicked, current body class:", document.body.className);
       redrawAll();
       updateInfo(currentZ);
     });
