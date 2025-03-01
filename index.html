@@ -179,8 +179,8 @@
   <script>
     // Global μεταβλητές
     let ignoreCanvasClick = false;
-    let lastClicked = null;  // αποθηκεύει το κλικαρισμένο κελί (αν δεν είναι το current)
-    let clickHandled = false; // global flag για αποφυγή πολλαπλής επεξεργασίας του ίδιου click
+    let lastClicked = null;  // Αποθηκεύει το κλικαρισμένο κελί (εάν δεν είναι το current)
+    let clickHandled = false; // Global flag για αποφυγή πολλαπλών επεξεργασιών του ίδιου click
 
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
@@ -295,7 +295,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // initializeCanvases – σχεδιάζει τους καμβάδες σύμφωνα με την αρχική λογική δόμησης
+    // initializeCanvases – σχεδιάζει τους καμβάδες σύμφωνα με τη λογική δόμησης
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -327,8 +327,7 @@
               else if(currentZ === 120)
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               else
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                              Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -345,7 +344,7 @@
                   break;
                 }
               }
-              setTimeout(() => { clickHandled = false; }, 50);
+              setTimeout(() => { clickHandled = false; }, 100);
             };
           };
         });
@@ -440,7 +439,7 @@
       window.groupsInitialized = true;
     }
     
-    // calculatePosition – υπολογίζει τη θέση του κελιού σύμφωνα με την αρχική λογική
+    // calculatePosition – υπολογίζει τη θέση του κελιού σύμφωνα με την αρχική λογική δόμησης
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') x = (e.col - 1) * 42;
@@ -521,7 +520,8 @@
     }
     
     // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon
-    // Αρχικό πλάτος: 10px, fontSize: 14, κάθε γραμμή παίρνει το αντίστοιχο χρώμα (prevColor, currentColor (bold), nextColor)
+    // Αρχικό πλάτος: 10px, fontSize: 14, κάθε γραμμή παίρνει το αντίστοιχο χρώμα: 
+    // prevColor, currentColor (bold) και nextColor.
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -642,7 +642,7 @@
                   break;
                 }
               }
-              setTimeout(() => { clickHandled = false; }, 50);
+              setTimeout(() => { clickHandled = false; }, 100);
             };
           };
         });
@@ -762,7 +762,7 @@
       }
     }
     
-    // Next: αυξάνουμε το currentZ μέχρι το 120 και ενημερώνουμε το current (clear lastClicked)
+    // Next: αυξάνουμε το currentZ μέχρι το 120, ενημερώνουμε το current και καθαρίζουμε το lastClicked
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 118) currentZ++;
