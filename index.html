@@ -179,8 +179,8 @@
   <script>
     // Global μεταβλητές
     let ignoreCanvasClick = false;
-    let lastClicked = null;  // αποθηκεύει το κλικαρισμένο κελί (εάν δεν είναι το current)
-    let clickHandled = false; // global flag για να αποτρέψουμε πολλαπλές επεξεργασίες του ίδιου click
+    let lastClicked = null;  // αποθηκεύει το κλικαρισμένο κελί (αν δεν είναι το current)
+    let clickHandled = false; // global flag για αποφυγή πολλαπλής επεξεργασίας του ίδιου click
 
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
@@ -304,7 +304,7 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')){
+            if(document.body.classList.contains('collapsed')) {
               if(block === 's') canvas.elt.style.left = "50px";
               else if(block === 'f' || block === 'd') canvas.elt.style.left = (block === 'f' ? "154px" : "139px");
               else if(block === 'p') canvas.elt.style.left = "559px";
@@ -327,7 +327,8 @@
               else if(currentZ === 120)
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               else
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                              Number(e.number) === 1 || Number(e.number) === 2));
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -439,7 +440,7 @@
       window.groupsInitialized = true;
     }
     
-    // calculatePosition – υπολογίζει τη θέση του κελιού σύμφωνα με την αρχική λογική δόμησης
+    // calculatePosition – υπολογίζει τη θέση του κελιού σύμφωνα με την αρχική λογική
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') x = (e.col - 1) * 42;
@@ -466,7 +467,8 @@
       else if(currentZ === 120)
         filter = e => e.block === block && Number(e.number) === 2;
       else
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                      Number(e.number) === 1 || Number(e.number) === 2);
       
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
@@ -519,8 +521,7 @@
     }
     
     // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon
-    // Αρχικό πλάτος: 10px, fontSize: 14, κάθε γραμμή παίρνει το αντίστοιχο χρώμα:
-    // prevColor, currentColor (bold) και nextColor.
+    // Αρχικό πλάτος: 10px, fontSize: 14, κάθε γραμμή παίρνει το αντίστοιχο χρώμα (prevColor, currentColor (bold), nextColor)
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -600,13 +601,13 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')){
-              if(block === 's') p.canvas.elt.style.left = "50px";
-              else if(block === 'f' || block === 'd') p.canvas.elt.style.left = (block === 'f' ? "154px" : "139px");
-              else if(block === 'p') p.canvas.elt.style.left = "559px";
+            if(document.body.classList.contains('collapsed')) {
+              if(block === 's') canvas.elt.style.left = "50px";
+              else if(block === 'f' || block === 'd') canvas.elt.style.left = (block === 'f' ? "154px" : "139px");
+              else if(block === 'p') canvas.elt.style.left = "559px";
             } else {
-              if(block === 's') p.canvas.elt.style.left = "50px";
-              else if(block === 'f' || block === 'd' || block === 'p') p.canvas.elt.style.left = "134px";
+              if(block === 's') canvas.elt.style.left = "50px";
+              else if(block === 'f' || block === 'd' || block === 'p') canvas.elt.style.left = "134px";
             }
             drawElements(p, block);
             p.mouseClicked = function() {
@@ -624,7 +625,7 @@
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               else
                 candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                            Number(e.number) === 1 || Number(e.number) === 2));
+                              Number(e.number) === 1 || Number(e.number) === 2));
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -646,6 +647,7 @@
           };
         });
       });
+      
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -760,7 +762,7 @@
       }
     }
     
-    // Next: αυξάνουμε το currentZ μέχρι το 120 και ενημερώνουμε το current
+    // Next: αυξάνουμε το currentZ μέχρι το 120 και ενημερώνουμε το current (clear lastClicked)
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 118) currentZ++;
