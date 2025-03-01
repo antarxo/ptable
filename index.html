@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών – μετατοπισμένος 30px προς τα πάνω */
+    /* Πίνακας πληροφοριών – 84px χαμηλότερα */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -34,7 +34,7 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 428px; /* 458 - 30 */
+      top: 512px; /* 428 + 84 (ή 458+? - προσαρμοσμένο) */
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
@@ -42,7 +42,7 @@
     }
     body.collapsed #infoPanel {
       left: 848px;
-      top: 28px; /* 58 - 30 */
+      top: 112px; /* 28 + 84 */
       width: calc(100vw - 920px);
       flex-direction: column;
     }
@@ -71,7 +71,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Το πλάτος και το ύψος θα ρυθμίζονται δυναμικά (αρχικό πλάτος: 10px) */
+      /* Ρυθμίζεται δυναμικά, αρχικό πλάτος: 10px */
       width: auto;
       height: auto;
       z-index: 150;
@@ -135,7 +135,7 @@
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 134px; width: 252px; z-index: 4; }
-    body.collapsed #canvasF { top: 220px; } /* 250 - 30 */
+    body.collapsed #canvasF { top: 220px; }
     body.collapsed #infoPanel { flex-direction: column; }
   </style>
 </head>
@@ -258,9 +258,14 @@
       let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
       let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
       
-      let prevStr = `<div style="color:${getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
-      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-      let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+      // Υπολογισμός ξεχωριστών χρωμάτων για κάθε γραμμή
+      let prevColor = getBlockColor(prev.block);
+      let currentColor = getBlockColor(element.block);
+      let nextColor = getBlockColor(next.block);
+      
+      let prevStr = `<div style="color:${prevColor};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
+      let currentStr = `<div style="font-weight:bold; color:${currentColor};">Ζ=${element.number} ${element.subshells}</div>`;
+      let nextStr = `<div style="color:${nextColor};">Ζ=${next.number || ""} ${next.subshells}</div>`;
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
@@ -275,12 +280,14 @@
                          </div>`;
       }
       
-      // Στο Balloon περνάμε και το χρώμα του τομέα
+      // Στο Balloon, περνάμε ξεχωριστά τα χρώματα για prev, current και next
       let subshellsData = {
         prev: prev ? prev.subshells : "",
         current: element.subshells,
         next: next ? next.subshells : "",
-        color: getBlockColor(element.block)
+        prevColor: prevColor,
+        currentColor: currentColor,
+        nextColor: nextColor
       };
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
@@ -496,7 +503,8 @@
     }
     
     // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon
-    // Αρχικό πλάτος 10px, fontSize 14, όπου κάθε γραμμή παίρνει το αντίστοιχο χρώμα του τομέα και η τρέχουσα είναι έντονη.
+    // Αρχικό πλάτος 10px, fontSize 14, όπου κάθε γραμμή παίρνει το αντίστοιχο χρώμα: 
+    // prev από data.prevColor, current από data.currentColor (και bold), next από data.nextColor.
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -518,27 +526,25 @@
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
       
       let rowHeight = balloonHeight / 3;
-      // Για κάθε γραμμή χρησιμοποιούμε το χρώμα του τομέα (data.color)
+      // prev
       subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.color || "black");
+      subshellsP.fill(data.prevColor || "black");
       subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
-      
+      // current – bold
       subshellsP.textStyle(p5.prototype.BOLD);
-      subshellsP.fill(data.color || "black");
+      subshellsP.fill(data.currentColor || "black");
       subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
-      
+      // next
       subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.color || "black");
+      subshellsP.fill(data.nextColor || "black");
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
     
     // updateBalloonPosition – τοποθετεί το Balloon σύμφωνα με τους κανόνες:
-    // Default: η κάτω δεξιά γωνία του κελιού (rect.left + pos.x + 40, rect.top + pos.y + 40)
-    // Αρχική μετατόπιση: 5px αριστερότερα από το default.
-    // Αν το defaultLeft (δηλαδή, rect.left + pos.x + 40) είναι πάνω από το μισό της οθόνης,
-    // τότε το Balloon μετατοπίζεται οριζόντια αριστερότερα κατά (33px + το τρέχον πλάτος του) από το default.
-    // Αν το κάτω περίγραμμα του Balloon (defaultTop + ύψος) επικαλύπτει τον πίνακα πληροφοριών,
-    // τότε ορίζεται topPos = defaultTop – (32px + το τρέχον ύψος του Balloon).
+    // Default: η κάτω δεξιά γωνία του κελιού (defaultLeft = rect.left + pos.x + 40, defaultTop = rect.top + pos.y + 40)
+    // Αρχική μετατόπιση: leftPos = defaultLeft – 5
+    // Αν το defaultLeft είναι πάνω από το μισό της οθόνης, τότε leftPos = defaultLeft – (33 + το τρέχον πλάτος του Balloon)
+    // Αν το κάτω περίγραμμα του Balloon (defaultTop + ύψος) επικαλύπτει τον πίνακα πληροφοριών, τότε topPos = defaultTop – (27 + το τρέχον ύψος του Balloon)
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -548,26 +554,20 @@
       if(cs) {
         let defaultLeft = rect.left + pos.x + 40;
         let defaultTop = rect.top + pos.y + 40;
-        // Αρχική μετατόπιση: 5px αριστερότερα από το default
         let leftPos = defaultLeft - 5;
         let topPos = defaultTop;
         let balloonWidth = cs.offsetWidth;
         let balloonHeight = cs.offsetHeight;
-        // Οριζόντια μετατόπιση: αν το defaultLeft είναι πάνω από το μισό της οθόνης,
-        // μετατοπίζεται αριστερότερα κατά (33px + το τρέχον πλάτος του Balloon)
         if(defaultLeft > window.innerWidth / 2) {
           leftPos = defaultLeft - (33 + balloonWidth);
         }
-        // Κατακόρυφη μετατόπιση: αν το defaultTop + ύψος του Balloon επικαλύπτει τον πίνακα πληροφοριών,
-        // τότε topPos = defaultTop – (32px + το τρέχον ύψος του Balloon)
         let infoPanel = document.getElementById('infoPanel');
         if(infoPanel) {
           let infoRect = infoPanel.getBoundingClientRect();
           if(defaultTop + balloonHeight > infoRect.top) {
-            topPos = defaultTop - (32 + balloonHeight);
+            topPos = defaultTop - (27 + balloonHeight);
           }
         }
-        // Εξασφαλίζουμε ότι το Balloon δεν ξεφεύγει από το δεξί άκρο της οθόνης
         if(leftPos + balloonWidth > window.innerWidth) {
           leftPos = window.innerWidth - balloonWidth - 5;
         }
@@ -614,6 +614,7 @@
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  console.log("Clicked element:", candidate.number);
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
                     flashActive = true;
@@ -669,7 +670,7 @@
         if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
         initGroupsCanvases();
       } else {
-        // Εξασφαλίζουμε ότι με reset οι καμβάδες των Περιόδων & Ομάδων αποκρύπτονται (και τα χρώματα δεν εμφανίζονται)
+        // Κατά το reset, αποκρύπτουμε ρητά τους καμβάδες των Περιόδων και Ομάδων
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "none"; }
         let csg = document.getElementById('canvasS_groups');
@@ -769,7 +770,7 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
-      // Αδειάζουμε όλους τους καμβάδες και αποκρύπτουμε τα περιθώρια των Periods & Groups
+      // Αδειάζουμε όλους τους καμβάδες και αποκρύπτουμε τους Periods & Groups
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
       let cp = document.getElementById('canvasPeriods');
       if(cp) cp.style.display = "none";
