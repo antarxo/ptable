@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών – 84px χαμηλότερα */
+    /* Πίνακας πληροφοριών */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -34,15 +34,16 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 512px; /* 428 + 84 (ή 458+? - προσαρμοσμένο) */
+      top: 428px;  /* full mode: top όπως πριν */
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
       text-align: left;
     }
+    /* Στο collapsed mode ο πίνακας πληροφοριών τοποθετείται 84px χαμηλότερα (top: 112px) */
     body.collapsed #infoPanel {
       left: 848px;
-      top: 112px; /* 28 + 84 */
+      top: 112px;
       width: calc(100vw - 920px);
       flex-direction: column;
     }
@@ -503,8 +504,8 @@
     }
     
     // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon
-    // Αρχικό πλάτος 10px, fontSize 14, όπου κάθε γραμμή παίρνει το αντίστοιχο χρώμα: 
-    // prev από data.prevColor, current από data.currentColor (και bold), next από data.nextColor.
+    // Αρχικό πλάτος: 10px, fontSize: 14. Για κάθε γραμμή χρησιμοποιούμε το αντίστοιχο χρώμα:
+    // prevColor για την προηγούμενη, currentColor για την τρέχουσα (έντονα) και nextColor για την επόμενη.
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -541,10 +542,10 @@
     }
     
     // updateBalloonPosition – τοποθετεί το Balloon σύμφωνα με τους κανόνες:
-    // Default: η κάτω δεξιά γωνία του κελιού (defaultLeft = rect.left + pos.x + 40, defaultTop = rect.top + pos.y + 40)
-    // Αρχική μετατόπιση: leftPos = defaultLeft – 5
-    // Αν το defaultLeft είναι πάνω από το μισό της οθόνης, τότε leftPos = defaultLeft – (33 + το τρέχον πλάτος του Balloon)
-    // Αν το κάτω περίγραμμα του Balloon (defaultTop + ύψος) επικαλύπτει τον πίνακα πληροφοριών, τότε topPos = defaultTop – (27 + το τρέχον ύψος του Balloon)
+    // Default: κάτω δεξιά γωνία του κελιού (defaultLeft = rect.left + pos.x + 40, defaultTop = rect.top + pos.y + 40)
+    // Αρχική μετατόπιση: leftPos = defaultLeft – 5.
+    // Αν το defaultLeft είναι πάνω από το μισό της οθόνης, τότε leftPos = defaultLeft – (33 + το τρέχον πλάτος του Balloon).
+    // Αν το κάτω περίγραμμα του Balloon (defaultTop + ύψος) επικαλύπτει τον πίνακα πληροφοριών, τότε topPos = defaultTop – (27 + το τρέχον ύψος του Balloon).
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -770,7 +771,7 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
-      // Αδειάζουμε όλους τους καμβάδες και αποκρύπτουμε τους Periods & Groups
+      // Αδειάζουμε όλους τους καμβάδες και αποκρύπτουμε τους Periods & Groups ώστε να μην εμφανίζονται τα χρώματα των κελιών
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
       let cp = document.getElementById('canvasPeriods');
       if(cp) cp.style.display = "none";
