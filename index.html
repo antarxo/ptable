@@ -34,13 +34,12 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 428px;  /* full mode: top όπως πριν */
+      top: 428px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Στο collapsed mode ο πίνακας πληροφοριών τοποθετείται 84px χαμηλότερα (top: 112px) */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
@@ -72,8 +71,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      /* Ρυθμίζεται δυναμικά, αρχικό πλάτος: 10px */
-      width: auto;
+      width: auto;  /* ρυθμίζεται δυναμικά, αρχικό: 10px */
       height: auto;
       z-index: 150;
       display: none;
@@ -105,7 +103,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάδες Περιόδων και Ομάδων – μετατοπισμένοι 30px προς τα πάνω */
+    /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -177,10 +175,10 @@
   </div>
   
   <script>
-    // Αγνοούμε τα canvas clicks μετά το "Επόμενο"
+    // Global μεταβλητές
     let ignoreCanvasClick = false;
+    let lastClicked = null; // αποθηκεύει τον αριθμό του κελιού που έχει κλικαριστεί (εάν δεν είναι το current)
     
-    // Βοηθητικές συναρτήσεις
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -222,7 +220,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Φόρτωση και ταξινόμηση στοιχείων (η αρχική εμφάνιση στο στοιχείο 3 ενημερώνεται από JSON)
+    // Φόρτωση και ταξινόμηση στοιχείων (αρχική εμφάνιση στο στοιχείο 3 ενημερώνεται από JSON)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -236,7 +234,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo – ενημερώνει τα δεδομένα και το Balloon
+    // updateInfo – ενημερώνει τον πίνακα πληροφοριών, αλλά το current παραμένει όπως έχει (μέσω του "Επόμενο")
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -259,7 +257,7 @@
       let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
       let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
       
-      // Υπολογισμός ξεχωριστών χρωμάτων για κάθε γραμμή
+      // Υπολογισμός ξεχωριστών χρωμάτων για κάθε γραμμή:
       let prevColor = getBlockColor(prev.block);
       let currentColor = getBlockColor(element.block);
       let nextColor = getBlockColor(next.block);
@@ -281,7 +279,7 @@
                          </div>`;
       }
       
-      // Στο Balloon, περνάμε ξεχωριστά τα χρώματα για prev, current και next
+      // Στο Balloon περνάμε ξεχωριστά τα χρώματα για κάθε γραμμή
       let subshellsData = {
         prev: prev ? prev.subshells : "",
         current: element.subshells,
@@ -332,8 +330,12 @@
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                   console.log("Clicked element:", candidate.number);
-                  window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
+                  // Εάν το κλικ γίνεται σε στοιχείο που ΔΕΝ είναι το current, τότε απλά αποθηκεύουμε το lastClicked
+                  if(candidate.number !== currentZ) {
+                    lastClicked = candidate.number;
+                    redrawAll();
+                  } else {
+                    // Αν είναι το current, τότε εφαρμόζουμε το flash
                     flashActive = true;
                     setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   }
@@ -346,7 +348,7 @@
       });
     }
     
-    // initSubshellsCanvas – δημιουργεί το canvas για το Balloon με αρχικό πλάτος 10px και ύψος 40px
+    // initSubshellsCanvas – δημιουργεί το canvas για το Balloon (αρχικό πλάτος 10px, ύψος 40px)
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -468,9 +470,8 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        if(Number(e.number) === currentZ ||
-           ((currentZ === 119) && Number(e.number) === 1) ||
-           ((currentZ === 120) && Number(e.number) === 2)) {
+        // Αν το στοιχείο είναι το current, χρησιμοποιούμε το ξεχωριστό στυλ (από το Next)
+        if(Number(e.number) === currentZ || ((currentZ === 119) && Number(e.number) === 1) || ((currentZ === 120) && Number(e.number) === 2)) {
           if(Number(e.number) === 119) { p.fill("yellow"); }
           else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
           else { p.fill(getBlockColor(e.block)); }
@@ -489,10 +490,26 @@
             p.drawingContext.shadowBlur = 0;
           }
           p.strokeWeight(1);
-        } else {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
-          else { p.fill(BLOCK_COLORS[e.block]); }
+        } 
+        // Διαφορετικά, αν το στοιχείο είναι το κλικαρισμένο (lastClicked) και δεν είναι το current,
+        // σχεδιάζουμε το περίγραμμα του με extra bold (π.χ. strokeWeight 6)
+        else if(Number(e.number) === lastClicked) {
+          p.fill(BLOCK_COLORS[e.block]);
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          p.fill(0);
+          p.textSize(Number(e.number) > 99 ? 10 : 12);
+          p.textStyle(p.BOLD);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          p.stroke(getBlockColor(e.block));
+          p.strokeWeight(6);
+          p.strokeJoin(p.ROUND);
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          p.strokeWeight(1);
+        }
+        // Αλλιώς, σχεδιάζουμε το στοιχείο κανονικά
+        else {
+          p.fill(BLOCK_COLORS[e.block]);
           p.rect(pos.x, pos.y, 40, 40, 5);
           p.fill(0);
           p.textSize(Number(e.number) > 99 ? 10 : 12);
@@ -504,8 +521,8 @@
     }
     
     // drawSubshells – ρυθμίζει το πλάτος και το ύψος του Balloon
-    // Αρχικό πλάτος: 10px, fontSize: 14. Για κάθε γραμμή χρησιμοποιούμε το αντίστοιχο χρώμα:
-    // prevColor για την προηγούμενη, currentColor για την τρέχουσα (έντονα) και nextColor για την επόμενη.
+    // Αρχικό πλάτος: 10px, fontSize: 14, κάθε γραμμή παίρνει το αντίστοιχο χρώμα:
+    // prevColor για την προηγούμενη, currentColor για την τρέχουσα (bold) και nextColor για την επόμενη.
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -616,8 +633,11 @@
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                   console.log("Clicked element:", candidate.number);
-                  window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
+                  // Εάν το κλικ γίνεται σε στοιχείο που ΔΕΝ είναι το current, απλά αποθηκεύουμε το lastClicked
+                  if(candidate.number !== currentZ) {
+                    lastClicked = candidate.number;
+                    redrawAll();
+                  } else {
                     flashActive = true;
                     setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   }
@@ -671,7 +691,6 @@
         if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
         initGroupsCanvases();
       } else {
-        // Κατά το reset, αποκρύπτουμε ρητά τους καμβάδες των Περιόδων και Ομάδων
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "none"; }
         let csg = document.getElementById('canvasS_groups');
@@ -754,16 +773,19 @@
         currentZ = 120; 
       }
       console.log("Next clicked, currentZ:", currentZ);
-      redrawAll();
+      // Κατά το Next ενημερώνουμε το current (updateInfo)
       updateInfo(currentZ);
+      lastClicked = null; // Καθαρίζουμε τυχόν προηγούμενο κλικ
+      redrawAll();
       setTimeout(() => { ignoreCanvasClick = false; }, 100);
     });
     
     document.getElementById('fillAll').addEventListener('click', function() {
       currentZ = 121;
       console.log("FillAll clicked, currentZ set to 121");
-      redrawAll();
       updateInfo(currentZ);
+      lastClicked = null;
+      redrawAll();
     });
     
     document.getElementById('reset').addEventListener('click', function() {
@@ -771,7 +793,7 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
-      // Αδειάζουμε όλους τους καμβάδες και αποκρύπτουμε τους Periods & Groups ώστε να μην εμφανίζονται τα χρώματα των κελιών
+      // Αδειάζουμε όλους τους καμβάδες και αποκρύπτουμε τους Periods & Groups
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
       let cp = document.getElementById('canvasPeriods');
       if(cp) cp.style.display = "none";
@@ -782,6 +804,7 @@
       let cpg = document.getElementById('canvasP_groups');
       if(cpg) cpg.style.display = "none";
       console.log("Reset triggered, currentZ reset to:", currentZ);
+      lastClicked = null;
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
