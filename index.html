@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Στο collapsed mode, ο πίνακας πληροφοριών τοποθετείται με top: 112px */
+    /* Στο collapsed mode, ο πίνακας πληροφοριών τοποθετείται με top: 112px (84px χαμηλότερα) */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
@@ -178,10 +178,11 @@
   <script>
     // Global μεταβλητές
     let ignoreCanvasClick = false;
-    let lastClicked = null;  // Αποθηκεύει το κλικαρισμένο κελί (εάν δεν είναι το current)
+    let lastClicked = null;  // Αποθηκεύει το κλικαρισμένο κελί (αν δεν είναι το current)
+    let redrawInProgress = false; // Flag για αποφυγή επαναλαμβανόμενων redraw
     
-    // Δεν χρησιμοποιούμε πλέον το clickHandled flag
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
+    
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
       switch(b) {
@@ -192,6 +193,7 @@
         default: return "black";
       }
     }
+    
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -211,6 +213,7 @@
       d: { cols: 10, rows: 7 },
       f: { cols: 14, rows: 7 }
     };
+    
     const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
@@ -280,6 +283,7 @@
                          </div>`;
       }
       
+      // Ενημέρωση του Balloon με τις υποστιβάδες του current στοιχείου
       let subshellsData = {
         prev: prev ? prev.subshells : "",
         current: element.subshells,
@@ -293,6 +297,23 @@
       setTimeout(() => { updateBalloonPosition(element); }, 10);
     }
     window.updateInfo = updateInfo;
+    
+    // updateBalloonForClick – ενημερώνει το Balloon ώστε να εμφανίζει τις υποστιβάδες για το στοιχείο που κλικαρίστηκε
+    function updateBalloonForClick(element) {
+      let prev = elements.find(e => Number(e.number) === (Number(element.number) - 1)) || { subshells: "-", number:"", block:"dummy" };
+      let next = elements.find(e => Number(e.number) === (Number(element.number) + 1)) || { subshells: "-", number:"", block:"dummy" };
+      
+      let subshellsData = {
+        prev: prev ? prev.subshells : "",
+        current: element.subshells,
+        next: next ? next.subshells : "",
+        prevColor: getBlockColor(prev.block),
+        currentColor: getBlockColor(element.block),
+        nextColor: getBlockColor(next.block)
+      };
+      drawSubshells(subshellsData);
+      updateBalloonPosition(element);
+    }
     
     // initializeCanvases – σχεδιάζει τους καμβάδες σύμφωνα με την αρχική λογική δόμησης
     function initializeCanvases() {
@@ -324,8 +345,7 @@
               else if(currentZ === 120)
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               else
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                              Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -333,7 +353,8 @@
                   console.log("Clicked element:", candidate.number);
                   if(candidate.number !== currentZ) {
                     lastClicked = candidate.number;
-                    updateBalloonPosition(candidate);
+                    // Ενημερώνουμε το Balloon για το κλικαρισμένο στοιχείο (χωρίς να αλλάζει το current)
+                    updateBalloonForClick(candidate);
                     redrawAll();
                   } else {
                     flashActive = true;
@@ -627,7 +648,8 @@
                   console.log("Clicked element:", candidate.number);
                   if(candidate.number !== currentZ) {
                     lastClicked = candidate.number;
-                    updateBalloonPosition(candidate);
+                    // Ενημερώνουμε το Balloon με τις υποστιβάδες του κλικαρισμένου στοιχείου
+                    updateBalloonForClick(candidate);
                     redrawAll();
                   } else {
                     flashActive = true;
@@ -812,6 +834,22 @@
       redrawAll();
       updateInfo(currentZ);
     });
+    
+    // Νέα συνάρτηση: ενημέρωση του Balloon για το στοιχείο που έχει κλικαριστεί (χωρίς αλλαγή του current)
+    function updateBalloonForClick(element) {
+      let prev = elements.find(e => Number(e.number) === (Number(element.number) - 1)) || { subshells: "-", number:"", block:"dummy" };
+      let next = elements.find(e => Number(e.number) === (Number(element.number) + 1)) || { subshells: "-", number:"", block:"dummy" };
+      let subshellsData = {
+        prev: prev ? prev.subshells : "",
+        current: element.subshells,
+        next: next ? next.subshells : "",
+        prevColor: getBlockColor(prev.block),
+        currentColor: getBlockColor(element.block),
+        nextColor: getBlockColor(next.block)
+      };
+      drawSubshells(subshellsData);
+      updateBalloonPosition(element);
+    }
     
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
