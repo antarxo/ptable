@@ -228,6 +228,8 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
+    // Ενημερώνει το δεξί πάνελ με τα στοιχεία του στοιχείου.
+    // Στο collapsed mode, οι στιβάδες και το μήνυμα τοποθετούνται κάτω από τις υποστιβάδες.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -262,13 +264,21 @@
       
       let rem = document.getElementById('remarks');
       if(rem) {
-        rem.innerHTML = `<div class="right-wrapper">
-                           <div class="upper-right">
+        if(document.body.classList.contains('collapsed')) {
+          rem.innerHTML = `<div class="right-wrapper">
                              <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
-                             <div class="shells-msg-col">${shellsAndMsg}</div>
-                           </div>
-                           <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
-                         </div>`;
+                             <div class="shells-msg-col" style="margin-top:10px;">${shellsAndMsg}</div>
+                             <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                           </div>`;
+        } else {
+          rem.innerHTML = `<div class="right-wrapper">
+                             <div class="upper-right">
+                               <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+                               <div class="shells-msg-col">${shellsAndMsg}</div>
+                             </div>
+                             <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                           </div>`;
+        }
       }
       
       let subshellsData = {
