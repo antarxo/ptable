@@ -34,13 +34,12 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 428px;  /* full mode */
+      top: 428px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Στο collapsed mode */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
@@ -183,9 +182,13 @@
     const SPECIAL_2 = 120;
     const FULL_VIEW = 121;
     
-    // Διαχείριση των p5 instances για αποφυγή διαρροών
+    // Για τη διαχείριση των p5 instances για καθαρισμό
     let p5Instances = [];
     let ignoreCanvasClick = false;
+    // Για το debounce στα canvas clicks
+    window.lastCanvasClickTime = 0;
+    // Flag για αποτροπή επαναλαμβανόμενων ενημερώσεων
+    let isUpdating = false;
     
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
@@ -262,13 +265,16 @@
     
     /* --- Ενημέρωση Πληροφοριών (updateInfo) --- */
     function updateInfo(clickedZ) {
+      if(isUpdating) return;
+      isUpdating = true;
+      
       let currentNum;
       if(clickedZ === SPECIAL_1) { currentNum = 1; }
       else if(clickedZ === SPECIAL_2) { currentNum = 2; }
       else { currentNum = convertClickedToCurrent(clickedZ); }
       
       const element = elements.find(e => Number(e.number) === currentNum);
-      if(!element) return;
+      if(!element) { isUpdating = false; return; }
       
       let displayZ = (Number(element.number) >= MAX_REGULAR+1 ? Number(element.number) - MAX_REGULAR : Number(element.number));
       if(clickedZ === SPECIAL_1) { displayZ = 1; }
@@ -313,8 +319,7 @@
         nextColor: nextColor
       };
       drawSubshells(subshellsData);
-      // Κλήση updateBalloonPosition για να εμφανιστεί το balloon
-      setTimeout(() => { updateBalloonPosition(element); }, 10);
+      setTimeout(() => { updateBalloonPosition(element); isUpdating = false; }, 10);
     }
     window.updateInfo = updateInfo;
     
@@ -340,17 +345,25 @@
             }
             drawElements(p, block);
             p.mouseClicked = function() {
+              if(isUpdating) return;
+              // Debounce στα click
+              if(Date.now() - window.lastCanvasClickTime < 300) return;
+              window.lastCanvasClickTime = Date.now();
+              
               if(ignoreCanvasClick) return;
               let candidates = getCandidates(block);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  isUpdating = true;
                   console.log("Clicked element:", candidate.number);
                   window.updateInfo(candidate.number);
                   if(Number(candidate.number) === currentZ) {
                     flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                    setTimeout(() => { flashActive = false; redrawAll(); isUpdating = false; }, 200);
+                  } else {
+                    setTimeout(() => { isUpdating = false; }, 200);
                   }
                   break;
                 }
@@ -600,16 +613,23 @@
             }
             drawElements(p, block);
             p.mouseClicked = function() {
+              if(isUpdating) return;
+              if(Date.now() - window.lastCanvasClickTime < 300) return;
+              window.lastCanvasClickTime = Date.now();
+              
               let candidates = getCandidates(block);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  isUpdating = true;
                   console.log("Clicked element:", candidate.number);
                   window.updateInfo(candidate.number);
                   if(Number(candidate.number) === currentZ) {
                     flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                    setTimeout(() => { flashActive = false; redrawAll(); isUpdating = false; }, 200);
+                  } else {
+                    setTimeout(() => { isUpdating = false; }, 200);
                   }
                   break;
                 }
@@ -620,7 +640,6 @@
         p5Instances.push(inst);
       });
       
-      // Εμφάνιση Periods & Groups όταν currentZ είναι FULL_VIEW (121)
       if(currentZ >= FULL_VIEW) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
@@ -716,6 +735,8 @@
     
     /* --- Χειριστές Κουμπιών --- */
     document.getElementById('nextElement').addEventListener('click', function() {
+      if(isUpdating) return;
+      isUpdating = true;
       ignoreCanvasClick = true;
       if(currentZ < MAX_REGULAR) { 
         currentZ++; 
@@ -727,17 +748,22 @@
       console.log("Next clicked, currentZ:", currentZ);
       redrawAll();
       updateInfo(currentZ);
-      setTimeout(() => { ignoreCanvasClick = false; }, 100);
+      setTimeout(() => { ignoreCanvasClick = false; isUpdating = false; }, 300);
     });
     
     document.getElementById('fillAll').addEventListener('click', function() {
+      if(isUpdating) return;
+      isUpdating = true;
       currentZ = FULL_VIEW;
       console.log("FillAll clicked, currentZ set to", currentZ);
       redrawAll();
       updateInfo(currentZ);
+      setTimeout(() => { isUpdating = false; }, 300);
     });
     
     document.getElementById('reset').addEventListener('click', function() {
+      if(isUpdating) return;
+      isUpdating = true;
       currentZ = 3;
       window.groupsInitialized = false;
       window.periodsInitialized = false;
@@ -757,10 +783,13 @@
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
+      setTimeout(() => { isUpdating = false; }, 300);
     });
     
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       if(currentZ < MAX_REGULAR) return;
+      if(isUpdating) return;
+      isUpdating = true;
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       if(document.body.classList.contains('collapsed')) {
@@ -773,6 +802,7 @@
       console.log("ToggleFBlock clicked, current body class:", document.body.className);
       redrawAll();
       updateInfo(currentZ);
+      setTimeout(() => { isUpdating = false; }, 300);
     });
     
     window.loadElements = loadElements;
