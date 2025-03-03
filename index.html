@@ -63,7 +63,7 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Στο collapsed mode, οι υποστιβάδες και το μήνυμα καταλαμβάνουν πλήρες πλάτος και στοιχίζονται αριστερά */
+    /* Στο collapsed mode, οι υποστιβάδες και το μήνυμα θα έχουν 100% πλάτος και αριστερή στοίχιση */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -230,9 +230,9 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Η updateInfo αναδιαμορφώνει πλήρως το infoPanel.
+    // Η updateInfo αναδημιουργεί πλήρως το περιεχόμενο του infoPanel.
     // Σε collapsed mode, στο "remarks" εμφανίζονται οι υποστιβάδες (100% πλάτος, αριστερά),
-    // μετά από μία λεπτή οριζόντια γραμμή, και κάτω από αυτήν οι στιβάδες/το μήνυμα.
+    // μετά από μια λεπτή lightgray γραμμή, και κάτω από αυτήν οι στιβάδες/το μήνυμα.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -779,14 +779,15 @@
       updateInfo(currentZ);
     });
     
-    // Κάθε πάτημα του toggle θα διαγράφει τις προηγούμενες inline ρυθμίσεις ώστε να ανανεώνεται πλήρως η δομή
+    // Κάθε πάτημα του toggle θα καθαρίζει όλες τις inline ρυθμίσεις για πλήρη ανανέωση
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       
-      // Καθαρίζουμε τις inline ρυθμίσεις του infoPanel και του canvasSubshells
+      // Καθαρίζουμε το infoPanel και το canvasSubshells από παλιές inline ρυθμίσεις
       const infoPanel = document.getElementById('infoPanel');
+      infoPanel.innerHTML = "";
       infoPanel.removeAttribute('style');
       const canvasSubshells = document.getElementById('canvasSubshells');
       canvasSubshells.removeAttribute('style');
