@@ -63,7 +63,7 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα καταλαμβάνουν 100% πλάτος και στοιχίζονται αριστερά */
+    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται 100% πλάτος, αριστερά */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -231,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo δημιουργεί το περιεχόμενο για τα leftPanel και remarks, ανάλογα με το mode
+    // updateInfo δημιουργεί το περιεχόμενο του infoPanel και ενημερώνει το balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -295,7 +295,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // Δημιουργία p5 canvases για κάθε block
+    // Δημιουργία των p5 canvases για κάθε block
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -766,13 +766,12 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler: με κάθε πάτημα αλλάζει η κλάση στο body και καλούνται redrawAll() και updateInfo()
+    // Τροποποίηση του toggle: μετά την αλλαγή της κλάσης στο body, προσομοιώνουμε ένα "κλικ" στο τρέχον στοιχείο (updateInfo)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       
-      // Χρησιμοποιούμε requestAnimationFrame για να βεβαιωθούμε ότι η νέα κλάση έχει εφαρμοστεί
       requestAnimationFrame(() => {
         redrawAll();
         updateInfo(currentZ);
