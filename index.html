@@ -295,6 +295,28 @@
     }
     window.updateInfo = updateInfo;
     
+    // Προσομοίωση κλικ στο τρέχον στοιχείο
+    function simulateClickOnCurrentElement() {
+      const element = elements.find(e => Number(e.number) === currentZ);
+      if (!element) return;
+      const block = element.block;
+      const pos = calculatePosition(element, block);
+      // Επιλέγουμε το canvas του αντίστοιχου block
+      const canvas = document.querySelector("#canvas" + block.toUpperCase() + " canvas");
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      // Προσαρμόζουμε τις συντεταγμένες για να προσομοιώσουμε ένα κλικ στο κέντρο του κελιού
+      const clickX = rect.left + pos.x + 20;
+      const clickY = rect.top + pos.y + 20;
+      const evt = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        clientX: clickX,
+        clientY: clickY
+      });
+      canvas.dispatchEvent(evt);
+    }
+    
     // Δημιουργία των p5 canvases για κάθε block
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
@@ -766,17 +788,40 @@
       updateInfo(currentZ);
     });
     
-    // Τροποποίηση του toggle: μετά την αλλαγή της κλάσης στο body, προσομοιώνουμε ένα "κλικ" στο τρέχον στοιχείο (updateInfo)
+    // Τροποποιούμε τον toggle ώστε να προκαλεί και κλικ στο τρέχον στοιχείο
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       
+      // Χρησιμοποιούμε requestAnimationFrame για να περιμένουμε το reflow
       requestAnimationFrame(() => {
         redrawAll();
         updateInfo(currentZ);
+        simulateClickOnCurrentElement();
       });
     });
+    
+    // Συνάρτηση που προσομοιώνει κλικ στο τρέχον στοιχείο
+    function simulateClickOnCurrentElement() {
+      const element = elements.find(e => Number(e.number) === currentZ);
+      if (!element) return;
+      const block = element.block;
+      const pos = calculatePosition(element, block);
+      const canvas = document.querySelector("#canvas" + block.toUpperCase() + " canvas");
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      // Προσαρμόζουμε τις συντεταγμένες για το κλικ στο κέντρο του κελιού
+      const clickX = rect.left + pos.x + 20;
+      const clickY = rect.top + pos.y + 20;
+      const evt = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        clientX: clickX,
+        clientY: clickY
+      });
+      canvas.dispatchEvent(evt);
+    }
     
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
