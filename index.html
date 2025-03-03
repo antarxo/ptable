@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Στο collapsed mode ο πίνακας πληροφοριών τοποθετείται 84px χαμηλότερα (top: 112px) και αλλάζει διάταξη */
+    /* Σε collapsed mode ο πίνακας πληροφοριών αλλάζει διάταξη */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
@@ -228,9 +228,11 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Ενημέρωση του πίνακα πληροφοριών.
-    // Σε collapsed mode, το div "remarks" εμφανίζει πρώτα τις υποστιβάδες (prev/current/next) με πλήρες πλάτος και αριστερή στοίχιση,
-    // μετά από μία λεπτή αχνή γκρι οριζόντια γραμμή, και κάτω από αυτήν οι στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
+    // Ενημερώνει τον πίνακα πληροφοριών.
+    // Σε collapsed mode, το "remarks" εμφανίζει:
+    // 1. Στην κορυφή, τις υποστιβάδες (prev/current/next) με 100% πλάτος και αριστερή στοίχιση.
+    // 2. Μία λεπτή (1px, lightgray) οριζόντια γραμμή.
+    // 3. Κάτω από αυτήν, τις στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -777,7 +779,7 @@
       updateInfo(currentZ);
     });
     
-    // Στο toggle, μετά την αλλαγή του collapsed mode, περιμένουμε 200ms ώστε να ενημερωθεί πλήρως το layout (Balloon, infoPanel κ.λπ.)
+    // Στο toggle, μετά την αλλαγή του collapsed mode, αναγκάζουμε ανανέωση του layout μέσω force reflow και requestAnimationFrame.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -789,7 +791,11 @@
         if(cm) cm.remove();
       }
       redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 200);
+      // Force reflow
+      void document.body.offsetWidth;
+      requestAnimationFrame(() => {
+        updateInfo(currentZ);
+      });
     });
     
     window.loadElements = loadElements;
