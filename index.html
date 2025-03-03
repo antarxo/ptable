@@ -63,7 +63,7 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα, 100% πλάτος, αριστερά */
+    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα καταλαμβάνουν 100% πλάτος και στοιχίζονται αριστερά */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -174,7 +174,6 @@
   </div>
   
   <script>
-    // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
     let ignoreCanvasClick = false;
     
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
@@ -218,7 +217,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Φόρτωση στοιχείων (προσπαθούμε να χρησιμοποιήσουμε τα δεδομένα από το elements.json)
+    // Φόρτωση στοιχείων από elements.json
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -232,7 +231,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: δημιουργεί το περιεχόμενο για το infoPanel και ενημερώνει το balloon
+    // updateInfo δημιουργεί το περιεχόμενο για τα leftPanel και remarks, ανάλογα με το mode
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -296,7 +295,7 @@
     }
     window.updateInfo = updateInfo;
     
-    // Δημιουργία των p5 canvases για κάθε block
+    // Δημιουργία p5 canvases για κάθε block
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -767,16 +766,17 @@
       updateInfo(currentZ);
     });
     
-    // Handler του toggle: απλώς αλλάζει την κλάση στο body και κατόπιν καλεί redrawAll() και updateInfo().
+    // Toggle handler: με κάθε πάτημα αλλάζει η κλάση στο body και καλούνται redrawAll() και updateInfo()
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       
-      redrawAll();
-      setTimeout(() => {
+      // Χρησιμοποιούμε requestAnimationFrame για να βεβαιωθούμε ότι η νέα κλάση έχει εφαρμοστεί
+      requestAnimationFrame(() => {
+        redrawAll();
         updateInfo(currentZ);
-      }, 50);
+      });
     });
     
     window.loadElements = loadElements;
