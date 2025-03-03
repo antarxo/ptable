@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Σε collapsed mode ο πίνακας πληροφοριών αλλάζει διάταξη */
+    /* Σε collapsed mode αλλάζει διάταξη */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
@@ -56,9 +56,14 @@
       text-align: left;
     }
     /* Right column */
-    #remarks { flex-grow: 1; padding-left: 20px; text-align: left; }
+    #remarks { 
+      flex-grow: 1; 
+      padding-left: 20px; 
+      text-align: left;
+    }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
+    /* Στο collapsed mode, οι υποστιβάδες και το μήνυμα καταλαμβάνουν πλήρες πλάτος και στοιχίζονται αριστερά */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -225,9 +230,9 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Ενημέρωση του infoPanel.
+    // Η updateInfo αναδιαμορφώνει πλήρως το infoPanel.
     // Σε collapsed mode, στο "remarks" εμφανίζονται οι υποστιβάδες (100% πλάτος, αριστερά),
-    // ακολουθούμενες από μία λεπτή οριζόντια γραμμή και κάτω από αυτήν οι στιβάδες/το μήνυμα.
+    // μετά από μία λεπτή οριζόντια γραμμή, και κάτω από αυτήν οι στιβάδες/το μήνυμα.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -774,26 +779,22 @@
       updateInfo(currentZ);
     });
     
-    // Κάθε πάτημα του toggle θα ανανεώνει πλήρως το infoPanel και το balloon.
+    // Κάθε πάτημα του toggle θα διαγράφει τις προηγούμενες inline ρυθμίσεις ώστε να ανανεώνεται πλήρως η δομή
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
-      if(document.body.classList.contains('collapsed')) {
-        toggleBtn.textContent = "Ανάπτυξη";
-      } else {
-        toggleBtn.textContent = "Σύμπτυξη";
-        let cm = document.getElementById('collapsedMiddle');
-        if(cm) cm.remove();
-      }
-      // Ανανέωση των καμβάδων
+      toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
+      
+      // Καθαρίζουμε τις inline ρυθμίσεις του infoPanel και του canvasSubshells
+      const infoPanel = document.getElementById('infoPanel');
+      infoPanel.removeAttribute('style');
+      const canvasSubshells = document.getElementById('canvasSubshells');
+      canvasSubshells.removeAttribute('style');
+      
       redrawAll();
-      // Εξαναγκάζουμε την πλήρη ανανέωση του infoPanel:
-      let infoPanel = document.getElementById('infoPanel');
-      infoPanel.style.display = 'none';
       setTimeout(() => {
-        infoPanel.style.display = 'block';
         updateInfo(currentZ);
-      }, 200);
+      }, 50);
     });
     
     window.loadElements = loadElements;
