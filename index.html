@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Στο collapsed mode ο πίνακας πληροφοριών τοποθετείται 84px χαμηλότερα (top: 112px) */
+    /* Στο collapsed mode ο πίνακας πληροφοριών τοποθετείται 84px χαμηλότερα (top: 112px) και αλλάζει διάταξη */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
@@ -228,9 +228,9 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Ενημέρωση του δεξιού πάνελ.
-    // Σε collapsed mode, στο "remarks" εμφανίζονται πρώτα οι υποστιβάδες (prev/current/next) με πλήρες πλάτος και αριστερή στοίχιση,
-    // και κάτω από αυτές με μια λεπτή αχνή γκρι γραμμή εμφανίζονται οι στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
+    // Ενημέρωση του πίνακα πληροφοριών.
+    // Σε collapsed mode, το div "remarks" εμφανίζει πρώτα τις υποστιβάδες (prev/current/next) με πλήρες πλάτος και αριστερή στοίχιση,
+    // μετά από μία λεπτή αχνή γκρι οριζόντια γραμμή, και κάτω από αυτήν οι στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -777,7 +777,7 @@
       updateInfo(currentZ);
     });
     
-    // Στο toggleFBlock, μετά την αλλαγή του collapsed mode, περιμένουμε 100ms ώστε να ενημερωθεί το layout (Balloon και infoPanel)
+    // Στο toggle, μετά την αλλαγή του collapsed mode, περιμένουμε 200ms ώστε να ενημερωθεί πλήρως το layout (Balloon, infoPanel κ.λπ.)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -789,7 +789,7 @@
         if(cm) cm.remove();
       }
       redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 100);
+      setTimeout(() => { updateInfo(currentZ); }, 200);
     });
     
     window.loadElements = loadElements;
