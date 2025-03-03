@@ -59,11 +59,8 @@
     #remarks { flex-grow: 1; padding-left: 20px; text-align: left; }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    .subshells-col { width: 67%; text-align: left; }
-    .shells-msg-col { width: 33%; text-align: left; margin-left: 20px; }
-    .subshell-line { width: 100%; }
-    .subshell-prev, .subshell-next { color: #333; }
-    .subshell-current { font-weight: bold; }
+    .subshells-col { width: 100%; text-align: left; }
+    .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
     #canvasSubshells {
       position: absolute;
@@ -104,7 +101,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάδες Περιόδων και Ομάδων – μετατοπισμένοι 30px προς τα πάνω */
+    /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -228,9 +225,9 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Η updateInfo αναδιαμορφώνει πλήρως τη δομή του infoPanel
-    // Σε collapsed mode, στο "remarks" εμφανίζονται οι υποστιβάδες με πλήρες πλάτος,
-    // μετά από μία λεπτή οριζόντια γραμμή, και κάτω από αυτήν οι στιβάδες/το μήνυμα.
+    // Ενημέρωση του infoPanel.
+    // Σε collapsed mode, στο "remarks" εμφανίζονται οι υποστιβάδες (100% πλάτος, αριστερά),
+    // ακολουθούμενες από μία λεπτή οριζόντια γραμμή και κάτω από αυτήν οι στιβάδες/το μήνυμα.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -777,7 +774,7 @@
       updateInfo(currentZ);
     });
     
-    // Κάθε πάτημα του toggle (σε οποιαδήποτε κατάσταση) θα ανανεώνει πλήρως τη δομή του infoPanel και τη θέση του balloon.
+    // Κάθε πάτημα του toggle θα ανανεώνει πλήρως το infoPanel και το balloon.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -788,12 +785,15 @@
         let cm = document.getElementById('collapsedMiddle');
         if(cm) cm.remove();
       }
-      // Ανανεώνουμε άμεσα όλους τους καμβάδες
+      // Ανανέωση των καμβάδων
       redrawAll();
-      // Καθυστέρηση 50ms για να γίνει reflow και μετά ανανέωση του infoPanel και του balloon
+      // Εξαναγκάζουμε την πλήρη ανανέωση του infoPanel:
+      let infoPanel = document.getElementById('infoPanel');
+      infoPanel.style.display = 'none';
       setTimeout(() => {
+        infoPanel.style.display = 'block';
         updateInfo(currentZ);
-      }, 50);
+      }, 200);
     });
     
     window.loadElements = loadElements;
