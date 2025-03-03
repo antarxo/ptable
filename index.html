@@ -229,7 +229,8 @@
     }
     
     // Ενημέρωση του δεξιού πάνελ.
-    // Σε collapsed mode, οι υποστιβάδες (prev/current/next) εμφανίζονται στην κορυφή και, κάτω από αυτές, οι στιβάδες και το συνοδευτικό μήνυμα.
+    // Σε collapsed mode, στο "remarks" εμφανίζονται πρώτα οι υποστιβάδες (prev/current/next) με πλήρες πλάτος και αριστερή στοίχιση,
+    // και κάτω από αυτές (με margin-top 10px) εμφανίζονται οι στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -266,9 +267,15 @@
       if(rem) {
         if(document.body.classList.contains('collapsed')) {
           rem.innerHTML = `<div class="right-wrapper">
-                             <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
-                             <div class="shells-msg-col" style="margin-top:10px;">${shellsAndMsg}</div>
-                             <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                             <div class="subshells-col" style="width:100%; text-align:left;">
+                               ${prevStr}${currentStr}${nextStr}
+                             </div>
+                             <div class="shells-msg-col" style="width:100%; text-align:left; margin-top:10px;">
+                               ${shellsAndMsg}
+                             </div>
+                             <div style="text-align:left; margin-top:10px;">
+                               ${element.remarks || ""}
+                             </div>
                            </div>`;
         } else {
           rem.innerHTML = `<div class="right-wrapper">
