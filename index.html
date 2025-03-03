@@ -230,7 +230,7 @@
     
     // Ενημέρωση του δεξιού πάνελ.
     // Σε collapsed mode, στο "remarks" εμφανίζονται πρώτα οι υποστιβάδες (prev/current/next) με πλήρες πλάτος και αριστερή στοίχιση,
-    // και κάτω από αυτές (με margin-top 10px) εμφανίζονται οι στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
+    // και κάτω από αυτές με μια λεπτή αχνή γκρι γραμμή εμφανίζονται οι στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -270,7 +270,8 @@
                              <div class="subshells-col" style="width:100%; text-align:left;">
                                ${prevStr}${currentStr}${nextStr}
                              </div>
-                             <div class="shells-msg-col" style="width:100%; text-align:left; margin-top:10px;">
+                             <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
+                             <div class="shells-msg-col" style="width:100%; text-align:left;">
                                ${shellsAndMsg}
                              </div>
                              <div style="text-align:left; margin-top:10px;">
@@ -776,6 +777,7 @@
       updateInfo(currentZ);
     });
     
+    // Στο toggleFBlock, μετά την αλλαγή του collapsed mode, περιμένουμε 100ms ώστε να ενημερωθεί το layout (Balloon και infoPanel)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -787,7 +789,7 @@
         if(cm) cm.remove();
       }
       redrawAll();
-      updateInfo(currentZ);
+      setTimeout(() => { updateInfo(currentZ); }, 100);
     });
     
     window.loadElements = loadElements;
