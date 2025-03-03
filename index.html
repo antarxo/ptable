@@ -2,49 +2,70 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Δοκιμαστικός Πίνακας</title>
-  <script>
-    let elements = [];
-    let currentZ = 3;
-    
-    // Dummy data για δοκιμή (αν δεν υπάρχει elements.json)
-    elements = [
-      { number: "3", symbol: "Li", name: "Λίθιο", subshells: "2s", shells: "2,1", block: "s", row: 1, col: 1 },
-      { number: "4", symbol: "Be", name: "Βηρύλλιο", subshells: "2s", shells: "2,2", block: "s", row: 1, col: 2 },
-      { number: "5", symbol: "B", name: "Βόριο", subshells: "2p", shells: "2,3", block: "p", row: 1, col: 3 }
-    ];
-    
-    function updateInfo(clickedZ) {
-      const element = elements.find(e => Number(e.number) === clickedZ);
-      if (!element) return;
-      document.getElementById('leftPanel').innerHTML = `<div>Ζ=${element.number} ${element.symbol} ${element.name}</div>`;
-      document.getElementById('remarks').innerHTML = `<div>Στιβάδες: ${element.shells}</div>`;
-      // Απλό balloon
-      document.getElementById('canvasSubshells').innerHTML = `<div>${element.subshells}</div>`;
-      document.getElementById('canvasSubshells').style.display = 'block';
-      document.getElementById('canvasSubshells').style.left = "300px";
-      document.getElementById('canvasSubshells').style.top = "100px";
-    }
-    
-    window.addEventListener('load', () => {
-      updateInfo(currentZ);
-      document.getElementById('toggleFBlock').addEventListener('click', function() {
-        document.body.classList.toggle('collapsed');
-        updateInfo(currentZ);
-      });
-    });
-  </script>
+  <title>Δοκιμαστικός Πίνακας & Toggle</title>
   <style>
-    #infoPanel { border: 1px solid black; padding: 10px; }
-    #canvasSubshells { position: absolute; background: yellow; padding: 5px; }
+    /* Βασική διάταξη infoPanel */
+    #infoPanel {
+      border: 1px solid black;
+      padding: 10px;
+      margin: 20px;
+      transition: background 0.5s, flex-direction 0.5s;
+      display: flex;
+      flex-direction: row;
+    }
+    /* Full mode: infoPanel διατάσσεται οριζόντια */
+    body.full #infoPanel {
+      background: white;
+      flex-direction: row;
+    }
+    /* Collapsed mode: infoPanel διατάσσεται κατακόρυφα */
+    body.collapsed #infoPanel {
+      background: lightblue;
+      flex-direction: column;
+    }
+    /* Το balloon (canvasSubshells) */
+    #canvasSubshells {
+      position: absolute;
+      background: yellow;
+      padding: 5px;
+      left: 300px;
+      top: 100px;
+    }
+    /* Κουμπί toggle */
+    #toggleFBlock {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 15px;
+      font-size: 1em;
+    }
   </style>
 </head>
 <body class="full">
   <div id="infoPanel">
-    <div id="leftPanel"></div>
-    <div id="remarks"></div>
+    <div id="leftPanel">
+      <p>Left Panel Content: Element info, symbol, name...</p>
+    </div>
+    <div id="remarks">
+      <p>Remarks Content: Shells, message, etc...</p>
+    </div>
   </div>
-  <div id="canvasSubshells"></div>
+  <div id="canvasSubshells">
+    <p>Balloon Content: Subshells</p>
+  </div>
   <button id="toggleFBlock">Toggle</button>
+  <script>
+    // Κάθε πάτημα του κουμπιού αλλάζει την κλάση στο body,
+    // έτσι ώστε το CSS να αναδιαμορφώνει το infoPanel.
+    document.getElementById('toggleFBlock').addEventListener('click', function() {
+      if(document.body.classList.contains('full')){
+        document.body.classList.remove('full');
+        document.body.classList.add('collapsed');
+      } else {
+        document.body.classList.remove('collapsed');
+        document.body.classList.add('full');
+      }
+    });
+  </script>
 </body>
 </html>
