@@ -309,7 +309,14 @@
               else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
+            // Αρχικά αγνοούμε το πρώτο click για 100ms
+            p.skipNextClick = true;
+            setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function() {
+              if(p.skipNextClick) {
+                console.log("Skipping initial synthetic click on block '" + block + "'");
+                return;
+              }
               console.log("MouseClicked on canvas block '" + block + "' at coordinates (" + p.mouseX + ", " + p.mouseY + "), currentZ:", currentZ);
               if(ignoreCanvasClick) {
                 console.log("Ignoring click because ignoreCanvasClick is true.");
@@ -381,8 +388,6 @@
           p.fill(0);
           p.text("1", 20, 10);
           p.text("2", 62, 10);
-          p.text("IA", 20, 32);
-          p.text("IIA", 62, 32);
         };
       });
       new p5(function(p) {
@@ -599,7 +604,14 @@
               else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
+            // Αγνοούμε το πρώτο click για 100ms
+            p.skipNextClick = true;
+            setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function() {
+              if(p.skipNextClick) {
+                console.log("Redraw: Skipping initial synthetic click on block '" + block + "'");
+                return;
+              }
               console.log("Redraw: MouseClicked on canvas block '" + block + "' at coordinates (" + p.mouseX + ", " + p.mouseY + "), currentZ:", currentZ);
               let candidates;
               if(currentZ < 118) {
@@ -742,7 +754,7 @@
         } else if(group === 14) {
           return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
         } else if(group >= 15 && group <= 17) {
-          return `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
+          return `Θέλει να <strong>πάρεται</strong> ${18 - group} ηλεκτρόνια`;
         } else if(group === 18) {
           return "Ευγενές αέριο-Χημικά αδρανές";
         }
@@ -778,6 +790,7 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
+      // Αδειάζουμε όλους τους καμβάδες και αποκρύπτουμε τους Periods & Groups ώστε να μην εμφανίζονται τα χρώματα των κελιών
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
       let cp = document.getElementById('canvasPeriods');
       if(cp) cp.style.display = "none";
