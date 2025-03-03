@@ -228,11 +228,9 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Ενημερώνει τον πίνακα πληροφοριών.
-    // Σε collapsed mode, το "remarks" εμφανίζει:
-    // 1. Στην κορυφή, τις υποστιβάδες (prev/current/next) με 100% πλάτος και αριστερή στοίχιση.
-    // 2. Μία λεπτή (1px, lightgray) οριζόντια γραμμή.
-    // 3. Κάτω από αυτήν, τις στιβάδες και το συνοδευτικό μήνυμα, επίσης αριστερά.
+    // Η updateInfo αναδιαμορφώνει πλήρως τη δομή του infoPanel
+    // Σε collapsed mode, στο "remarks" εμφανίζονται οι υποστιβάδες με πλήρες πλάτος,
+    // μετά από μία λεπτή οριζόντια γραμμή, και κάτω από αυτήν οι στιβάδες/το μήνυμα.
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -779,7 +777,7 @@
       updateInfo(currentZ);
     });
     
-    // Στο toggle, μετά την αλλαγή του collapsed mode, αναγκάζουμε ανανέωση του layout μέσω force reflow και requestAnimationFrame.
+    // Κάθε πάτημα του toggle (σε οποιαδήποτε κατάσταση) θα ανανεώνει πλήρως τη δομή του infoPanel και τη θέση του balloon.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -790,12 +788,12 @@
         let cm = document.getElementById('collapsedMiddle');
         if(cm) cm.remove();
       }
+      // Ανανεώνουμε άμεσα όλους τους καμβάδες
       redrawAll();
-      // Force reflow
-      void document.body.offsetWidth;
-      requestAnimationFrame(() => {
+      // Καθυστέρηση 50ms για να γίνει reflow και μετά ανανέωση του infoPanel και του balloon
+      setTimeout(() => {
         updateInfo(currentZ);
-      });
+      }, 50);
     });
     
     window.loadElements = loadElements;
