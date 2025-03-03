@@ -63,7 +63,7 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Στο collapsed mode, οι υποστιβάδες και το μήνυμα καταλαμβάνουν 100% πλάτος και στοιχίζονται αριστερά */
+    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα, 100% πλάτος, αριστερά */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -174,7 +174,7 @@
   </div>
   
   <script>
-    // Αρχικές μεταβλητές και βοηθητικές συναρτήσεις
+    // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
     let ignoreCanvasClick = false;
     
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
@@ -218,7 +218,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Φόρτωση στοιχείων
+    // Φόρτωση στοιχείων (προσπαθούμε να χρησιμοποιήσουμε τα δεδομένα από το elements.json)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -232,7 +232,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Ενημέρωση του infoPanel (leftPanel & remarks) και το balloon
+    // updateInfo: δημιουργεί το περιεχόμενο για το infoPanel και ενημερώνει το balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -249,26 +249,19 @@
       let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                      `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
                      `<span style="font-style: italic;">${element.name}</span>`;
-      let leftPanel = document.getElementById('leftPanel');
-      if(leftPanel) { leftPanel.innerHTML = infoHTML; }
+      document.getElementById('leftPanel').innerHTML = infoHTML;
       
       let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
       let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
       
-      let prevColor = getBlockColor(prev.block);
-      let currentColor = getBlockColor(element.block);
-      let nextColor = getBlockColor(next.block);
-      
-      let prevStr = `<div style="color:${prevColor};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
-      let currentStr = `<div style="font-weight:bold; color:${currentColor};">Ζ=${element.number} ${element.subshells}</div>`;
-      let nextStr = `<div style="color:${nextColor};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+      let prevStr = `<div style="color:${getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
+      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+      let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
-      let rem = document.getElementById('remarks');
-      if(rem) {
-        if(document.body.classList.contains('collapsed')) {
-          rem.innerHTML = `<div class="right-wrapper">
+      if(document.body.classList.contains('collapsed')) {
+        document.getElementById('remarks').innerHTML = `<div class="right-wrapper">
                              <div class="subshells-col" style="width:100%; text-align:left;">
                                ${prevStr}${currentStr}${nextStr}
                              </div>
@@ -280,24 +273,23 @@
                                ${element.remarks || ""}
                              </div>
                            </div>`;
-        } else {
-          rem.innerHTML = `<div class="right-wrapper">
+      } else {
+        document.getElementById('remarks').innerHTML = `<div class="right-wrapper">
                              <div class="upper-right">
                                <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
                                <div class="shells-msg-col">${shellsAndMsg}</div>
                              </div>
                              <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
                            </div>`;
-        }
       }
       
       let subshellsData = {
-        prev: prev ? prev.subshells : "",
+        prev: prev.subshells,
         current: element.subshells,
-        next: next ? next.subshells : "",
-        prevColor: prevColor,
-        currentColor: currentColor,
-        nextColor: nextColor
+        next: next.subshells,
+        prevColor: getBlockColor(prev.block),
+        currentColor: getBlockColor(element.block),
+        nextColor: getBlockColor(next.block)
       };
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
@@ -325,8 +317,7 @@
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function() {
-              if(p.skipNextClick) { return; }
-              if(ignoreCanvasClick) { return; }
+              if(p.skipNextClick || ignoreCanvasClick) { return; }
               let candidates;
               if(currentZ < 118) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ);
@@ -339,7 +330,6 @@
               } else {
                 candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               }
-              let candidateFound = false;
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -349,7 +339,6 @@
                     flashActive = true;
                     setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   }
-                  candidateFound = true;
                   break;
                 }
               }
@@ -609,7 +598,6 @@
               } else {
                 candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               }
-              let candidateFound = false;
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -619,7 +607,6 @@
                     flashActive = true;
                     setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   }
-                  candidateFound = true;
                   break;
                 }
               }
@@ -780,18 +767,11 @@
       updateInfo(currentZ);
     });
     
-    // Handler του toggle: καθαρίζει τα inline styles και επαναδημιουργεί πλήρως τη δομή του infoPanel και του balloon
+    // Handler του toggle: απλώς αλλάζει την κλάση στο body και κατόπιν καλεί redrawAll() και updateInfo().
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
-      
-      // Καθαρίζουμε το infoPanel και το canvasSubshells από προηγούμενες inline ρυθμίσεις και περιεχόμενο
-      const infoPanel = document.getElementById('infoPanel');
-      infoPanel.innerHTML = "";
-      infoPanel.removeAttribute('style');
-      const canvasSubshells = document.getElementById('canvasSubshells');
-      canvasSubshells.removeAttribute('style');
       
       redrawAll();
       setTimeout(() => {
