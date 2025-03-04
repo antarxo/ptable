@@ -40,10 +40,8 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Σε collapsed mode αλλάζει διάταξη, αλλά εδώ δεν θα μετακινηθεί ο πίνακας */
+    /* Στο collapsed mode αλλάζει μόνο η διάταξη, αλλά ο πίνακας παραμένει στη θέση του */
     body.collapsed #infoPanel {
-      /* Δεν αλλάζουμε left και top, ώστε ο πίνακας να μην μετακινείται */
-      width: calc(100vw - var(--rightPanelWidth) - 105px);
       flex-direction: column;
     }
     /* Left column */
@@ -62,7 +60,7 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα, 100% πλάτος, αριστερά */
+    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -174,7 +172,6 @@
   <script>
     // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
     let ignoreCanvasClick = false;
-    
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -302,6 +299,23 @@
       };
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
+      
+      // Ειδική ρύθμιση για currentZ>=121:
+      if(currentZ >= 121) {
+        if(isCollapsed) {
+          document.getElementById('canvasPeriods').style.display = "none";
+          document.getElementById('canvasS_groups').style.display = "none";
+          document.getElementById('canvasD_groups').style.display = "none";
+          document.getElementById('canvasP_groups').style.display = "none";
+        } else {
+          document.getElementById('canvasPeriods').style.display = "block";
+          initPeriodsCanvas();
+          document.getElementById('canvasS_groups').style.display = "block";
+          document.getElementById('canvasD_groups').style.display = "block";
+          document.getElementById('canvasP_groups').style.display = "block";
+          initGroupsCanvases();
+        }
+      }
     }
     window.updateInfo = updateInfo;
     
@@ -650,33 +664,10 @@
         if(cP) { cP.style.left = "559px"; }
       }
       if(currentZ >= 121) {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "block"; }
-        initPeriodsCanvas();
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "block"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "block"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "block"; }
-        let csgLeft = document.getElementById('canvasS_groups');
-        if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "50px"; }
-        let dLeft = document.getElementById('canvasD').style.left;
-        let cdgLeft = document.getElementById('canvasD_groups');
-        if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
-        let pLeft = document.getElementById('canvasP').style.left;
-        let cpgLeft = document.getElementById('canvasP_groups');
-        if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
-        initGroupsCanvases();
-      } else {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "none"; }
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "none"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "none"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "none"; }
+        // Για currentZ>=121, το αρχικό updateInfo τώρα ελέγχει το mode:
+        // Εάν ο νέος mode είναι full, εμφανίζουμε τα επιπλέον canvases, αλλιώς τα κρύβουμε.
+        // (Εδώ δεν αλλάζουμε τη θέση του info panel.)
+        // Δεν εφαρμόζουμε τη "default" ρύθμιση που είχε στο προηγούμενο παράδειγμα.
       }
       updateToggleButton();
     }
@@ -779,8 +770,8 @@
       updateInfo(currentZ);
     });
     
-    // Το event listener του toggle: Εδώ ενημερώνουμε το info panel και το balloon σύμφωνα με το νέο mode,
-    // αλλά δεν αλλάζουμε (δεν μετακινούμε) τη θέση του info panel.
+    // Event listener για το toggle: Εδώ ενημερώνουμε το info panel και το balloon σύμφωνα με το νέο mode,
+    // αλλά δεν μετακινούμε τη θέση του info panel.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let newMode;
       if(document.body.classList.contains('collapsed')) {
@@ -788,13 +779,12 @@
       } else {
         newMode = "collapsed";
       }
-      // Ενημέρωση του info panel και του balloon σύμφωνα με το νέο mode
+      // Ενημέρωση του info panel σύμφωνα με το νέο mode πριν από οποιαδήποτε μεταβολή
       updateInfo(currentZ, newMode);
-      // Δεν κάνουμε toggle της κλάσης του body, οπότε η θέση του info panel παραμένει αμετάβλητη.
-      // Απλά ενημερώνουμε το κείμενο του κουμπιού
+      // Μόνο το κείμενο του κουμπιού αλλάζει (δεν κάνουμε toggle την κλάση του body)
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = newMode === "collapsed" ? "Ανάπτυξη" : "Σύμπτυξη";
-      // Επανασχεδιάζουμε τους καμβάδες (που ενδέχεται να χρειαστούν αλλαγές στο περιεχόμενο)
+      // Ανασχεδιάζουμε τους καμβάδες για ενημέρωση των στοιχείων
       redrawAll();
     });
     
