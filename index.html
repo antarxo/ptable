@@ -24,7 +24,9 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Δύο info panels – ταυτόχρονα στον ίδιο χώρο */
+    /* Δύο info panels: ο ένας για full mode, ο άλλος για collapsed.
+       Και οι δύο έχουν την ίδια θέση και διαστάσεις, ώστε να μην μετακινούνται.
+       Οι μεταβάσεις (opacity, transform) δημιουργούν το εφέ εναλλαγής. */
     .infoPanel {
       position: absolute;
       left: 20px;
@@ -47,10 +49,10 @@
       transform: translateY(20px);
       pointer-events: none;
     }
-    /* Εσωτερικό περιεχόμενο info panel */
+    /* Στυλ εσωτερικού περιεχομένου */
     .leftPanel, .remarks { }
     
-    /* Καμβάδες – Οι καμβάδες τοποθετούνται όπως στην αρχική έκδοση */
+    /* Οι καμβάδες (π.χ. για το periodic layout) παραμένουν όπως στον αρχικό κώδικα */
     .canvas {
       position: absolute;
       background: transparent;
@@ -154,7 +156,7 @@
     let flashActive = false;
     let subshellsP = null;
     
-    /* --- Βασικές Συναρτήσεις --- */
+    /* --- Βασικές συναρτήσεις --- */
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     
     function getBlockColor(b) {
@@ -231,8 +233,8 @@
       else if(currentZ === 120)
         filter = e => e.block === block && Number(e.number) === 2;
       else
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                     Number(e.number) === 1 || Number(e.number) === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || 
+                 Number(e.number) === 1 || Number(e.number) === 2);
       
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
@@ -357,7 +359,7 @@
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               else
                 candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                              Number(e.number) === 1 || Number(e.number) === 2));
+                                  Number(e.number) === 1 || Number(e.number) === 2));
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -402,6 +404,7 @@
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${element.remarks || ""}</div>`;
       
+      // Full mode (οριζόντια διάταξη)
       document.getElementById('remarksFull').innerHTML = `<div class="right-wrapper">
         <div class="upper-right">
           <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
@@ -409,6 +412,7 @@
         </div>
       </div>`;
       
+      // Collapsed mode (κατακόρυφη διάταξη)
       document.getElementById('remarksCollapsed').innerHTML = `<div class="right-wrapper">
         <div class="subshells-col" style="width:100%; text-align:left;">
           ${prevStr}${currentStr}${nextStr}
@@ -430,72 +434,26 @@
       setTimeout(() => { updateBalloonPosition(element); }, 10);
     }
     
-    /* --- Event Listeners --- */
-    document.getElementById('nextElement').addEventListener('click', function() {
-      ignoreCanvasClick = true;
-      if(currentZ < 118) currentZ++;
-      else if(currentZ === 118) currentZ = 119;
-      else if(currentZ === 119) currentZ = 120;
-      redrawAll();
-      updateInfoPanels(currentZ);
-      setTimeout(() => { ignoreCanvasClick = false; }, 100);
-    });
-    
-    document.getElementById('fillAll').addEventListener('click', function() {
-      currentZ = 121;
-      redrawAll();
-      updateInfoPanels(currentZ);
-    });
-    
-    document.getElementById('reset').addEventListener('click', function() {
-      currentZ = 3;
-      window.groupsInitialized = false;
-      window.periodsInitialized = false;
-      window.subshellsInitialized = false;
-      document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      document.getElementById('canvasPeriods').style.display = "none";
-      document.getElementById('canvasS_groups').style.display = "none";
-      document.getElementById('canvasD_groups').style.display = "none";
-      document.getElementById('canvasP_groups').style.display = "none";
-      initializeCanvases();
-      initSubshellsCanvas();
-      updateInfoPanels(currentZ);
-    });
-    
-    // Toggle των info panels: Χρησιμοποιούμε CSS μεταβάσεις για το fade-out/in μεταξύ full και collapsed
-    document.getElementById('toggleInfo').addEventListener('click', function() {
-      const fullPanel = document.getElementById('infoPanelFull');
-      const collapsedPanel = document.getElementById('infoPanelCollapsed');
-      if(getComputedStyle(fullPanel).opacity == "1") {
-        fullPanel.style.opacity = "0";
-        fullPanel.style.transform = "translateY(-20px)";
-        setTimeout(() => {
-          collapsedPanel.style.opacity = "1";
-          collapsedPanel.style.transform = "translateY(0)";
-        }, 500);
-      } else {
-        collapsedPanel.style.opacity = "0";
-        collapsedPanel.style.transform = "translateY(20px)";
-        setTimeout(() => {
-          fullPanel.style.opacity = "1";
-          fullPanel.style.transform = "translateY(0)";
-        }, 500);
-      }
-    });
-    
-    function updateToggleButton() {
-      document.getElementById('toggleInfo').disabled = false;
-    }
-    
-    function updateRightPanelWidth() {
+    /* --- Global assignments for p5.js helper functions --- */
+    window.initializeCanvases = initializeCanvases;
+    window.sortElements = function(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); };
+    window.initSubshellsCanvas = initSubshellsCanvas;
+    window.initGroupsCanvases = initGroupsCanvases;
+    window.calculatePosition = calculatePosition;
+    window.drawElements = drawElements;
+    window.drawSubshells = drawSubshells;
+    window.updateBalloonPosition = updateBalloonPosition;
+    window.redrawAll = redrawAll;
+    window.messageForElement = messageForElement;
+    window.updateRightPanelWidth = function() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
         let width = rp.offsetWidth;
         document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
       }
-    }
-    window.addEventListener('load', updateRightPanelWidth);
-    window.addEventListener('resize', updateRightPanelWidth);
+    };
+    window.addEventListener('load', window.updateRightPanelWidth);
+    window.addEventListener('resize', window.updateRightPanelWidth);
     
     /* --- Φόρτωση στοιχείων από elements.json --- */
     window.loadElements = function() {
@@ -512,20 +470,7 @@
     };
     window.loadElements();
     
-    /* --- Global assignments --- */
-    window.initializeCanvases = initializeCanvases;
-    window.sortElements = function(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); };
-    window.initSubshellsCanvas = initSubshellsCanvas;
-    window.initGroupsCanvases = initGroupsCanvases;
-    window.calculatePosition = calculatePosition;
-    window.drawElements = drawElements;
-    window.drawSubshells = drawSubshells;
-    window.updateBalloonPosition = updateBalloonPosition;
-    window.redrawAll = redrawAll;
-    window.messageForElement = messageForElement;
-    window.updateRightPanelWidth = updateRightPanelWidth;
-    
-    /* --- Ορισμός συναρτήσεων για καμβάδες ομάδων και αρχικοποίηση καμβάδων --- */
+    /* --- Συνάρτηση δημιουργίας καμβάδων ομάδων --- */
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -661,28 +606,74 @@
       window.groupsInitialized = true;
     }
     
-    /* --- Global assignments for p5 functions --- */
-    window.initializeCanvases = initializeCanvases;
-    window.sortElements = function(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); };
-    window.initSubshellsCanvas = initSubshellsCanvas;
-    window.initGroupsCanvases = initGroupsCanvases;
-    window.calculatePosition = calculatePosition;
-    window.drawElements = drawElements;
-    window.drawSubshells = drawSubshells;
-    window.updateBalloonPosition = updateBalloonPosition;
-    window.redrawAll = redrawAll;
-    window.messageForElement = messageForElement;
-    window.updateRightPanelWidth = function() {
+    /* --- Event Listeners --- */
+    document.getElementById('nextElement').addEventListener('click', function() {
+      ignoreCanvasClick = true;
+      if(currentZ < 118) currentZ++;
+      else if(currentZ === 118) currentZ = 119;
+      else if(currentZ === 119) currentZ = 120;
+      redrawAll();
+      updateInfoPanels(currentZ);
+      setTimeout(() => { ignoreCanvasClick = false; }, 100);
+    });
+    
+    document.getElementById('fillAll').addEventListener('click', function() {
+      currentZ = 121;
+      redrawAll();
+      updateInfoPanels(currentZ);
+    });
+    
+    document.getElementById('reset').addEventListener('click', function() {
+      currentZ = 3;
+      window.groupsInitialized = false;
+      window.periodsInitialized = false;
+      window.subshellsInitialized = false;
+      document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
+      document.getElementById('canvasPeriods').style.display = "none";
+      document.getElementById('canvasS_groups').style.display = "none";
+      document.getElementById('canvasD_groups').style.display = "none";
+      document.getElementById('canvasP_groups').style.display = "none";
+      initializeCanvases();
+      initSubshellsCanvas();
+      updateInfoPanels(currentZ);
+    });
+    
+    // Toggle των info panels με CSS μεταβάσεις: ο full πίνακας fade out, ο collapsed fade in και αντίστροφα.
+    document.getElementById('toggleInfo').addEventListener('click', function() {
+      const fullPanel = document.getElementById('infoPanelFull');
+      const collapsedPanel = document.getElementById('infoPanelCollapsed');
+      if(getComputedStyle(fullPanel).opacity == "1") {
+        fullPanel.style.opacity = "0";
+        fullPanel.style.transform = "translateY(-20px)";
+        setTimeout(() => {
+          collapsedPanel.style.opacity = "1";
+          collapsedPanel.style.transform = "translateY(0)";
+        }, 500);
+      } else {
+        collapsedPanel.style.opacity = "0";
+        collapsedPanel.style.transform = "translateY(20px)";
+        setTimeout(() => {
+          fullPanel.style.opacity = "1";
+          fullPanel.style.transform = "translateY(0)";
+        }, 500);
+      }
+    });
+    
+    function updateToggleButton() {
+      document.getElementById('toggleInfo').disabled = false;
+    }
+    
+    function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
         let width = rp.offsetWidth;
         document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
       }
-    };
-    window.addEventListener('load', window.updateRightPanelWidth);
-    window.addEventListener('resize', window.updateRightPanelWidth);
+    }
+    window.addEventListener('load', updateRightPanelWidth);
+    window.addEventListener('resize', updateRightPanelWidth);
     
-    /* --- Φόρτωση στοιχείων --- */
+    /* --- Φόρτωση στοιχείων από elements.json --- */
     window.loadElements = function() {
       fetch('elements.json')
         .then(response => response.json())
@@ -696,6 +687,19 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     };
     window.loadElements();
+    
+    /* --- Global assignments --- */
+    window.initializeCanvases = initializeCanvases;
+    window.sortElements = function(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); };
+    window.initSubshellsCanvas = initSubshellsCanvas;
+    window.initGroupsCanvases = initGroupsCanvases;
+    window.calculatePosition = calculatePosition;
+    window.drawElements = drawElements;
+    window.drawSubshells = drawSubshells;
+    window.updateBalloonPosition = updateBalloonPosition;
+    window.redrawAll = redrawAll;
+    window.messageForElement = messageForElement;
+    window.updateRightPanelWidth = updateRightPanelWidth;
   </script>
 </body>
 </html>
