@@ -22,6 +22,7 @@
       font-weight: bold;
       z-index: 50;
     }
+    /* Πίνακας πληροφοριών */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -46,12 +47,21 @@
     }
     #leftPanel { width: 220px; }
     #remarks { flex-grow: 1; padding-left: 20px; }
-    .canvas {
+    /* Container για τους καμβάδες στοιχείων */
+    #canvasContainer {
       position: absolute;
-      background: transparent;
-      transition: all 0.5s ease;
-      transform: translateY(-10px);
+      top: 100px;
+      left: 50px;
+      width: 800px;
+      height: 400px;
+      /* Μπορείτε να το ρυθμίσετε όπως θέλετε */
     }
+    /* Κάθε container για καμβά ανά block */
+    .canvasDiv {
+      position: absolute;
+      border: 1px dashed #ccc;
+    }
+    /* Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -62,6 +72,7 @@
       z-index: 150;
       display: none;
     }
+    /* Κουμπιά */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -85,7 +96,15 @@
 <body class="full">
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα - Δοκιμή</div>
   
-  <!-- Πίνακας Πληροφοριών -->
+  <!-- Containers για τους καμβάδες στοιχείων -->
+  <div id="canvasContainer">
+    <div id="canvasS" class="canvasDiv" style="top:0; left:0;"></div>
+    <div id="canvasP" class="canvasDiv" style="top:0; left:100px;"></div>
+    <div id="canvasD" class="canvasDiv" style="top:100px; left:0;"></div>
+    <div id="canvasF" class="canvasDiv" style="top:100px; left:100px;"></div>
+  </div>
+  
+  <!-- Πίνακας πληροφοριών -->
   <div id="infoPanel">
     <div id="leftPanel"></div>
     <div id="remarks"></div>
@@ -102,10 +121,10 @@
   </div>
   
   <script>
-    // Όλο το script τυλίγεται μέσα σε DOMContentLoaded για να είναι σίγουρο ότι όλα τα DOM στοιχεία υπάρχουν.
+    // Βεβαιωνόμαστε ότι όλα τα στοιχεία υπάρχουν πριν τρέξουμε το script
     window.addEventListener('DOMContentLoaded', function() {
       
-      // Sample δεδομένα (αντί για φόρτωση από αρχείο)
+      // Sample δεδομένα
       elements = [
         { number: "3", symbol: "Li", name: "Λίθιο", subshells: "2s", shells: "2,1", block: "s", col:"1", row:"1", remarks:"" },
         { number: "4", symbol: "Be", name: "Βηρύλλιο", subshells: "2s", shells: "2,2", block: "s", col:"2", row:"1", remarks:"" },
@@ -274,12 +293,17 @@
       }
       
       function initializeCanvases() {
-        // Για απλοποίηση, δημιουργούμε έναν απλό καμβά για κάθε block
+        // Δημιουργούμε έναν απλό καμβά για κάθε block (S, P, D, F)
         ["S", "P", "D", "F"].forEach(block => {
           new p5(function(p) {
             p.setup = function() {
               const canvas = p.createCanvas(80, 80);
-              canvas.parent("canvas" + block);
+              const parentDiv = document.getElementById("canvas" + block);
+              if(parentDiv) {
+                canvas.parent(parentDiv);
+              } else {
+                console.error("Το div 'canvas" + block + "' δεν βρέθηκε!");
+              }
               p.background(200);
               p.fill(0);
               p.textAlign(p.CENTER, p.CENTER);
@@ -293,15 +317,18 @@
       function initSubshellsCanvas() {
         new p5(function(p) {
           p.setup = function() {
-            let canvas = p.createCanvas(10, 40);
-            canvas.parent("canvasSubshells");
+            const canvas = p.createCanvas(10, 40);
+            const parentDiv = document.getElementById("canvasSubshells");
+            if(parentDiv) {
+              canvas.parent(parentDiv);
+            }
             subshellsP = p;
             p.noLoop();
           };
         });
       }
       
-      // Toggle handler: κρατάμε το τρέχον στοιχείο και μετά το toggle ενημερώνουμε το UI
+      // Toggle handler: κρατάμε το τρέχον στοιχείο και ενημερώνουμε το UI μετά το toggle
       document.getElementById('toggleFBlock').addEventListener('click', function() {
         const previousZ = currentZ;
         document.body.classList.toggle('collapsed');
@@ -330,12 +357,12 @@
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
+      
       window.updateInfo = updateInfo;
       window.initializeCanvases = initializeCanvases;
       window.updateBalloonPosition = updateBalloonPosition;
       
       window.addEventListener('resize', function() {
-        // Ανανεώνουμε απλά το UI σε resize (για δοκιμή)
         updateInfo(currentZ);
       });
     });
