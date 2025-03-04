@@ -40,7 +40,6 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Σε collapsed mode αλλάζει διάταξη */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
@@ -63,10 +62,9 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται 100% πλάτος, αριστερά */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
-    /* Balloon – το canvas των υποστιβάδων */
+    /* Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -174,7 +172,7 @@
   </div>
   
   <script>
-    let ignoreCanvasClick = false;
+    // Ολες οι συναρτήσεις δηλώνονται στο global scope.
     
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     
@@ -209,31 +207,14 @@
       f: { cols: 14, rows: 7 }
     };
     const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
-    let elements = [];
+    
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
-    elements = [];
+    
+    let elements = [];
     let currentZ = 3;
     let flashActive = false;
     let subshellsP;
     
-    window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
-    window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
-    
-    // Φόρτωση στοιχείων από elements.json
-    function loadElements() {
-      fetch('elements.json')
-        .then(response => response.json())
-        .then(data => {
-          elements = sortElements(data);
-          initializeCanvases();
-          initSubshellsCanvas();
-          updateInfo(currentZ);
-          updateToggleButton();
-        })
-        .catch(err => console.error('Σφάλμα φόρτωσης:', err));
-    }
-    
-    // updateInfo δημιουργεί το περιεχόμενο του infoPanel και ενημερώνει το balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -247,44 +228,44 @@
       if(clickedZ === 119) { displayZ = 1; }
       else if(clickedZ === 120) { displayZ = 2; }
       
-      let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
-                     `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
-                     `<span style="font-style: italic;">${element.name}</span>`;
+      const infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
+                       `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                       `<span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('leftPanel').innerHTML = infoHTML;
       
-      let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
-      let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
+      const prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
+      const next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
       
-      let prevStr = `<div style="color:${getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
-      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-      let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
-      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
-                         `<div style="font-style: italic;">${messageForElement(element)}</div>`;
+      const prevStr = `<div style="color:${getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
+      const currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+      const nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+      const shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
+                            `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
       if(document.body.classList.contains('collapsed')) {
         document.getElementById('remarks').innerHTML = `<div class="right-wrapper">
-                             <div class="subshells-col" style="width:100%; text-align:left;">
-                               ${prevStr}${currentStr}${nextStr}
-                             </div>
-                             <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
-                             <div class="shells-msg-col" style="width:100%; text-align:left;">
-                               ${shellsAndMsg}
-                             </div>
-                             <div style="text-align:left; margin-top:10px;">
-                               ${element.remarks || ""}
-                             </div>
-                           </div>`;
+                               <div class="subshells-col" style="width:100%; text-align:left;">
+                                 ${prevStr}${currentStr}${nextStr}
+                               </div>
+                               <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
+                               <div class="shells-msg-col" style="width:100%; text-align:left;">
+                                 ${shellsAndMsg}
+                               </div>
+                               <div style="text-align:left; margin-top:10px;">
+                                 ${element.remarks || ""}
+                               </div>
+                             </div>`;
       } else {
         document.getElementById('remarks').innerHTML = `<div class="right-wrapper">
-                             <div class="upper-right">
-                               <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
-                               <div class="shells-msg-col">${shellsAndMsg}</div>
-                             </div>
-                             <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
-                           </div>`;
+                               <div class="upper-right">
+                                 <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+                                 <div class="shells-msg-col">${shellsAndMsg}</div>
+                               </div>
+                               <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                             </div>`;
       }
       
-      let subshellsData = {
+      const subshellsData = {
         prev: prev.subshells,
         current: element.subshells,
         next: next.subshells,
@@ -295,29 +276,27 @@
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
     }
-    window.updateInfo = updateInfo;
     
-    // Τροποποιημένη updateBalloonPosition με έλεγχο για undefined
     function updateBalloonPosition(element) {
-      if (!element) return;  // Έλεγχος: αν το στοιχείο είναι undefined, επιστροφή
-      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
+      if(!element) return;
+      const blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
-      let rect = blockCanvas.getBoundingClientRect();
-      let pos = calculatePosition(element, element.block);
-      let cs = document.getElementById('canvasSubshells');
+      const rect = blockCanvas.getBoundingClientRect();
+      const pos = calculatePosition(element, element.block);
+      const cs = document.getElementById('canvasSubshells');
       if(cs) {
         let defaultLeft = rect.left + pos.x + 40;
         let defaultTop = rect.top + pos.y + 40;
         let leftPos = defaultLeft - 5;
         let topPos = defaultTop;
-        let balloonWidth = cs.offsetWidth;
-        let balloonHeight = cs.offsetHeight;
+        const balloonWidth = cs.offsetWidth;
+        const balloonHeight = cs.offsetHeight;
         if(defaultLeft > window.innerWidth / 2) {
           leftPos = defaultLeft - (33 + balloonWidth);
         }
-        let infoPanel = document.getElementById('infoPanel');
+        const infoPanel = document.getElementById('infoPanel');
         if(infoPanel) {
-          let infoRect = infoPanel.getBoundingClientRect();
+          const infoRect = infoPanel.getBoundingClientRect();
           if(defaultTop + balloonHeight > infoRect.top) {
             topPos = defaultTop - (27 + balloonHeight);
           }
@@ -333,7 +312,7 @@
     
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
-        let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
+        const canvasDiv = document.getElementById("canvas" + block.toUpperCase());
         if(canvasDiv) { canvasDiv.innerHTML = ""; }
         new p5(function(p) {
           p.setup = function() {
@@ -367,7 +346,7 @@
                 candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
-                let pos = calculatePosition(candidate, candidate.block);
+                const pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                   window.updateInfo(candidate.number);
@@ -389,49 +368,49 @@
         else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
         else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
         else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        let cF = document.getElementById('canvasF');
+        const cF = document.getElementById('canvasF');
         if(cF) { cF.style.left = base + "px"; }
-        let cD = document.getElementById('canvasD');
+        const cD = document.getElementById('canvasD');
         if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
+        const cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = (base + shiftP) + "px"; }
       } else {
-        let cS = document.getElementById('canvasS');
+        const cS = document.getElementById('canvasS');
         if(cS) { cS.style.left = "50px"; }
-        let cF = document.getElementById('canvasF');
+        const cF = document.getElementById('canvasF');
         if(cF) { cF.style.left = "154px"; }
-        let cD = document.getElementById('canvasD');
+        const cD = document.getElementById('canvasD');
         if(cD) { cD.style.left = "139px"; }
-        let cP = document.getElementById('canvasP');
+        const cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = "559px"; }
       }
       if(currentZ >= 121) {
-        let cp = document.getElementById('canvasPeriods');
+        const cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
-        let csg = document.getElementById('canvasS_groups');
+        const csg = document.getElementById('canvasS_groups');
         if(csg) { csg.style.display = "block"; }
-        let cdg = document.getElementById('canvasD_groups');
+        const cdg = document.getElementById('canvasD_groups');
         if(cdg) { cdg.style.display = "block"; }
-        let cpg = document.getElementById('canvasP_groups');
+        const cpg = document.getElementById('canvasP_groups');
         if(cpg) { cpg.style.display = "block"; }
-        let csgLeft = document.getElementById('canvasS_groups');
+        const csgLeft = document.getElementById('canvasS_groups');
         if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "50px"; }
-        let dLeft = document.getElementById('canvasD').style.left;
-        let cdgLeft = document.getElementById('canvasD_groups');
+        const dLeft = document.getElementById('canvasD').style.left;
+        const cdgLeft = document.getElementById('canvasD_groups');
         if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
-        let pLeft = document.getElementById('canvasP').style.left;
-        let cpgLeft = document.getElementById('canvasP_groups');
+        const pLeft = document.getElementById('canvasP').style.left;
+        const cpgLeft = document.getElementById('canvasP_groups');
         if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
         initGroupsCanvases();
       } else {
-        let cp = document.getElementById('canvasPeriods');
+        const cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "none"; }
-        let csg = document.getElementById('canvasS_groups');
+        const csg = document.getElementById('canvasS_groups');
         if(csg) { csg.style.display = "none"; }
-        let cdg = document.getElementById('canvasD_groups');
+        const cdg = document.getElementById('canvasD_groups');
         if(cdg) { cdg.style.display = "none"; }
-        let cpg = document.getElementById('canvasP_groups');
+        const cpg = document.getElementById('canvasP_groups');
         if(cpg) { cpg.style.display = "none"; }
       }
       updateToggleButton();
@@ -441,7 +420,7 @@
       if(window.periodsInitialized) return;
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(40, 292);
+          const canvas = p.createCanvas(40, 292);
           canvas.parent("canvasPeriods");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -465,9 +444,9 @@
     }
     
     function updateRightPanelWidth() {
-      let rp = document.getElementById('buttonPanel');
+      const rp = document.getElementById('buttonPanel');
       if(rp) {
-        let width = rp.offsetWidth;
+        const width = rp.offsetWidth;
         document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
       }
     }
@@ -476,7 +455,7 @@
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
       } else {
-        let group = parseInt(element.col);
+        const group = parseInt(element.col);
         if(group === 1) {
           return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
         } else if(group === 2) {
@@ -522,24 +501,24 @@
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      let cp = document.getElementById('canvasPeriods');
+      const cp = document.getElementById('canvasPeriods');
       if(cp) cp.style.display = "none";
-      let csg = document.getElementById('canvasS_groups');
+      const csg = document.getElementById('canvasS_groups');
       if(csg) csg.style.display = "none";
-      let cdg = document.getElementById('canvasD_groups');
+      const cdg = document.getElementById('canvasD_groups');
       if(cdg) cdg.style.display = "none";
-      let cpg = document.getElementById('canvasP_groups');
+      const cpg = document.getElementById('canvasP_groups');
       if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
     });
     
-    // Toggle handler: κρατάμε το τρέχον στοιχείο (previousZ) και μετά την αλλαγή του mode
+    // Toggle handler: κρατάμε το τρέχον στοιχείο (previousZ) και μετά την αλλαγή του mode ενημερώνουμε το UI
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       const previousZ = currentZ;
       document.body.classList.toggle('collapsed');
-      let toggleBtn = document.getElementById('toggleFBlock');
+      const toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       
       requestAnimationFrame(() => {
@@ -549,6 +528,7 @@
       });
     });
     
+    // Εκχωρούμε τις συναρτήσεις στο global scope για να είναι προσβάσιμες
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
