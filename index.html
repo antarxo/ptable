@@ -24,7 +24,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Δύο info panels: Ταυτόχρονα στον ίδιο χώρο */
+    /* Δύο info panels – ταυτόχρονα στον ίδιο χώρο */
     .infoPanel {
       position: absolute;
       left: 20px;
@@ -47,17 +47,17 @@
       transform: translateY(20px);
       pointer-events: none;
     }
-    /* Εσωτερικά */
+    /* Εσωτερικό περιεχόμενο info panel */
     .leftPanel, .remarks { }
     
-    /* Καμβάδες – οι υπόλοιποι καμβάδες παραμένουν όπως στην αρχική έκδοση */
+    /* Καμβάδες – Οι καμβάδες τοποθετούνται όπως στην αρχική έκδοση */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάδες Περιόδων & Ομάδων */
+    /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
       left: 6px;
@@ -80,6 +80,7 @@
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
+    
     /* Button Panel */
     #buttonPanel {
       position: fixed;
@@ -131,7 +132,7 @@
   <!-- Balloon -->
   <div id="canvasSubshells" class="canvas"></div>
   
-  <!-- Κουμπιά -->
+  <!-- Button Panel -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -153,7 +154,7 @@
     let flashActive = false;
     let subshellsP = null;
     
-    /* --- Βασικές συναρτήσεις --- */
+    /* --- Βασικές Συναρτήσεις --- */
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     
     function getBlockColor(b) {
@@ -231,7 +232,7 @@
         filter = e => e.block === block && Number(e.number) === 2;
       else
         filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                   Number(e.number) === 1 || Number(e.number) === 2);
+                     Number(e.number) === 1 || Number(e.number) === 2);
       
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
@@ -356,7 +357,7 @@
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               else
                 candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                  Number(e.number) === 1 || Number(e.number) === 2));
+                              Number(e.number) === 1 || Number(e.number) === 2));
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
@@ -373,6 +374,60 @@
           };
         });
       });
+    }
+    
+    /* --- Ενημέρωση των Info Panels --- */
+    function updateInfoPanels(clickedZ) {
+      let currentNum;
+      if(clickedZ === 119) currentNum = 1;
+      else if(clickedZ === 120) currentNum = 2;
+      else currentNum = convertClickedToCurrent(clickedZ);
+      const element = elements.find(e => Number(e.number) === currentNum);
+      if(!element) return;
+      let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
+      if(clickedZ === 119) displayZ = 1;
+      else if(clickedZ === 120) displayZ = 2;
+      
+      let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
+                     `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                     `<span style="font-style: italic;">${element.name}</span>`;
+      document.getElementById('leftPanelFull').innerHTML = infoHTML;
+      document.getElementById('leftPanelCollapsed').innerHTML = infoHTML;
+      
+      let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
+      let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
+      let prevStr = `<div style="color:${getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
+      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+      let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
+                         `<div style="font-style: italic;">${element.remarks || ""}</div>`;
+      
+      document.getElementById('remarksFull').innerHTML = `<div class="right-wrapper">
+        <div class="upper-right">
+          <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+          <div class="shells-msg-col">${shellsAndMsg}</div>
+        </div>
+      </div>`;
+      
+      document.getElementById('remarksCollapsed').innerHTML = `<div class="right-wrapper">
+        <div class="subshells-col" style="width:100%; text-align:left;">
+          ${prevStr}${currentStr}${nextStr}
+        </div>
+        <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
+        <div class="shells-msg-col" style="width:100%; text-align:left;">
+          ${shellsAndMsg}
+        </div>
+      </div>`;
+      
+      drawSubshells({
+        prev: prev.subshells,
+        current: element.subshells,
+        next: next.subshells,
+        prevColor: getBlockColor(prev.block),
+        currentColor: getBlockColor(element.block),
+        nextColor: getBlockColor(next.block)
+      });
+      setTimeout(() => { updateBalloonPosition(element); }, 10);
     }
     
     /* --- Event Listeners --- */
@@ -407,7 +462,7 @@
       updateInfoPanels(currentZ);
     });
     
-    // Toggle των info panels: Ο full πίνακας μετασχηματίζεται σε collapsed και αντίστροφα μέσω CSS μεταβάσεων.
+    // Toggle των info panels: Χρησιμοποιούμε CSS μεταβάσεις για το fade-out/in μεταξύ full και collapsed
     document.getElementById('toggleInfo').addEventListener('click', function() {
       const fullPanel = document.getElementById('infoPanelFull');
       const collapsedPanel = document.getElementById('infoPanelCollapsed');
@@ -447,7 +502,7 @@
       fetch('elements.json')
         .then(response => response.json())
         .then(data => {
-          elements = sortElements(data);
+          elements = window.sortElements(data);
           initializeCanvases();
           initSubshellsCanvas();
           updateInfoPanels(currentZ);
@@ -470,7 +525,7 @@
     window.messageForElement = messageForElement;
     window.updateRightPanelWidth = updateRightPanelWidth;
     
-    /* --- Ορισμός των συναρτήσεων initGroupsCanvases και initializeCanvases --- */
+    /* --- Ορισμός συναρτήσεων για καμβάδες ομάδων και αρχικοποίηση καμβάδων --- */
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -606,89 +661,7 @@
       window.groupsInitialized = true;
     }
     
-    /* --- Event Listeners --- */
-    document.getElementById('nextElement').addEventListener('click', function() {
-      ignoreCanvasClick = true;
-      if(currentZ < 118) currentZ++;
-      else if(currentZ === 118) currentZ = 119;
-      else if(currentZ === 119) currentZ = 120;
-      redrawAll();
-      updateInfoPanels(currentZ);
-      setTimeout(() => { ignoreCanvasClick = false; }, 100);
-    });
-    
-    document.getElementById('fillAll').addEventListener('click', function() {
-      currentZ = 121;
-      redrawAll();
-      updateInfoPanels(currentZ);
-    });
-    
-    document.getElementById('reset').addEventListener('click', function() {
-      currentZ = 3;
-      window.groupsInitialized = false;
-      window.periodsInitialized = false;
-      window.subshellsInitialized = false;
-      document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      document.getElementById('canvasPeriods').style.display = "none";
-      document.getElementById('canvasS_groups').style.display = "none";
-      document.getElementById('canvasD_groups').style.display = "none";
-      document.getElementById('canvasP_groups').style.display = "none";
-      initializeCanvases();
-      initSubshellsCanvas();
-      updateInfoPanels(currentZ);
-    });
-    
-    // Toggle των info panels: Με CSS μεταβάσεις, ο full πίνακας fade out και το collapsed fade in, ή αντίστροφα.
-    document.getElementById('toggleInfo').addEventListener('click', function() {
-      const fullPanel = document.getElementById('infoPanelFull');
-      const collapsedPanel = document.getElementById('infoPanelCollapsed');
-      if(getComputedStyle(fullPanel).opacity == "1") {
-        fullPanel.style.opacity = "0";
-        fullPanel.style.transform = "translateY(-20px)";
-        setTimeout(() => {
-          collapsedPanel.style.opacity = "1";
-          collapsedPanel.style.transform = "translateY(0)";
-        }, 500);
-      } else {
-        collapsedPanel.style.opacity = "0";
-        collapsedPanel.style.transform = "translateY(20px)";
-        setTimeout(() => {
-          fullPanel.style.opacity = "1";
-          fullPanel.style.transform = "translateY(0)";
-        }, 500);
-      }
-    });
-    
-    function updateToggleButton() {
-      document.getElementById('toggleInfo').disabled = false;
-    }
-    
-    function updateRightPanelWidth() {
-      let rp = document.getElementById('buttonPanel');
-      if(rp) {
-        let width = rp.offsetWidth;
-        document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
-      }
-    }
-    window.addEventListener('load', updateRightPanelWidth);
-    window.addEventListener('resize', updateRightPanelWidth);
-    
-    /* --- Φόρτωση στοιχείων --- */
-    window.loadElements = function() {
-      fetch('elements.json')
-        .then(response => response.json())
-        .then(data => {
-          elements = sortElements(data);
-          initializeCanvases();
-          initSubshellsCanvas();
-          updateInfoPanels(currentZ);
-          updateToggleButton();
-        })
-        .catch(err => console.error('Σφάλμα φόρτωσης:', err));
-    };
-    window.loadElements();
-    
-    /* --- Global assignments --- */
+    /* --- Global assignments for p5 functions --- */
     window.initializeCanvases = initializeCanvases;
     window.sortElements = function(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); };
     window.initSubshellsCanvas = initSubshellsCanvas;
@@ -699,7 +672,30 @@
     window.updateBalloonPosition = updateBalloonPosition;
     window.redrawAll = redrawAll;
     window.messageForElement = messageForElement;
-    window.updateRightPanelWidth = updateRightPanelWidth;
+    window.updateRightPanelWidth = function() {
+      let rp = document.getElementById('buttonPanel');
+      if(rp) {
+        let width = rp.offsetWidth;
+        document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
+      }
+    };
+    window.addEventListener('load', window.updateRightPanelWidth);
+    window.addEventListener('resize', window.updateRightPanelWidth);
+    
+    /* --- Φόρτωση στοιχείων --- */
+    window.loadElements = function() {
+      fetch('elements.json')
+        .then(response => response.json())
+        .then(data => {
+          elements = window.sortElements(data);
+          initializeCanvases();
+          initSubshellsCanvas();
+          updateInfoPanels(currentZ);
+          updateToggleButton();
+        })
+        .catch(err => console.error('Σφάλμα φόρτωσης:', err));
+    };
+    window.loadElements();
   </script>
 </body>
 </html>
