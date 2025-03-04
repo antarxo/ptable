@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+  <!-- p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     :root { --rightPanelWidth: 150px; }
@@ -23,7 +24,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Δύο info panels – έχουν τις ίδιες διαστάσεις και θέση, αλλά το ένα είναι ορατό και το άλλο όχι */
+    /* Δύο info panels – έχουν τις ίδιες διαστάσεις και θέση */
     .infoPanel {
       position: absolute;
       left: 20px;
@@ -46,28 +47,37 @@
       transform: translateY(20px);
       pointer-events: none;
     }
-    /* Εσωτερικό περιεχόμενο των info panels */
-    .leftPanel, .remarks {
-      /* Μπορείτε να προσθέσετε επιπλέον στυλ */
-    }
-    /* Καμβάδες – παραμένουν όπως στο προηγούμενο */
+    /* Εσωτερικά του info panel */
+    .leftPanel, .remarks { }
+    
+    /* Οι καμβάδες για περιόδους, ομάδες, τομείς, κλπ. όπως στην αρχική έκδοση */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Καμβάδες Περιόδων και Ομάδων */
-    #canvasPeriods, #canvasS_groups, #canvasD_groups, #canvasP_groups {
+    #canvasPeriods {
+      position: absolute;
+      left: 6px;
+      top: 120px;
+      width: 42px;
+      height: 292px;
       background: #f0f0f0;
       display: none;
-      position: absolute;
       z-index: 5;
     }
-    #canvasPeriods { left: 6px; top: 120px; width: 42px; height: 292px; }
+    #canvasS_groups, #canvasD_groups, #canvasP_groups {
+      position: absolute;
+      background: #f0f0f0;
+      display: none;
+      z-index: 11;
+      pointer-events: none;
+    }
     #canvasS_groups { width: 82px; height: 40px; }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
+    
     /* Button Panel */
     #buttonPanel {
       position: fixed;
@@ -106,7 +116,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Δύο info panels -->
+  <!-- Δύο info panels: Full και Collapsed -->
   <div id="infoPanelFull" class="infoPanel">
     <div id="leftPanelFull" class="leftPanel"></div>
     <div id="remarksFull" class="remarks"></div>
@@ -128,7 +138,7 @@
   </div>
   
   <script>
-    /* Global variables & constants */
+    /* --- Global Variables & Constants --- */
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -141,7 +151,7 @@
     let flashActive = false;
     let subshellsP = null;
     
-    /* Βασικές συναρτήσεις */
+    /* --- Βασικές συναρτήσεις --- */
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     
     function getBlockColor(b) {
@@ -197,7 +207,7 @@
       if(block === 's') x = (e.col - 1) * 42;
       else if(block === 'f') x = (e.col - 3) * 42;
       else if(block === 'd') x = (e.col - 3) * 42;
-      else if(block === 'p'){
+      else if(block === 'p') {
         if(currentZ < 20 && e.row === 1) x = (e.col - 18) * 42;
         else x = (e.col - 13) * 42;
       }
@@ -218,16 +228,16 @@
       else if(currentZ === 120)
         filter = e => e.block === block && Number(e.number) === 2;
       else
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
-      
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                Number(e.number) === 1 || Number(e.number) === 2);
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
         if(Number(e.number) === currentZ ||
-          ((currentZ === 119) && Number(e.number) === 1) ||
-          ((currentZ === 120) && Number(e.number) === 2)) {
+           ((currentZ === 119) && Number(e.number) === 1) ||
+           ((currentZ === 120) && Number(e.number) === 2)) {
           if(Number(e.number) === 119) p.fill("yellow");
           else if(Number(e.number) === 120) p.fill(BLOCK_COLORS["s"]);
           else p.fill(getBlockColor(e.block));
@@ -272,8 +282,7 @@
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 10;
-      let newWidth = Math.max(computedWidth, minWidth);
+      let newWidth = Math.max(computedWidth, 10);
       subshellsP.resizeCanvas(newWidth, balloonHeight);
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
       let rowHeight = balloonHeight / 3;
@@ -324,8 +333,7 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            // Οι θέσεις καθορίζονται σύμφωνα με τις ρυθμίσεις
-            if(document.body.classList.contains('collapsed')){
+            if(document.body.classList.contains('collapsed')) {
               if(block === 's') canvas.elt.style.left = "50px";
               else if(block === 'f' || block === 'd') canvas.elt.style.left = (block === 'f' ? "154px" : "139px");
               else if(block === 'p') canvas.elt.style.left = "559px";
@@ -400,7 +408,7 @@
       updateInfoPanels(currentZ);
     });
     
-    // Το toggle των info panels: Με CSS μεταβάσεις το full panel fade out και το collapsed fade in, ή αντίστροφα.
+    // Toggle των info panels: Με CSS μεταβάσεις, ο full πίνακας fade out και το collapsed fade in, ή αντίστροφα.
     document.getElementById('toggleInfo').addEventListener('click', function() {
       const fullPanel = document.getElementById('infoPanelFull');
       const collapsedPanel = document.getElementById('infoPanelCollapsed');
@@ -436,7 +444,7 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('resize', updateRightPanelWidth);
     
-    /* --- Εκκίνηση φόρτωσης --- */
+    /* --- Φόρτωση στοιχείων --- */
     window.loadElements = function() {
       fetch('elements.json')
         .then(response => response.json())
@@ -451,7 +459,7 @@
     };
     window.loadElements();
     
-    /* --- Global assignments για τις συναρτήσεις που χρειάζονται από p5 --- */
+    /* --- Ανάθεση global για τις συναρτήσεις που καλούνται από το p5 --- */
     window.initializeCanvases = initializeCanvases;
     window.initSubshellsCanvas = initSubshellsCanvas;
     window.initGroupsCanvases = initGroupsCanvases;
