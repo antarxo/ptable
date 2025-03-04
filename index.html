@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών */
+    /* Πίνακας πληροφοριών - παραμένει σταθερός */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Στο collapsed mode αλλάζει μόνο η διάταξη, χωρίς μετακίνηση του info panel */
+    /* Δεν αλλάζει η θέση του info panel στο collapsed mode */
     body.collapsed #infoPanel {
       flex-direction: column;
     }
@@ -60,7 +60,7 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα */
+    /* Σε collapsed mode, οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -130,10 +130,12 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
+    /* Κανονική διάταξη των καμβάδων (full mode) */
     .full #canvasS { top: 120px; left: 50px; z-index: 1; }
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 134px; width: 252px; z-index: 4; }
+    /* Στο collapsed mode, μεταβάλλονται μόνο οι καμβάδες των τομέων */
     body.collapsed #canvasF { top: 220px; }
   </style>
 </head>
@@ -305,7 +307,7 @@
         currentZ = Number(element.number);
       }
       
-      // Εμφάνιση ή απόκρυψη των επιπλέον καμβάδων ανάλογα με το mode
+      // Διαχείριση εμφάνισης των επιπλέον καμβάδων:
       if(currentZ >= 121) {
         if(isCollapsed) {
           document.getElementById('canvasPeriods').style.display = "none";
@@ -356,7 +358,8 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                      Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -488,7 +491,8 @@
       } else if(currentZ === 120) {
         filter = e => e.block === block && Number(e.number) === 2;
       } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                      Number(e.number) === 1 || Number(e.number) === 2);
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
@@ -627,7 +631,8 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                      Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -667,9 +672,6 @@
         if(cD) { cD.style.left = "139px"; }
         let cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = "559px"; }
-      }
-      if(currentZ >= 121) {
-        // Η διαχείριση των επιπλέον καμβάδων γίνεται μέσα στο updateInfo.
       }
       updateToggleButton();
     }
@@ -772,18 +774,15 @@
       updateInfo(currentZ);
     });
     
-    // Event listener για το toggle: Εδώ ενημερώνουμε το info panel και το balloon σύμφωνα με το νέο mode,
-    // αλλά δεν μετακινούμε τη θέση του info panel.
+    // Event listener για το toggle: Εδώ κάνουμε πραγματικό toggle της κλάσης του body,
+    // ώστε να "σύμπτυξαν" ή "αναπτυχθούν" οι τομείς (δηλαδή οι επιπλέον καμβάδες) – το info panel δεν μετακινείται.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
-      let newMode;
-      if(document.body.classList.contains('collapsed')) {
-        newMode = "full";
-      } else {
-        newMode = "collapsed";
-      }
-      // Ενημέρωση του info panel και του balloon σύμφωνα με το νέο mode
+      // Κάνουμε πρώτα toggle την κλάση, ώστε να αλλάζει το mode (το CSS του collapsed mode εφαρμόζεται στους τομείς)
+      document.body.classList.toggle('collapsed');
+      // Με βάση τη νέα κατάσταση, ενημερώνουμε το info panel και το balloon
+      let newMode = document.body.classList.contains('collapsed') ? "collapsed" : "full";
       updateInfo(currentZ, newMode);
-      // Μόνο ενημέρωση του κειμένου του κουμπιού (δεν κάνουμε toggle της κλάσης του body)
+      // Ενημερώνουμε και το κείμενο του κουμπιού
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = newMode === "collapsed" ? "Ανάπτυξη" : "Σύμπτυξη";
       redrawAll();
