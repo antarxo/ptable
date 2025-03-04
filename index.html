@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών - παραμένει σταθερός */
+    /* Πίνακας πληροφοριών */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -40,8 +40,11 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Δεν αλλάζει η θέση του info panel στο collapsed mode */
+    /* Σε collapsed mode αλλάζει διάταξη */
     body.collapsed #infoPanel {
+      left: 848px;
+      top: 112px;
+      width: calc(100vw - 920px);
       flex-direction: column;
     }
     /* Left column */
@@ -60,7 +63,7 @@
     }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Σε collapsed mode, οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα */
+    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα, 100% πλάτος, αριστερά */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -130,13 +133,12 @@
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
     .f-block { background: #ffe5cc !important; }
-    /* Κανονική διάταξη των καμβάδων (full mode) */
     .full #canvasS { top: 120px; left: 50px; z-index: 1; }
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 134px; width: 252px; z-index: 4; }
-    /* Στο collapsed mode, μεταβάλλονται μόνο οι καμβάδες των τομέων */
     body.collapsed #canvasF { top: 220px; }
+    body.collapsed #infoPanel { flex-direction: column; }
   </style>
 </head>
 <body class="full">
@@ -174,6 +176,7 @@
   <script>
     // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
     let ignoreCanvasClick = false;
+    
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -212,11 +215,10 @@
     let flashActive = false;
     let subshellsP;
     
-    // Ορισμοί στο global scope
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Ορισμός της συνάρτησης loadElements στο global scope
+    // Φόρτωση στοιχείων (προσπαθούμε να χρησιμοποιήσουμε τα δεδομένα από το elements.json)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -229,19 +231,9 @@
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
-    window.loadElements = loadElements;
     
-    // Η updateInfo δέχεται προαιρετική παράμετρο mode ("collapsed" ή "full")
-    function updateInfo(clickedZ, mode) {
-      let isCollapsed;
-      if(mode === "collapsed") {
-        isCollapsed = true;
-      } else if(mode === "full") {
-        isCollapsed = false;
-      } else {
-        isCollapsed = document.body.classList.contains('collapsed');
-      }
-      
+    // updateInfo: δημιουργεί το περιεχόμενο για το infoPanel και ενημερώνει το balloon
+    function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
       else if(clickedZ === 120) { currentNum = 2; }
@@ -268,7 +260,7 @@
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
-      if(isCollapsed) {
+      if(document.body.classList.contains('collapsed')) {
         document.getElementById('remarks').innerHTML = `<div class="right-wrapper">
                              <div class="subshells-col" style="width:100%; text-align:left;">
                                ${prevStr}${currentStr}${nextStr}
@@ -301,28 +293,6 @@
       };
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
-      
-      // Εάν το currentZ είναι >= 121, επαναφέρουμε το currentZ στην τιμή του τρέχοντος στοιχείου
-      if(currentZ >= 121) {
-        currentZ = Number(element.number);
-      }
-      
-      // Διαχείριση εμφάνισης των επιπλέον καμβάδων:
-      if(currentZ >= 121) {
-        if(isCollapsed) {
-          document.getElementById('canvasPeriods').style.display = "none";
-          document.getElementById('canvasS_groups').style.display = "none";
-          document.getElementById('canvasD_groups').style.display = "none";
-          document.getElementById('canvasP_groups').style.display = "none";
-        } else {
-          document.getElementById('canvasPeriods').style.display = "block";
-          initPeriodsCanvas();
-          document.getElementById('canvasS_groups').style.display = "block";
-          document.getElementById('canvasD_groups').style.display = "block";
-          document.getElementById('canvasP_groups').style.display = "block";
-          initGroupsCanvases();
-        }
-      }
     }
     window.updateInfo = updateInfo;
     
@@ -358,8 +328,7 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                      Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -378,7 +347,6 @@
         });
       });
     }
-    window.initializeCanvases = initializeCanvases;
     
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
@@ -392,7 +360,6 @@
       });
       window.subshellsInitialized = true;
     }
-    window.initSubshellsCanvas = initSubshellsCanvas;
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
@@ -464,7 +431,6 @@
       });
       window.groupsInitialized = true;
     }
-    window.initGroupsCanvases = initGroupsCanvases;
     
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
@@ -491,8 +457,7 @@
       } else if(currentZ === 120) {
         filter = e => e.block === block && Number(e.number) === 2;
       } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                      Number(e.number) === 1 || Number(e.number) === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
@@ -631,8 +596,7 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                      Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -672,6 +636,35 @@
         if(cD) { cD.style.left = "139px"; }
         let cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = "559px"; }
+      }
+      if(currentZ >= 121) {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "block"; }
+        initPeriodsCanvas();
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "block"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "block"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "block"; }
+        let csgLeft = document.getElementById('canvasS_groups');
+        if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "50px"; }
+        let dLeft = document.getElementById('canvasD').style.left;
+        let cdgLeft = document.getElementById('canvasD_groups');
+        if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
+        let pLeft = document.getElementById('canvasP').style.left;
+        let cpgLeft = document.getElementById('canvasP_groups');
+        if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
+        initGroupsCanvases();
+      } else {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "none"; }
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "none"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "none"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "none"; }
       }
       updateToggleButton();
     }
@@ -774,29 +767,29 @@
       updateInfo(currentZ);
     });
     
-    // Event listener για το toggle: Εδώ κάνουμε πραγματικό toggle της κλάσης του body,
-    // ώστε να "σύμπτυξαν" ή "αναπτυχθούν" οι τομείς (δηλαδή οι επιπλέον καμβάδες) – το info panel δεν μετακινείται.
+    // Handler του toggle: απλώς αλλάζει την κλάση στο body και κατόπιν καλεί redrawAll() και updateInfo().
     document.getElementById('toggleFBlock').addEventListener('click', function() {
-      // Κάνουμε πρώτα toggle την κλάση, ώστε να αλλάζει το mode (το CSS του collapsed mode εφαρμόζεται στους τομείς)
       document.body.classList.toggle('collapsed');
-      // Με βάση τη νέα κατάσταση, ενημερώνουμε το info panel και το balloon
-      let newMode = document.body.classList.contains('collapsed') ? "collapsed" : "full";
-      updateInfo(currentZ, newMode);
-      // Ενημερώνουμε και το κείμενο του κουμπιού
       let toggleBtn = document.getElementById('toggleFBlock');
-      toggleBtn.textContent = newMode === "collapsed" ? "Ανάπτυξη" : "Σύμπτυξη";
+      toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
+      
       redrawAll();
+      setTimeout(() => {
+        updateInfo(currentZ);
+      }, 50);
     });
     
+    window.loadElements = loadElements;
+    window.initializeCanvases = initializeCanvases;
+    window.updateInfo = updateInfo;
+    window.redrawAll = redrawAll;
     window.initPeriodsCanvas = initPeriodsCanvas;
     window.initGroupsCanvases = initGroupsCanvases;
-    window.redrawAll = redrawAll;
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('resize', updateRightPanelWidth);
     
-    // Εκκίνηση φόρτωσης στοιχείων
     loadElements();
   </script>
 </body>
