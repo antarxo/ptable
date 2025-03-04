@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Πίνακας πληροφοριών */
+    /* Πίνακας πληροφοριών (αρχική διάταξη full mode) */
     #infoPanel {
       display: flex;
       flex-direction: row;
@@ -37,35 +37,23 @@
       top: 428px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
-      transition: all 1.5s ease;
+      transition: all 0.5s ease;
       text-align: left;
     }
-    /* Σε collapsed mode αλλάζει διάταξη */
     body.collapsed #infoPanel {
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
       flex-direction: column;
     }
-    /* Left column (αρχική διάταξη) */
-    #leftPanel {
-      width: 220px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      text-align: left;
-    }
-    /* Right column (αρχική διάταξη) */
-    #remarks { 
-      flex-grow: 1; 
-      padding-left: 20px; 
-      text-align: left;
-    }
+    #leftPanel { width: 220px; }
+    #remarks { flex-grow: 1; padding-left: 20px; }
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
     .subshells-col { width: auto; text-align: left; }
     .shells-msg-col { width: auto; text-align: left; margin-left: 20px; }
-    /* Containers για τους καμβάδες τοποθετούνται εδώ */
+    
+    /* Containers για τους καμβάδες – ρητά στο HTML */
     #canvasContainer {
       position: absolute;
       top: 100px;
@@ -74,16 +62,17 @@
       height: 400px;
       z-index: 10;
     }
-    /* Κάθε container για καμβά ανά block */
-    .canvasDiv {
+    /* Τα container div για τους καμβάδες */
+    #canvasS, #canvasF, #canvasD, #canvasP {
       position: absolute;
-      /* Οι αρχικές θέσεις μπορείς να τις προσαρμόσεις αναλόγως της διάταξης */
+      border: 1px dashed #ccc;
     }
-    /* Για full mode οι θέσεις (παράδειγμα) */
-    #canvasS { top: 120px; left: 50px; }
-    #canvasF { top: 120px; left: 134px; width: 588px; }
-    #canvasD { top: 120px; left: 134px; width: 420px; }
-    #canvasP { top: 120px; left: 134px; width: 252px; }
+    /* Θέσεις για full mode (παράδειγμα) */
+    #canvasS { top: 120px; left: 50px; width: 84px; height: 294px; }
+    #canvasF { top: 120px; left: 134px; width: 588px; height: 294px; }
+    #canvasD { top: 120px; left: 134px; width: 420px; height: 294px; }
+    #canvasP { top: 120px; left: 134px; width: 252px; height: 294px; }
+    
     /* Balloon */
     #canvasSubshells {
       position: absolute;
@@ -95,6 +84,7 @@
       z-index: 150;
       display: none;
     }
+    
     /* Κουμπιά */
     #buttonPanel {
       position: fixed;
@@ -120,15 +110,15 @@
 <body class="full">
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   
-  <!-- Containers για τους καμβάδες (Full Mode) -->
+  <!-- Container για τους καμβάδες (full mode) -->
   <div id="canvasContainer">
-    <div id="canvasS" class="canvasDiv"></div>
-    <div id="canvasF" class="canvasDiv"></div>
-    <div id="canvasD" class="canvasDiv"></div>
-    <div id="canvasP" class="canvasDiv"></div>
+    <div id="canvasS"></div>
+    <div id="canvasF"></div>
+    <div id="canvasD"></div>
+    <div id="canvasP"></div>
   </div>
   
-  <!-- Πίνακας Πληροφοριών -->
+  <!-- Πίνακας πληροφοριών -->
   <div id="infoPanel">
     <div id="leftPanel"></div>
     <div id="remarks"></div>
@@ -145,17 +135,16 @@
   </div>
   
   <script>
-    // Όλες οι συναρτήσεις τρέχουν μετά το DOMContentLoaded
+    // Βεβαιώνουμε ότι το DOM είναι έτοιμο πριν τρέξουμε το script
     window.addEventListener('DOMContentLoaded', function() {
       
-      // Δεδομένα (παράδειγμα)
+      // Sample δεδομένα (όπως πριν)
       elements = [
         { number: "3", symbol: "Li", name: "Λίθιο", subshells: "2s", shells: "2,1", block: "s", col:"1", row:"1", remarks:"" },
         { number: "4", symbol: "Be", name: "Βηρύλλιο", subshells: "2s", shells: "2,2", block: "s", col:"2", row:"1", remarks:"" },
         { number: "5", symbol: "B",  name: "Βόριο",    subshells: "2p", shells: "2,3", block: "p", col:"3", row:"1", remarks:"" }
       ];
       
-      // Βασικές μεταβλητές
       let currentZ = 3;
       let flashActive = false;
       let subshellsP = null;
@@ -211,7 +200,7 @@
         const shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells)}</div>` +
                               `<div style="font-style: italic;">${messageForElement(element)}</div>`;
         
-        // Διατάσσουμε τα στοιχεία στον πίνακα πληροφοριών (full mode)
+        // Full mode διάταξη: τα στοιχεία στοιχίζονται οριζόντια
         document.getElementById('remarks').innerHTML = `<div class="right-wrapper">
           <div class="upper-right">
             <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
@@ -305,7 +294,7 @@
       }
       
       function initializeCanvases() {
-        // Δημιουργούμε έναν καμβά για κάθε block (S, F, D, P)
+        // Δημιουργούμε καμβά για κάθε block (S, F, D, P) χρησιμοποιώντας τα ήδη υπάρχοντα divs
         ["S", "F", "D", "P"].forEach(block => {
           new p5(function(p) {
             p.setup = function() {
@@ -370,13 +359,15 @@
       initSubshellsCanvas();
       updateInfo(currentZ);
       
-      window.updateInfo = updateInfo;
-      window.initializeCanvases = initializeCanvases;
-      window.updateBalloonPosition = updateBalloonPosition;
-      
+      // Διάβασε events resize για ανανέωση του UI
       window.addEventListener('resize', function() {
         updateInfo(currentZ);
       });
+      
+      // Εκχώρηση στο global scope για debugging (αν χρειάζεται)
+      window.updateInfo = updateInfo;
+      window.initializeCanvases = initializeCanvases;
+      window.updateBalloonPosition = updateBalloonPosition;
     });
   </script>
 </body>
