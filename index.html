@@ -218,22 +218,19 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Φόρτωση στοιχείων από το elements.json
-    function loadElements() {
-      fetch('elements.json')
-        .then(response => response.json())
-        .then(data => {
-          elements = sortElements(data);
-          initializeCanvases();
-          initSubshellsCanvas();
-          updateInfo(currentZ);
-          updateToggleButton();
-        })
-        .catch(err => console.error('Σφάλμα φόρτωσης:', err));
-    }
-    
-    // updateInfo: δημιουργεί το περιεχόμενο για το infoPanel και ενημερώνει το balloon
-    function updateInfo(clickedZ) {
+    // Προσθήκη προαιρετικής παραμέτρου mode στο updateInfo.
+    // Αν mode έχει τιμή "collapsed" ή "full", τότε η ενημέρωση γίνεται σύμφωνα με αυτήν τη διάταξη,
+    // αλλιώς χρησιμοποιείται η τρέχουσα κατάσταση του body.
+    function updateInfo(clickedZ, mode) {
+      let isCollapsed;
+      if(mode === "collapsed") {
+        isCollapsed = true;
+      } else if(mode === "full") {
+        isCollapsed = false;
+      } else {
+        isCollapsed = document.body.classList.contains('collapsed');
+      }
+      
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
       else if(clickedZ === 120) { currentNum = 2; }
@@ -260,7 +257,7 @@
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
-      if(document.body.classList.contains('collapsed')) {
+      if(isCollapsed) {
         document.getElementById('remarks').innerHTML = `<div class="right-wrapper">
                              <div class="subshells-col" style="width:100%; text-align:left;">
                                ${prevStr}${currentStr}${nextStr}
@@ -767,16 +764,27 @@
       updateInfo(currentZ);
     });
     
-    // Τροποποιημένος event listener για το κουμπί εναλλαγής (toggle)
-    // Ενημερώνουμε τον πίνακα πριν την μετακίνηση του layout σύμφωνα με το mode.
+    // Εδώ ορίζουμε το toggle έτσι ώστε:
+    // - Αν το τρέχον mode είναι full (δηλαδή, body δεν έχει την κλάση collapsed),
+    //   τότε πριν την αλλαγή ενημερώνουμε το info panel με το layout που έχει το full,
+    //   και μετά το toggle (που θα μεταφέρει στο collapsed).
+    // - Αν το τρέχον mode είναι collapsed, ενημερώνουμε πρώτα το info panel για το collapsed,
+    //   και μετά γίνεται το toggle (που θα το μεταφέρει στο full).
     document.getElementById('toggleFBlock').addEventListener('click', function() {
-      // Ενημέρωση του info panel και του balloon για το τρέχον στοιχείο πριν την αλλαγή
-      updateInfo(currentZ);
-      // Αλλάζουμε το mode (collapsed/full)
+      let newMode;
+      if(document.body.classList.contains('collapsed')) {
+        // τρέχον collapsed → νέος mode: full
+        newMode = "full";
+      } else {
+        // τρέχον full → νέος mode: collapsed
+        newMode = "collapsed";
+      }
+      // Ενημέρωση του info panel και του balloon σύμφωνα με τον νέο mode
+      updateInfo(currentZ, newMode);
+      // Στη συνέχεια αλλάζουμε το mode και ανασχεδιάζουμε τους καμβάδες
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
-      // Μετά την αλλαγή, ανασχεδιάζουμε τους καμβάδες
       redrawAll();
     });
     
