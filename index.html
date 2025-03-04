@@ -40,11 +40,10 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Σε collapsed mode αλλάζει διάταξη */
+    /* Σε collapsed mode αλλάζει διάταξη, αλλά εδώ δεν θα μετακινηθεί ο πίνακας */
     body.collapsed #infoPanel {
-      left: 848px;
-      top: 112px;
-      width: calc(100vw - 920px);
+      /* Δεν αλλάζουμε left και top, ώστε ο πίνακας να μην μετακινείται */
+      width: calc(100vw - var(--rightPanelWidth) - 105px);
       flex-direction: column;
     }
     /* Left column */
@@ -138,7 +137,6 @@
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 134px; width: 252px; z-index: 4; }
     body.collapsed #canvasF { top: 220px; }
-    body.collapsed #infoPanel { flex-direction: column; }
   </style>
 </head>
 <body class="full">
@@ -215,11 +213,11 @@
     let flashActive = false;
     let subshellsP;
     
-    // Ορισμοί σε global scope
+    // Ορισμοί στο global scope
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Η συνάρτηση loadElements ορίζεται στο global scope
+    // Ορισμός της συνάρτησης loadElements στο global scope
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -234,7 +232,7 @@
     }
     window.loadElements = loadElements;
     
-    // Προσθέτουμε μια προαιρετική παράμετρο mode στο updateInfo:
+    // Η updateInfo δέχεται προαιρετική παράμετρο mode ("collapsed" ή "full")
     function updateInfo(clickedZ, mode) {
       let isCollapsed;
       if(mode === "collapsed") {
@@ -781,9 +779,8 @@
       updateInfo(currentZ);
     });
     
-    // Event listener για το toggle:
-    // Αν το τρέχον mode είναι full, τότε πριν την αλλαγή ενημερώνουμε με mode collapsed.
-    // Αν το τρέχον mode είναι collapsed, ενημερώνουμε πριν την αλλαγή με mode full.
+    // Το event listener του toggle: Εδώ ενημερώνουμε το info panel και το balloon σύμφωνα με το νέο mode,
+    // αλλά δεν αλλάζουμε (δεν μετακινούμε) τη θέση του info panel.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let newMode;
       if(document.body.classList.contains('collapsed')) {
@@ -791,12 +788,13 @@
       } else {
         newMode = "collapsed";
       }
-      // Ενημέρωση του info panel σύμφωνα με το νέο mode πριν την αλλαγή
+      // Ενημέρωση του info panel και του balloon σύμφωνα με το νέο mode
       updateInfo(currentZ, newMode);
-      // Αλλάζουμε το mode και ανασχεδιάζουμε τους καμβάδες
-      document.body.classList.toggle('collapsed');
+      // Δεν κάνουμε toggle της κλάσης του body, οπότε η θέση του info panel παραμένει αμετάβλητη.
+      // Απλά ενημερώνουμε το κείμενο του κουμπιού
       let toggleBtn = document.getElementById('toggleFBlock');
-      toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
+      toggleBtn.textContent = newMode === "collapsed" ? "Ανάπτυξη" : "Σύμπτυξη";
+      // Επανασχεδιάζουμε τους καμβάδες (που ενδέχεται να χρειαστούν αλλαγές στο περιεχόμενο)
       redrawAll();
     });
     
@@ -808,7 +806,7 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('resize', updateRightPanelWidth);
     
-    // Εκκίνηση της φόρτωσης των στοιχείων
+    // Εκκίνηση φόρτωσης στοιχείων
     loadElements();
   </script>
 </body>
