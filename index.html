@@ -218,7 +218,7 @@
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Φόρτωση στοιχείων (προσπαθούμε να χρησιμοποιήσουμε τα δεδομένα από το elements.json)
+    // Φόρτωση στοιχείων από το elements.json
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -767,14 +767,18 @@
       updateInfo(currentZ);
     });
     
-    // Τροποποιημένο event listener για το κουμπί εναλλαγής (toggle)
+    // Τροποποιημένος event listener για το κουμπί εναλλαγής (toggle)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       
+      // Αρχικά ανανεώνουμε το layout
       redrawAll();
-      updateInfo(currentZ); // Άμεση ενημέρωση του info panel και του balloon
+      // Καθυστέρηση για να εφαρμοστεί η νέα διάταξη πριν την ενημέρωση του info panel & balloon
+      setTimeout(() => { 
+        updateInfo(currentZ);
+      }, 50);
     });
     
     window.loadElements = loadElements;
