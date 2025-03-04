@@ -215,12 +215,26 @@
     let flashActive = false;
     let subshellsP;
     
+    // Ορισμοί σε global scope
     window.initialExplanation = document.getElementById('explanation') ? document.getElementById('explanation').innerHTML : "";
     window.initialComments = document.getElementById('comments') ? document.getElementById('comments').innerHTML : "";
     
-    // Προσθήκη προαιρετικής παραμέτρου mode στο updateInfo.
-    // Αν mode έχει τιμή "collapsed" ή "full", τότε η ενημέρωση γίνεται σύμφωνα με αυτήν τη διάταξη,
-    // αλλιώς χρησιμοποιείται η τρέχουσα κατάσταση του body.
+    // Η συνάρτηση loadElements ορίζεται στο global scope
+    function loadElements() {
+      fetch('elements.json')
+        .then(response => response.json())
+        .then(data => {
+          elements = sortElements(data);
+          initializeCanvases();
+          initSubshellsCanvas();
+          updateInfo(currentZ);
+          updateToggleButton();
+        })
+        .catch(err => console.error('Σφάλμα φόρτωσης:', err));
+    }
+    window.loadElements = loadElements;
+    
+    // Προσθέτουμε μια προαιρετική παράμετρο mode στο updateInfo:
     function updateInfo(clickedZ, mode) {
       let isCollapsed;
       if(mode === "collapsed") {
@@ -344,6 +358,7 @@
         });
       });
     }
+    window.initializeCanvases = initializeCanvases;
     
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
@@ -357,6 +372,7 @@
       });
       window.subshellsInitialized = true;
     }
+    window.initSubshellsCanvas = initSubshellsCanvas;
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
@@ -428,6 +444,7 @@
       });
       window.groupsInitialized = true;
     }
+    window.initGroupsCanvases = initGroupsCanvases;
     
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
@@ -764,41 +781,34 @@
       updateInfo(currentZ);
     });
     
-    // Εδώ ορίζουμε το toggle έτσι ώστε:
-    // - Αν το τρέχον mode είναι full (δηλαδή, body δεν έχει την κλάση collapsed),
-    //   τότε πριν την αλλαγή ενημερώνουμε το info panel με το layout που έχει το full,
-    //   και μετά το toggle (που θα μεταφέρει στο collapsed).
-    // - Αν το τρέχον mode είναι collapsed, ενημερώνουμε πρώτα το info panel για το collapsed,
-    //   και μετά γίνεται το toggle (που θα το μεταφέρει στο full).
+    // Event listener για το toggle:
+    // Αν το τρέχον mode είναι full, τότε πριν την αλλαγή ενημερώνουμε με mode collapsed.
+    // Αν το τρέχον mode είναι collapsed, ενημερώνουμε πριν την αλλαγή με mode full.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let newMode;
       if(document.body.classList.contains('collapsed')) {
-        // τρέχον collapsed → νέος mode: full
         newMode = "full";
       } else {
-        // τρέχον full → νέος mode: collapsed
         newMode = "collapsed";
       }
-      // Ενημέρωση του info panel και του balloon σύμφωνα με τον νέο mode
+      // Ενημέρωση του info panel σύμφωνα με το νέο mode πριν την αλλαγή
       updateInfo(currentZ, newMode);
-      // Στη συνέχεια αλλάζουμε το mode και ανασχεδιάζουμε τους καμβάδες
+      // Αλλάζουμε το mode και ανασχεδιάζουμε τους καμβάδες
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       redrawAll();
     });
     
-    window.loadElements = loadElements;
-    window.initializeCanvases = initializeCanvases;
-    window.updateInfo = updateInfo;
-    window.redrawAll = redrawAll;
     window.initPeriodsCanvas = initPeriodsCanvas;
     window.initGroupsCanvases = initGroupsCanvases;
+    window.redrawAll = redrawAll;
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('resize', updateRightPanelWidth);
     
+    // Εκκίνηση της φόρτωσης των στοιχείων
     loadElements();
   </script>
 </body>
