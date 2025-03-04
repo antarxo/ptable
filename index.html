@@ -767,16 +767,14 @@
       updateInfo(currentZ);
     });
     
-    // Handler του toggle: απλώς αλλάζει την κλάση στο body και κατόπιν καλεί redrawAll() και updateInfo().
+    // Τροποποιημένο event listener για το κουμπί εναλλαγής (toggle)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
       
       redrawAll();
-      setTimeout(() => {
-        updateInfo(currentZ);
-      }, 50);
+      updateInfo(currentZ); // Άμεση ενημέρωση του info panel και του balloon
     });
     
     window.loadElements = loadElements;
