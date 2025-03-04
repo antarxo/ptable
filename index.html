@@ -768,17 +768,16 @@
     });
     
     // Τροποποιημένος event listener για το κουμπί εναλλαγής (toggle)
+    // Ενημερώνουμε τον πίνακα πριν την μετακίνηση του layout σύμφωνα με το mode.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
+      // Ενημέρωση του info panel και του balloon για το τρέχον στοιχείο πριν την αλλαγή
+      updateInfo(currentZ);
+      // Αλλάζουμε το mode (collapsed/full)
       document.body.classList.toggle('collapsed');
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = document.body.classList.contains('collapsed') ? "Ανάπτυξη" : "Σύμπτυξη";
-      
-      // Αρχικά ανανεώνουμε το layout
+      // Μετά την αλλαγή, ανασχεδιάζουμε τους καμβάδες
       redrawAll();
-      // Καθυστέρηση για να εφαρμοστεί η νέα διάταξη πριν την ενημέρωση του info panel & balloon
-      setTimeout(() => { 
-        updateInfo(currentZ);
-      }, 50);
     });
     
     window.loadElements = loadElements;
