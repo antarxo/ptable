@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Στο collapsed mode αλλάζει μόνο η διάταξη, αλλά ο πίνακας παραμένει στη θέση του */
+    /* Στο collapsed mode αλλάζει μόνο η διάταξη, χωρίς μετακίνηση του info panel */
     body.collapsed #infoPanel {
       flex-direction: column;
     }
@@ -300,7 +300,12 @@
       drawSubshells(subshellsData);
       setTimeout(() => { updateBalloonPosition(element); }, 10);
       
-      // Ειδική ρύθμιση για currentZ>=121:
+      // Εάν το currentZ είναι >= 121, επαναφέρουμε το currentZ στην τιμή του τρέχοντος στοιχείου
+      if(currentZ >= 121) {
+        currentZ = Number(element.number);
+      }
+      
+      // Εμφάνιση ή απόκρυψη των επιπλέον καμβάδων ανάλογα με το mode
       if(currentZ >= 121) {
         if(isCollapsed) {
           document.getElementById('canvasPeriods').style.display = "none";
@@ -664,10 +669,7 @@
         if(cP) { cP.style.left = "559px"; }
       }
       if(currentZ >= 121) {
-        // Για currentZ>=121, το αρχικό updateInfo τώρα ελέγχει το mode:
-        // Εάν ο νέος mode είναι full, εμφανίζουμε τα επιπλέον canvases, αλλιώς τα κρύβουμε.
-        // (Εδώ δεν αλλάζουμε τη θέση του info panel.)
-        // Δεν εφαρμόζουμε τη "default" ρύθμιση που είχε στο προηγούμενο παράδειγμα.
+        // Η διαχείριση των επιπλέον καμβάδων γίνεται μέσα στο updateInfo.
       }
       updateToggleButton();
     }
@@ -779,12 +781,11 @@
       } else {
         newMode = "collapsed";
       }
-      // Ενημέρωση του info panel σύμφωνα με το νέο mode πριν από οποιαδήποτε μεταβολή
+      // Ενημέρωση του info panel και του balloon σύμφωνα με το νέο mode
       updateInfo(currentZ, newMode);
-      // Μόνο το κείμενο του κουμπιού αλλάζει (δεν κάνουμε toggle την κλάση του body)
+      // Μόνο ενημέρωση του κειμένου του κουμπιού (δεν κάνουμε toggle της κλάσης του body)
       let toggleBtn = document.getElementById('toggleFBlock');
       toggleBtn.textContent = newMode === "collapsed" ? "Ανάπτυξη" : "Σύμπτυξη";
-      // Ανασχεδιάζουμε τους καμβάδες για ενημέρωση των στοιχείων
       redrawAll();
     });
     
