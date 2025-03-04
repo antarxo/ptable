@@ -297,6 +297,37 @@
     }
     window.updateInfo = updateInfo;
     
+    // Συνάρτηση που προσομοιώνει κλικ στο τρέχον στοιχείο
+    // (αν και στον τελικό handler δεν την καλούμε πλέον)
+    function simulateClickOnCurrentElement() {
+      const element = elements.find(e => Number(e.number) === currentZ);
+      if (!element) return;
+      const block = element.block;
+      const pos = calculatePosition(element, block);
+      const canvas = document.querySelector("#canvas" + block.toUpperCase() + " canvas");
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = rect.left + pos.x + 20;
+      const clickY = rect.top + pos.y + 20;
+      // Προσπάθεια με PointerEvent
+      const pointerDown = new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        clientX: clickX,
+        clientY: clickY,
+        pointerType: 'mouse'
+      });
+      const pointerUp = new PointerEvent('pointerup', {
+        bubbles: true,
+        cancelable: true,
+        clientX: clickX,
+        clientY: clickY,
+        pointerType: 'mouse'
+      });
+      canvas.dispatchEvent(pointerDown);
+      canvas.dispatchEvent(pointerUp);
+    }
+    
     // Δημιουργία των p5 canvases για κάθε block
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
@@ -768,8 +799,7 @@
       updateInfo(currentZ);
     });
     
-    // Τελικός handler του toggle: κρατάμε το τρέχον στοιχείο και μετά την αλλαγή του mode (via class toggle)
-    // καλούμε redrawAll() και updateInfo() για το ίδιο στοιχείο, χωρίς να προσομοιώνουμε κλικ.
+    // Toggle handler: κρατάμε το τρέχον στοιχείο και μετά την αλλαγή του mode καλούμε redrawAll(), updateInfo() και updateBalloonPosition()
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       const previousZ = currentZ;
       document.body.classList.toggle('collapsed');
@@ -779,7 +809,8 @@
       requestAnimationFrame(() => {
         redrawAll();
         updateInfo(previousZ);
-        updateBalloonPosition(elements.find(e => e.number === previousZ));
+        // Χρησιμοποιούμε Number(e.number) για να διασφαλίσουμε ότι η σύγκριση είναι σωστή
+        updateBalloonPosition(elements.find(e => Number(e.number) === previousZ));
       });
     });
     
