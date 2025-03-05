@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Info Panel – Full Mode */
+    /* Info Panel Full – αρχική κατάσταση */
     #infoPanelFull {
       display: flex;
       flex-direction: row;
@@ -37,12 +37,19 @@
       top: 428px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
-      transition: all 0.5s ease;
+      transition: all 1.5s ease;
       text-align: left;
     }
-    /* Info Panel – Collapsed Mode */
+    /* Όταν το body έχει την κλάση collapsed, ο full πίνακας μετακινείται/μεγεθύνεται σύμφωνα με τα παρακάτω */
+    body.collapsed #infoPanelFull {
+      left: 848px;
+      top: 112px;
+      width: calc(100vw - 920px);
+      /* Διατηρείται η διάταξη της full (row) για να παρατηρείται η μετάβαση */
+    }
+    /* Info Panel Collapsed – τελική κατάσταση, εμφανίζεται αμέσως μετά το πέρας της μετάβασης */
     #infoPanelCollapsed {
-      display: flex;
+      display: none;
       flex-direction: column;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
@@ -54,10 +61,9 @@
       top: 112px;
       width: calc(100vw - 920px);
       z-index: 40;
-      transition: all 0.5s ease;
-      text-align: left;
+      /* Δεν έχει μετάβαση ώστε να εμφανίζεται αμέσως */
     }
-    /* Εσωτερικά τμήματα info panel */
+    /* Εσωτερικά τμήματα των info panels */
     #infoPanelFull > div,
     #infoPanelCollapsed > div {
       width: 100%;
@@ -67,7 +73,6 @@
     /* Right column */
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
-    /* Σε collapsed mode: οι υποστιβάδες και το μήνυμα στοιχίζονται κατακόρυφα, 100% πλάτος, αριστερά */
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
     /* Balloon – το canvas των υποστιβάδων */
@@ -121,6 +126,7 @@
       display: none;
       z-index: 5;
     }
+    /* Για τους καμβάδες ομάδων */
     #canvasS_groups,
     #canvasD_groups,
     #canvasP_groups {
@@ -130,8 +136,8 @@
       z-index: 11;
       pointer-events: none;
     }
-    /* Στον canvasS_groups τώρα έχουμε δύο γραμμές:
-       πρώτη με τους αριθμούς 1 και 2 και δεύτερη με τους "ΙΑ" και "ΙΙΑ" */
+    /* Στον canvasS_groups έχουμε δύο γραμμές: */
+    /* Πρώτη γραμμή: νέα αρίθμηση (1,2) – ύψος 40px, δεύτερη γραμμή: παλιά (ΙΑ, ΙΙΑ) – συνολικό ύψος 80px */
     #canvasS_groups { width: 82px; height: 80px; }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
@@ -161,7 +167,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακες Πληροφοριών -->
+  <!-- Πίνακες Πληροφοριών: δύο καμβάδες -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -185,6 +191,10 @@
   <script>
     // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
     let ignoreCanvasClick = false;
+    let currentZ = 3;
+    let flashActive = false;
+    let subshellsP;
+    let lastClickedElement = null; // για το Balloon
     
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
@@ -219,10 +229,6 @@
     const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
-    elements = [];
-    let currentZ = 3;
-    let flashActive = false;
-    let subshellsP;
     
     // Φόρτωση στοιχείων
     function loadElements() {
@@ -238,7 +244,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει και τους δύο πίνακες και το Balloon αμέσως
+    // updateInfo: ενημερώνει το περιεχόμενο και το Balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -247,6 +253,7 @@
       
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
+      lastClickedElement = element; // αποθηκεύουμε για το Balloon
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
       if(clickedZ === 119) { displayZ = 1; }
@@ -265,28 +272,27 @@
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
-      // Αν το layout είναι collapsed, ενημερώνουμε το infoPanelCollapsed, αλλιώς το infoPanelFull
       if(document.body.classList.contains('collapsed')) {
         document.getElementById('leftPanelCollapsed').innerHTML = infoHTML;
         document.getElementById('remarksCollapsed').innerHTML = `<div class="right-wrapper">
-                             <div class="subshells-col" style="width:100%; text-align:left;">
-                               ${prevStr}${currentStr}${nextStr}
-                             </div>
-                             <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
-                             <div class="shells-msg-col" style="width:100%; text-align:left;">
-                               ${shellsAndMsg}
-                             </div>
-                             <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
-                           </div>`;
+                              <div class="subshells-col" style="width:100%; text-align:left;">
+                                ${prevStr}${currentStr}${nextStr}
+                              </div>
+                              <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
+                              <div class="shells-msg-col" style="width:100%; text-align:left;">
+                                ${shellsAndMsg}
+                              </div>
+                              <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                            </div>`;
       } else {
         document.getElementById('leftPanelFull').innerHTML = infoHTML;
         document.getElementById('remarksFull').innerHTML = `<div class="right-wrapper">
-                             <div class="upper-right">
-                               <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
-                               <div class="shells-msg-col">${shellsAndMsg}</div>
-                             </div>
-                             <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
-                           </div>`;
+                              <div class="upper-right">
+                                <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+                                <div class="shells-msg-col">${shellsAndMsg}</div>
+                              </div>
+                              <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                            </div>`;
       }
       
       let subshellsData = {
@@ -298,11 +304,11 @@
         nextColor: getBlockColor(next.block)
       };
       drawSubshells(subshellsData);
-      updateBalloonPosition(element); // Ενημέρωση του Balloon αμέσως
+      updateBalloonPosition(element);
     }
     window.updateInfo = updateInfo;
     
-    // Δημιουργία των p5 canvases για κάθε block
+    // Δημιουργία των canvases για κάθε block
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -369,8 +375,7 @@
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Canvas για τις ομάδες του block s: Δύο γραμμές. Η πρώτη θα δείχνει "1" και "2" όπως ήταν,
-      // και στη δεύτερη γραμμή θα εμφανίζονται οι "ΙΑ" και "ΙΙΑ".
+      // Canvas για το s block: δύο γραμμές, πρώτη με "1" και "2", δεύτερη με "ΙΑ" και "ΙΙΑ"
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(82, 80);
@@ -381,14 +386,15 @@
           p.textStyle(p.BOLD);
           p.background(240);
           p.fill(0);
-          // Πρώτη γραμμή: αριθμοί
+          // Πρώτη γραμμή: νέα αρίθμηση
           p.text("1", 20, 10);
           p.text("2", 62, 10);
-          // Δεύτερη γραμμή: "ΙΑ" και "ΙΙΑ"
+          // Δεύτερη γραμμή: παλιά αρίθμηση
           p.text("ΙΑ", 20, 50);
           p.text("ΙΙΑ", 62, 50);
         };
       });
+      // Οι καμβάδες για τους άλλους τομείς παραμένουν ως πριν
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -511,7 +517,7 @@
       });
     }
     
-    // Ενημέρωση του Balloon – χωρίς καθυστέρηση
+    // Ενημέρωση του Balloon χωρίς καθυστέρηση – καλεί την updateBalloonPosition με το τελευταίο κλικ στοιχείο
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -772,32 +778,35 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler: ο παλιός πίνακας μετακινείται με το υπάρχον εφέ και το νέο εμφανίζεται αμέσως από πάνω, ενώ ο παλιός εξαφανίζεται μετά από 0,5 δευτερόλεπτα
+    // Toggle handler:
+    // Όταν γίνεται η μετάβαση, ο πίνακας στην αρχική κατάσταση (full ή collapsed) μετακινείται σύμφωνα με το εφέ και,
+    // μόλις ολοκληρωθεί (1.5 δευτερόλεπτα), ο νέος πίνακας εμφανίζεται από πάνω ενώ ο παλιός εξαφανίζεται.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
-      if(document.body.classList.contains('collapsed')) {
-         // Μετάβαση από collapsed σε full
-         document.body.classList.remove('collapsed');
-         toggleBtn.textContent = "Σύμπτυξη";
-         let fullPanel = document.getElementById('infoPanelFull');
-         fullPanel.style.display = 'flex';
-         fullPanel.style.opacity = 1;
-         let collPanel = document.getElementById('infoPanelCollapsed');
-         collPanel.style.transition = 'all 0.5s ease';
-         setTimeout(function() { collPanel.style.display = 'none'; }, 500);
-      } else {
-         // Μετάβαση από full σε collapsed
+      if(!document.body.classList.contains('collapsed')) {
+         // Full -> Collapsed:
+         // Ενεργοποιούμε το εφέ μετάβασης στο infoPanelFull
          document.body.classList.add('collapsed');
          toggleBtn.textContent = "Ανάπτυξη";
-         let collPanel = document.getElementById('infoPanelCollapsed');
-         collPanel.style.display = 'flex';
-         collPanel.style.opacity = 1;
-         let fullPanel = document.getElementById('infoPanelFull');
-         fullPanel.style.transition = 'all 0.5s ease';
-         setTimeout(function() { fullPanel.style.display = 'none'; }, 500);
+         // Μετά από 1500ms (όταν ολοκληρωθεί το εφέ) κάνουμε swap:
+         setTimeout(function() {
+           document.getElementById('infoPanelFull').style.display = "none";
+           document.getElementById('infoPanelCollapsed').style.display = "flex";
+           updateInfo(currentZ); // ανανέωση για το Balloon
+         }, 1500);
+      } else {
+         // Collapsed -> Full:
+         document.body.classList.remove('collapsed');
+         toggleBtn.textContent = "Σύμπτυξη";
+         setTimeout(function() {
+           document.getElementById('infoPanelCollapsed').style.display = "none";
+           document.getElementById('infoPanelFull').style.display = "flex";
+           updateInfo(currentZ);
+         }, 1500);
       }
       redrawAll();
-      updateInfo(currentZ);
+      // Επαναξιολόγηση του Balloon με βάση το τελευταίο κλικ
+      if(lastClickedElement) updateBalloonPosition(lastClickedElement);
     });
     
     window.loadElements = loadElements;
