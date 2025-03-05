@@ -40,14 +40,13 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Όταν το body έχει την κλάση collapsed, ο full πίνακας μετακινείται/μεγεθύνεται σύμφωνα με τα παρακάτω */
+    /* Όταν το body έχει την κλάση collapsed, ο full πίνακας μετακινείται/μεγεθύνεται */
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
-      /* Διατηρείται η διάταξη της full (row) για να παρατηρείται η μετάβαση */
     }
-    /* Info Panel Collapsed – τελική κατάσταση, εμφανίζεται αμέσως μετά το πέρας της μετάβασης */
+    /* Info Panel Collapsed – τελική κατάσταση, κρυμμένος αρχικά */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -61,7 +60,8 @@
       top: 112px;
       width: calc(100vw - 920px);
       z-index: 40;
-      /* Δεν έχει μετάβαση ώστε να εμφανίζεται αμέσως */
+      transition: none;
+      text-align: left;
     }
     /* Εσωτερικά τμήματα των info panels */
     #infoPanelFull > div,
@@ -126,21 +126,11 @@
       display: none;
       z-index: 5;
     }
-    /* Για τους καμβάδες ομάδων */
-    #canvasS_groups,
-    #canvasD_groups,
-    #canvasP_groups {
-      position: absolute;
-      background: #f0f0f0;
-      display: none;
-      z-index: 11;
-      pointer-events: none;
-    }
-    /* Στον canvasS_groups έχουμε δύο γραμμές: */
-    /* Πρώτη γραμμή: νέα αρίθμηση (1,2) – ύψος 40px, δεύτερη γραμμή: παλιά (ΙΑ, ΙΙΑ) – συνολικό ύψος 80px */
-    #canvasS_groups { width: 82px; height: 80px; }
+    /* Καμβάδες ομάδων για τους τομείς d και p */
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
+    /* Για τον s τομέα θέλουμε την ίδια μορφοποίηση: μία canvas με ύψος 40, στην πρώτη γραμμή οι νέοι αριθμοί (1,2) και στη δεύτερη οι παλιοί ("ΙΑ","ΙΙΑ") */
+    #canvasS_groups { width: 84px; height: 40px; }
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
@@ -195,7 +185,7 @@
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null; // για το Balloon
-    
+
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -244,7 +234,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει το περιεχόμενο και το Balloon
+    // updateInfo: ενημερώνει τα περιεχόμενα και το Balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -253,7 +243,7 @@
       
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
-      lastClickedElement = element; // αποθηκεύουμε για το Balloon
+      lastClickedElement = element;
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
       if(clickedZ === 119) { displayZ = 1; }
@@ -375,26 +365,36 @@
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Canvas για το s block: δύο γραμμές, πρώτη με "1" και "2", δεύτερη με "ΙΑ" και "ΙΙΑ"
+      // Canvas για το s block – ακριβώς όπως στους άλλους τομείς:
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(82, 80);
+          let canvas = p.createCanvas(84, 40);
           canvas.parent("canvasS_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          p.fill(0);
-          // Πρώτη γραμμή: νέα αρίθμηση
-          p.text("1", 20, 10);
-          p.text("2", 62, 10);
-          // Δεύτερη γραμμή: παλιά αρίθμηση
-          p.text("ΙΑ", 20, 50);
-          p.text("ΙΙΑ", 62, 50);
+          for(let c = 0; c < 2; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 0, 40, 20);
+            p.fill(0);
+            // Πρώτη γραμμή: νέα αρίθμηση
+            p.text((c+1).toString(), x + 20, 10);
+          }
+          const oldLabels = ["ΙΑ", "ΙΙΑ"];
+          for(let c = 0; c < 2; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 22, 40, 20);
+            p.fill(0);
+            // Δεύτερη γραμμή: παλιά αρίθμηση
+            p.text(oldLabels[c], x + 20, 32);
+          }
         };
       });
-      // Οι καμβάδες για τους άλλους τομείς παραμένουν ως πριν
+      // Canvas για τους τομείς d και p (ίδια με πριν)
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -517,7 +517,7 @@
       });
     }
     
-    // Ενημέρωση του Balloon χωρίς καθυστέρηση – καλεί την updateBalloonPosition με το τελευταίο κλικ στοιχείο
+    // Ενημέρωση του Balloon χωρίς καθυστέρηση
     function updateBalloonPosition(element) {
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
@@ -779,23 +779,21 @@
     });
     
     // Toggle handler:
-    // Όταν γίνεται η μετάβαση, ο πίνακας στην αρχική κατάσταση (full ή collapsed) μετακινείται σύμφωνα με το εφέ και,
-    // μόλις ολοκληρωθεί (1.5 δευτερόλεπτα), ο νέος πίνακας εμφανίζεται από πάνω ενώ ο παλιός εξαφανίζεται.
+    // Ο πίνακας full μετακινείται με το εφέ και μετά από 1.5s γίνεται swap με τον collapsed, ο οποίος ενημερώνεται αμέσως.
+    // Επιπλέον, μετά το swap καλείται updateBalloonPosition με το τελευταίο κλικ στοιχείο ώστε να ενημερωθεί η θέση του Balloon.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')) {
-         // Full -> Collapsed:
-         // Ενεργοποιούμε το εφέ μετάβασης στο infoPanelFull
+         // Full -> Collapsed
          document.body.classList.add('collapsed');
          toggleBtn.textContent = "Ανάπτυξη";
-         // Μετά από 1500ms (όταν ολοκληρωθεί το εφέ) κάνουμε swap:
          setTimeout(function() {
            document.getElementById('infoPanelFull').style.display = "none";
            document.getElementById('infoPanelCollapsed').style.display = "flex";
-           updateInfo(currentZ); // ανανέωση για το Balloon
+           updateInfo(currentZ);
          }, 1500);
       } else {
-         // Collapsed -> Full:
+         // Collapsed -> Full
          document.body.classList.remove('collapsed');
          toggleBtn.textContent = "Σύμπτυξη";
          setTimeout(function() {
@@ -805,8 +803,9 @@
          }, 1500);
       }
       redrawAll();
-      // Επαναξιολόγηση του Balloon με βάση το τελευταίο κλικ
-      if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+      setTimeout(function() {
+         if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+      }, 1600);
     });
     
     window.loadElements = loadElements;
