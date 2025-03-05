@@ -177,10 +177,10 @@
     let flashActive = false;
     let subshellsP; // p5 instance για το Balloon
     let lastClickedElement = null;
-
+    
     // Global variable για τα δεδομένα του Balloon
     window.subshellsData = null;
-
+    
     // Χρώματα τομέων
     const BLOCK_COLORS = {
       s: "#FFB3C9",
@@ -188,7 +188,7 @@
       d: "#ACDFEC",
       p: "#8CED8C"
     };
-
+    
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -212,7 +212,7 @@
       }
       return result.join(", ");
     }
-
+    
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -221,17 +221,17 @@
     };
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
-
+    
     //─────────────────────────────
-    // Προσθήκη βοηθητικών συναρτήσεων που λείπουν
+    // Προσθήκη των βοηθητικών συναρτήσεων που λείπουν
     //─────────────────────────────
-
-    // Υπολογισμός θέσης για κάθε στοιχείο βάσει των ιδιοτήτων col και row (αρχίζοντας από το 1)
+    
+    // Η calculatePosition υπολογίζει τη θέση κάθε στοιχείου βάσει των ιδιοτήτων col και row (ξεκινώντας από το 1)
     function calculatePosition(element, block) {
       return { x: (element.col - 1) * 42, y: (element.row - 1) * 42 };
     }
-
-    // Σχεδίαση των στοιχείων για το συγκεκριμένο block σύμφωνα με τα δεδομένα του elements.json
+    
+    // Η drawElements σχεδιάζει τα στοιχεία του block χρησιμοποιώντας τα δεδομένα από το elements.json
     function drawElements(p, block) {
       elements.forEach(e => {
         if(e.block === block) {
@@ -244,7 +244,7 @@
         }
       });
     }
-
+    
     // Ενημέρωση των πληροφοριών στο info panel για το επιλεγμένο στοιχείο
     function updateInfo(number) {
       let element = elements.find(e => Number(e.number) === Number(number));
@@ -256,11 +256,11 @@
       lastClickedElement = element;
       updateBalloonPosition(element);
     }
-
+    
     //─────────────────────────────
     // Υπόλοιπες συναρτήσεις σχεδίασης και διαχείρισης καμβάδων
     //─────────────────────────────
-
+    
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -344,7 +344,7 @@
       });
       window.groupsInitialized = true;
     }
-
+    
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -361,7 +361,7 @@
       });
       window.subshellsInitialized = true;
     }
-
+    
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -385,7 +385,7 @@
       cs.style.left = leftPos + "px";
       cs.style.top = topPos + "px";
     }
-
+    
     function drawSubshells(data) {
       if (!subshellsP) return;
       subshellsP.clear();
@@ -415,7 +415,7 @@
       subshellsP.text(data.nextZ, leftMargin, rowHeight * 2.5);
       subshellsP.text(data.nextSub, leftMargin + maxZWidth + spacing, rowHeight * 2.5);
     }
-
+    
     function repositionCanvases() {
       if(!document.body.classList.contains('collapsed')) {
         let base = 134;
@@ -448,7 +448,7 @@
         document.getElementById('canvasP').style.left = "559px";
       }
     }
-
+    
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -530,7 +530,7 @@
       }
       updateToggleButton();
     }
-
+    
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -553,11 +553,11 @@
       });
       window.periodsInitialized = true;
     }
-
+    
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
-
+    
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -565,7 +565,7 @@
         document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
       }
     }
-
+    
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -589,11 +589,11 @@
       }
       return "";
     }
-
+    
     //─────────────────────────────
     // Event listeners για τα κουμπιά
     //─────────────────────────────
-
+    
     document.getElementById('nextElement').addEventListener('click', function(){
       let currentIndex = elements.findIndex(e => Number(e.number) === currentZ);
       if (currentZ === 118) {
@@ -607,13 +607,13 @@
       updateInfo(currentZ);
       redrawAll();
     });
-
+    
     document.getElementById('fillAll').addEventListener('click', function(){
       currentZ = 120;
       updateInfo(currentZ);
       redrawAll();
     });
-
+    
     document.getElementById('toggleFBlock').addEventListener('click', function(){
       document.body.classList.toggle('collapsed');
       redrawAll();
@@ -621,17 +621,17 @@
         updateBalloonPosition(lastClickedElement);
       }, 100);
     });
-
+    
     document.getElementById('reset').addEventListener('click', function(){
       currentZ = 3;
       updateInfo(currentZ);
       redrawAll();
     });
-
+    
     //─────────────────────────────
     // Φόρτωση δεδομένων από το elements.json και εκκίνηση εφαρμογής
     //─────────────────────────────
-
+    
     window.loadElements = loadElements;
     function loadElements() {
       fetch('elements.json')
@@ -645,11 +645,11 @@
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
-
+    
     function initializeCanvases() {
       redrawAll();
     }
-
+    
     loadElements();
   </script>
 </body>
