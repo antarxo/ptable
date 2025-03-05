@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Full mode: Grid διάταξη για τον πίνακα */
+    /* Full mode: Grid διάταξη για τον πίνακα (από το original another) */
     #infoPanelFull {
       display: grid;
       grid-template-areas: 
@@ -71,7 +71,7 @@
       transition: all 1.5s ease;
     }
     #infoPanelCollapsed > div { margin-bottom: 10px; }
-    /* Το Balloon */
+    /* Το Balloon: σύμφωνα με το original, αλλά με ενημερωμένη λογική στο JS */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -81,7 +81,6 @@
       padding: 10px;
       z-index: 150;
       display: none;
-      /* Η νέα λογική ορίζει το transition στην updateBalloonPosition */
     }
     /* Κουμπιά */
     #buttonPanel {
@@ -104,7 +103,7 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* Καμβάδες */
+    /* Καμβάδες Τομέων και Ομάδων (όπως στο original) */
     .canvas {
       position: absolute;
       background: transparent;
@@ -158,7 +157,7 @@
     <div id="remarksCollapsed"></div>
   </div>
   
-  <!-- Balloon -->
+  <!-- Balloon (Canvas υποστιβάδων) -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Κουμπιά -->
@@ -177,7 +176,7 @@
     let subshellsP;
     let lastClickedElement = null;
     
-    // Χρώματα τομέων
+    // Χρώματα τομέων (όπως στο original)
     const BLOCK_COLORS = { 
       s: "#FFB3C9",
       p: "#8CED8C",
@@ -209,6 +208,7 @@
       return result.join(", ");
     }
     
+    // Ρυθμίσεις καμβάδων
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -218,7 +218,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Δήλωση της drawElements ώστε να είναι διαθέσιμη σε όλες τις p5 instances.
+    // Δήλωση της drawElements στην global scope (όπως στο original)
     function drawElements(p, block) {
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
@@ -274,7 +274,7 @@
       });
     }
     
-    // Συνάρτηση φόρτωσης στοιχείων (π.χ. από elements.json)
+    // Φόρτωση στοιχείων (αρχείο elements.json)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -288,7 +288,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Συνάρτηση ενημέρωσης πληροφοριών
+    // Συνάρτηση ενημέρωσης πληροφοριών (όπως στο original, χωρίς περικοπές)
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -335,6 +335,7 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
+      // Ενημέρωση του Balloon με την ενημερωμένη λογική
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
@@ -364,7 +365,7 @@
       cs.style.top = topPos + "px";
     }
     
-    // Ενημερωμένη υλοποίηση της drawSubshells (με τα νέα χαρακτηριστικά)
+    // Ενημερωμένη υλοποίηση της drawSubshells (με νέα ρυθμίσεις)
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -477,7 +478,7 @@
       document.getElementById('toggleFBlock').disabled = false;
     }
     
-    // Εφαρμογή event listeners για τα κουμπιά
+    // Ενσωμάτωση πλήρους λειτουργικότητας κουμπιών:
     document.getElementById('nextElement').addEventListener('click', function(){
       currentZ++;
       updateInfo(currentZ);
@@ -485,7 +486,7 @@
     });
     
     document.getElementById('fillAll').addEventListener('click', function(){
-      currentZ = 118;
+      currentZ = 118; // Θεωρούμε πως 118 είναι το "πλήρες" επίπεδο εμφάνισης
       updateInfo(currentZ);
       redrawAll();
     });
@@ -503,9 +504,8 @@
       redrawAll();
     });
     
-    // Εύκολη υλοποίηση της redrawAll (επανεγκατάσταση των canvases)
+    // Εύκολη υλοποίηση της redrawAll (επαναλαμβάνει την ενημέρωση)
     function redrawAll() {
-      // Για απλές ανάγκες, επαναλαμβάνουμε την ενημέρωση
       updateInfo(currentZ);
     }
     
