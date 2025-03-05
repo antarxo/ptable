@@ -166,20 +166,19 @@
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξη</button>
     <button id="reset">Reset</button>
   </div>
   
   <script>
     // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
     let ignoreCanvasClick = false;
-    // Η μεταβλητή currentZ δείχνει το τρέχον στοιχείο; ενημερώνεται στο updateInfo
+    // currentZ δείχνει το τρέχον στοιχείο (ξεκινάει από 3)
     let currentZ = 3;
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null;
     
-    // Νέα χρώματα τομέων (σύμφωνα με το anothernewest)
+    // Νέα χρώματα τομέων σύμφωνα με το anothernewest
     const BLOCK_COLORS = { 
       s: "red",
       p: "darkgreen",
@@ -234,14 +233,13 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα panels και το global currentZ βάσει του επιλεγμένου στοιχείου.
+    // Η updateInfo ενημερώνει τα panels και το global currentZ
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
       else if(clickedZ === 120) { currentNum = 2; }
       else { currentNum = convertClickedToCurrent(clickedZ); }
       
-      // Ενημέρωση currentZ ώστε το νέο στοιχείο να χρησιμοποιείται στα φίλτρα
       currentZ = currentNum;
       
       const element = elements.find(e => Number(e.number) === currentNum);
@@ -296,7 +294,6 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Κλήση των λειτουργιών του Balloon
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
@@ -324,28 +321,15 @@
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function() {
               if(p.skipNextClick || ignoreCanvasClick) { return; }
-              let candidates;
-              if(currentZ < 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ);
-              } else if(currentZ === 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118);
-              } else if(currentZ === 119) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 1);
-              } else if(currentZ === 120) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
-              } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                                                Number(e.number) === 1 || Number(e.number) === 2));
-              }
+              // ΔΕΝ περιορίζουμε πλέον τους υποψήφιους, ώστε με κλικ να μπορείς να επιλέγεις οποιοδήποτε στοιχείο του block
+              let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                   window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
-                    flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                  }
+                  flashActive = true;
+                  setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   break;
                 }
               }
@@ -383,30 +367,15 @@
     function drawElements(p, block) {
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
-      let filter;
-      if(currentZ < 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
-      } else if(currentZ === 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
-      } else if(currentZ === 119) {
-        filter = e => e.block === block && Number(e.number) === 1;
-      } else if(currentZ === 120) {
-        filter = e => e.block === block && Number(e.number) === 2;
-      } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                              Number(e.number) === 1 || Number(e.number) === 2);
-      }
+      // ΔΕΝ εφαρμόζουμε πλέον φιλτράρισμα βάση currentZ ώστε να σχεδιάζονται όλα τα στοιχεία του block
+      let filter = e => e.block === block;
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        if(Number(e.number) === currentZ ||
-           ((currentZ === 119) && Number(e.number) === 1) ||
-           ((currentZ === 120) && Number(e.number) === 2)) {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
-          else { p.fill(getBlockColor(e.block)); }
+        if(Number(e.number) === currentZ) {
+          p.fill(getBlockColor(e.block));
           p.textSize(16);
           p.textAlign(p.CENTER, p.CENTER);
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
@@ -423,9 +392,7 @@
           }
           p.strokeWeight(1);
         } else {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
-          else { p.fill(BLOCK_COLORS[e.block]); }
+          p.fill(BLOCK_COLORS[e.block]);
           p.rect(pos.x, pos.y, 40, 40, 5);
           p.fill(0);
           p.textSize(Number(e.number) > 99 ? 10 : 12);
@@ -516,28 +483,14 @@
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function() {
               if(p.skipNextClick) { return; }
-              let candidates;
-              if(currentZ < 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ);
-              } else if(currentZ === 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118);
-              } else if(currentZ === 119) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 1);
-              } else if(currentZ === 120) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
-              } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                                                Number(e.number) === 1 || Number(e.number) === 2));
-              }
+              let candidates = elements.filter(e => e.block === block);
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
                   window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
-                    flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                  }
+                  flashActive = true;
+                  setTimeout(() => { flashActive = false; redrawAll(); }, 200);
                   break;
                 }
               }
@@ -545,155 +498,31 @@
           };
         });
       });
-      if(!document.body.classList.contains('collapsed')) {
-        let base = 134, shiftP = 0, shiftD = 0;
-        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
-        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = base + "px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = (base + shiftP) + "px"; }
-      } else {
-        let cS = document.getElementById('canvasS');
-        if(cS) { cS.style.left = "50px"; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = "154px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = "139px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = "559px"; }
-      }
-      if(currentZ >= 121) {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "block"; }
-        initPeriodsCanvas();
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "block"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "block"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "block"; }
-        let csgLeft = document.getElementById('canvasS_groups');
-        if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "50px"; }
-        let dLeft = document.getElementById('canvasD').style.left;
-        let cdgLeft = document.getElementById('canvasD_groups');
-        if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
-        let pLeft = document.getElementById('canvasP').style.left;
-        let cpgLeft = document.getElementById('canvasP_groups');
-        if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
-        initGroupsCanvases();
-      } else {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "none"; }
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "none"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "none"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "none"; }
-      }
+      // Ενημέρωση τοποθεσιών (παραμένουν οι ίδιες)
       updateToggleButton();
     }
     
-    function initPeriodsCanvas() {
-      if(window.periodsInitialized) return;
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(40, 292);
-          canvas.parent("canvasPeriods");
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
-          p.textStyle(p.BOLD);
-          p.background(240);
-          const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
-          for (let i = 0; i < 7; i++) {
-            p.fill(240);
-            p.rect(0, i * 42, 40, 40);
-            p.fill(0);
-            p.text(periodLabels[i], 20, i * 42 + 20);
-          }
-        };
-      });
-      window.periodsInitialized = true;
-    }
+    // Επεξεργασία κουμπιών
+    document.getElementById('nextElement').addEventListener('click', function() {
+      if(currentZ < 118) { currentZ++; }
+      else if(currentZ === 118) { currentZ = 119; }
+      else if(currentZ === 119) { currentZ = 120; }
+      else { currentZ = 3; } // επαναφορά
+      updateInfo(currentZ);
+      redrawAll();
+    });
     
-    function initGroupsCanvases() {
-      if(window.groupsInitialized) return;
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(84, 80);
-          canvas.parent("canvasS_groups");
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
-          p.textStyle(p.BOLD);
-          p.background(240);
-          p.text("1", 20, 10);
-          p.text("2", 62, 10);
-          p.text("ΙΑ", 20, 50);
-          p.text("ΙΙΑ", 62, 50);
-        };
-      });
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(418, 40);
-          canvas.parent("canvasD_groups");
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
-          p.textStyle(p.BOLD);
-          p.background(240);
-          for(let c = 0; c < 10; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 0, 40, 20);
-            p.fill(0);
-            p.text((c+3).toString(), x + 20, 10);
-          }
-          const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
-          for(let c = 0; c < 10; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 22, 40, 20);
-            p.fill(0);
-            p.text(oldLabels[c], x + 20, 32);
-          }
-        };
-      });
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(250, 40);
-          canvas.parent("canvasP_groups");
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
-          p.textStyle(p.BOLD);
-          p.background(240);
-          for(let c = 0; c < 6; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 0, 40, 20);
-            p.fill(0);
-            p.text((c+13).toString(), x + 20, 10);
-          }
-          const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
-          for(let c = 0; c < 6; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 22, 40, 20);
-            p.fill(0);
-            p.text(oldLabels[c], x + 20, 32);
-          }
-        };
-      });
-      window.groupsInitialized = true;
-    }
+    document.getElementById('fillAll').addEventListener('click', function() {
+      currentZ = 118;
+      updateInfo(currentZ);
+      redrawAll();
+    });
+    
+    document.getElementById('reset').addEventListener('click', function() {
+      currentZ = 3;
+      updateInfo(currentZ);
+      redrawAll();
+    });
     
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
