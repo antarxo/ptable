@@ -71,7 +71,7 @@
       transition: all 1.5s ease;
     }
     #infoPanelCollapsed > div { margin-bottom: 10px; }
-    /* Το Balloon – ΔΗΛΩΣΗ ΑΛΛΑΓΗΣ: Αντικαταστάθηκαν οι συναρτήσεις drawSubshells και updateBalloonPosition από το anothernewest */
+    /* Το Balloon: ΑΛΛΑΓΗ _ΜΟΝΟ_ στη λογική του (σύμφωνα με το anothernewest) */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -123,7 +123,6 @@
       display: none;
       z-index: 5;
     }
-    /* Οι καμβάδες ομάδων για τους τομείς */
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
     #canvasS_groups { width: 84px; height: 80px; }
@@ -180,7 +179,7 @@
     let subshellsP;
     let lastClickedElement = null;
     
-    // Χρώματα τομέων (όπως στο αρχικό) – εδώ δεν τροποποιούνται
+    // Χρώματα τομέων – δεν αλλάζουν (όπως στο αρχικό)
     const BLOCK_COLORS = { 
       s: "#FFB3C9",
       f: "#EACE5D",
@@ -319,7 +318,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: Λογική ενημέρωσης πληροφοριών (όπως στο αρχικό another)
+    // updateInfo: Ενημέρωση πίνακα πληροφοριών (όπως στο αρχικό another)
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -387,7 +386,7 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Ενσωμάτωση λογικής του Balloon από το anothernewest (μόνο αυτή η αλλαγή)
+      // Κλήση της λογικής του Balloon (ακριβώς όπως από το anothernewest)
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
@@ -514,7 +513,7 @@
       }
     }
     
-    /* ΕΝΣΩΜΑΤΩΣΗ της λογικής του Balloon από το anothernewest (χωρίς καμία αλλαγή) */
+    /* ΕΝΣΩΜΑΤΩΣΗ της λογικής του Balloon από το anothernewest (χωρίς καμία άλλη αλλαγή) */
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -761,9 +760,11 @@
       updateInfo(currentZ);
     });
     
+    // ** Τροποποίηση στο toggle: μετά την εναλλαγή, καλείται updateInfo ώστε να ενημερωθεί και η θέση του Balloon όπως στο original **
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       document.body.classList.toggle('collapsed');
       redrawAll();
+      updateInfo(currentZ);
     });
     
     document.getElementById('reset').addEventListener('click', function() {
