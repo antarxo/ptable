@@ -224,7 +224,7 @@
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
 
     //─────────────────────────────
-    // Ορισμός βοηθητικών συναρτήσεων
+    // Βοηθητικές συναρτήσεις σύμφωνα με τη βασική λογική
     //─────────────────────────────
 
     // Υπολογισμός θέσης για κάθε στοιχείο βάσει των ιδιοτήτων col και row
@@ -233,7 +233,7 @@
       return { x: (element.col - 1) * 42, y: (element.row - 1) * 42 };
     }
 
-    // Σχεδίαση των στοιχείων για κάθε block
+    // Σχεδίαση των στοιχείων για κάθε block (ακολουθώντας τη λογική συμπλήρωσης από το αρχείο)
     function drawElements(p, block) {
       elements.forEach(e => {
         if(e.block === block) {
@@ -247,7 +247,7 @@
       });
     }
 
-    // Ενημέρωση πληροφοριών για το επιλεγμένο στοιχείο
+    // Ενημέρωση των πληροφοριών για το επιλεγμένο στοιχείο
     function updateInfo(number) {
       let element = elements.find(e => Number(e.number) === Number(number));
       if (!element) return;
