@@ -217,7 +217,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Δηλώνουμε τη συνάρτηση drawElements στην global scope για να είναι διαθέσιμη σε όλα τα p5 instances.
+    // ΔΗΛΩΣΗ της drawElements ώστε να είναι διαθέσιμη σε όλες τις p5 instances.
     function drawElements(p, block) {
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
@@ -273,7 +273,7 @@
       });
     }
     
-    // Φόρτωση στοιχείων
+    // Φόρτωση στοιχείων (π.χ. από αρχείο elements.json)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -475,6 +475,13 @@
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
+    
+    // Προσθήκη event listener στο κουμπί "Επόμενο" για αλλαγή στοιχείου
+    document.getElementById('nextElement').addEventListener('click', function(){
+      currentZ++;
+      updateInfo(currentZ);
+      redrawAll();
+    });
     
     loadElements();
   </script>
