@@ -338,6 +338,11 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
+    // Προσθήκη της συνάρτησης initializeCanvases για αρχικοποίηση των καμβάδων
+    function initializeCanvases() {
+      redrawAll();
+    }
+    
     // updateInfo: Ενημερώνει το info panel και το Balloon.
     function updateInfo(clickedZ) {
       let currentNum;
