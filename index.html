@@ -220,20 +220,18 @@
       f: { cols: 14, rows: 7 }
     };
     let elements = [];
-
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
 
     //─────────────────────────────
-    // Βοηθητικές συναρτήσεις σύμφωνα με τη βασική λογική
+    // Προσθήκη βοηθητικών συναρτήσεων που λείπουν
     //─────────────────────────────
 
-    // Υπολογισμός θέσης για κάθε στοιχείο βάσει των ιδιοτήτων col και row
+    // Υπολογισμός θέσης για κάθε στοιχείο βάσει των ιδιοτήτων col και row (αρχίζοντας από το 1)
     function calculatePosition(element, block) {
-      // Υποθέτουμε ότι οι ιδιότητες col και row ξεκινούν από το 1
       return { x: (element.col - 1) * 42, y: (element.row - 1) * 42 };
     }
 
-    // Σχεδίαση των στοιχείων για κάθε block (ακολουθώντας τη λογική συμπλήρωσης από το αρχείο)
+    // Σχεδίαση των στοιχείων για το συγκεκριμένο block σύμφωνα με τα δεδομένα του elements.json
     function drawElements(p, block) {
       elements.forEach(e => {
         if(e.block === block) {
@@ -247,7 +245,7 @@
       });
     }
 
-    // Ενημέρωση των πληροφοριών για το επιλεγμένο στοιχείο
+    // Ενημέρωση των πληροφοριών στο info panel για το επιλεγμένο στοιχείο
     function updateInfo(number) {
       let element = elements.find(e => Number(e.number) === Number(number));
       if (!element) return;
