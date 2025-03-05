@@ -220,9 +220,49 @@
       f: { cols: 14, rows: 7 }
     };
     let elements = [];
+
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
 
-    // initGroupsCanvases χωρίς τροποποιήσεις
+    //─────────────────────────────
+    // Ορισμός βοηθητικών συναρτήσεων
+    //─────────────────────────────
+
+    // Υπολογισμός θέσης για κάθε στοιχείο βάσει των ιδιοτήτων col και row
+    function calculatePosition(element, block) {
+      // Υποθέτουμε ότι οι ιδιότητες col και row ξεκινούν από το 1
+      return { x: (element.col - 1) * 42, y: (element.row - 1) * 42 };
+    }
+
+    // Σχεδίαση των στοιχείων για κάθε block
+    function drawElements(p, block) {
+      elements.forEach(e => {
+        if(e.block === block) {
+          let pos = calculatePosition(e, block);
+          p.fill(getBlockColor(e.block));
+          p.rect(pos.x, pos.y, 40, 40);
+          p.fill(0);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(e.symbol, pos.x + 20, pos.y + 20);
+        }
+      });
+    }
+
+    // Ενημέρωση πληροφοριών για το επιλεγμένο στοιχείο
+    function updateInfo(number) {
+      let element = elements.find(e => Number(e.number) === Number(number));
+      if (!element) return;
+      document.getElementById('leftPanelFull').innerHTML = "Αριθμός: " + element.number;
+      document.getElementById('middlePanelFull').innerHTML = "Σύμβολο: " + element.symbol;
+      document.getElementById('rightPanelFull').innerHTML = "Όνομα: " + element.name;
+      document.getElementById('remarksFull').innerHTML = messageForElement(element);
+      lastClickedElement = element;
+      updateBalloonPosition(element);
+    }
+
+    //─────────────────────────────
+    // Υπόλοιπες συναρτήσεις σχεδίασης και διαχείρισης καμβάδων
+    //─────────────────────────────
+
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -307,7 +347,6 @@
       window.groupsInitialized = true;
     }
 
-    // Δημιουργία του canvas του Balloon με draw() ώστε να ενημερώνεται συνεχώς
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -325,7 +364,6 @@
       window.subshellsInitialized = true;
     }
 
-    // Ορισμός της updateBalloonPosition στο global scope
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -350,7 +388,6 @@
       cs.style.top = topPos + "px";
     }
 
-    // ΝΕΑ drawSubshells: χωρίζει σε στήλες (Z και υποστιβάδες)
     function drawSubshells(data) {
       if (!subshellsP) return;
       subshellsP.clear();
@@ -381,7 +418,6 @@
       subshellsP.text(data.nextSub, leftMargin + maxZWidth + spacing, rowHeight * 2.5);
     }
 
-    // Συνάρτηση repositionCanvases για μετατοπίσεις των καμβάδων d και p
     function repositionCanvases() {
       if(!document.body.classList.contains('collapsed')) {
         let base = 134;
@@ -556,6 +592,10 @@
       return "";
     }
 
+    //─────────────────────────────
+    // Event listeners για τα κουμπιά
+    //─────────────────────────────
+
     document.getElementById('nextElement').addEventListener('click', function(){
       let currentIndex = elements.findIndex(e => Number(e.number) === currentZ);
       if (currentZ === 118) {
@@ -590,14 +630,16 @@
       redrawAll();
     });
 
-    // Ορίζουμε το loadElements στο global scope πριν την κλήση του
+    //─────────────────────────────
+    // Φόρτωση δεδομένων από το elements.json και εκκίνηση εφαρμογής
+    //─────────────────────────────
+
     window.loadElements = loadElements;
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
         .then(data => {
           elements = sortElements(data);
-          // Καλούμε την initializeCanvases για αρχικοποίηση όλων των καμβάδων
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
@@ -606,7 +648,6 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
 
-    // Ορίζουμε την initializeCanvases στο global scope
     function initializeCanvases() {
       redrawAll();
     }
