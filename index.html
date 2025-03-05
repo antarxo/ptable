@@ -317,7 +317,9 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: Ενημερώνει το info panel και το Balloon
+    // updateInfo: Ενημερώνει το info panel και το Balloon.
+    // Εδώ χρησιμοποιούμε fallback για την ιδιότητα subshells, ώστε αν δεν υπάρχουν πληροφορίες,
+    // να εμφανίζεται το μήνυμα "Δεν υπάρχουν πληροφορίες".
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -327,6 +329,9 @@
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
+      
+      // Χρησιμοποιούμε fallback για subshells
+      const subshellsText = element.subshells ? element.subshells : "Δεν υπάρχουν πληροφορίες";
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
       if(clickedZ === 119) { displayZ = 1; }
@@ -340,14 +345,14 @@
       let prevElement;
       if(!document.body.classList.contains('collapsed')) {
         prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1);
-        if(!prevElement) { prevElement = { number: "-", subshells: "-", block: element.block }; }
+        if(!prevElement) { prevElement = { number: "-", subshells: "Δεν υπάρχουν πληροφορίες", block: element.block }; }
       } else {
         prevElement = elements.find(e => e.group === element.group && e.period === element.period - 1)
-                      || { number: "-", subshells: "-", block: element.block };
+                      || { number: "-", subshells: "Δεν υπάρχουν πληροφορίες", block: element.block };
       }
       
       let nextElement = elements.find(e => Number(e.number) === Number(element.number) + 1)
-                        || { number: "-", subshells: "-", block: element.block };
+                        || { number: "-", subshells: "Δεν υπάρχουν πληροφορίες", block: element.block };
       
       function displayZFor(e) {
         if(e.number === "-" || isNaN(Number(e.number))) return "-";
@@ -356,9 +361,9 @@
       }
       
       let subsData = {
-        prev: "Ζ=" + displayZFor(prevElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (prevElement.subshells || "-"),
-        current: "Ζ=" + displayZFor(element) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (element.subshells || "-"),
-        next: "Ζ=" + displayZFor(nextElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (nextElement.subshells || "-"),
+        prev: "Ζ=" + displayZFor(prevElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (prevElement.subshells ? prevElement.subshells : "Δεν υπάρχουν πληροφορίες"),
+        current: "Ζ=" + displayZFor(element) + "&nbsp;&nbsp;&nbsp;&nbsp;" + subshellsText,
+        next: "Ζ=" + displayZFor(nextElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (nextElement.subshells ? nextElement.subshells : "Δεν υπάρχουν πληροφορίες"),
         prevColor: getBlockColor(prevElement.block),
         currentColor: getBlockColor(element.block),
         nextColor: getBlockColor(nextElement.block)
@@ -387,7 +392,7 @@
       
       drawSubshells(subsData);
       updateBalloonPosition(element);
-      // Εξασφαλίζουμε ανανέωση του canvas του balloon
+      // Ανανεώνουμε το canvas του balloon
       if(subshellsP && typeof subshellsP.redraw === "function"){
         subshellsP.redraw();
       }
@@ -416,11 +421,9 @@
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
-        // Ειδικά: 119 εμφανίζεται ως 1, 120 ως 2.
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
         
-        // Εάν το στοιχείο αντιστοιχεί στο currentZ ή στα ειδικά όταν έχουν προστεθεί, εμφανίζεται επισημασμένα.
         if(Number(e.number) === currentZ ||
            ((currentZ === 119) && Number(e.number) === 1) ||
            ((currentZ >= 120) && (Number(e.number) === 1 || Number(e.number) === 2))) {
@@ -686,7 +689,6 @@
     }
     
     // Χειριστές κουμπιών
-    // Το κουμπί "Επόμενο": όταν το currentZ είναι 118 πηγαίνει στο 119, όταν είναι 119 στο 120 και όταν είναι ήδη 120 δεν κάνει τίποτα.
     document.getElementById('nextElement').addEventListener('click', function(){
       let currentIndex = elements.findIndex(e => Number(e.number) === currentZ);
       if (currentZ === 118) {
@@ -696,26 +698,22 @@
       } else if (currentZ < 120 && currentIndex < elements.length - 1) {
         currentZ = Number(elements[currentIndex + 1].number);
       }
-      // Μόνο αν δεν έχει φτάσει στο 120
       if(currentZ > 120) currentZ = 120;
       updateInfo(currentZ);
       redrawAll();
     });
     
-    // Το κουμπί "Συμπλήρωσε": ορίζει το currentZ στο 120 ώστε να εμφανίζονται τα στοιχεία 3-118 και τα ειδικά 1 και 2.
     document.getElementById('fillAll').addEventListener('click', function(){
       currentZ = 120;
       updateInfo(currentZ);
       redrawAll();
     });
     
-    // Το "Σύμπτυξη" εναλλάσσει την κλάση collapsed.
     document.getElementById('toggleFBlock').addEventListener('click', function(){
       document.body.classList.toggle('collapsed');
       redrawAll();
     });
     
-    // Το "Reset" επαναφέρει την αρχική τιμή.
     document.getElementById('reset').addEventListener('click', function(){
       currentZ = 3;
       updateInfo(currentZ);
