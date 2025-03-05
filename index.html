@@ -175,10 +175,10 @@
     let ignoreCanvasClick = false;
     let currentZ = 3; // Αρχική τιμή: εμφανίζονται στοιχεία 3 έως 118
     let flashActive = false;
-    let subshellsP; // p5 instance για το balloon
+    let subshellsP; // p5 instance για το Balloon
     let lastClickedElement = null;
 
-    // Global variable για τα δεδομένα του balloon
+    // Global variable για τα δεδομένα του Balloon
     window.subshellsData = null;
 
     // Χρώματα τομέων
@@ -333,7 +333,7 @@
       // 3 γραμμές (prev, current, next)
       let rowHeight = 20;
       let totalHeight = rowHeight * 3;
-      // Δώσε όσο πλάτος χρειάζεται (π.χ. 300)
+      // Δώσε πλάτος που να επαρκεί (π.χ. 300)
       subshellsP.resizeCanvas(300, totalHeight);
       subshellsP.canvas.style.cssText =
         "width: 300px !important; height: " + totalHeight + "px !important;";
@@ -382,7 +382,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
 
-    // Προσθήκη της συνάρτησης initializeCanvases για αρχικοποίηση των καμβάδων
+    // Συνάρτηση για αρχικοποίηση των καμβάδων
     function initializeCanvases() {
       redrawAll();
     }
@@ -438,23 +438,19 @@
         // prev
         prevZ: "Z=" + displayZFor(prevElement),
         prevSub: prevElement.subshells || "Δεν υπάρχουν πληροφορίες",
-
         // current
         currentZ: "Z=" + displayZFor(element),
         currentSub: subshellsText,
-
         // next
         nextZ: "Z=" + displayZFor(nextElement),
         nextSub: nextElement.subshells || "Δεν υπάρχουν πληροφορίες",
-
         // Χρώματα
         prevColor: getBlockColor(prevElement.block),
         currentColor: getBlockColor(element.block),
         nextColor: getBlockColor(nextElement.block)
       };
 
-      // Εμφάνιση αντίστοιχων πληροφοριών στο μεσαίο panel
-      // (τώρα κι εδώ δύο «στήλες» - απλώς σε HTML)
+      // Εμφάνιση πληροφοριών στο μεσαίο panel
       let subshellsInfo = `
         <div style="font-size:1.2em; color:${subsData.prevColor}; text-align:left;">
           ${subsData.prevZ} ${subsData.prevSub}
@@ -497,7 +493,7 @@
     }
     window.updateInfo = updateInfo;
 
-    // drawElements: Εμφανίζει τα στοιχεία σύμφωνα με το φίλτρο ...
+    // drawElements: Εμφανίζει τα στοιχεία σύμφωνα με το φίλτρο
     function drawElements(p, block) {
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
@@ -641,36 +637,8 @@
           };
         });
       });
-      if(!document.body.classList.contains('collapsed')) {
-        let base = 134, shiftP = 0, shiftD = 0;
-        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
-        else if(currentZ >= 57 && currentZ <= 70) {
-          shiftP = 42 * 10 + 42 * (currentZ - 56);
-          shiftD = 42 * (currentZ - 56);
-        }
-        else {
-          shiftP = 42 * 10 + 42 * 14;
-          shiftD = 42 * 14;
-        }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = base + "px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = (base + shiftP) + "px"; }
-      } else {
-        let cS = document.getElementById('canvasS');
-        if(cS) { cS.style.left = "50px"; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = "154px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = "139px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = "559px"; }
-      }
-      if(currentZ >= 121) {
+      // Εμφάνιση καμβάδων περιόδων και ομάδων όταν currentZ είναι 120 ή πάνω
+      if(currentZ >= 120) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
