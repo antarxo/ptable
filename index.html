@@ -64,6 +64,7 @@
       width: calc(100vw - 920px);
       z-index: 40;
       text-align: left;
+      transition: all 1.5s ease;
     }
     /* Εσωτερικά τμήματα των info panels */
     #leftPanelFull, #leftPanelCollapsed,
@@ -185,14 +186,22 @@
     let subshellsP;
     let lastClickedElement = null;
 
+    // Ενημερωμένες τιμές χρωμάτων βάσει του ptable.com:
+    const BLOCK_COLORS = { 
+      s: '#FFB6C1',  // light pink
+      p: '#98FB98',  // pale green
+      d: '#ADD8E6',  // light blue
+      f: '#FFE4B5'   // moccasin
+    };
+
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
       switch(b) {
-        case "s": return "red";
-        case "p": return "darkgreen";
-        case "d": return "darkblue";
-        case "f": return "orange";
+        case "s": return BLOCK_COLORS.s;
+        case "p": return BLOCK_COLORS.p;
+        case "d": return BLOCK_COLORS.d;
+        case "f": return BLOCK_COLORS.f;
         default: return "black";
       }
     }
@@ -215,7 +224,6 @@
       d: { cols: 10, rows: 7 },
       f: { cols: 14, rows: 7 }
     };
-    const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
@@ -777,8 +785,8 @@
     });
     
     // Toggle handler με τις τροποποιήσεις:
-    // 1. Κατά το full -> collapsed, το infoPanelFull μετακινείται στην πάνω δεξιά θέση με εφέ 1.5s και μετά εμφανίζεται το infoPanelCollapsed (με τις τελικές διαστάσεις του collapsed mode) ενώ εξαφανίζεται το infoPanelFull.
-    // 2. Αντίστροφα, κατά το collapsed -> full, το infoPanelCollapsed μετακινείται στην κάτω θέση και μετά εμφανίζεται το infoPanelFull ενώ εξαφανίζεται το infoPanelCollapsed.
+    // 1. Κατά το full -> collapsed, το infoPanelFull μετακινείται στην πάνω δεξιά θέση με εφέ 1.5s και μετά εμφανίζεται το infoPanelCollapsed ενώ εξαφανίζεται το infoPanelFull.
+    // 2. Κατά το collapsed -> full, το infoPanelCollapsed, που ξεκινά στην πάνω δεξιά θέση, μετακινείται στην κάτω θέση (με το ίδιο εφέ 1.5s) και μετά εμφανίζεται το infoPanelFull ενώ εξαφανίζεται το infoPanelCollapsed.
     // 3. Το Balloon ξεκινά την αλλαγή θέσης του ταυτόχρονα με την μετάβαση, με καθυστέρηση 1s.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -793,11 +801,17 @@
         }, 1500);
       } else {
         // Collapsed → Full:
+        let panelB = document.getElementById('infoPanelCollapsed');
+        // Μετακίνηση του Panel B από την πάνω δεξιά θέση στη θέση του full πίνακα (κάτω θέση)
+        panelB.style.left = "20px";
+        panelB.style.top = "428px";
+        panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
         document.body.classList.remove('collapsed');
         toggleBtn.textContent = "Σύμπτυξη";
         setTimeout(function() {
-          document.getElementById('infoPanelCollapsed').style.display = "none";
-          document.getElementById('infoPanelFull').style.display = "flex";
+          panelB.style.display = "none";
+          let panelA = document.getElementById('infoPanelFull');
+          panelA.style.display = "flex";
           updateInfo(currentZ);
         }, 1500);
       }
