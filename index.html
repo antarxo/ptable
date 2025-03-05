@@ -81,6 +81,7 @@
       padding: 10px;
       z-index: 150;
       display: none;
+      /* Η νέα λογική ορίζει το transition στην updateBalloonPosition */
     }
     /* Κουμπιά */
     #buttonPanel {
@@ -217,7 +218,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Δήλωση της drawElements για global χρήση
+    // Δήλωση της drawElements ώστε να είναι διαθέσιμη σε όλες τις p5 instances.
     function drawElements(p, block) {
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
@@ -273,7 +274,7 @@
       });
     }
     
-    // Φόρτωση στοιχείων (π.χ. από elements.json)
+    // Συνάρτηση φόρτωσης στοιχείων (π.χ. από elements.json)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -338,7 +339,7 @@
       updateBalloonPosition(element);
     }
     
-    // Νέα υλοποίηση της updateBalloonPosition
+    // Ενημερωμένη υλοποίηση της updateBalloonPosition (με transition 1.5s)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if (!cs) return;
@@ -363,7 +364,7 @@
       cs.style.top = topPos + "px";
     }
     
-    // Νέα υλοποίηση της drawSubshells
+    // Ενημερωμένη υλοποίηση της drawSubshells (με τα νέα χαρακτηριστικά)
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -476,15 +477,37 @@
       document.getElementById('toggleFBlock').disabled = false;
     }
     
-    // Dummy δήλωση για redrawAll ώστε να μην εμφανίζεται το σφάλμα.
-    function redrawAll() { }
-    
-    // Event listener στο κουμπί "Επόμενο" για αλλαγή στοιχείου
+    // Εφαρμογή event listeners για τα κουμπιά
     document.getElementById('nextElement').addEventListener('click', function(){
       currentZ++;
       updateInfo(currentZ);
       redrawAll();
     });
+    
+    document.getElementById('fillAll').addEventListener('click', function(){
+      currentZ = 118;
+      updateInfo(currentZ);
+      redrawAll();
+    });
+    
+    document.getElementById('toggleFBlock').addEventListener('click', function(){
+      document.body.classList.toggle('collapsed');
+      updateInfo(currentZ);
+      redrawAll();
+    });
+    
+    document.getElementById('reset').addEventListener('click', function(){
+      currentZ = 3;
+      document.body.classList.remove('collapsed');
+      updateInfo(currentZ);
+      redrawAll();
+    });
+    
+    // Εύκολη υλοποίηση της redrawAll (επανεγκατάσταση των canvases)
+    function redrawAll() {
+      // Για απλές ανάγκες, επαναλαμβάνουμε την ενημέρωση
+      updateInfo(currentZ);
+    }
     
     loadElements();
   </script>
