@@ -179,10 +179,11 @@
     let subshellsP;
     let lastClickedElement = null;
     
-    // Νέα χρώματα όπως δόθηκαν
+    // Νέα χρώματα όπως ζητήθηκαν:
+    // s τομέας: "#FFB3C9", f τομέας: "#EACE5D"
     const BLOCK_COLORS = { 
-      s: "#EACE5D",
-      f: "#F1F165",
+      s: "#FFB3C9",
+      f: "#EACE5D",
       d: "#ACDFEC",
       p: "#8CED8C"
     };
@@ -530,11 +531,12 @@
     }
     
     // Συνάρτηση για το Balloon: ενημερώνει το canvas με 3 γραμμές (προηγούμενη, τρέχουσα - bold, επόμενη)
-    // Χρησιμοποιούμε ακόμα μικρότερη γραμματοσειρά (π.χ. 0.8em)
+    // Χρησιμοποιούμε ακόμη μικρότερη γραμματοσειρά (π.χ. 12px)
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
       let fontSize = 12;
+      subshellsP.textSize(fontSize);
       let leftMargin = 2;
       let extraMargin = 5;
       subshellsP.clear();
