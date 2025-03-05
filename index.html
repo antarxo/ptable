@@ -175,7 +175,7 @@
   <script>
     // Βασικές μεταβλητές
     let ignoreCanvasClick = false;
-    let currentZ = 3;
+    let currentZ = 3; // Αρχική τιμή. Για αλλαγή, τροποποιήστε εδώ.
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null;
@@ -743,6 +743,34 @@
       }
       return "";
     }
+    
+    // Προσθήκη event listeners στα κουμπιά για πλήρη λειτουργικότητα
+    document.getElementById('nextElement').addEventListener('click', function(){
+      let currentIndex = elements.findIndex(e => Number(e.number) === currentZ);
+      if(currentIndex < elements.length - 1) {
+        currentZ = Number(elements[currentIndex + 1].number);
+        updateInfo(currentZ);
+        redrawAll();
+      }
+    });
+    
+    document.getElementById('fillAll').addEventListener('click', function(){
+      // Για παράδειγμα, ορίζουμε το currentZ στο 118 (το τελευταίο στοιχείο πριν από τις ειδικές τιμές)
+      currentZ = 118;
+      updateInfo(currentZ);
+      redrawAll();
+    });
+    
+    document.getElementById('toggleFBlock').addEventListener('click', function(){
+      document.body.classList.toggle('collapsed');
+      redrawAll();
+    });
+    
+    document.getElementById('reset').addEventListener('click', function(){
+      currentZ = 3;
+      updateInfo(currentZ);
+      redrawAll();
+    });
     
     loadElements();
   </script>
