@@ -40,13 +40,13 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Όταν το body έχει την κλάση collapsed, ο full πίνακας μετακινείται/μεγεθύνεται */
+    /* Όταν το body έχει κλάση collapsed, ο full πίνακας μετακινείται/μεγεθύνεται */
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
     }
-    /* Info Panel Collapsed – τελική κατάσταση, κρυμμένος αρχικά */
+    /* Info Panel Collapsed – τελική collapsed κατάσταση, κρυμμένος αρχικά */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -60,7 +60,7 @@
       top: 112px;
       width: calc(100vw - 920px);
       z-index: 40;
-      transition: none;
+      /* Χωρίς transition για άμεση εμφάνιση */
       text-align: left;
     }
     /* Εσωτερικά τμήματα των info panels */
@@ -126,11 +126,11 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες ομάδων για τους τομείς d και p */
+    /* Για τους καμβάδες ομάδων των τομέων d και p */
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Για τον s τομέα θέλουμε την ίδια μορφοποίηση: μία canvas με ύψος 40, στην πρώτη γραμμή οι νέοι αριθμοί (1,2) και στη δεύτερη οι παλιοί ("ΙΑ","ΙΙΑ") */
-    #canvasS_groups { width: 84px; height: 40px; }
+    /* Για τον s τομέα: ο καμβάς ομάδων θα έχει δύο γραμμές – πρώτη με "1" και "2", δεύτερη με "ΙΑ" και "ΙΙΑ" */
+    #canvasS_groups { width: 84px; height: 80px; }
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
     .d-block { background: #ccccff !important; }
@@ -157,7 +157,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακες Πληροφοριών: δύο καμβάδες -->
+  <!-- Πίνακες Πληροφοριών: δύο panels -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -234,7 +234,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα περιεχόμενα και το Balloon
+    // updateInfo: ενημερώνει το περιεχόμενο για το full ή collapsed panel ανάλογα με το status
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -365,36 +365,25 @@
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Canvas για το s block – ακριβώς όπως στους άλλους τομείς:
+      // Για τον s τομέα: ο καμβάς ομάδων έχει 2 γραμμές (ύψος 80px) – πρώτη με νέα αρίθμηση και δεύτερη με παλιά ("ΙΑ", "ΙΙΑ")
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(84, 40);
+          let canvas = p.createCanvas(84, 80);
           canvas.parent("canvasS_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          for(let c = 0; c < 2; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 0, 40, 20);
-            p.fill(0);
-            // Πρώτη γραμμή: νέα αρίθμηση
-            p.text((c+1).toString(), x + 20, 10);
-          }
-          const oldLabels = ["ΙΑ", "ΙΙΑ"];
-          for(let c = 0; c < 2; c++){
-            let x = c * (40 + 2);
-            p.fill(240);
-            p.rect(x, 22, 40, 20);
-            p.fill(0);
-            // Δεύτερη γραμμή: παλιά αρίθμηση
-            p.text(oldLabels[c], x + 20, 32);
-          }
+          // Πρώτη γραμμή (y=0 έως 20): νέοι αριθμοί
+          p.text("1", 20, 10);
+          p.text("2", 62, 10);
+          // Δεύτερη γραμμή (y=22 έως 42): παλιές ετικέτες
+          p.text("ΙΑ", 20, 32);
+          p.text("ΙΙΑ", 62, 32);
         };
       });
-      // Canvas για τους τομείς d και p (ίδια με πριν)
+      // Οι καμβάδες για τους τομείς d και p παραμένουν ως πριν
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -779,12 +768,14 @@
     });
     
     // Toggle handler:
-    // Ο πίνακας full μετακινείται με το εφέ και μετά από 1.5s γίνεται swap με τον collapsed, ο οποίος ενημερώνεται αμέσως.
-    // Επιπλέον, μετά το swap καλείται updateBalloonPosition με το τελευταίο κλικ στοιχείο ώστε να ενημερωθεί η θέση του Balloon.
+    // Όταν γίνεται η μετάβαση, ο πίνακας full μετακινείται με το εφέ.
+    // Μετά από 1.5 δευτερόλεπτα (όταν ολοκληρωθεί η μετάβαση), γίνεται swap: 
+    // το full panel κρύβεται και εμφανίζεται ο collapsed panel με ενημερωμένο περιεχόμενο, ενώ στη μετάβαση και το αντίστροφο.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')) {
-         // Full -> Collapsed
+         // Full -> Collapsed: αφήνουμε το infoPanelFull να μετακινηθεί με το εφέ,
+         // και μετά από 1.5s κρύβουμε το full panel και εμφανίζουμε το collapsed panel.
          document.body.classList.add('collapsed');
          toggleBtn.textContent = "Ανάπτυξη";
          setTimeout(function() {
@@ -793,7 +784,7 @@
            updateInfo(currentZ);
          }, 1500);
       } else {
-         // Collapsed -> Full
+         // Collapsed -> Full: αντίστοιχα
          document.body.classList.remove('collapsed');
          toggleBtn.textContent = "Σύμπτυξη";
          setTimeout(function() {
