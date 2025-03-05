@@ -343,17 +343,22 @@
                        <span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
       
-      // Επιλογή του στοιχείου "πάνω από" το τρέχον με βάση την προβολή:
+      // Επιλογή του στοιχείου "πάνω από" το τρέχον:
+      // Σε full mode: αν element.row > 1 τότε αναζητούμε με ίδιο col και row = element.row - 1, αλλιώς "-"
       let prevElement;
-      if(document.body.classList.contains('collapsed')) {
-        // Σε collapsed mode: χρήση του στοιχείου της ίδιας ομάδας με period = element.period - 1
-        prevElement = elements.find(e => e.group === element.group && e.period === element.period - 1) || { number: "-", subshells: "-", block: element.block };
+      if(!document.body.classList.contains('collapsed')) {
+        prevElement = (element.row > 1) 
+                      ? elements.find(e => e.col === element.col && e.row === element.row - 1)
+                      : { number: "-", subshells: "-", block: element.block };
       } else {
-        // Σε full mode: χρήση του στοιχείου με ίδιο col και row = element.row - 1
-        prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1) || { number: "-", subshells: "-", block: element.block };
+        // Σε collapsed mode: με βάση το group και period
+        prevElement = elements.find(e => e.group === element.group && e.period === element.period - 1) 
+                      || { number: "-", subshells: "-", block: element.block };
       }
-      // Το τρέχον στοιχείο και το στοιχείο με Z+1 (δηλαδή, atomic number = current + 1)
-      let nextElement = elements.find(e => Number(e.number) === Number(element.number) + 1) || { number: "-", subshells: "-", block: element.block };
+      
+      // Το στοιχείο με Z+1: αναζητούμε με atomic number = current + 1
+      let nextElement = elements.find(e => Number(e.number) === Number(element.number) + 1) 
+                        || { number: "-", subshells: "-", block: element.block };
       
       function displayZFor(e) {
         if(e.number === "-" || isNaN(Number(e.number))) return "-";
@@ -361,21 +366,21 @@
         return (num >= 119 ? num - 118 : num);
       }
       
-      // Δημιουργία HTML για τις υποστιβάδες με 10px κενό μεταξύ του αριθμού και της υποστιβάδας
+      // Για κάθε υποστιβάδα, χρησιμοποιούμε ένα σταθερό κενό 10px μετά τον αριθμό (με χρήση HTML &nbsp;)
       let subsData = {
-        prev: "Ζ=" + displayZFor(prevElement) + "  " + (prevElement.subshells || "-"),
-        current: "Ζ=" + displayZFor(element) + "  " + (element.subshells || "-"),
-        next: "Ζ=" + displayZFor(nextElement) + "  " + (nextElement.subshells || "-"),
+        prev: "Ζ=" + displayZFor(prevElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (prevElement.subshells || "-"),
+        current: "Ζ=" + displayZFor(element) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (element.subshells || "-"),
+        next: "Ζ=" + displayZFor(nextElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (nextElement.subshells || "-"),
         prevColor: getBlockColor(prevElement.block),
         currentColor: getBlockColor(element.block),
         nextColor: getBlockColor(nextElement.block)
       };
       
-      // Ενημέρωση του middlePanelFull με τις υποστιβάδες (ελαφρώς μικρότερη γραμματοσειρά)
+      // Ενημέρωση του middlePanelFull με τις υποστιβάδες (με μικρότερη γραμματοσειρά)
       let subshellsInfo = `
-        <div style="font-size:1.2em; color:${subsData.prevColor};">${subsData.prev}</div>
-        <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold;">${subsData.current}</div>
-        <div style="font-size:1.2em; color:${subsData.nextColor};">${subsData.next}</div>
+        <div style="font-size:1.2em; color:${subsData.prevColor}; text-align:left;">${subsData.prev}</div>
+        <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold; text-align:left;">${subsData.current}</div>
+        <div style="font-size:1.2em; color:${subsData.nextColor}; text-align:left;">${subsData.next}</div>
       `;
       document.getElementById('middlePanelFull').innerHTML = subshellsInfo;
       
@@ -385,21 +390,21 @@
       document.getElementById('remarksFull').innerHTML = element.remarks || "";
       
       let collapsedBasic = basicInfo;
-      let collapsedContent = `<div style="font-size:1.2em; color:${subsData.prevColor};">${subsData.prev}</div>
-                              <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold;">${subsData.current}</div>
-                              <div style="font-size:1.2em; color:${subsData.nextColor};">${subsData.next}</div>`;
+      let collapsedContent = `<div style="font-size:1.2em; color:${subsData.prevColor}; text-align:left;">${subsData.prev}</div>
+                              <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold; text-align:left;">${subsData.current}</div>
+                              <div style="font-size:1.2em; color:${subsData.nextColor}; text-align:left;">${subsData.next}</div>`;
       document.getElementById('leftPanelCollapsed').innerHTML = collapsedBasic;
       document.getElementById('remarksCollapsed').innerHTML = `<div>${collapsedContent}</div>
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Ενημέρωση του Balloon: σχεδιασμός του περιεχομένου (με μικρότερη γραμματοσειρά) και μετακίνηση
+      // Ενημέρωση του Balloon: σχεδιασμός περιεχομένου και μετακίνηση
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
     window.updateInfo = updateInfo;
     
-    // Δημιουργία canvases για κάθε block
+    // Δημιουργία canvases για κάθε block (χωρίς αλλαγές)
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -479,7 +484,7 @@
     }
     
     function drawElements(p, block) {
-      // Χρήση συγκεκριμένου χρώματος περιγράμματος για όλα τα κελιά: "#D1D1D1"
+      // Περιθώριο κελιών: "#D1D1D1"
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
       let filter;
@@ -535,8 +540,7 @@
       });
     }
     
-    // Συνάρτηση για το Balloon: ενημερώνει το canvas με 3 γραμμές (προηγούμενη, τρέχουσα - bold, επόμενη)
-    // Χρησιμοποιούμε textSize(fontSize) για μικρότερη γραμματοσειρά (π.χ. 12px)
+    // Συνάρτηση για το Balloon: σχεδιάζει 3 γραμμές με τις υποστιβάδες
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
@@ -568,7 +572,7 @@
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
     }
     
-    // updateBalloonPosition: μετακινεί το Balloon ώστε να εμφανίζεται δίπλα στο κελί του στοιχείου, χρησιμοποιώντας τις νέες θέσεις
+    // updateBalloonPosition: μετακινεί το Balloon δίπλα στο κελί του στοιχείου
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -798,7 +802,7 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler: στο toggle, το Balloon καλείται αμέσως μαζί με την έναρξη της μετάβασης (transition 1s)
+    // Toggle handler: εναλλαγή full / collapsed και ενημέρωση του Balloon
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
