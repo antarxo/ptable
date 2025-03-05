@@ -597,12 +597,18 @@
         .then(response => response.json())
         .then(data => {
           elements = sortElements(data);
+          // Καλούμε την initializeCanvases για αρχικοποίηση όλων των καμβάδων
           initializeCanvases();
           initSubshellsCanvas();
           updateInfo(currentZ);
           updateToggleButton();
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
+    }
+
+    // Ορίζουμε την initializeCanvases στο global scope
+    function initializeCanvases() {
+      redrawAll();
     }
 
     loadElements();
