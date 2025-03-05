@@ -71,7 +71,7 @@
       transition: all 1.5s ease;
     }
     #infoPanelCollapsed > div { margin-bottom: 10px; }
-    /* Το Balloon: transition 1s (θα αλλάξει στην ενημερωμένη λογική) */
+    /* Το Balloon: εδώ ορίζουμε βασικά στυλ – το transition θα οριστεί στην updateBalloonPosition */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -81,7 +81,6 @@
       padding: 10px;
       z-index: 150;
       display: none;
-      /* Η νέα λογική ορίζει transition 1.5s μέσα στη συνάρτηση updateBalloonPosition */
     }
     /* Κουμπιά */
     #buttonPanel {
@@ -220,7 +219,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Φόρτωση στοιχείων
+    // Φόρτωση στοιχείων (π.χ. από αρχείο elements.json)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -234,7 +233,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // Συνάρτηση ενημέρωσης πληροφοριών (μέρος του updateInfo)
+    // Συνάρτηση ενημέρωσης πληροφοριών
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -254,7 +253,7 @@
                        <span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
       
-      // Ενημέρωση των άλλων panels (παράδειγμα για το middlePanelFull)
+      // Ενημέρωση για το middle panel
       let prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1) || { subshells: "-" };
       let nextElement = elements.find(e => e.col === element.col && e.row === element.row + 1) || { subshells: "-" };
       
@@ -273,24 +272,24 @@
         <div style="font-size:1.2em; color:${subsData.nextColor}; text-align:left;">${subsData.next}</div>
       `;
       
-      // Ενημέρωση του rightPanelFull (παράδειγμα)
+      // Ενημέρωση του right panel
       let stacksInfo = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>`;
       document.getElementById('rightPanelFull').innerHTML = stacksInfo;
       document.getElementById('remarksFull').innerHTML = element.remarks || "";
       
-      // Ενημέρωση των collapsed panels (παρόμοια)
+      // Ενημέρωση collapsed panels
       document.getElementById('leftPanelCollapsed').innerHTML = basicInfo;
       document.getElementById('remarksCollapsed').innerHTML = `<div>${subsData.prev}<br>${subsData.current}<br>${subsData.next}</div>
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Ενημέρωση του Balloon (το canvas των υποστιβάδων)
+      // Ενημέρωση του Balloon (canvas υποστιβάδων)
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
     
     // ─────────────────────────────────────────────
-    // Νέα υλοποίηση της updateBalloonPosition:
+    // Νέα υλοποίηση της updateBalloonPosition (χωρίς εκπτώσεις)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if (!cs) return;
@@ -316,7 +315,7 @@
     }
     
     // ─────────────────────────────────────────────
-    // Νέα υλοποίηση της drawSubshells:
+    // Νέα υλοποίηση της drawSubshells (χωρίς εκπτώσεις)
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -409,6 +408,61 @@
             };
           };
         });
+      });
+    }
+    
+    function drawElements(p, block) {
+      p.stroke("#D1D1D1");
+      p.strokeWeight(1);
+      let filter;
+      if(currentZ < 118) {
+        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
+      } else if(currentZ === 118) {
+        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
+      } else if(currentZ === 119) {
+        filter = e => e.block === block && Number(e.number) === 1;
+      } else if(currentZ === 120) {
+        filter = e => e.block === block && Number(e.number) === 2;
+      } else {
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
+      }
+      elements.filter(filter).forEach(function(e) {
+        const pos = calculatePosition(e, e.block);
+        let displayNumber = Number(e.number);
+        if(Number(e.number) === 119) displayNumber = 1;
+        if(Number(e.number) === 120) displayNumber = 2;
+        if(Number(e.number) === currentZ ||
+           ((currentZ === 119) && Number(e.number) === 1) ||
+           ((currentZ === 120) && Number(e.number) === 2)) {
+          if(Number(e.number) === 119) { p.fill("yellow"); }
+          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
+          else { p.fill(getBlockColor(e.block)); }
+          p.textSize(16);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          p.noFill();
+          p.stroke(getBlockColor(e.block));
+          p.strokeWeight(4);
+          p.strokeJoin(p.ROUND);
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          if(flashActive) {
+            p.drawingContext.shadowBlur = 10;
+            p.drawingContext.shadowColor = "yellow";
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.drawingContext.shadowBlur = 0;
+          }
+          p.strokeWeight(1);
+        } else {
+          if(Number(e.number) === 119) { p.fill("yellow"); }
+          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
+          else { p.fill(BLOCK_COLORS[e.block]); }
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          p.fill(0);
+          p.textSize(Number(e.number) > 99 ? 10 : 12);
+          p.textStyle(p.BOLD);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+        }
       });
     }
     
