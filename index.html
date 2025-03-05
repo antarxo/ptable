@@ -175,8 +175,11 @@
     let ignoreCanvasClick = false;
     let currentZ = 3; // Αρχική τιμή: εμφανίζονται στοιχεία 3 έως 118
     let flashActive = false;
-    let subshellsP;
+    let subshellsP; // p5 instance για το balloon
     let lastClickedElement = null;
+    
+    // Global variable για τα δεδομένα του balloon
+    window.subshellsData = null;
     
     // Χρώματα τομέων
     const BLOCK_COLORS = { 
@@ -219,7 +222,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // initGroupsCanvases: χωρίς τροποποιήσεις
+    // initGroupsCanvases χωρίς τροποποιήσεις
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -304,6 +307,24 @@
       window.groupsInitialized = true;
     }
     
+    // Δημιουργία του canvas του Balloon με draw() ώστε να ενημερώνεται συνεχώς
+    function initSubshellsCanvas() {
+      if(window.subshellsInitialized) return;
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(10, 40);
+          canvas.parent("canvasSubshells");
+          subshellsP = p;
+        };
+        p.draw = function() {
+          if (window.subshellsData) {
+            drawSubshells(window.subshellsData);
+          }
+        };
+      });
+      window.subshellsInitialized = true;
+    }
+    
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -318,8 +339,6 @@
     }
     
     // updateInfo: Ενημερώνει το info panel και το Balloon.
-    // Εδώ χρησιμοποιούμε fallback για την ιδιότητα subshells, ώστε αν δεν υπάρχουν πληροφορίες,
-    // να εμφανίζεται το μήνυμα "Δεν υπάρχουν πληροφορίες".
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -330,7 +349,7 @@
       if(!element) return;
       lastClickedElement = element;
       
-      // Χρησιμοποιούμε fallback για subshells
+      // Fallback για subshells
       const subshellsText = element.subshells ? element.subshells : "Δεν υπάρχουν πληροφορίες";
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
@@ -390,9 +409,9 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      drawSubshells(subsData);
+      // Αντιγράφουμε τα δεδομένα στο global variable ώστε η draw() του balloon τα χρησιμοποιεί.
+      window.subshellsData = subsData;
       updateBalloonPosition(element);
-      // Ανανεώνουμε το canvas του balloon
       if(subshellsP && typeof subshellsP.redraw === "function"){
         subshellsP.redraw();
       }
