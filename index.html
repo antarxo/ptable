@@ -340,42 +340,56 @@
       let basicInfo = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span>
                        <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
                        <span style="font-style: italic;">${element.name}</span>`;
-      let subshellsInfo = `<div style="font-size:1.2em; color:${getBlockColor(element.block)};">
-                            Υποστιβάδες: ${element.subshells || "-"}</div>`;
-      let stacksInfo = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
-                        <div style="font-style: italic;">${messageForElement(element)}</div>`;
-      let remarksInfo = element.remarks || "";
-      
+      // Ενημέρωση του infoPanel με τις βασικές πληροφορίες
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
-      document.getElementById('middlePanelFull').innerHTML = subshellsInfo;
-      document.getElementById('rightPanelFull').innerHTML = stacksInfo;
-      document.getElementById('remarksFull').innerHTML = remarksInfo;
       
-      let collapsedBasic = basicInfo;
-      let collapsedContent = `<div style="font-size:1.2em; color:${getBlockColor(element.block)};">
-                                 Υποστιβάδες: ${element.subshells || "-"}</div>
-                              <div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
-                              <div style="font-style: italic;">${messageForElement(element)}</div>`;
-      document.getElementById('leftPanelCollapsed').innerHTML = collapsedBasic;
-      document.getElementById('remarksCollapsed').innerHTML = `<div>${collapsedContent}</div>
-                                                               <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
-                                                               <div>${remarksInfo}</div>`;
+      // Δημιουργία των υποστιβάδων σε τρεις σειρές:
+      // - Το στοιχείο πάνω από το τρέχον: το στοιχείο της ίδιας ομάδας με row = (element.row - 1), αν υπάρχει, αλλιώς "-"
+      // - Το τρέχον στοιχείο
+      // - Το επόμενο στοιχείο: το στοιχείο της ίδιας ομάδας με row = (element.row + 1), αν υπάρχει, αλλιώς "-"
+      let prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1) || { number: "-", subshells: "-" };
+      let nextElement = elements.find(e => e.col === element.col && e.row === element.row + 1) || { number: "-", subshells: "-" };
       
-      // Εμφάνιση υποστιβάδων: προηγούμενη, τρέχουσα (bold), επόμενη
-      let prevSub = (elements.find(e => Number(e.number) === (currentNum - 1)) || {subshells:"-"}).subshells;
-      let currSub = element.subshells || "-";
-      let nextSub = (elements.find(e => Number(e.number) === (currentNum + 1)) || {subshells:"-"}).subshells;
+      function displayZFor(e) {
+        if(e.number === "-" || isNaN(Number(e.number))) return "-";
+        let num = Number(e.number);
+        return (num >= 119 ? num - 118 : num);
+      }
+      
       let subsData = {
-        prev: prevSub,
-        current: currSub,
-        next: nextSub,
+        prev: "Ζ=" + displayZFor(prevElement) + "   " + (prevElement.subshells || "-"),
+        current: "Ζ=" + displayZFor(element) + "   " + (element.subshells || "-"),
+        next: "Ζ=" + displayZFor(nextElement) + "   " + (nextElement.subshells || "-"),
         prevColor: getBlockColor(element.block),
         currentColor: getBlockColor(element.block),
         nextColor: getBlockColor(element.block)
       };
-      drawSubshells(subsData);
-      // Κλήση του Balloon αμέσως μαζί με την έναρξη της μετάβασης
+      
+      // Ενημέρωση του middlePanelFull με τις υποστιβάδες (μικρότερη γραμματοσειρά)
+      let subshellsInfo = `
+        <div style="font-size:1.2em; color:${subsData.prevColor};">${subsData.prev}</div>
+        <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold;">${subsData.current}</div>
+        <div style="font-size:1.2em; color:${subsData.nextColor};">${subsData.next}</div>
+      `;
+      document.getElementById('middlePanelFull').innerHTML = subshellsInfo;
+      
+      let stacksInfo = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
+                        <div style="font-style: italic;">${messageForElement(element)}</div>`;
+      document.getElementById('rightPanelFull').innerHTML = stacksInfo;
+      document.getElementById('remarksFull').innerHTML = element.remarks || "";
+      
+      let collapsedBasic = basicInfo;
+      let collapsedContent = `<div style="font-size:1.2em; color:${getBlockColor(element.block)};">${subsData.prev}</div>
+                              <div style="font-size:1.2em; color:${getBlockColor(element.block)}; font-weight:bold;">${subsData.current}</div>
+                              <div style="font-size:1.2em; color:${getBlockColor(element.block)};">${subsData.next}</div>`;
+      document.getElementById('leftPanelCollapsed').innerHTML = collapsedBasic;
+      document.getElementById('remarksCollapsed').innerHTML = `<div>${collapsedContent}</div>
+                                                               <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
+                                                               <div>${element.remarks || ""}</div>`;
+      
+      // Ενημέρωση του Balloon με τις υποστιβάδες (μικρότερη γραμματοσειρά)
       updateBalloonPosition(element);
+      drawSubshells(subsData);
     }
     window.updateInfo = updateInfo;
     
@@ -526,19 +540,19 @@
       // Προηγούμενη (normal)
       subshellsP.textStyle(p5.prototype.NORMAL);
       subshellsP.fill(data.prevColor || "black");
-      subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
+      subshellsP.text(data.prev, leftMargin, rowHeight/2);
       // Τρέχουσα (bold)
       subshellsP.textStyle(p5.prototype.BOLD);
       subshellsP.fill(data.currentColor || "black");
-      subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
+      subshellsP.text(data.current, leftMargin, rowHeight + rowHeight/2);
       // Επόμενη (normal)
       subshellsP.textStyle(p5.prototype.NORMAL);
       subshellsP.fill(data.nextColor || "black");
-      subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
+      subshellsP.text(data.next, leftMargin, 2 * rowHeight + rowHeight/2);
       
-      let wPrev = subshellsP.textWidth(data.prev || "-");
-      let wCurrent = subshellsP.textWidth(data.current || "-");
-      let wNext = subshellsP.textWidth(data.next || "-");
+      let wPrev = subshellsP.textWidth(data.prev);
+      let wCurrent = subshellsP.textWidth(data.current);
+      let wNext = subshellsP.textWidth(data.next);
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
       let newWidth = Math.max(computedWidth, 10);
       subshellsP.resizeCanvas(newWidth, balloonHeight);
