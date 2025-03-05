@@ -71,7 +71,7 @@
       transition: all 1.5s ease;
     }
     #infoPanelCollapsed > div { margin-bottom: 10px; }
-    /* Το Balloon: εδώ ορίζουμε βασικά στυλ – το transition θα οριστεί στην updateBalloonPosition */
+    /* Το Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -103,7 +103,7 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* Οι καμβάδες τομέων και ομάδων */
+    /* Καμβάδες */
     .canvas {
       position: absolute;
       background: transparent;
@@ -146,20 +146,18 @@
   <div id="canvasP" class="canvas"></div>
   
   <!-- Πίνακες Πληροφοριών -->
-  <!-- Full mode -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="middlePanelFull"></div>
     <div id="rightPanelFull"></div>
     <div id="remarksFull"></div>
   </div>
-  <!-- Collapsed mode -->
   <div id="infoPanelCollapsed">
     <div id="leftPanelCollapsed"></div>
     <div id="remarksCollapsed"></div>
   </div>
   
-  <!-- Balloon (Canvas υποστιβάδων) -->
+  <!-- Balloon -->
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Κουμπιά -->
@@ -219,7 +217,63 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Φόρτωση στοιχείων (π.χ. από αρχείο elements.json)
+    // Δηλώνουμε τη συνάρτηση drawElements στην global scope για να είναι διαθέσιμη σε όλα τα p5 instances.
+    function drawElements(p, block) {
+      p.stroke("#D1D1D1");
+      p.strokeWeight(1);
+      let filter;
+      if(currentZ < 118) {
+        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
+      } else if(currentZ === 118) {
+        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
+      } else if(currentZ === 119) {
+        filter = e => e.block === block && Number(e.number) === 1;
+      } else if(currentZ === 120) {
+        filter = e => e.block === block && Number(e.number) === 2;
+      } else {
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
+      }
+      elements.filter(filter).forEach(function(e) {
+        const pos = calculatePosition(e, e.block);
+        let displayNumber = Number(e.number);
+        if(Number(e.number) === 119) displayNumber = 1;
+        if(Number(e.number) === 120) displayNumber = 2;
+        if(Number(e.number) === currentZ ||
+           ((currentZ === 119) && Number(e.number) === 1) ||
+           ((currentZ === 120) && Number(e.number) === 2)) {
+          if(Number(e.number) === 119) { p.fill("yellow"); }
+          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
+          else { p.fill(getBlockColor(e.block)); }
+          p.textSize(16);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          p.noFill();
+          p.stroke(getBlockColor(e.block));
+          p.strokeWeight(4);
+          p.strokeJoin(p.ROUND);
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          if(flashActive) {
+            p.drawingContext.shadowBlur = 10;
+            p.drawingContext.shadowColor = "yellow";
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.drawingContext.shadowBlur = 0;
+          }
+          p.strokeWeight(1);
+        } else {
+          if(Number(e.number) === 119) { p.fill("yellow"); }
+          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
+          else { p.fill(BLOCK_COLORS[e.block]); }
+          p.rect(pos.x, pos.y, 40, 40, 5);
+          p.fill(0);
+          p.textSize(Number(e.number) > 99 ? 10 : 12);
+          p.textStyle(p.BOLD);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+        }
+      });
+    }
+    
+    // Φόρτωση στοιχείων
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -253,7 +307,6 @@
                        <span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
       
-      // Ενημέρωση για το middle panel
       let prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1) || { subshells: "-" };
       let nextElement = elements.find(e => e.col === element.col && e.row === element.row + 1) || { subshells: "-" };
       
@@ -272,23 +325,19 @@
         <div style="font-size:1.2em; color:${subsData.nextColor}; text-align:left;">${subsData.next}</div>
       `;
       
-      // Ενημέρωση του right panel
       let stacksInfo = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>`;
       document.getElementById('rightPanelFull').innerHTML = stacksInfo;
       document.getElementById('remarksFull').innerHTML = element.remarks || "";
       
-      // Ενημέρωση collapsed panels
       document.getElementById('leftPanelCollapsed').innerHTML = basicInfo;
       document.getElementById('remarksCollapsed').innerHTML = `<div>${subsData.prev}<br>${subsData.current}<br>${subsData.next}</div>
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Ενημέρωση του Balloon (canvas υποστιβάδων)
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
     
-    // ─────────────────────────────────────────────
     // Νέα υλοποίηση της updateBalloonPosition (χωρίς εκπτώσεις)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
@@ -314,7 +363,6 @@
       cs.style.top = topPos + "px";
     }
     
-    // ─────────────────────────────────────────────
     // Νέα υλοποίηση της drawSubshells (χωρίς εκπτώσεις)
     function drawSubshells(data) {
       if (!subshellsP) return;
@@ -411,61 +459,6 @@
       });
     }
     
-    function drawElements(p, block) {
-      p.stroke("#D1D1D1");
-      p.strokeWeight(1);
-      let filter;
-      if(currentZ < 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
-      } else if(currentZ === 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
-      } else if(currentZ === 119) {
-        filter = e => e.block === block && Number(e.number) === 1;
-      } else if(currentZ === 120) {
-        filter = e => e.block === block && Number(e.number) === 2;
-      } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
-      }
-      elements.filter(filter).forEach(function(e) {
-        const pos = calculatePosition(e, e.block);
-        let displayNumber = Number(e.number);
-        if(Number(e.number) === 119) displayNumber = 1;
-        if(Number(e.number) === 120) displayNumber = 2;
-        if(Number(e.number) === currentZ ||
-           ((currentZ === 119) && Number(e.number) === 1) ||
-           ((currentZ === 120) && Number(e.number) === 2)) {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
-          else { p.fill(getBlockColor(e.block)); }
-          p.textSize(16);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          p.noFill();
-          p.stroke(getBlockColor(e.block));
-          p.strokeWeight(4);
-          p.strokeJoin(p.ROUND);
-          p.rect(pos.x, pos.y, 40, 40, 5);
-          if(flashActive) {
-            p.drawingContext.shadowBlur = 10;
-            p.drawingContext.shadowColor = "yellow";
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            p.drawingContext.shadowBlur = 0;
-          }
-          p.strokeWeight(1);
-        } else {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
-          else { p.fill(BLOCK_COLORS[e.block]); }
-          p.rect(pos.x, pos.y, 40, 40, 5);
-          p.fill(0);
-          p.textSize(Number(e.number) > 99 ? 10 : 12);
-          p.textStyle(p.BOLD);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-        }
-      });
-    }
-    
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -483,7 +476,6 @@
       document.getElementById('toggleFBlock').disabled = false;
     }
     
-    // Εκκίνηση φόρτωσης στοιχείων
     loadElements();
   </script>
 </body>
