@@ -179,8 +179,8 @@
     let subshellsP;
     let lastClickedElement = null;
     
-    // Νέα χρώματα όπως ζητήθηκαν:
-    // s τομέας: "#FFB3C9", f τομέας: "#EACE5D"
+    // Χρώματα τομέων όπως ζητήθηκαν:
+    // s: "#FFB3C9", f: "#EACE5D", d και p παραμένουν όπως πριν
     const BLOCK_COLORS = { 
       s: "#FFB3C9",
       f: "#EACE5D",
@@ -343,11 +343,16 @@
                        <span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
       
-      // Εύρεση στοιχείων για τις υποστιβάδες:
-      // 1. Το στοιχείο που είναι στην ίδια ομάδα αλλά στην προηγούμενη περίοδο (αν υπάρχει)
-      let prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1) || { number: "-", subshells: "-", block: element.block };
-      // 2. Το τρέχον στοιχείο
-      // 3. Το στοιχείο με Z+1 (αν υπάρχει) – δηλαδή το στοιχείο με atomic number ίσο με (current + 1)
+      // Επιλογή του στοιχείου "πάνω από" το τρέχον με βάση την προβολή:
+      let prevElement;
+      if(document.body.classList.contains('collapsed')) {
+        // Σε collapsed mode: χρήση του στοιχείου της ίδιας ομάδας με period = element.period - 1
+        prevElement = elements.find(e => e.group === element.group && e.period === element.period - 1) || { number: "-", subshells: "-", block: element.block };
+      } else {
+        // Σε full mode: χρήση του στοιχείου με ίδιο col και row = element.row - 1
+        prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1) || { number: "-", subshells: "-", block: element.block };
+      }
+      // Το τρέχον στοιχείο και το στοιχείο με Z+1 (δηλαδή, atomic number = current + 1)
       let nextElement = elements.find(e => Number(e.number) === Number(element.number) + 1) || { number: "-", subshells: "-", block: element.block };
       
       function displayZFor(e) {
@@ -388,7 +393,7 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Ενημέρωση του Balloon: το περιεχόμενο (με ακόμη μικρότερη γραμματοσειρά) και ενημέρωση θέσης
+      // Ενημέρωση του Balloon: σχεδιασμός του περιεχομένου (με μικρότερη γραμματοσειρά) και μετακίνηση
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
@@ -531,7 +536,7 @@
     }
     
     // Συνάρτηση για το Balloon: ενημερώνει το canvas με 3 γραμμές (προηγούμενη, τρέχουσα - bold, επόμενη)
-    // Χρησιμοποιούμε ακόμη μικρότερη γραμματοσειρά (π.χ. 12px)
+    // Χρησιμοποιούμε textSize(fontSize) για μικρότερη γραμματοσειρά (π.χ. 12px)
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
