@@ -217,7 +217,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // ΔΗΛΩΣΗ της drawElements ώστε να είναι διαθέσιμη σε όλες τις p5 instances.
+    // Δήλωση της drawElements για global χρήση
     function drawElements(p, block) {
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
@@ -273,7 +273,7 @@
       });
     }
     
-    // Φόρτωση στοιχείων (π.χ. από αρχείο elements.json)
+    // Φόρτωση στοιχείων (π.χ. από elements.json)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -338,7 +338,7 @@
       updateBalloonPosition(element);
     }
     
-    // Νέα υλοποίηση της updateBalloonPosition (χωρίς εκπτώσεις)
+    // Νέα υλοποίηση της updateBalloonPosition
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if (!cs) return;
@@ -363,7 +363,7 @@
       cs.style.top = topPos + "px";
     }
     
-    // Νέα υλοποίηση της drawSubshells (χωρίς εκπτώσεις)
+    // Νέα υλοποίηση της drawSubshells
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 40;
@@ -476,7 +476,10 @@
       document.getElementById('toggleFBlock').disabled = false;
     }
     
-    // Προσθήκη event listener στο κουμπί "Επόμενο" για αλλαγή στοιχείου
+    // Dummy δήλωση για redrawAll ώστε να μην εμφανίζεται το σφάλμα.
+    function redrawAll() { }
+    
+    // Event listener στο κουμπί "Επόμενο" για αλλαγή στοιχείου
     document.getElementById('nextElement').addEventListener('click', function(){
       currentZ++;
       updateInfo(currentZ);
