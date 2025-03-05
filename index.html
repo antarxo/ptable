@@ -221,6 +221,94 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
+    // Ορισμός της συνάρτησης initGroupsCanvases
+    function initGroupsCanvases() {
+      if(window.groupsInitialized) return;
+      // Καμβάς για τον s τομέα
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(84, 40);
+          canvas.parent("canvasS_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          for (let c = 0; c < 2; c++) {
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 0, 40, 20);
+          }
+          p.fill(0);
+          p.text("1", 20, 10);
+          p.text("2", 20 + 42, 10);
+          for (let c = 0; c < 2; c++) {
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 22, 40, 20);
+          }
+          p.fill(0);
+          p.text("ΙΑ", 20, 32);
+          p.text("ΙΙΑ", 20 + 42, 32);
+        };
+      });
+      // Καμβάς για τον d τομέα
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(418, 40);
+          canvas.parent("canvasD_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          for(let c = 0; c < 10; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 0, 40, 20);
+            p.fill(0);
+            p.text((c+3).toString(), x + 20, 10);
+          }
+          const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
+          for(let c = 0; c < 10; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 22, 40, 20);
+            p.fill(0);
+            p.text(oldLabels[c], x + 20, 32);
+          }
+        };
+      });
+      // Καμβάς για τον p τομέα
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(250, 40);
+          canvas.parent("canvasP_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          for(let c = 0; c < 6; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 0, 40, 20);
+            p.fill(0);
+            p.text((c+13).toString(), x + 20, 10);
+          }
+          const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
+          for(let c = 0; c < 6; c++){
+            let x = c * (40 + 2);
+            p.fill(240);
+            p.rect(x, 22, 40, 20);
+            p.fill(0);
+            p.text(oldLabels[c], x + 20, 32);
+          }
+        };
+      });
+      window.groupsInitialized = true;
+    }
+    
     // Φόρτωση στοιχείων
     function loadElements() {
       fetch('elements.json')
@@ -289,7 +377,7 @@
         nextColor: getBlockColor(element.block)
       };
       drawSubshells(subsData);
-      // Κλήση του Balloon άμεσα μαζί με την έναρξη της μετάβασης
+      // Κλήση του Balloon αμέσως με την έναρξη της μετάβασης
       updateBalloonPosition(element);
     }
     window.updateInfo = updateInfo;
@@ -429,7 +517,7 @@
       });
     }
     
-    // Συνάρτηση για το Balloon (υποστιβάδες): σχεδιάζει 3 γραμμές (προηγούμενη, τρέχουσα - bold, επόμενη)
+    // Συνάρτηση για το Balloon (υποστιβάδες): σχεδιάζει 3 γραμμές
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
@@ -460,7 +548,7 @@
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
     }
     
-    // updateBalloonPosition: καλείται αμέσως μαζί με την έναρξη της μετάβασης του πίνακα
+    // updateBalloonPosition: καλείται αμέσως μαζί με την έναρξη της μετάβασης του πίνακα (transition 1s)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -528,7 +616,6 @@
           };
         });
       });
-      // Προσαρμογές θέσης για ορισμένους καμβάδες (ίδια όπως πριν)
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -682,8 +769,7 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler: 
-    // Κατά το toggle, το Balloon καλείται αμέσως μαζί με την έναρξη της μετάβασης του πίνακα (transition 1s) και η νέα θέση του ενημερώνεται άμεσα.
+    // Toggle handler: το Balloon καλείται αμέσως μαζί με την έναρξη της μετάβασης
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
