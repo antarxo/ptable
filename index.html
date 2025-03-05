@@ -340,15 +340,14 @@
       let basicInfo = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span>
                        <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
                        <span style="font-style: italic;">${element.name}</span>`;
-      // Ενημέρωση του infoPanel με τις βασικές πληροφορίες
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
       
-      // Δημιουργία των υποστιβάδων σε τρεις σειρές:
-      // - Το στοιχείο πάνω από το τρέχον: το στοιχείο της ίδιας ομάδας με row = (element.row - 1), αν υπάρχει, αλλιώς "-"
-      // - Το τρέχον στοιχείο
-      // - Το επόμενο στοιχείο: το στοιχείο της ίδιας ομάδας με row = (element.row + 1), αν υπάρχει, αλλιώς "-"
+      // Εύρεση στοιχείων για τις υποστιβάδες:
+      // 1. Το στοιχείο που είναι στην ίδια ομάδα αλλά στην προηγούμενη περίοδο (αν υπάρχει)
       let prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1) || { number: "-", subshells: "-" };
-      let nextElement = elements.find(e => e.col === element.col && e.row === element.row + 1) || { number: "-", subshells: "-" };
+      // 2. Το τρέχον στοιχείο
+      // 3. Το στοιχείο με Z+1 (αν υπάρχει) – δηλαδή το στοιχείο με atomic number ίσο με (current + 1)
+      let nextElement = elements.find(e => Number(e.number) === Number(element.number) + 1) || { number: "-", subshells: "-" };
       
       function displayZFor(e) {
         if(e.number === "-" || isNaN(Number(e.number))) return "-";
@@ -356,16 +355,17 @@
         return (num >= 119 ? num - 118 : num);
       }
       
+      // Δημιουργία HTML για τις υποστιβάδες με 10px κενό μεταξύ του αριθμού και της υποστιβάδας
       let subsData = {
-        prev: "Ζ=" + displayZFor(prevElement) + "   " + (prevElement.subshells || "-"),
-        current: "Ζ=" + displayZFor(element) + "   " + (element.subshells || "-"),
-        next: "Ζ=" + displayZFor(nextElement) + "   " + (nextElement.subshells || "-"),
+        prev: "Ζ=" + displayZFor(prevElement) + "  " + (prevElement.subshells || "-"),
+        current: "Ζ=" + displayZFor(element) + "  " + (element.subshells || "-"),
+        next: "Ζ=" + displayZFor(nextElement) + "  " + (nextElement.subshells || "-"),
         prevColor: getBlockColor(element.block),
         currentColor: getBlockColor(element.block),
         nextColor: getBlockColor(element.block)
       };
       
-      // Ενημέρωση του middlePanelFull με τις υποστιβάδες (μικρότερη γραμματοσειρά)
+      // Ενημέρωση του middlePanelFull με τις υποστιβάδες (ελαφρώς μικρότερη γραμματοσειρά)
       let subshellsInfo = `
         <div style="font-size:1.2em; color:${subsData.prevColor};">${subsData.prev}</div>
         <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold;">${subsData.current}</div>
@@ -387,9 +387,9 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Ενημέρωση του Balloon με τις υποστιβάδες (μικρότερη γραμματοσειρά)
-      updateBalloonPosition(element);
+      // Ενημέρωση του Balloon: το περιεχόμενο (με ακόμα μικρότερη γραμματοσειρά) και ενημέρωση θέσης
       drawSubshells(subsData);
+      updateBalloonPosition(element);
     }
     window.updateInfo = updateInfo;
     
@@ -531,8 +531,9 @@
     // Συνάρτηση για το Balloon: ενημερώνει το canvas με 3 γραμμές (προηγούμενη, τρέχουσα - bold, επόμενη)
     function drawSubshells(data) {
       if (!subshellsP) return;
+      // Ορίζουμε μικρότερη γραμματοσειρά για το Balloon (π.χ. 0.8em)
       let balloonHeight = 60;
-      let fontSize = 14;
+      let fontSize = 12;
       let leftMargin = 2;
       let extraMargin = 5;
       subshellsP.clear();
@@ -559,8 +560,7 @@
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
     }
     
-    // updateBalloonPosition: βασίζεται στην αρχική λογική που μετακινεί το Balloon ώστε να εμφανίζεται στο στοιχείο,
-    // υπολογίζοντας επιπλέον offset εάν είναι αναγκαίο
+    // updateBalloonPosition: μετακινεί το Balloon ώστε να εμφανίζεται δίπλα στο κελί του στοιχείου
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
