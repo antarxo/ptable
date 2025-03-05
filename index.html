@@ -44,7 +44,6 @@
       transition: all 1.5s ease;
       z-index: 40;
     }
-    /* Όταν το body έχει κλάση collapsed, ο πίνακας μετακινείται */
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
@@ -105,7 +104,7 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* Καμβάδες Τομέων και Ομάδων (ίδια όπως πριν) */
+    /* Οι καμβάδες τομέων και ομάδων παραμένουν όπως πριν */
     .canvas {
       position: absolute;
       background: transparent;
@@ -180,7 +179,7 @@
     let subshellsP;
     let lastClickedElement = null;
     
-    // Νέα χρώματα όπως δόθηκαν:
+    // Νέα χρώματα όπως δόθηκαν
     const BLOCK_COLORS = { 
       s: "#EACE5D",
       f: "#F1F165",
@@ -221,7 +220,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Ορισμός της συνάρτησης initGroupsCanvases
+    // Ορισμός της συνάρτησης initGroupsCanvases στο global scope
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       // Καμβάς για τον s τομέα
@@ -338,7 +337,6 @@
       if(clickedZ === 119) { displayZ = 1; }
       else if(clickedZ === 120) { displayZ = 2; }
       
-      // Full mode update (grid layout)
       let basicInfo = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span>
                        <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
                        <span style="font-style: italic;">${element.name}</span>`;
@@ -353,7 +351,6 @@
       document.getElementById('rightPanelFull').innerHTML = stacksInfo;
       document.getElementById('remarksFull').innerHTML = remarksInfo;
       
-      // Collapsed mode update
       let collapsedBasic = basicInfo;
       let collapsedContent = `<div style="font-size:1.2em; color:${getBlockColor(element.block)};">
                                  Υποστιβάδες: ${element.subshells || "-"}</div>
@@ -377,7 +374,7 @@
         nextColor: getBlockColor(element.block)
       };
       drawSubshells(subsData);
-      // Κλήση του Balloon αμέσως με την έναρξη της μετάβασης
+      // Κλήση του Balloon αμέσως μαζί με την έναρξη της μετάβασης
       updateBalloonPosition(element);
     }
     window.updateInfo = updateInfo;
@@ -517,7 +514,7 @@
       });
     }
     
-    // Συνάρτηση για το Balloon (υποστιβάδες): σχεδιάζει 3 γραμμές
+    // Συνάρτηση για το Balloon: ενημερώνει το canvas με 3 γραμμές (προηγούμενη, τρέχουσα - bold, επόμενη)
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
@@ -537,7 +534,7 @@
       // Επόμενη (normal)
       subshellsP.textStyle(p5.prototype.NORMAL);
       subshellsP.fill(data.nextColor || "black");
-      subshellsP.text(data.next || "-", leftMargin, 2*rowHeight + rowHeight/2);
+      subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
       
       let wPrev = subshellsP.textWidth(data.prev || "-");
       let wCurrent = subshellsP.textWidth(data.current || "-");
@@ -548,7 +545,8 @@
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
     }
     
-    // updateBalloonPosition: καλείται αμέσως μαζί με την έναρξη της μετάβασης του πίνακα (transition 1s)
+    // updateBalloonPosition: βασίζεται στην αρχική λογική που μετακινεί το Balloon ώστε να εμφανίζεται στο στοιχείο,
+    // υπολογίζοντας επιπλέον offset εάν είναι αναγκαίο
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -559,9 +557,18 @@
       let pos = calculatePosition(element, element.block);
       let defaultLeft = rect.left + pos.x + 40;
       let defaultTop = rect.top + pos.y + 40;
+      let leftPos = defaultLeft - 5;
+      let topPos = defaultTop;
+      let balloonWidth = cs.offsetWidth;
+      if(defaultLeft > window.innerWidth / 2) {
+        leftPos = defaultLeft - (33 + balloonWidth);
+      }
+      if(leftPos + balloonWidth > window.innerWidth) {
+        leftPos = window.innerWidth - balloonWidth - 5;
+      }
       cs.style.display = "block";
-      cs.style.left = (defaultLeft - 5) + "px";
-      cs.style.top = defaultTop + "px";
+      cs.style.left = leftPos + "px";
+      cs.style.top = topPos + "px";
     }
     
     function redrawAll() {
@@ -769,7 +776,7 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler: το Balloon καλείται αμέσως μαζί με την έναρξη της μετάβασης
+    // Toggle handler: στο toggle, το Balloon καλείται αμέσως μαζί με την έναρξη της μετάβασης (transition 1s)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
