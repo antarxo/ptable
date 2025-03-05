@@ -166,7 +166,7 @@
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξη</button>
+    <button id="toggleFBlock">Ανάπτυξε/Σύμπτυξε</button>
     <button id="reset">Reset</button>
   </div>
 
@@ -333,7 +333,7 @@
       // 3 γραμμές (prev, current, next)
       let rowHeight = 20;
       let totalHeight = rowHeight * 3;
-      // Δώσε πλάτος που να επαρκεί (π.χ. 300)
+      // Ορίζουμε πλάτος που επαρκεί (π.χ. 300)
       subshellsP.resizeCanvas(300, totalHeight);
       subshellsP.canvas.style.cssText =
         "width: 300px !important; height: " + totalHeight + "px !important;";
@@ -348,7 +348,7 @@
       let maxZWidth = Math.max(wPrevZ, wCurrentZ, wNextZ);
 
       let leftMargin = 5;
-      let spacing = 10; // απόσταση μεταξύ "στήλης Z" και "στήλης υποστιβάδων"
+      let spacing = 10; // απόσταση μεταξύ στήλης Z και στήλης υποστιβάδων
 
       // 1η γραμμή (prev)
       subshellsP.fill(data.prevColor || "black");
@@ -435,16 +435,12 @@
 
       // Δημιουργία ξεχωριστών πεδίων για Z και υποστιβάδες
       let subsData = {
-        // prev
         prevZ: "Z=" + displayZFor(prevElement),
         prevSub: prevElement.subshells || "Δεν υπάρχουν πληροφορίες",
-        // current
         currentZ: "Z=" + displayZFor(element),
         currentSub: subshellsText,
-        // next
         nextZ: "Z=" + displayZFor(nextElement),
         nextSub: nextElement.subshells || "Δεν υπάρχουν πληροφορίες",
-        // Χρώματα
         prevColor: getBlockColor(prevElement.block),
         currentColor: getBlockColor(element.block),
         nextColor: getBlockColor(nextElement.block)
@@ -555,37 +551,49 @@
       else if(block === 'f') { x = (e.col - 3) * 42; }
       else if(block === 'd') { x = (e.col - 3) * 42; }
       else if(block === 'p') {
-        if(currentZ < 20 && e.row === 1) {
-          x = (e.col - 18) * 42;
-        } else {
-          x = (e.col - 13) * 42;
-        }
+        if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
+        else { x = (e.col - 13) * 42; }
       }
       return { x: x, y: y };
     }
 
-    function updateBalloonPosition(element) {
-      let cs = document.getElementById('canvasSubshells');
-      if(!cs) return;
-      cs.style.transition = "all 1.5s ease";
-      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
-      if(!blockCanvas) return;
-      let rect = blockCanvas.getBoundingClientRect();
-      let pos = calculatePosition(element, element.block);
-      let defaultLeft = rect.left + pos.x + 40;
-      let defaultTop = rect.top + pos.y + 40;
-      let leftPos = defaultLeft - 5;
-      let topPos = defaultTop;
-      let balloonWidth = cs.offsetWidth;
-      if(defaultLeft > window.innerWidth / 2) {
-        leftPos = defaultLeft - (33 + balloonWidth);
+    // Εδώ έχουμε τροποποιήσει το repositioning των καμβάδων d και p
+    function repositionCanvases() {
+      if(!document.body.classList.contains('collapsed')) {
+        let base = 134;
+        // Ορισμός τελικών τιμών μετατόπισης (μπορείς να τις ρυθμίσεις)
+        let maxShiftD = 42 * 14;  // 588 px
+        let maxShiftP = 42 * 24;  // 1008 px
+        let shiftD = 0, shiftP = 0;
+        if(currentZ <= 20) {
+          shiftD = 0;
+          shiftP = 0;
+        } else if(currentZ <= 30) {
+          // Σταδιακή μετατόπιση στο διάστημα 21-30
+          shiftD = (currentZ - 20) * (0.3 * maxShiftD) / 10;
+          shiftP = (currentZ - 20) * (0.3 * maxShiftP) / 10;
+        } else if(currentZ <= 56) {
+          // Μετατόπιση στο διάστημα 31-56: το d αρχίζει να κινείται
+          shiftD = 0.3 * maxShiftD + (currentZ - 30) * (0.2 * maxShiftD) / 26;
+          shiftP = 0.3 * maxShiftP;
+        } else if(currentZ <= 70) {
+          // Σταδιακή μετατόπιση στο διάστημα 57-70: το d και το p μετακινούνται προς το τελικό τους σημείο
+          shiftD = 0.5 * maxShiftD + (currentZ - 56) * (0.5 * maxShiftD) / 14;
+          shiftP = 0.3 * maxShiftP + (currentZ - 56) * (0.7 * maxShiftP) / 14;
+        } else {
+          shiftD = maxShiftD;
+          shiftP = maxShiftP;
+        }
+        document.getElementById('canvasF').style.left = base + "px";
+        document.getElementById('canvasD').style.left = (base + shiftD) + "px";
+        document.getElementById('canvasP').style.left = (base + shiftP) + "px";
+      } else {
+        // Σε collapsed mode χρησιμοποιούνται σταθερές τιμές
+        document.getElementById('canvasS').style.left = "50px";
+        document.getElementById('canvasF').style.left = "154px";
+        document.getElementById('canvasD').style.left = "139px";
+        document.getElementById('canvasP').style.left = "559px";
       }
-      if(leftPos + balloonWidth > window.innerWidth) {
-        leftPos = window.innerWidth - balloonWidth - 5;
-      }
-      cs.style.display = "block";
-      cs.style.left = leftPos + "px";
-      cs.style.top = topPos + "px";
     }
 
     function redrawAll() {
@@ -598,13 +606,13 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')) {
+            if(!document.body.classList.contains('collapsed')) {
+              if(block === 's') { canvas.elt.style.left = "50px"; }
+              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
+            } else {
               if(block === 's') { canvas.elt.style.left = "50px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "154px" : "139px"); }
               else if(block === 'p') { canvas.elt.style.left = "559px"; }
-            } else {
-              if(block === 's') { canvas.elt.style.left = "50px"; }
-              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
             p.skipNextClick = true;
@@ -637,7 +645,8 @@
           };
         });
       });
-      // Εμφάνιση καμβάδων περιόδων και ομάδων όταν currentZ είναι 120 ή πάνω
+      repositionCanvases();
+      // Εμφάνιση των καμβάδων περιόδων και ομάδων όταν currentZ είναι τουλάχιστον 120
       if(currentZ >= 120) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
@@ -750,9 +759,14 @@
       redrawAll();
     });
 
+    // Τροποποιημένος χειριστής για το toggle ώστε το Balloon να επανατοποθετείται σωστά μετά την αλλαγή layout
     document.getElementById('toggleFBlock').addEventListener('click', function(){
       document.body.classList.toggle('collapsed');
       redrawAll();
+      // Περιμένουμε 100ms για να ολοκληρωθεί το νέο layout πριν ενημερωθεί το Balloon.
+      setTimeout(() => {
+        updateBalloonPosition(lastClickedElement);
+      }, 100);
     });
 
     document.getElementById('reset').addEventListener('click', function(){
