@@ -2,6 +2,8 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
+  <!-- Προστέθηκε meta tag για responsive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -579,6 +581,12 @@
       cs.style.top = topPos + "px";
     }
     
+    // Προστέθηκε listener για το resize ώστε να ενημερώνεται η θέση του Balloon
+    window.addEventListener('resize', function() {
+      updateRightPanelWidth();
+      if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+    });
+    
     function redrawAll() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -824,8 +832,6 @@
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
     window.addEventListener('load', updateRightPanelWidth);
-    window.addEventListener('resize', updateRightPanelWidth);
-    
     loadElements();
   </script>
 </body>
