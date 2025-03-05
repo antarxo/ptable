@@ -186,12 +186,12 @@
     let subshellsP;
     let lastClickedElement = null;
 
-    // Ενημερωμένες τιμές χρωμάτων βάσει του ptable.com:
+    // Χρήση λαμπρότερων χρωμάτων σύμφωνα με το ptable.com
     const BLOCK_COLORS = { 
-      s: '#FFB6C1',  // light pink
-      p: '#98FB98',  // pale green
-      d: '#ADD8E6',  // light blue
-      f: '#FFE4B5'   // moccasin
+      s: "#FF5722",  // έντονο πορτοκαλί
+      p: "#4CAF50",  // λαμπρό πράσινο
+      d: "#2196F3",  // ζωντανό μπλε
+      f: "#9C27B0"   // φωτεινό μωβ
     };
 
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
@@ -784,10 +784,11 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler με τις τροποποιήσεις:
-    // 1. Κατά το full -> collapsed, το infoPanelFull μετακινείται στην πάνω δεξιά θέση με εφέ 1.5s και μετά εμφανίζεται το infoPanelCollapsed ενώ εξαφανίζεται το infoPanelFull.
-    // 2. Κατά το collapsed -> full, το infoPanelCollapsed, που ξεκινά στην πάνω δεξιά θέση, μετακινείται στην κάτω θέση (με το ίδιο εφέ 1.5s) και μετά εμφανίζεται το infoPanelFull ενώ εξαφανίζεται το infoPanelCollapsed.
-    // 3. Το Balloon ξεκινά την αλλαγή θέσης του ταυτόχρονα με την μετάβαση, με καθυστέρηση 1s.
+    // Toggle handler με τις διορθώσεις:
+    // 1. Full -> Collapsed: το infoPanelFull μετακινείται στην πάνω δεξιά θέση με εφέ 1.5s, και μετά από 1.5s κρύβεται ενώ εμφανίζεται το infoPanelCollapsed.
+    // 2. Collapsed -> Full: το infoPanelCollapsed (που αρχικά είναι στην πάνω δεξιά θέση) αναλαμβάνει με inline αλλαγές τη θέση του πίνακα full (left:20px, top:428px, width: calc(100vw - var(--rightPanelWidth) - 105px)),
+    //    ενώ ταυτόχρονα αφαιρείται η κλάση collapsed. Μετά από 1.5s, το infoPanelCollapsed κρύβεται (και επαναφέρεται το inline style του) και εμφανίζεται το infoPanelFull.
+    // 3. Το Balloon ξεκινά την αλλαγή θέσης του με καθυστέρηση 1s.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
@@ -802,21 +803,23 @@
       } else {
         // Collapsed → Full:
         let panelB = document.getElementById('infoPanelCollapsed');
-        // Μετακίνηση του Panel B από την πάνω δεξιά θέση στη θέση του full πίνακα (κάτω θέση)
+        // Αναβάθμιση των inline τιμών για μετάβαση στον full πίνακα
         panelB.style.left = "20px";
         panelB.style.top = "428px";
         panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
         document.body.classList.remove('collapsed');
         toggleBtn.textContent = "Σύμπτυξη";
         setTimeout(function() {
+          // Επαναφορά των inline τιμών του Panel B και εμφάνιση του Panel A
           panelB.style.display = "none";
-          let panelA = document.getElementById('infoPanelFull');
-          panelA.style.display = "flex";
+          panelB.style.left = "";
+          panelB.style.top = "";
+          panelB.style.width = "";
+          document.getElementById('infoPanelFull').style.display = "flex";
           updateInfo(currentZ);
         }, 1500);
       }
       redrawAll();
-      // Το Balloon ξεκινά την αλλαγή θέσης του με καθυστέρηση 1s
       setTimeout(function() {
         if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1000);
