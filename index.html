@@ -63,20 +63,17 @@
       /* Χωρίς transition για άμεση εμφάνιση */
       text-align: left;
     }
-    /* Εσωτερικά τμήματα των info panels */
-    #infoPanelFull > div,
-    #infoPanelCollapsed > div {
+    /* Εσωτερικά τμήματα των info panels – ενημερώνονται πάντα και στα δύο */
+    #leftPanelFull, #leftPanelCollapsed,
+    #remarksFull, #remarksCollapsed {
       width: 100%;
     }
-    /* Left column */
-    #leftPanelFull, #leftPanelCollapsed { }
-    /* Right column */
+    /* Διάταξη */
     .right-wrapper { display: flex; flex-direction: column; }
     .upper-right { display: flex; flex-direction: row; }
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
-    /* Balloon – το canvas των υποστιβάδων.
-       Προστέθηκε transition για να κινεύεται ταυτόχρονα με τον πίνακα (1.5s ease) */
+    /* Balloon – το canvas των υποστιβάδων με transition 1.5s */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -128,12 +125,10 @@
       display: none;
       z-index: 5;
     }
-    /* Καμβάδες ομάδων για τους τομείς d και p */
+    /* Οι καμβάδες για τους τομείς d και p έχουν 2 γραμμές (ύψος 40px) */
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Για τον s τομέα: ο καμβάς ομάδων έχει 2 γραμμές (ύψος 80px):
-       στην πρώτη γραμμή εμφανίζονται οι νέοι αριθμοί ("1", "2")
-       και στη δεύτερη οι παλιές ετικέτες ("ΙΑ", "ΙΙΑ") */
+    /* Για τον s τομέα: ο καμβάς ομάδων θα έχει 2 γραμμές (ύψος 80px) */
     #canvasS_groups { width: 84px; height: 80px; }
     .s-block { background: #ffcccc !important; }
     .p-block { background: #ccffcc !important; }
@@ -238,7 +233,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα περιεχόμενα του ενεργού panel και το Balloon
+    // updateInfo: ενημερώνει τα περιεχόμενα και στα δύο panels ώστε να μην παραμένει κενό κανένα
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -266,9 +261,17 @@
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
-      if(document.body.classList.contains('collapsed')) {
-        document.getElementById('leftPanelCollapsed').innerHTML = infoHTML;
-        document.getElementById('remarksCollapsed').innerHTML = `<div class="right-wrapper">
+      // Ενημέρωση και στα δύο panels
+      document.getElementById('leftPanelFull').innerHTML = infoHTML;
+      document.getElementById('remarksFull').innerHTML = `<div class="right-wrapper">
+                              <div class="upper-right">
+                                <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
+                                <div class="shells-msg-col">${shellsAndMsg}</div>
+                              </div>
+                              <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
+                            </div>`;
+      document.getElementById('leftPanelCollapsed').innerHTML = infoHTML;
+      document.getElementById('remarksCollapsed').innerHTML = `<div class="right-wrapper">
                               <div class="subshells-col" style="width:100%; text-align:left;">
                                 ${prevStr}${currentStr}${nextStr}
                               </div>
@@ -278,16 +281,6 @@
                               </div>
                               <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
                             </div>`;
-      } else {
-        document.getElementById('leftPanelFull').innerHTML = infoHTML;
-        document.getElementById('remarksFull').innerHTML = `<div class="right-wrapper">
-                              <div class="upper-right">
-                                <div class="subshells-col">${prevStr}${currentStr}${nextStr}</div>
-                                <div class="shells-msg-col">${shellsAndMsg}</div>
-                              </div>
-                              <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
-                            </div>`;
-      }
       
       let subshellsData = {
         prev: prev.subshells,
@@ -369,7 +362,7 @@
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Για τον s τομέα: ο καμβάς ομάδων έχει 2 γραμμές (ύψος 80px):
+      // Για τον s τομέα: μία μόνο p5 δημιουργία, ύψος 80px, 2 γραμμές: πρώτη γραμμή με "1" και "2", δεύτερη με "ΙΑ" και "ΙΙΑ"
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 80);
@@ -383,11 +376,11 @@
           p.text("1", 20, 10);
           p.text("2", 62, 10);
           // Δεύτερη γραμμή: παλιές ετικέτες
-          p.text("ΙΑ", 20, 32);
-          p.text("ΙΙΑ", 62, 32);
+          p.text("ΙΑ", 20, 50);
+          p.text("ΙΙΑ", 62, 50);
         };
       });
-      // Οι καμβάδες για τους τομείς d και p παραμένουν όπως ήταν
+      // Για τους τομείς d και p, όπως πριν:
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -510,7 +503,7 @@
       });
     }
     
-    // Ενημέρωση του Balloon: θέτουμε transition για να κινεύεται ταυτόχρονα με τον πίνακα (1.5s)
+    // Ενημέρωση του Balloon: το CSS transition του έχει οριστεί 1.5s, οπότε η νέα θέση θα επιτευχθεί στον ίδιο χρόνο.
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -771,9 +764,9 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler: 
-    // Όταν γίνεται η μετάβαση, τόσο η αλλαγή (full->collapsed και collapsed->full) ακολουθεί το ίδιο εφέ.
-    // Μετά από 1.5 δευτερόλεπτα (όταν ολοκληρωθεί η μετάβαση), γίνεται το swap μεταξύ των panels και το Balloon ενημερώνεται.
+    // Toggle handler:
+    // Και για την μετάβαση από full σε collapsed και από collapsed σε full εφαρμόζεται το ίδιο εφέ 1.5s.
+    // Μετά από 1.5s γίνεται το swap (εμφάνιση του νέου panel και εξαφάνιση του παλιού) και το Balloon ενημερώνεται.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')) {
@@ -796,10 +789,10 @@
          }, 1500);
       }
       redrawAll();
-      // Καλέστε updateBalloonPosition αμέσως (με transition) ώστε να κινείται ταυτόχρονα
+      // Ενημέρωση του Balloon μετά το swap
       setTimeout(function() {
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-      }, 10);
+      }, 1500);
     });
     
     window.loadElements = loadElements;
