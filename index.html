@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <!-- Προστέθηκε meta tag για responsive design -->
+  <!-- Responsive design -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
@@ -359,11 +359,11 @@
         return (num >= 119 ? num - 118 : num);
       }
       
-      // Χρήση σταθερού HTML κενού (&nbsp;&nbsp;&nbsp;&nbsp;) μετά το "Ζ=αριθμός"
+      // Χρήση απλών κενών αντί για &nbsp;
       let subsData = {
-        prev: "Ζ=" + displayZFor(prevElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (prevElement.subshells || "-"),
-        current: "Ζ=" + displayZFor(element) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (element.subshells || "-"),
-        next: "Ζ=" + displayZFor(nextElement) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (nextElement.subshells || "-"),
+        prev: "Ζ=" + displayZFor(prevElement) + "    " + (prevElement.subshells || "-"),
+        current: "Ζ=" + displayZFor(element) + "    " + (element.subshells || "-"),
+        next: "Ζ=" + displayZFor(nextElement) + "    " + (nextElement.subshells || "-"),
         prevColor: getBlockColor(prevElement.block),
         currentColor: getBlockColor(element.block),
         nextColor: getBlockColor(nextElement.block)
@@ -381,12 +381,15 @@
       document.getElementById('rightPanelFull').innerHTML = stacksInfo;
       document.getElementById('remarksFull').innerHTML = element.remarks || "";
       
+      // Στο collapsed mode συμπεριλαμβάνουμε και τις στιβάδες
       let collapsedBasic = basicInfo;
       let collapsedContent = `<div style="font-size:1.2em; color:${subsData.prevColor}; text-align:left;">${subsData.prev}</div>
                               <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold; text-align:left;">${subsData.current}</div>
                               <div style="font-size:1.2em; color:${subsData.nextColor}; text-align:left;">${subsData.next}</div>`;
       document.getElementById('leftPanelCollapsed').innerHTML = collapsedBasic;
-      document.getElementById('remarksCollapsed').innerHTML = `<div>${collapsedContent}</div>
+      document.getElementById('remarksCollapsed').innerHTML = `<div>${stacksInfo}</div>
+                                                               <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
+                                                               <div>${collapsedContent}</div>
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
@@ -554,6 +557,7 @@
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + 5;
       subshellsP.resizeCanvas(computedWidth, balloonHeight);
       subshellsP.canvas.style.cssText = 'width: ' + computedWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
+      subshellsP.redraw();
     }
     
     // updateBalloonPosition: Τοποθετεί το Balloon δίπλα στο κελί του στοιχείου, σύμφωνα με την αρχική λογική
@@ -581,7 +585,7 @@
       cs.style.top = topPos + "px";
     }
     
-    // Προστέθηκε listener για το resize ώστε να ενημερώνεται η θέση του Balloon
+    // Listener για το resize ώστε να ενημερώνεται η θέση του Balloon
     window.addEventListener('resize', function() {
       updateRightPanelWidth();
       if(lastClickedElement) updateBalloonPosition(lastClickedElement);
@@ -797,27 +801,29 @@
       if (!document.body.classList.contains('collapsed')) {
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
-        if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+        // Μεταφέρουμε την ενημέρωση θέσης του Balloon μετά το transition
         setTimeout(function() {
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
           updateInfo(currentZ);
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
         }, 1500);
       } else {
         let panelB = document.getElementById('infoPanelCollapsed');
         panelB.style.left = "20px";
         panelB.style.top = "428px";
         panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-        if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-        document.body.classList.remove('collapsed');
-        toggleBtn.textContent = "Σύμπτυξη";
+        // Ενημέρωση θέσης Balloon μετά το transition
         setTimeout(function() {
           panelB.style.display = "none";
           panelB.style.left = "";
           panelB.style.top = "";
           panelB.style.width = "";
+          document.body.classList.remove('collapsed');
+          toggleBtn.textContent = "Σύμπτυξη";
           document.getElementById('infoPanelFull').style.display = "grid";
           updateInfo(currentZ);
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
         }, 1500);
       }
       redrawAll();
