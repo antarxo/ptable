@@ -364,7 +364,6 @@
     }
     window.initPeriodsCanvas = initPeriodsCanvas;
     
-    // Ορισμός στο global scope
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -727,13 +726,17 @@
           };
         });
       });
-      // Εμφάνιση και τοποθέτηση των ονομάτων περιόδων και ομάδων όπως στο αρχικό αρχείο
+      // Εμφάνιση και τοποθέτηση των ονομάτων περιόδων και ομάδων ως επικεφαλίδες που ακολουθούν τους αντίστοιχους τομείς
       let cp = document.getElementById('canvasPeriods');
       if(cp) { cp.style.display = "block"; }
       initPeriodsCanvas();
       
       let csg = document.getElementById('canvasS_groups');
-      if(csg) { csg.style.display = "block"; csg.style.top = "78px"; csg.style.left = "50px"; }
+      if(csg) { 
+        csg.style.display = "block"; 
+        csg.style.top = "78px"; 
+        csg.style.left = "50px"; 
+      }
       
       let cdg = document.getElementById('canvasD_groups');
       if(cdg) {
@@ -756,7 +759,6 @@
           cpg.style.left = pLeft;
         }
       }
-      
       initGroupsCanvases();
       
       if(!document.body.classList.contains('collapsed')) {
