@@ -224,16 +224,20 @@
     
     // Συνάρτηση για ανανέωση θέσεων καμβάδων των d και p
     function updateCanvasPositions() {
-      if(!document.body.classList.contains('collapsed')) {
+      let cD = document.getElementById('canvasD');
+      let cP = document.getElementById('canvasP');
+      if(document.body.classList.contains('collapsed')) {
+        // Σε collapsed κατάσταση, θέτουμε τις θέσεις στα "139px" και "559px" αντίστοιχα
+        if(cD) { cD.style.left = "139px"; }
+        if(cP) { cP.style.left = "559px"; }
+      } else {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
         else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
         else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
         else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
         else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        let cD = document.getElementById('canvasD');
         if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = (base + shiftP) + "px"; }
       }
     }
@@ -361,7 +365,7 @@
     }
     window.initPeriodsCanvas = initPeriodsCanvas;
     
-    // Ορισμός της συνάρτησης updateRightPanelWidth στο global scope
+    // Ορισμός της updateRightPanelWidth στο global scope
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -371,7 +375,7 @@
     }
     window.updateRightPanelWidth = updateRightPanelWidth;
     
-    // Ορισμός της συνάρτησης messageForElement στο global scope
+    // Ορισμός της messageForElement στο global scope
     function messageForElement(element) {
       if (element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -397,7 +401,7 @@
     }
     window.messageForElement = messageForElement;
     
-    // Συνάρτηση updateToggleButton για ενεργοποίηση του toggle κουμπιού
+    // Ορισμός της updateToggleButton στο global scope
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
