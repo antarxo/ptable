@@ -43,7 +43,7 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      transition: all 1.5s ease;
+      transition: all 1.2s ease;
       z-index: 40;
     }
     body.collapsed #infoPanelFull {
@@ -70,7 +70,7 @@
       top: 112px;
       width: calc(100vw - 920px);
       z-index: 40;
-      transition: all 1.5s ease;
+      transition: all 1.2s ease;
     }
     #infoPanelCollapsed > div { margin-bottom: 10px; }
     /* Το Balloon: transition 1s */
@@ -106,12 +106,11 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* Οι καμβάδες τομέων και ομάδων */
+    /* Οι καμβάδες τομέων και ομάδων μετακινούνται σε 0,8s */
     .canvas {
       position: absolute;
       background: transparent;
-      /* Μετακίνηση σε 1s */
-      transition: all 1s ease-in-out;
+      transition: all 0.8s ease-in-out;
       transform: translateY(-10px);
     }
     #canvasPeriods {
@@ -321,7 +320,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: Διόρθωση της λογικής για το "πάνω από" στοιχείο στο full mode (πρώτη γεμάτη σειρά)
+    // updateInfo: ενημερώνει το περιεχόμενο και τη θέση των panels
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -341,7 +340,6 @@
                        <span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
       
-      // Επίλυση "πάνω από": αν δεν υπάρχει στοιχείο με ίδιο col και row = element.row - 1, τότε "-"
       let prevElement;
       if(!document.body.classList.contains('collapsed')) {
         prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1);
@@ -392,7 +390,6 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Σχεδιάζουμε το Balloon και ενημερώνουμε τη θέση του
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
@@ -531,7 +528,7 @@
       });
     }
     
-    // drawSubshells: Τροποποιημένη ώστε να γίνεται clear πριν το resize και να σχεδιάζεται ορθά το περιεχόμενο του Balloon.
+    // drawSubshells: Καθαρίζει και σχεδιάζει το περιεχόμενο του Balloon
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
@@ -567,7 +564,7 @@
       subshellsP.redraw();
     }
     
-    // updateBalloonPosition: Ενημερώνει τη νέα θέση του Balloon βάσει της τρέχουσας διάταξης.
+    // updateBalloonPosition: Υπολογίζει τη νέα θέση του Balloon με βάση την τρέχουσα διάταξη
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -764,7 +761,7 @@
       }
     }
     
-    // Εναλλαγή μεταξύ collapsed και expanded με καθυστέρηση για ανανέωση θέσης του Balloon
+    // Εναλλαγή μεταξύ collapsed και expanded: οι καμβάδες ξεκινούν μαζί με info panels
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
@@ -775,11 +772,11 @@
           document.getElementById('infoPanelCollapsed').style.display = "flex";
           updateInfo(currentZ);
           redrawAll();
-          // Μετά από 1500ms + 100ms, ενημερώνουμε τη νέα θέση του Balloon
+          // Ενημέρωση θέσης Balloon μετά από 1,2s transition
           setTimeout(function(){
             if(lastClickedElement) updateBalloonPosition(lastClickedElement);
           }, 100);
-        }, 1500);
+        }, 1200);
       } else {
         let panelB = document.getElementById('infoPanelCollapsed');
         panelB.style.left = "20px";
@@ -798,7 +795,7 @@
           setTimeout(function(){
             if(lastClickedElement) updateBalloonPosition(lastClickedElement);
           }, 100);
-        }, 1500);
+        }, 1200);
       }
     });
     
