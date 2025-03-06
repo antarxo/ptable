@@ -361,7 +361,7 @@
     }
     window.initPeriodsCanvas = initPeriodsCanvas;
     
-    // Συνάρτηση για ενημέρωση του δεξιού panel
+    // Ορισμός της συνάρτησης updateRightPanelWidth στο global scope
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -396,6 +396,12 @@
       }
     }
     window.messageForElement = messageForElement;
+    
+    // Συνάρτηση updateToggleButton για ενεργοποίηση του toggle κουμπιού
+    function updateToggleButton() {
+      document.getElementById('toggleFBlock').disabled = false;
+    }
+    window.updateToggleButton = updateToggleButton;
     
     // updateInfo: Ενημερώνει τα info panels
     function updateInfo(clickedZ) {
