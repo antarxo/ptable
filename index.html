@@ -371,6 +371,32 @@
     }
     window.updateRightPanelWidth = updateRightPanelWidth;
     
+    // Ορισμός της συνάρτησης messageForElement στο global scope
+    function messageForElement(element) {
+      if (element.block === 'f') {
+        return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+      } else {
+        let group = parseInt(element.col);
+        if (group === 1) {
+          return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
+        } else if (group === 2) {
+          return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
+        } else if (group === 13) {
+          return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
+        } else if (group >= 3 && group <= 12) {
+          return "Στοιχείο μετάπτωσης";
+        } else if (group === 14) {
+          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
+        } else if (group >= 15 && group <= 17) {
+          return `Θέλει να <strong>πάρεται</strong> ${18 - group} ηλεκτρόνια`;
+        } else if (group === 18) {
+          return "Ευγενές αέριο-Χημικά αδρανές";
+        }
+        return "";
+      }
+    }
+    window.messageForElement = messageForElement;
+    
     // updateInfo: Ενημερώνει τα info panels
     function updateInfo(clickedZ) {
       let currentNum;
