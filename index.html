@@ -110,7 +110,8 @@
     .canvas {
       position: absolute;
       background: transparent;
-      transition: all 0.5s ease-in-out;
+      /* Οι καμβάδες μετακινούνται σε 1s */
+      transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
     #canvasPeriods {
@@ -769,19 +770,20 @@
       }
     }
     
-    // Τροποποιημένη κλήση για εναλλαγή μεταξύ collapsed και expanded:
+    // Εναλλαγή μεταξύ collapsed και expanded:
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
+        // Τα καμβάδες (1s transition) κι ο πίνακας (1.5s transition) ξεκινούν ταυτόχρονα
         setTimeout(function() {
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
           updateInfo(currentZ);
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-          // Ενημέρωση θέσεων καμβάδων μετά το transition
+          // Μετά το transition του πίνακα (1.5s) ανανεώνεται το redraw και η θέση του Balloon
           redrawAll();
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
         }, 1500);
       } else {
         let panelB = document.getElementById('infoPanelCollapsed');
@@ -797,9 +799,9 @@
           toggleBtn.textContent = "Σύμπτυξη";
           document.getElementById('infoPanelFull').style.display = "grid";
           updateInfo(currentZ);
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-          // Ενημέρωση θέσεων καμβάδων μετά το transition
+          // Μετά το transition του πίνακα, ανανεώνεται το redraw και η θέση του Balloon
           redrawAll();
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
         }, 1500);
       }
     });
