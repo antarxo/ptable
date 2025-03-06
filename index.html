@@ -320,7 +320,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει το περιεχόμενο και τη θέση των panels
+    // updateInfo: ενημερώνει τα περιεχόμενα και τη θέση των info panels
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -564,7 +564,7 @@
       subshellsP.redraw();
     }
     
-    // updateBalloonPosition: Υπολογίζει τη νέα θέση του Balloon με βάση την τρέχουσα διάταξη
+    // updateBalloonPosition: Υπολογίζει τη νέα θέση του Balloon βάσει της τρέχουσας διάταξης
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -761,27 +761,27 @@
       }
     }
     
-    // Εναλλαγή μεταξύ collapsed και expanded: οι καμβάδες ξεκινούν μαζί με info panels
+    // Εναλλαγή μεταξύ collapsed και expanded: οι καμβάδες και τα info panels ξεκινούν μαζί
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
+        // Ξεκινάμε αμέσως το redraw ώστε όλοι οι καμβάδες να ξεκινούν τη μετάβαση (0,8s)
+        redrawAll();
+        // Περιμένουμε 1,2s για το info panels να ολοκληρώσουν και προσθέτουμε ένα επιπλέον delay ώστε να έχουν σταθεροποιηθεί και οι καμβάδες (συνολικά 2s)
         setTimeout(function() {
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
           updateInfo(currentZ);
-          redrawAll();
-          // Ενημέρωση θέσης Balloon μετά από 1,2s transition
-          setTimeout(function(){
-            if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-          }, 100);
-        }, 1200);
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+        }, 2000);
       } else {
         let panelB = document.getElementById('infoPanelCollapsed');
         panelB.style.left = "20px";
         panelB.style.top = "428px";
         panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
+        redrawAll();
         setTimeout(function() {
           panelB.style.display = "none";
           panelB.style.left = "";
@@ -791,11 +791,8 @@
           toggleBtn.textContent = "Σύμπτυξη";
           document.getElementById('infoPanelFull').style.display = "grid";
           updateInfo(currentZ);
-          redrawAll();
-          setTimeout(function(){
-            if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-          }, 100);
-        }, 1200);
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+        }, 2000);
       }
     });
     
