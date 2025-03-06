@@ -134,7 +134,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">κατασκευή του Περιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -178,8 +178,8 @@
     let ignoreCanvasClick = false;
     let currentZ = 3;
     let flashActive = false;
-    let subshellsP;
     let lastClickedElement = null;
+    let subshellsP;
     
     // Χρώματα τομέων
     const BLOCK_COLORS = { 
@@ -472,10 +472,10 @@
       return { x: x, y: y };
     }
     
-    // Τροποποιημένη συνάρτηση ζωγραφικής: 
-    // Για currentZ < 119, δείχνει τα στοιχεία από 3 έως currentZ.
-    // Για currentZ==119, δείχνει τα στοιχεία από 3 έως 118 και επιπλέον το 1.
-    // Για currentZ==120, δείχνει τα στοιχεία από 3 έως 118 και επιπλέον το 1 και το 2.
+    // Τροποποιημένη συνάρτηση ζωγραφικής:
+    // - Για currentZ < 119: εμφανίζονται τα στοιχεία με αριθμούς 3 έως currentZ.
+    // - Για currentZ === 119: εμφανίζονται τα στοιχεία με αριθμούς 3 έως 118 και επιπλέον το στοιχείο 1.
+    // - Για currentZ === 120: εμφανίζονται τα στοιχεία με αριθμούς 3 έως 118 και επιπλέον τα στοιχεία 1 και 2.
     function drawElements(p, block) {
       p.stroke("#D1D1D1");
       p.strokeWeight(1);
@@ -495,7 +495,7 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Αν το στοιχείο είναι το τελευταίο (και στο βήμα του hydrogen/helium, θα το επισημάνει)
+        // Ελέγχουμε αν το στοιχείο είναι το τελευταίο της φάσης (ώστε να επισημάνεται)
         if((currentZ < 119 && Number(e.number) === currentZ) ||
            (currentZ === 119 && Number(e.number) === 1) ||
            (currentZ === 120 && (Number(e.number) === 1 || Number(e.number) === 2))) {
@@ -729,7 +729,7 @@
     }
     
     function updateToggleButton() {
-      // Το κουμπί "Σύμπτυξη" παραμένει απενεργοποιημένο μέχρι να ολοκληρωθεί η διαδικασία (currentZ==123)
+      // Το κουμπί "Σύμπτυξη" παραμένει απενεργοποιημένο μέχρι να φτάσει το currentZ στο 123.
       if(currentZ < 123)
         document.getElementById('toggleFBlock').disabled = true;
       else
@@ -768,7 +768,7 @@
       }
     }
     
-    // Τροποποιημένη λειτουργία εναλλαγής μεταξύ collapsed και full:
+    // Λειτουργία εναλλαγής μεταξύ collapsed και full (όπως έχεις ήδη ορίσει)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
@@ -805,10 +805,10 @@
       }
     });
     
-    // Ενημερωμένος χειριστής του κουμπιού "Επόμενο"
+    // Χειριστής του κουμπιού "Επόμενο"
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
-      // Το κουμπί "Σύμπτυξη" παραμένει απενεργοποιημένο καθ' όλη τη διάρκεια της διαδικασίας
+      // Το κουμπί "Σύμπτυξη" παραμένει απενεργοποιημένο κατά τη διάρκεια της διαδικασίας.
       document.getElementById('toggleFBlock').disabled = true;
       
       if (currentZ < 118) {
