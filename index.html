@@ -134,7 +134,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή </div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -768,12 +768,9 @@
         // Ξεκινάμε την μετάβαση (full -> collapsed)
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
-        // Με την εμφάνιση του info panel να ξεκινά αμέσως (transition 1,2s)
-        // Μετά από 0,4s, καλούμε redrawAll() για να ξεκινήσουν οι καμβάδες (transition 0,8s)
         setTimeout(function(){
           redrawAll();
         }, 400);
-        // Μετά από συνολικά 1,2s (δηλαδή αφού ολοκληρωθούν όλες οι μεταβάσεις) ενημερώνουμε το info panel και το Balloon
         setTimeout(function(){
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
@@ -781,16 +778,13 @@
           if(lastClickedElement) updateBalloonPosition(lastClickedElement);
         }, 1200);
       } else {
-        // Ξεκινάμε την μετάβαση (collapsed -> full)
         let panelB = document.getElementById('infoPanelCollapsed');
         panelB.style.left = "20px";
         panelB.style.top = "428px";
         panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-        // Μετά από 0,4s ξεκινάμε το redrawAll() για τους καμβάδες
         setTimeout(function(){
           redrawAll();
         }, 400);
-        // Μετά από 1,2s ενημερώνουμε το info panel και το Balloon
         setTimeout(function(){
           panelB.style.display = "none";
           panelB.style.left = "";
@@ -810,7 +804,10 @@
       ignoreCanvasClick = true;
       // Απενεργοποίηση του κουμπιού "Σύμπτυξη" κατά τη διάρκεια της διαδικασίας
       document.getElementById('toggleFBlock').disabled = true;
-
+      
+      // Debug: εμφάνιση της τρέχουσας τιμής currentZ
+      console.log('Πριν το επόμενο, currentZ =', currentZ);
+      
       if (currentZ < 118) {
         currentZ++;
       } else if (currentZ === 118) {
@@ -827,7 +824,6 @@
       } else if (currentZ === 121) {
         // Εμφάνιση μόνο της δεύτερης σειράς των ομάδων (παλιά ονομασία: ΙΑ, ΙΙΑ κ.λπ.)
         document.getElementById('canvasS_groups').style.display = 'block';
-        // Κρύβουμε τους άλλους αν υπάρχουν
         document.getElementById('canvasD_groups').style.display = 'none';
         document.getElementById('canvasP_groups').style.display = 'none';
         currentZ = 122;
@@ -839,7 +835,8 @@
         // Επανενεργοποίηση του κουμπιού "Σύμπτυξη" αφού ολοκληρωθεί η διαδικασία
         document.getElementById('toggleFBlock').disabled = false;
       }
-
+      
+      console.log('Μετά το επόμενο, currentZ =', currentZ);
       redrawAll();
       updateInfo(currentZ);
       setTimeout(() => { ignoreCanvasClick = false; }, 100);
