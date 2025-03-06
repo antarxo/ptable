@@ -336,6 +336,32 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
+    // initPeriodsCanvas ορίζεται στο global scope και προστίθεται στο window ώστε να είναι προσβάσιμο από εξωτερικά scripts
+    function initPeriodsCanvas() {
+      if(window.periodsInitialized) return;
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(40, 292);
+          canvas.parent("canvasPeriods");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+          for (let i = 0; i < 7; i++) {
+            p.fill(240);
+            p.rect(0, i * 42, 40, 40);
+            p.fill(0);
+            p.text(periodLabels[i], 20, i * 42 + 20);
+          }
+        };
+      });
+      window.periodsInitialized = true;
+    }
+    // Βεβαιώνουμε ότι η initPeriodsCanvas είναι προσβάσιμη global
+    window.initPeriodsCanvas = initPeriodsCanvas;
+    
     // updateInfo: Ενημερώνει τα info panels
     function updateInfo(clickedZ) {
       let currentNum;
@@ -605,7 +631,7 @@
       cs.style.top = topPos + "px";
     }
     
-    // Listener για το resize ώστε να ενημερώνεται η θέση του Balloon
+    // Listener για το resize
     window.addEventListener('resize', function() {
       updateRightPanelWidth();
       if(lastClickedElement) updateBalloonPosition(lastClickedElement);
@@ -663,7 +689,7 @@
           };
         });
       });
-      // Εάν είμαστε σε full mode, ανανεώνουμε τις θέσεις για d και p
+      // Σε full mode ανανεώνουμε τις θέσεις των d και p
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -684,12 +710,12 @@
       if (!document.body.classList.contains('collapsed')) {
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
-        // Ξεκινά άμεσα ο πίνακας (info panels) – transition 1,2s
+        // Ξεκινάει ο πίνακας (info panels) άμεσα (transition 1,2s)
         // Μετά από 0,4s ξεκινά το redraw των καμβάδων (transition 0,8s)
         setTimeout(function(){
           redrawAll();
         }, 400);
-        // Μετά από 1,2s, αφού ολοκληρωθούν οι μεταβάσεις, ενημερώνουμε το info panel και καλούμε updateCanvasPositions
+        // Μετά από 1,2s ενημερώνουμε το info panel, τις θέσεις των καμβάδων και το Balloon
         setTimeout(function(){
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
