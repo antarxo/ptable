@@ -138,9 +138,9 @@
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
-  <div id="canvasS_groups" class="canvas"></div>
-  <div id="canvasD_groups" class="canvas"></div>
-  <div id="canvasP_groups" class="canvas"></div>
+  <div id="canvasS_groups" class="canvas" style="display:none;"></div>
+  <div id="canvasD_groups" class="canvas" style="display:none;"></div>
+  <div id="canvasP_groups" class="canvas" style="display:none;"></div>
   
   <!-- Καμβάδες Τομέων -->
   <div id="canvasS" class="canvas"></div>
@@ -805,15 +805,41 @@
       }
     });
     
+    // Ενημερωμένος χειριστής του κουμπιού "Επόμενο"
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
-      if(currentZ < 118) { 
-        currentZ++; 
-      } else if(currentZ === 118) { 
-        currentZ = 119; 
-      } else if(currentZ === 119) { 
-        currentZ = 120; 
+      // Απενεργοποίηση του κουμπιού "Σύμπτυξη" κατά τη διάρκεια της διαδικασίας
+      document.getElementById('toggleFBlock').disabled = true;
+
+      if (currentZ < 118) {
+        currentZ++;
+      } else if (currentZ === 118) {
+        // Εμφάνιση του 1 (υδρογόνο) χωρίς να εξαφανίζονται τα προηγούμενα
+        currentZ = 119;
+      } else if (currentZ === 119) {
+        // Εμφάνιση του 2 (ήλιο) χωρίς να εξαφανίζονται τα προηγούμενα
+        currentZ = 120;
+      } else if (currentZ === 120) {
+        // Εμφάνιση των περιόδων
+        document.getElementById('canvasPeriods').style.display = 'block';
+        initPeriodsCanvas();
+        currentZ = 121;
+      } else if (currentZ === 121) {
+        // Εμφάνιση μόνο της δεύτερης σειράς των ομάδων (παλιά ονομασία: ΙΑ, ΙΙΑ κ.λπ.)
+        document.getElementById('canvasS_groups').style.display = 'block';
+        // Κρύβουμε τους άλλους αν υπάρχουν
+        document.getElementById('canvasD_groups').style.display = 'none';
+        document.getElementById('canvasP_groups').style.display = 'none';
+        currentZ = 122;
+      } else if (currentZ === 122) {
+        // Εμφάνιση της νέας ονομασίας των ομάδων (1-18)
+        document.getElementById('canvasD_groups').style.display = 'block';
+        document.getElementById('canvasP_groups').style.display = 'block';
+        currentZ = 123;
+        // Επανενεργοποίηση του κουμπιού "Σύμπτυξη" αφού ολοκληρωθεί η διαδικασία
+        document.getElementById('toggleFBlock').disabled = false;
       }
+
       redrawAll();
       updateInfo(currentZ);
       setTimeout(() => { ignoreCanvasClick = false; }, 100);
