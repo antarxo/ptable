@@ -110,7 +110,7 @@
     .canvas {
       position: absolute;
       background: transparent;
-      /* Οι καμβάδες μετακινούνται σε 1s */
+      /* Μετακίνηση σε 1s */
       transition: all 1s ease-in-out;
       transform: translateY(-10px);
     }
@@ -341,7 +341,7 @@
                        <span style="font-style: italic;">${element.name}</span>`;
       document.getElementById('leftPanelFull').innerHTML = basicInfo;
       
-      // Επίλυση "πάνω από": σε full mode, αν δεν υπάρχει στοιχείο με ίδιο col και row = element.row - 1, τότε "-"
+      // Επίλυση "πάνω από": αν δεν υπάρχει στοιχείο με ίδιο col και row = element.row - 1, τότε "-"
       let prevElement;
       if(!document.body.classList.contains('collapsed')) {
         prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1);
@@ -360,7 +360,6 @@
         return (num >= 119 ? num - 118 : num);
       }
       
-      // Χρήση απλών κενών αντί για &nbsp;
       let subsData = {
         prev: "Ζ=" + displayZFor(prevElement) + "    " + (prevElement.subshells || "-"),
         current: "Ζ=" + displayZFor(element) + "    " + (element.subshells || "-"),
@@ -382,7 +381,6 @@
       document.getElementById('rightPanelFull').innerHTML = stacksInfo;
       document.getElementById('remarksFull').innerHTML = element.remarks || "";
       
-      // Στο collapsed mode συμπεριλαμβάνουμε και τις στιβάδες
       let collapsedBasic = basicInfo;
       let collapsedContent = `<div style="font-size:1.2em; color:${subsData.prevColor}; text-align:left;">${subsData.prev}</div>
                               <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold; text-align:left;">${subsData.current}</div>
@@ -394,7 +392,7 @@
                                                                <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
                                                                <div>${element.remarks || ""}</div>`;
       
-      // Σχεδιασμός και μετακίνηση του Balloon όπως στο αρχικό:
+      // Σχεδιάζουμε το Balloon και ενημερώνουμε τη θέση του
       drawSubshells(subsData);
       updateBalloonPosition(element);
     }
@@ -542,7 +540,6 @@
       let leftMargin = 2;
       let rowHeight = balloonHeight / 3;
       
-      // Υπολογισμός του πλάτους με βάση το κείμενο
       subshellsP.textStyle(p5.prototype.NORMAL);
       let wPrev = subshellsP.textWidth(data.prev);
       subshellsP.textStyle(p5.prototype.BOLD);
@@ -551,13 +548,10 @@
       let wNext = subshellsP.textWidth(data.next);
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + 5;
       
-      // Καθαρίζουμε το canvas πριν από το resize
       subshellsP.clear();
-      // Κάνουμε resize ώστε το canvas να έχει το απαιτούμενο πλάτος και ύψος
       subshellsP.resizeCanvas(computedWidth, balloonHeight);
       subshellsP.canvas.style.cssText = 'width: ' + computedWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
       
-      // Σχεδιάζουμε το κείμενο
       subshellsP.textStyle(p5.prototype.NORMAL);
       subshellsP.fill(data.prevColor || "black");
       subshellsP.text(data.prev, leftMargin, rowHeight / 2);
@@ -573,7 +567,7 @@
       subshellsP.redraw();
     }
     
-    // updateBalloonPosition: Τοποθετεί το Balloon δίπλα στο κελί του στοιχείου, σύμφωνα με την αρχική λογική
+    // updateBalloonPosition: Ενημερώνει τη νέα θέση του Balloon βάσει της τρέχουσας διάταξης.
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -770,20 +764,21 @@
       }
     }
     
-    // Εναλλαγή μεταξύ collapsed και expanded:
+    // Εναλλαγή μεταξύ collapsed και expanded με καθυστέρηση για ανανέωση θέσης του Balloon
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
-        // Τα καμβάδες (1s transition) κι ο πίνακας (1.5s transition) ξεκινούν ταυτόχρονα
         setTimeout(function() {
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
           updateInfo(currentZ);
-          // Μετά το transition του πίνακα (1.5s) ανανεώνεται το redraw και η θέση του Balloon
           redrawAll();
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+          // Μετά από 1500ms + 100ms, ενημερώνουμε τη νέα θέση του Balloon
+          setTimeout(function(){
+            if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+          }, 100);
         }, 1500);
       } else {
         let panelB = document.getElementById('infoPanelCollapsed');
@@ -799,9 +794,10 @@
           toggleBtn.textContent = "Σύμπτυξη";
           document.getElementById('infoPanelFull').style.display = "grid";
           updateInfo(currentZ);
-          // Μετά το transition του πίνακα, ανανεώνεται το redraw και η θέση του Balloon
           redrawAll();
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+          setTimeout(function(){
+            if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+          }, 100);
         }, 1500);
       }
     });
