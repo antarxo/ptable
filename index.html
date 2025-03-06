@@ -733,24 +733,32 @@
           };
         });
       });
-      // Εμφάνιση ονομάτων περιόδων και ομάδων πάντοτε
+      // Εμφάνιση και τοποθέτηση των ονομάτων περιόδων και ομάδων
       let cp = document.getElementById('canvasPeriods');
       if(cp) { cp.style.display = "block"; }
       initPeriodsCanvas();
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) { csg.style.display = "block"; }
+      
+      // Για τις ομάδες χρησιμοποιούμε getBoundingClientRect για τους καμβάδες των τομέων d και p:
+      let dCanvas = document.getElementById('canvasD');
       let cdg = document.getElementById('canvasD_groups');
-      if(cdg) { cdg.style.display = "block"; }
+      if(dCanvas && cdg) {
+          let dRect = dCanvas.getBoundingClientRect();
+          cdg.style.top = "78px";
+          cdg.style.left = dRect.left + "px";
+          cdg.style.display = "block";
+      }
+      let pCanvas = document.getElementById('canvasP');
       let cpg = document.getElementById('canvasP_groups');
-      if(cpg) { cpg.style.display = "block"; }
-      let csgLeft = document.getElementById('canvasS_groups');
-      if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "50px"; }
-      let dLeft = document.getElementById('canvasD').style.left;
-      let cdgLeft = document.getElementById('canvasD_groups');
-      if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
-      let pLeft = document.getElementById('canvasP').style.left;
-      let cpgLeft = document.getElementById('canvasP_groups');
-      if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
+      if(pCanvas && cpg) {
+          let pRect = pCanvas.getBoundingClientRect();
+          cpg.style.top = "78px";
+          cpg.style.left = pRect.left + "px";
+          cpg.style.display = "block";
+      }
+      
+      let csg = document.getElementById('canvasS_groups');
+      if(csg) { csg.style.display = "block"; csg.style.top = "78px"; csg.style.left = "50px"; }
+      
       initGroupsCanvases();
       
       if(!document.body.classList.contains('collapsed')) {
