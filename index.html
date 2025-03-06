@@ -532,7 +532,7 @@
       });
     }
     
-    // drawSubshells: Επαναφορά στην αρχική μορφή με καθορισμένο textSize και σχεδιασμό 3 γραμμών
+    // drawSubshells: Τροποποιημένη ώστε να γίνεται clear πριν το resize και να σχεδιάζεται ορθά το περιεχόμενο του Balloon.
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
@@ -541,7 +541,7 @@
       let leftMargin = 2;
       let rowHeight = balloonHeight / 3;
       
-      // Υπολογισμός του πλάτους πριν το resize
+      // Υπολογισμός του πλάτους με βάση το κείμενο
       subshellsP.textStyle(p5.prototype.NORMAL);
       let wPrev = subshellsP.textWidth(data.prev);
       subshellsP.textStyle(p5.prototype.BOLD);
@@ -550,12 +550,13 @@
       let wNext = subshellsP.textWidth(data.next);
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + 5;
       
-      // Πρώτα κάνουμε resize για να αποφύγουμε το clear που κάνει η resizeCanvas
+      // Καθαρίζουμε το canvas πριν από το resize
+      subshellsP.clear();
+      // Κάνουμε resize ώστε το canvas να έχει το απαιτούμενο πλάτος και ύψος
       subshellsP.resizeCanvas(computedWidth, balloonHeight);
       subshellsP.canvas.style.cssText = 'width: ' + computedWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
       
-      // Καθαρίζουμε το canvas και σχεδιάζουμε το νέο περιεχόμενο
-      subshellsP.clear();
+      // Σχεδιάζουμε το κείμενο
       subshellsP.textStyle(p5.prototype.NORMAL);
       subshellsP.fill(data.prevColor || "black");
       subshellsP.text(data.prev, leftMargin, rowHeight / 2);
@@ -768,6 +769,41 @@
       }
     }
     
+    // Τροποποιημένη κλήση για εναλλαγή μεταξύ collapsed και expanded:
+    document.getElementById('toggleFBlock').addEventListener('click', function() {
+      let toggleBtn = document.getElementById('toggleFBlock');
+      if (!document.body.classList.contains('collapsed')) {
+        document.body.classList.add('collapsed');
+        toggleBtn.textContent = "Ανάπτυξη";
+        setTimeout(function() {
+          document.getElementById('infoPanelFull').style.display = "none";
+          document.getElementById('infoPanelCollapsed').style.display = "flex";
+          updateInfo(currentZ);
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+          // Ενημέρωση θέσεων καμβάδων μετά το transition
+          redrawAll();
+        }, 1500);
+      } else {
+        let panelB = document.getElementById('infoPanelCollapsed');
+        panelB.style.left = "20px";
+        panelB.style.top = "428px";
+        panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
+        setTimeout(function() {
+          panelB.style.display = "none";
+          panelB.style.left = "";
+          panelB.style.top = "";
+          panelB.style.width = "";
+          document.body.classList.remove('collapsed');
+          toggleBtn.textContent = "Σύμπτυξη";
+          document.getElementById('infoPanelFull').style.display = "grid";
+          updateInfo(currentZ);
+          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+          // Ενημέρωση θέσεων καμβάδων μετά το transition
+          redrawAll();
+        }, 1500);
+      }
+    });
+    
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 118) { 
@@ -805,39 +841,6 @@
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
-    });
-    
-    document.getElementById('toggleFBlock').addEventListener('click', function() {
-      let toggleBtn = document.getElementById('toggleFBlock');
-      if (!document.body.classList.contains('collapsed')) {
-        document.body.classList.add('collapsed');
-        toggleBtn.textContent = "Ανάπτυξη";
-        // Μεταφέρουμε την ενημέρωση θέσης του Balloon μετά το transition
-        setTimeout(function() {
-          document.getElementById('infoPanelFull').style.display = "none";
-          document.getElementById('infoPanelCollapsed').style.display = "flex";
-          updateInfo(currentZ);
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-        }, 1500);
-      } else {
-        let panelB = document.getElementById('infoPanelCollapsed');
-        panelB.style.left = "20px";
-        panelB.style.top = "428px";
-        panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-        // Ενημέρωση θέσης Balloon μετά το transition
-        setTimeout(function() {
-          panelB.style.display = "none";
-          panelB.style.left = "";
-          panelB.style.top = "";
-          panelB.style.width = "";
-          document.body.classList.remove('collapsed');
-          toggleBtn.textContent = "Σύμπτυξη";
-          document.getElementById('infoPanelFull').style.display = "grid";
-          updateInfo(currentZ);
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-        }, 1500);
-      }
-      redrawAll();
     });
     
     window.loadElements = loadElements;
