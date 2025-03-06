@@ -539,24 +539,35 @@
       let fontSize = 12;
       subshellsP.textSize(fontSize);
       let leftMargin = 2;
-      subshellsP.clear();
       let rowHeight = balloonHeight / 3;
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.prevColor || "black");
-      subshellsP.text(data.prev, leftMargin, rowHeight/2);
-      subshellsP.textStyle(p5.prototype.BOLD);
-      subshellsP.fill(data.currentColor || "black");
-      subshellsP.text(data.current, leftMargin, rowHeight + rowHeight/2);
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.nextColor || "black");
-      subshellsP.text(data.next, leftMargin, 2 * rowHeight + rowHeight/2);
       
+      // Υπολογισμός του πλάτους πριν το resize
+      subshellsP.textStyle(p5.prototype.NORMAL);
       let wPrev = subshellsP.textWidth(data.prev);
+      subshellsP.textStyle(p5.prototype.BOLD);
       let wCurrent = subshellsP.textWidth(data.current);
+      subshellsP.textStyle(p5.prototype.NORMAL);
       let wNext = subshellsP.textWidth(data.next);
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + 5;
+      
+      // Πρώτα κάνουμε resize για να αποφύγουμε το clear που κάνει η resizeCanvas
       subshellsP.resizeCanvas(computedWidth, balloonHeight);
       subshellsP.canvas.style.cssText = 'width: ' + computedWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
+      
+      // Καθαρίζουμε το canvas και σχεδιάζουμε το νέο περιεχόμενο
+      subshellsP.clear();
+      subshellsP.textStyle(p5.prototype.NORMAL);
+      subshellsP.fill(data.prevColor || "black");
+      subshellsP.text(data.prev, leftMargin, rowHeight / 2);
+      
+      subshellsP.textStyle(p5.prototype.BOLD);
+      subshellsP.fill(data.currentColor || "black");
+      subshellsP.text(data.current, leftMargin, rowHeight + rowHeight / 2);
+      
+      subshellsP.textStyle(p5.prototype.NORMAL);
+      subshellsP.fill(data.nextColor || "black");
+      subshellsP.text(data.next, leftMargin, 2 * rowHeight + rowHeight / 2);
+      
       subshellsP.redraw();
     }
     
