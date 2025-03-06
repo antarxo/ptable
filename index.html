@@ -238,7 +238,7 @@
       }
     }
     
-    // initGroupsCanvases (χωρίς αλλαγές)
+    // initGroupsCanvases χωρίς αλλαγές
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -336,7 +336,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // initPeriodsCanvas ορίζεται στο global scope και προστίθεται στο window ώστε να είναι προσβάσιμο από εξωτερικά scripts
+    // initPeriodsCanvas ορίζεται στο global scope
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -359,8 +359,17 @@
       });
       window.periodsInitialized = true;
     }
-    // Βεβαιώνουμε ότι η initPeriodsCanvas είναι προσβάσιμη global
     window.initPeriodsCanvas = initPeriodsCanvas;
+    
+    // Συνάρτηση για ενημέρωση του δεξιού panel
+    function updateRightPanelWidth() {
+      let rp = document.getElementById('buttonPanel');
+      if(rp) {
+        let width = rp.offsetWidth;
+        document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
+      }
+    }
+    window.updateRightPanelWidth = updateRightPanelWidth;
     
     // updateInfo: Ενημερώνει τα info panels
     function updateInfo(clickedZ) {
@@ -689,7 +698,6 @@
           };
         });
       });
-      // Σε full mode ανανεώνουμε τις θέσεις των d και p
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -710,12 +718,9 @@
       if (!document.body.classList.contains('collapsed')) {
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
-        // Ξεκινάει ο πίνακας (info panels) άμεσα (transition 1,2s)
-        // Μετά από 0,4s ξεκινά το redraw των καμβάδων (transition 0,8s)
         setTimeout(function(){
           redrawAll();
         }, 400);
-        // Μετά από 1,2s ενημερώνουμε το info panel, τις θέσεις των καμβάδων και το Balloon
         setTimeout(function(){
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
