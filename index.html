@@ -222,7 +222,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Συνάρτηση για ανανέωση θέσεων καμβάδων των d και p
+    // Συνάρτηση για ανανέωση θέσεων των καμβάδων d και p
     function updateCanvasPositions() {
       let cD = document.getElementById('canvasD');
       let cP = document.getElementById('canvasP');
@@ -241,7 +241,7 @@
       }
     }
     
-    // initGroupsCanvases χωρίς αλλαγές
+    // initGroupsCanvases όπως στο αρχικό αρχείο
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -339,7 +339,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // initPeriodsCanvas ορίζεται στο global scope
+    // initPeriodsCanvas όπως στο αρχικό αρχείο
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -364,7 +364,7 @@
     }
     window.initPeriodsCanvas = initPeriodsCanvas;
     
-    // Ορισμός της updateRightPanelWidth στο global scope
+    // Ορισμός στο global scope
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -374,7 +374,6 @@
     }
     window.updateRightPanelWidth = updateRightPanelWidth;
     
-    // Ορισμός της messageForElement στο global scope
     function messageForElement(element) {
       if (element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -400,13 +399,11 @@
     }
     window.messageForElement = messageForElement;
     
-    // Ορισμός της updateToggleButton στο global scope
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
     window.updateToggleButton = updateToggleButton;
     
-    // updateInfo: Ενημερώνει τα info panels
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -614,7 +611,6 @@
       });
     }
     
-    // drawSubshells: Καθαρίζει και σχεδιάζει το περιεχόμενο του Balloon
     function drawSubshells(data) {
       if (!subshellsP) return;
       let balloonHeight = 60;
@@ -650,7 +646,6 @@
       subshellsP.redraw();
     }
     
-    // updateBalloonPosition: Υπολογίζει τη νέα θέση του Balloon βάσει της τρέχουσας διάταξης
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -675,7 +670,6 @@
       cs.style.top = topPos + "px";
     }
     
-    // Listener για το resize
     window.addEventListener('resize', function() {
       updateRightPanelWidth();
       if(lastClickedElement) updateBalloonPosition(lastClickedElement);
@@ -733,31 +727,35 @@
           };
         });
       });
-      // Εμφάνιση και τοποθέτηση των ονομάτων περιόδων και ομάδων
+      // Εμφάνιση και τοποθέτηση των ονομάτων περιόδων και ομάδων όπως στο αρχικό αρχείο
       let cp = document.getElementById('canvasPeriods');
       if(cp) { cp.style.display = "block"; }
       initPeriodsCanvas();
       
-      // Για τις ομάδες χρησιμοποιούμε getBoundingClientRect για τους καμβάδες των τομέων d και p:
-      let dCanvas = document.getElementById('canvasD');
-      let cdg = document.getElementById('canvasD_groups');
-      if(dCanvas && cdg) {
-          let dRect = dCanvas.getBoundingClientRect();
-          cdg.style.top = "78px";
-          cdg.style.left = dRect.left + "px";
-          cdg.style.display = "block";
-      }
-      let pCanvas = document.getElementById('canvasP');
-      let cpg = document.getElementById('canvasP_groups');
-      if(pCanvas && cpg) {
-          let pRect = pCanvas.getBoundingClientRect();
-          cpg.style.top = "78px";
-          cpg.style.left = pRect.left + "px";
-          cpg.style.display = "block";
-      }
-      
       let csg = document.getElementById('canvasS_groups');
       if(csg) { csg.style.display = "block"; csg.style.top = "78px"; csg.style.left = "50px"; }
+      
+      let cdg = document.getElementById('canvasD_groups');
+      if(cdg) {
+        cdg.style.display = "block";
+        let dCanvas = document.getElementById('canvasD');
+        if(dCanvas) {
+          let dLeft = window.getComputedStyle(dCanvas).left;
+          cdg.style.top = "78px";
+          cdg.style.left = dLeft;
+        }
+      }
+      
+      let cpg = document.getElementById('canvasP_groups');
+      if(cpg) {
+        cpg.style.display = "block";
+        let pCanvas = document.getElementById('canvasP');
+        if(pCanvas) {
+          let pLeft = window.getComputedStyle(pCanvas).left;
+          cpg.style.top = "78px";
+          cpg.style.left = pLeft;
+        }
+      }
       
       initGroupsCanvases();
       
@@ -772,10 +770,19 @@
         if(cD) { cD.style.left = (base + shiftD) + "px"; }
         let cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = (base + shiftP) + "px"; }
+      } else {
+        let cS = document.getElementById('canvasS');
+        if(cS) { cS.style.left = "50px"; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.left = "154px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.left = "139px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.left = "559px"; }
       }
+      updateToggleButton();
     }
     
-    // Εναλλαγή μεταξύ collapsed και full
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
