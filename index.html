@@ -227,7 +227,6 @@
       let cD = document.getElementById('canvasD');
       let cP = document.getElementById('canvasP');
       if(document.body.classList.contains('collapsed')) {
-        // Σε collapsed κατάσταση, θέτουμε τις θέσεις στα "139px" και "559px" αντίστοιχα
         if(cD) { cD.style.left = "139px"; }
         if(cP) { cP.style.left = "559px"; }
       } else {
@@ -734,6 +733,26 @@
           };
         });
       });
+      // Εμφάνιση ονομάτων περιόδων και ομάδων πάντοτε
+      let cp = document.getElementById('canvasPeriods');
+      if(cp) { cp.style.display = "block"; }
+      initPeriodsCanvas();
+      let csg = document.getElementById('canvasS_groups');
+      if(csg) { csg.style.display = "block"; }
+      let cdg = document.getElementById('canvasD_groups');
+      if(cdg) { cdg.style.display = "block"; }
+      let cpg = document.getElementById('canvasP_groups');
+      if(cpg) { cpg.style.display = "block"; }
+      let csgLeft = document.getElementById('canvasS_groups');
+      if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "50px"; }
+      let dLeft = document.getElementById('canvasD').style.left;
+      let cdgLeft = document.getElementById('canvasD_groups');
+      if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
+      let pLeft = document.getElementById('canvasP').style.left;
+      let cpgLeft = document.getElementById('canvasP_groups');
+      if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
+      initGroupsCanvases();
+      
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
