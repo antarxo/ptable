@@ -222,7 +222,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // initGroupsCanvases χωρίς τροποποιήσεις
+    // initGroupsCanvases (χωρίς αλλαγές)
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -320,7 +320,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα περιεχόμενα και τη θέση των info panels
+    // updateInfo: Ενημερώνει τα περιεχόμενα των info panels
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -589,7 +589,7 @@
       cs.style.top = topPos + "px";
     }
     
-    // Listener για το resize ώστε να ενημερώνεται η θέση του Balloon
+    // Listener για το resize
     window.addEventListener('resize', function() {
       updateRightPanelWidth();
       if(lastClickedElement) updateBalloonPosition(lastClickedElement);
@@ -761,28 +761,37 @@
       }
     }
     
-    // Εναλλαγή μεταξύ collapsed και expanded: οι καμβάδες και τα info panels ξεκινούν μαζί
+    // Τροποποιημένη λειτουργία εναλλαγής μεταξύ collapsed και full:
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if (!document.body.classList.contains('collapsed')) {
+        // Ξεκινάμε την μετάβαση (full -> collapsed)
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
-        // Ξεκινάμε αμέσως το redraw ώστε όλοι οι καμβάδες να ξεκινούν τη μετάβαση (0,8s)
-        redrawAll();
-        // Περιμένουμε 1,2s για το info panels να ολοκληρώσουν και προσθέτουμε ένα επιπλέον delay ώστε να έχουν σταθεροποιηθεί και οι καμβάδες (συνολικά 2s)
-        setTimeout(function() {
+        // Με την εμφάνιση του info panel να ξεκινά αμέσως (transition 1,2s)
+        // Μετά από 0,4s, καλούμε redrawAll() για να ξεκινήσουν οι καμβάδες (transition 0,8s)
+        setTimeout(function(){
+          redrawAll();
+        }, 400);
+        // Μετά από συνολικά 1,2s (δηλαδή αφού ολοκληρωθούν όλες οι μεταβάσεις) ενημερώνουμε το info panel και το Balloon
+        setTimeout(function(){
           document.getElementById('infoPanelFull').style.display = "none";
           document.getElementById('infoPanelCollapsed').style.display = "flex";
           updateInfo(currentZ);
           if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-        }, 2000);
+        }, 1200);
       } else {
+        // Ξεκινάμε την μετάβαση (collapsed -> full)
         let panelB = document.getElementById('infoPanelCollapsed');
         panelB.style.left = "20px";
         panelB.style.top = "428px";
         panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-        redrawAll();
-        setTimeout(function() {
+        // Μετά από 0,4s ξεκινάμε το redrawAll() για τους καμβάδες
+        setTimeout(function(){
+          redrawAll();
+        }, 400);
+        // Μετά από 1,2s ενημερώνουμε το info panel και το Balloon
+        setTimeout(function(){
           panelB.style.display = "none";
           panelB.style.left = "";
           panelB.style.top = "";
@@ -792,7 +801,7 @@
           document.getElementById('infoPanelFull').style.display = "grid";
           updateInfo(currentZ);
           if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-        }, 2000);
+        }, 1200);
       }
     });
     
