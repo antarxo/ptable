@@ -2,8 +2,6 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <!-- Responsive design -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -28,7 +26,7 @@
     /* Full mode: Grid διάταξη για τον πίνακα */
     #infoPanelFull {
       display: grid;
-      grid-template-areas: 
+      grid-template-areas:
          "left middle right"
          "left remarks remarks";
       grid-template-columns: 120px 7fr 3fr;
@@ -43,7 +41,7 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      transition: all 1.2s ease;
+      transition: all 1.5s ease;
       z-index: 40;
     }
     body.collapsed #infoPanelFull {
@@ -56,7 +54,7 @@
     #middlePanelFull { grid-area: middle; }
     #rightPanelFull { grid-area: right; }
     #remarksFull { grid-area: remarks; }
-    /* Collapsed mode: απλή διάταξη */
+    /* Collapsed mode */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -70,10 +68,10 @@
       top: 112px;
       width: calc(100vw - 920px);
       z-index: 40;
-      transition: all 1.2s ease;
+      transition: all 1.5s ease;
     }
     #infoPanelCollapsed > div { margin-bottom: 10px; }
-    /* Το Balloon: transition 1s */
+    /* Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.8);
@@ -81,9 +79,11 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
+      width: auto;
+      height: auto;
       z-index: 150;
       display: none;
-      transition: all 1s ease;
+      transition: all 1.5s ease;
     }
     /* Κουμπιά */
     #buttonPanel {
@@ -106,11 +106,11 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* Οι καμβάδες τομέων και ομάδων μετακινούνται σε 0,8s */
+    /* Καμβάδες */
     .canvas {
       position: absolute;
       background: transparent;
-      transition: all 0.8s ease-in-out;
+      transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
     #canvasPeriods {
@@ -125,7 +125,6 @@
     }
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    #canvasS_groups { width: 84px; height: 40px; }
     .full #canvasS { top: 120px; left: 50px; z-index: 1; }
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 3; }
@@ -135,54 +134,55 @@
 </head>
 <body class="full">
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
-  
+
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
-  
+
   <!-- Καμβάδες Τομέων -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
-  
+
   <!-- Πίνακες Πληροφοριών -->
-  <!-- Full mode -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="middlePanelFull"></div>
     <div id="rightPanelFull"></div>
     <div id="remarksFull"></div>
   </div>
-  <!-- Collapsed mode -->
   <div id="infoPanelCollapsed">
     <div id="leftPanelCollapsed"></div>
     <div id="remarksCollapsed"></div>
   </div>
-  
-  <!-- Balloon (Canvas υποστιβάδων) -->
+
+  <!-- Balloon -->
   <div id="canvasSubshells" class="canvas"></div>
-  
+
   <!-- Κουμπιά -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξη</button>
+    <button id="toggleFBlock">Ανάπτυξε/Σύμπτυξε</button>
     <button id="reset">Reset</button>
   </div>
-  
+
   <script>
     // Βασικές μεταβλητές
     let ignoreCanvasClick = false;
-    let currentZ = 3;
+    let currentZ = 3; // Αρχική τιμή: εμφανίζονται στοιχεία 3 έως 118
     let flashActive = false;
-    let subshellsP;
+    let subshellsP; // p5 instance για το Balloon
     let lastClickedElement = null;
-    
+
+    // Global variable για τα δεδομένα του Balloon
+    window.subshellsData = null;
+
     // Χρώματα τομέων
-    const BLOCK_COLORS = { 
+    const BLOCK_COLORS = {
       s: "#FFB3C9",
       f: "#EACE5D",
       d: "#ACDFEC",
@@ -212,7 +212,7 @@
       }
       return result.join(", ");
     }
-    
+
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -221,27 +221,8 @@
     };
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
-    
-    // Συνάρτηση για ανανέωση θέσεων των καμβάδων d και p
-    function updateCanvasPositions() {
-      let cD = document.getElementById('canvasD');
-      let cP = document.getElementById('canvasP');
-      if(document.body.classList.contains('collapsed')) {
-        if(cD) { cD.style.left = "139px"; }
-        if(cP) { cP.style.left = "559px"; }
-      } else {
-        let base = 134, shiftP = 0, shiftD = 0;
-        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
-        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        if(cP) { cP.style.left = (base + shiftP) + "px"; }
-      }
-    }
-    
-    // initGroupsCanvases όπως στο αρχικό αρχείο
+
+    // initGroupsCanvases χωρίς τροποποιήσεις
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -325,21 +306,197 @@
       });
       window.groupsInitialized = true;
     }
-    
-    function loadElements() {
-      fetch('elements.json')
-        .then(response => response.json())
-        .then(data => {
-          elements = sortElements(data);
-          initializeCanvases();
-          initSubshellsCanvas();
-          updateInfo(currentZ);
-          updateToggleButton();
-        })
-        .catch(err => console.error('Σφάλμα φόρτωσης:', err));
+
+    // Δημιουργία του canvas του Balloon με draw() ώστε να ενημερώνεται συνεχώς
+    function initSubshellsCanvas() {
+      if(window.subshellsInitialized) return;
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(10, 40);
+          canvas.parent("canvasSubshells");
+          subshellsP = p;
+        };
+        p.draw = function() {
+          if (window.subshellsData) {
+            drawSubshells(window.subshellsData);
+          }
+        };
+      });
+      window.subshellsInitialized = true;
     }
-    
-    // initPeriodsCanvas όπως στο αρχικό αρχείο
+
+    // Ορισμός της updateBalloonPosition στο global scope
+    function updateBalloonPosition(element) {
+      let cs = document.getElementById('canvasSubshells');
+      if(!cs) return;
+      cs.style.transition = "all 1.5s ease";
+      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
+      if(!blockCanvas) return;
+      let rect = blockCanvas.getBoundingClientRect();
+      let pos = calculatePosition(element, element.block);
+      let defaultLeft = rect.left + pos.x + 40;
+      let defaultTop = rect.top + pos.y + 40;
+      let leftPos = defaultLeft - 5;
+      let topPos = defaultTop;
+      let balloonWidth = cs.offsetWidth;
+      if(defaultLeft > window.innerWidth / 2) {
+        leftPos = defaultLeft - (33 + balloonWidth);
+      }
+      if(leftPos + balloonWidth > window.innerWidth) {
+        leftPos = window.innerWidth - balloonWidth - 5;
+      }
+      cs.style.display = "block";
+      cs.style.left = leftPos + "px";
+      cs.style.top = topPos + "px";
+    }
+
+    // ΝΕΑ drawSubshells: χωρίζει σε στήλες (Z και υποστιβάδες)
+    function drawSubshells(data) {
+      if (!subshellsP) return;
+      subshellsP.clear();
+      let rowHeight = 20;
+      let totalHeight = rowHeight * 3;
+      subshellsP.resizeCanvas(300, totalHeight);
+      subshellsP.canvas.style.cssText =
+        "width: 300px !important; height: " + totalHeight + "px !important;";
+      subshellsP.textSize(14);
+      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
+      let wPrevZ = subshellsP.textWidth(data.prevZ);
+      let wCurrentZ = subshellsP.textWidth(data.currentZ);
+      let wNextZ = subshellsP.textWidth(data.nextZ);
+      let maxZWidth = Math.max(wPrevZ, wCurrentZ, wNextZ);
+      let leftMargin = 5;
+      let spacing = 10;
+      subshellsP.fill(data.prevColor || "black");
+      subshellsP.textStyle(subshellsP.NORMAL);
+      subshellsP.text(data.prevZ, leftMargin, rowHeight * 0.5);
+      subshellsP.text(data.prevSub, leftMargin + maxZWidth + spacing, rowHeight * 0.5);
+      subshellsP.fill(data.currentColor || "black");
+      subshellsP.textStyle(subshellsP.BOLD);
+      subshellsP.text(data.currentZ, leftMargin, rowHeight * 1.5);
+      subshellsP.text(data.currentSub, leftMargin + maxZWidth + spacing, rowHeight * 1.5);
+      subshellsP.fill(data.nextColor || "black");
+      subshellsP.textStyle(subshellsP.NORMAL);
+      subshellsP.text(data.nextZ, leftMargin, rowHeight * 2.5);
+      subshellsP.text(data.nextSub, leftMargin + maxZWidth + spacing, rowHeight * 2.5);
+    }
+
+    // Συνάρτηση repositionCanvases για μετατοπίσεις των καμβάδων d και p
+    function repositionCanvases() {
+      if(!document.body.classList.contains('collapsed')) {
+        let base = 134;
+        let maxShiftD = 42 * 14;
+        let maxShiftP = 42 * 24;
+        let shiftD = 0, shiftP = 0;
+        if(currentZ <= 20) {
+          shiftD = 0;
+          shiftP = 0;
+        } else if(currentZ <= 30) {
+          shiftD = (currentZ - 20) * (0.3 * maxShiftD) / 10;
+          shiftP = (currentZ - 20) * (0.3 * maxShiftP) / 10;
+        } else if(currentZ <= 56) {
+          shiftD = 0.3 * maxShiftD + (currentZ - 30) * (0.2 * maxShiftD) / 26;
+          shiftP = 0.3 * maxShiftP;
+        } else if(currentZ <= 70) {
+          shiftD = 0.5 * maxShiftD + (currentZ - 56) * (0.5 * maxShiftD) / 14;
+          shiftP = 0.3 * maxShiftP + (currentZ - 56) * (0.7 * maxShiftP) / 14;
+        } else {
+          shiftD = maxShiftD;
+          shiftP = maxShiftP;
+        }
+        document.getElementById('canvasF').style.left = base + "px";
+        document.getElementById('canvasD').style.left = (base + shiftD) + "px";
+        document.getElementById('canvasP').style.left = (base + shiftP) + "px";
+      } else {
+        document.getElementById('canvasS').style.left = "50px";
+        document.getElementById('canvasF').style.left = "154px";
+        document.getElementById('canvasD').style.left = "139px";
+        document.getElementById('canvasP').style.left = "559px";
+      }
+    }
+
+    function redrawAll() {
+      Object.keys(BLOCKS_CONFIG).forEach(function(block) {
+        let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
+        if(canvasDiv) { canvasDiv.innerHTML = ""; }
+        new p5(function(p) {
+          p.setup = function() {
+            const config = BLOCKS_CONFIG[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+            canvas.parent("canvas" + block.toUpperCase());
+            canvas.elt.style.height = config.rows * 42 + "px";
+            if(!document.body.classList.contains('collapsed')) {
+              if(block === 's') { canvas.elt.style.left = "50px"; }
+              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
+            } else {
+              if(block === 's') { canvas.elt.style.left = "50px"; }
+              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "154px" : "139px"); }
+              else if(block === 'p') { canvas.elt.style.left = "559px"; }
+            }
+            drawElements(p, block);
+            p.skipNextClick = true;
+            setTimeout(() => { p.skipNextClick = false; }, 100);
+            p.mouseClicked = function() {
+              if(p.skipNextClick || ignoreCanvasClick) { return; }
+              let candidates;
+              if(currentZ < 118) {
+                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ);
+              } else if(currentZ === 118) {
+                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118);
+              } else if(currentZ === 119) {
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1));
+              } else {
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
+              }
+              for(let candidate of candidates) {
+                let pos = calculatePosition(candidate, candidate.block);
+                if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
+                   p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  window.updateInfo(candidate.number);
+                  if(candidate.number === currentZ) {
+                    flashActive = true;
+                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                  }
+                  break;
+                }
+              }
+            };
+          };
+        });
+      });
+      repositionCanvases();
+      if(currentZ >= 120) {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "block"; }
+        initPeriodsCanvas();
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "block"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "block"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "block"; }
+        let csgLeft = document.getElementById('canvasS_groups');
+        if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "50px"; }
+        let dLeft = document.getElementById('canvasD').style.left;
+        let cdgLeft = document.getElementById('canvasD_groups');
+        if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
+        let pLeft = document.getElementById('canvasP').style.left;
+        let cpgLeft = document.getElementById('canvasP_groups');
+        if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
+        initGroupsCanvases();
+      } else {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "none"; }
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "none"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "none"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "none"; }
+      }
+      updateToggleButton();
+    }
+
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -362,8 +519,11 @@
       });
       window.periodsInitialized = true;
     }
-    window.initPeriodsCanvas = initPeriodsCanvas;
-    
+
+    function updateToggleButton() {
+      document.getElementById('toggleFBlock').disabled = false;
+    }
+
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -371,506 +531,86 @@
         document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
       }
     }
-    window.updateRightPanelWidth = updateRightPanelWidth;
-    
+
     function messageForElement(element) {
-      if (element.block === 'f') {
+      if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
       } else {
         let group = parseInt(element.col);
-        if (group === 1) {
-          return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
-        } else if (group === 2) {
+        if(group === 1) {
+          return (element.number === 1)
+            ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο"
+            : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
+        } else if(group === 2) {
           return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
-        } else if (group === 13) {
+        } else if(group === 13) {
           return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
-        } else if (group >= 3 && group <= 12) {
+        } else if(group >= 3 && group <= 12) {
           return "Στοιχείο μετάπτωσης";
-        } else if (group === 14) {
+        } else if(group === 14) {
           return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
-        } else if (group >= 15 && group <= 17) {
-          return `Θέλει να <strong>πάρεται</strong> ${18 - group} ηλεκτρόνια`;
-        } else if (group === 18) {
-          return "Ευγενές αέριο-Χημικά αδρανές";
-        }
-        return "";
-      }
-    }
-    window.messageForElement = messageForElement;
-    
-    function updateToggleButton() {
-      document.getElementById('toggleFBlock').disabled = false;
-    }
-    window.updateToggleButton = updateToggleButton;
-    
-    function updateInfo(clickedZ) {
-      let currentNum;
-      if(clickedZ === 119) { currentNum = 1; }
-      else if(clickedZ === 120) { currentNum = 2; }
-      else { currentNum = convertClickedToCurrent(clickedZ); }
-      
-      const element = elements.find(e => Number(e.number) === currentNum);
-      if(!element) return;
-      lastClickedElement = element;
-      
-      let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
-      if(clickedZ === 119) { displayZ = 1; }
-      else if(clickedZ === 120) { displayZ = 2; }
-      
-      let basicInfo = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span>
-                       <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
-                       <span style="font-style: italic;">${element.name}</span>`;
-      document.getElementById('leftPanelFull').innerHTML = basicInfo;
-      
-      let prevElement;
-      if(!document.body.classList.contains('collapsed')) {
-        prevElement = elements.find(e => e.col === element.col && e.row === element.row - 1);
-        if(!prevElement) { prevElement = { number: "-", subshells: "-", block: element.block }; }
-      } else {
-        prevElement = elements.find(e => e.group === element.group && e.period === element.period - 1)
-                      || { number: "-", subshells: "-", block: element.block };
-      }
-      
-      let nextElement = elements.find(e => Number(e.number) === Number(element.number) + 1)
-                        || { number: "-", subshells: "-", block: element.block };
-      
-      function displayZFor(e) {
-        if(e.number === "-" || isNaN(Number(e.number))) return "-";
-        let num = Number(e.number);
-        return (num >= 119 ? num - 118 : num);
-      }
-      
-      let subsData = {
-        prev: "Ζ=" + displayZFor(prevElement) + "    " + (prevElement.subshells || "-"),
-        current: "Ζ=" + displayZFor(element) + "    " + (element.subshells || "-"),
-        next: "Ζ=" + displayZFor(nextElement) + "    " + (nextElement.subshells || "-"),
-        prevColor: getBlockColor(prevElement.block),
-        currentColor: getBlockColor(element.block),
-        nextColor: getBlockColor(nextElement.block)
-      };
-      
-      let subshellsInfo = `
-        <div style="font-size:1.2em; color:${subsData.prevColor}; text-align:left;">${subsData.prev}</div>
-        <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold; text-align:left;">${subsData.current}</div>
-        <div style="font-size:1.2em; color:${subsData.nextColor}; text-align:left;">${subsData.next}</div>
-      `;
-      document.getElementById('middlePanelFull').innerHTML = subshellsInfo;
-      
-      let stacksInfo = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>
-                        <div style="font-style: italic;">${messageForElement(element)}</div>`;
-      document.getElementById('rightPanelFull').innerHTML = stacksInfo;
-      document.getElementById('remarksFull').innerHTML = element.remarks || "";
-      
-      let collapsedBasic = basicInfo;
-      let collapsedContent = `<div style="font-size:1.2em; color:${subsData.prevColor}; text-align:left;">${subsData.prev}</div>
-                              <div style="font-size:1.2em; color:${subsData.currentColor}; font-weight:bold; text-align:left;">${subsData.current}</div>
-                              <div style="font-size:1.2em; color:${subsData.nextColor}; text-align:left;">${subsData.next}</div>`;
-      document.getElementById('leftPanelCollapsed').innerHTML = collapsedBasic;
-      document.getElementById('remarksCollapsed').innerHTML = `<div>${stacksInfo}</div>
-                                                               <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
-                                                               <div>${collapsedContent}</div>
-                                                               <hr style="border:none; border-top:1px solid lightgray; margin:10px 0;">
-                                                               <div>${element.remarks || ""}</div>`;
-      
-      drawSubshells(subsData);
-      updateBalloonPosition(element);
-    }
-    window.updateInfo = updateInfo;
-    
-    function initializeCanvases() {
-      Object.keys(BLOCKS_CONFIG).forEach(function(block) {
-        new p5(function(p) {
-          p.setup = function() {
-            const config = BLOCKS_CONFIG[block];
-            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-            canvas.parent("canvas" + block.toUpperCase());
-            canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')){
-              if(block === 's') { canvas.elt.style.left = "50px"; }
-              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "154px" : "139px"); }
-              else if(block === 'p') { canvas.elt.style.left = "559px"; }
-            } else {
-              if(block === 's') { canvas.elt.style.left = "50px"; }
-              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
-            }
-            drawElements(p, block);
-            p.skipNextClick = true;
-            setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = function() {
-              if(p.skipNextClick || ignoreCanvasClick) { return; }
-              let candidates;
-              if(currentZ < 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ);
-              } else if(currentZ === 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118);
-              } else if(currentZ === 119) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 1);
-              } else if(currentZ === 120) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
-              } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                                                Number(e.number) === 1 || Number(e.number) === 2));
-              }
-              for(let candidate of candidates) {
-                let pos = calculatePosition(candidate, candidate.block);
-                if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
-                   p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                  window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
-                    flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                  }
-                  break;
-                }
-              }
-            };
-          };
-        });
-      });
-    }
-    
-    function initSubshellsCanvas() {
-      if(window.subshellsInitialized) return;
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(10, 60);
-          canvas.parent("canvasSubshells");
-          subshellsP = p;
-          p.noLoop();
-        };
-      });
-      window.subshellsInitialized = true;
-    }
-    
-    function calculatePosition(e, block) {
-      let x = 0, y = (e.row - 1) * 42;
-      if(block === 's') { x = (e.col - 1) * 42; }
-      else if(block === 'f') { x = (e.col - 3) * 42; }
-      else if(block === 'd') { x = (e.col - 3) * 42; }
-      else if(block === 'p') {
-        if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
-        else { x = (e.col - 13) * 42; }
-      }
-      return { x: x, y: y };
-    }
-    
-    function drawElements(p, block) {
-      p.stroke("#D1D1D1");
-      p.strokeWeight(1);
-      let filter;
-      if(currentZ < 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
-      } else if(currentZ === 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
-      } else if(currentZ === 119) {
-        filter = e => e.block === block && Number(e.number) === 1;
-      } else if(currentZ === 120) {
-        filter = e => e.block === block && Number(e.number) === 2;
-      } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                              Number(e.number) === 1 || Number(e.number) === 2);
-      }
-      elements.filter(filter).forEach(function(e) {
-        const pos = calculatePosition(e, e.block);
-        let displayNumber = Number(e.number);
-        if(Number(e.number) === 119) displayNumber = 1;
-        if(Number(e.number) === 120) displayNumber = 2;
-        if(Number(e.number) === currentZ ||
-           ((currentZ === 119) && Number(e.number) === 1) ||
-           ((currentZ === 120) && Number(e.number) === 2)) {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
-          else { p.fill(getBlockColor(e.block)); }
-          p.textSize(16);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          p.noFill();
-          p.stroke(getBlockColor(e.block));
-          p.strokeWeight(4);
-          p.strokeJoin(p.ROUND);
-          p.rect(pos.x, pos.y, 40, 40, 5);
-          if(flashActive) {
-            p.drawingContext.shadowBlur = 10;
-            p.drawingContext.shadowColor = "yellow";
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            p.drawingContext.shadowBlur = 0;
-          }
-          p.strokeWeight(1);
-        } else {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS.s); }
-          else { p.fill(BLOCK_COLORS[e.block]); }
-          p.rect(pos.x, pos.y, 40, 40, 5);
-          p.fill(0);
-          p.textSize(Number(e.number) > 99 ? 10 : 12);
-          p.textStyle(p.BOLD);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-        }
-      });
-    }
-    
-    function drawSubshells(data) {
-      if (!subshellsP) return;
-      let balloonHeight = 60;
-      let fontSize = 12;
-      subshellsP.textSize(fontSize);
-      let leftMargin = 2;
-      let rowHeight = balloonHeight / 3;
-      
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      let wPrev = subshellsP.textWidth(data.prev);
-      subshellsP.textStyle(p5.prototype.BOLD);
-      let wCurrent = subshellsP.textWidth(data.current);
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      let wNext = subshellsP.textWidth(data.next);
-      let computedWidth = Math.max(wPrev, wCurrent, wNext) + 5;
-      
-      subshellsP.clear();
-      subshellsP.resizeCanvas(computedWidth, balloonHeight);
-      subshellsP.canvas.style.cssText = 'width: ' + computedWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
-      
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.prevColor || "black");
-      subshellsP.text(data.prev, leftMargin, rowHeight / 2);
-      
-      subshellsP.textStyle(p5.prototype.BOLD);
-      subshellsP.fill(data.currentColor || "black");
-      subshellsP.text(data.current, leftMargin, rowHeight + rowHeight / 2);
-      
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.nextColor || "black");
-      subshellsP.text(data.next, leftMargin, 2 * rowHeight + rowHeight / 2);
-      
-      subshellsP.redraw();
-    }
-    
-    function updateBalloonPosition(element) {
-      let cs = document.getElementById('canvasSubshells');
-      if(!cs) return;
-      cs.style.transition = "all 1s ease";
-      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
-      if(!blockCanvas) return;
-      let rect = blockCanvas.getBoundingClientRect();
-      let pos = calculatePosition(element, element.block);
-      let defaultLeft = rect.left + pos.x + 40;
-      let defaultTop = rect.top + pos.y + 40;
-      let leftPos = defaultLeft - 5;
-      let topPos = defaultTop;
-      let balloonWidth = cs.offsetWidth;
-      if(defaultLeft > window.innerWidth / 2) {
-        leftPos = defaultLeft - (33 + balloonWidth);
-      }
-      if(leftPos + balloonWidth > window.innerWidth) {
-        leftPos = window.innerWidth - balloonWidth - 5;
-      }
-      cs.style.display = "block";
-      cs.style.left = leftPos + "px";
-      cs.style.top = topPos + "px";
-    }
-    
-    window.addEventListener('resize', function() {
-      updateRightPanelWidth();
-      if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-    });
-    
-    function redrawAll() {
-      Object.keys(BLOCKS_CONFIG).forEach(function(block) {
-        let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
-        if(canvasDiv) { canvasDiv.innerHTML = ""; }
-        new p5(function(p) {
-          p.setup = function() {
-            const config = BLOCKS_CONFIG[block];
-            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-            canvas.parent("canvas" + block.toUpperCase());
-            canvas.elt.style.height = config.rows * 42 + "px";
-            if(document.body.classList.contains('collapsed')) {
-              if(block === 's') { canvas.elt.style.left = "50px"; }
-              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "154px" : "139px"); }
-              else if(block === 'p') { canvas.elt.style.left = "559px"; }
-            } else {
-              if(block === 's') { canvas.elt.style.left = "50px"; }
-              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
-            }
-            drawElements(p, block);
-            p.skipNextClick = true;
-            setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = function() {
-              if(p.skipNextClick) { return; }
-              let candidates;
-              if(currentZ < 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ);
-              } else if(currentZ === 118) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118);
-              } else if(currentZ === 119) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 1);
-              } else if(currentZ === 120) {
-                candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
-              } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                                                Number(e.number) === 1 || Number(e.number) === 2));
-              }
-              for(let candidate of candidates) {
-                let pos = calculatePosition(candidate, candidate.block);
-                if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
-                   p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                  window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
-                    flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                  }
-                  break;
-                }
-              }
-            };
-          };
-        });
-      });
-      // Εμφάνιση και τοποθέτηση των ονομάτων περιόδων και ομάδων ως επικεφαλίδες που ακολουθούν τους αντίστοιχους τομείς
-      let cp = document.getElementById('canvasPeriods');
-      if(cp) { cp.style.display = "block"; }
-      initPeriodsCanvas();
-      
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) { 
-        csg.style.display = "block"; 
-        csg.style.top = "78px"; 
-        csg.style.left = "50px"; 
-      }
-      
-      let cdg = document.getElementById('canvasD_groups');
-      if(cdg) {
-        cdg.style.display = "block";
-        let dCanvas = document.getElementById('canvasD');
-        if(dCanvas) {
-          let dLeft = window.getComputedStyle(dCanvas).left;
-          cdg.style.top = "78px";
-          cdg.style.left = dLeft;
+        } else if(group === 15) {
+          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 5 ηλεκτρόνια";
         }
       }
-      
-      let cpg = document.getElementById('canvasP_groups');
-      if(cpg) {
-        cpg.style.display = "block";
-        let pCanvas = document.getElementById('canvasP');
-        if(pCanvas) {
-          let pLeft = window.getComputedStyle(pCanvas).left;
-          cpg.style.top = "78px";
-          cpg.style.left = pLeft;
-        }
-      }
-      initGroupsCanvases();
-      
-      if(!document.body.classList.contains('collapsed')) {
-        let base = 134, shiftP = 0, shiftD = 0;
-        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
-        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = (base + shiftP) + "px"; }
-      } else {
-        let cS = document.getElementById('canvasS');
-        if(cS) { cS.style.left = "50px"; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = "154px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = "139px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = "559px"; }
-      }
-      updateToggleButton();
+      return "";
     }
-    
-    document.getElementById('toggleFBlock').addEventListener('click', function() {
-      let toggleBtn = document.getElementById('toggleFBlock');
-      if (!document.body.classList.contains('collapsed')) {
-        document.body.classList.add('collapsed');
-        toggleBtn.textContent = "Ανάπτυξη";
-        setTimeout(function(){
-          redrawAll();
-        }, 400);
-        setTimeout(function(){
-          document.getElementById('infoPanelFull').style.display = "none";
-          document.getElementById('infoPanelCollapsed').style.display = "flex";
-          updateInfo(currentZ);
-          updateCanvasPositions();
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-        }, 1200);
-      } else {
-        let panelB = document.getElementById('infoPanelCollapsed');
-        panelB.style.left = "20px";
-        panelB.style.top = "428px";
-        panelB.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-        setTimeout(function(){
-          redrawAll();
-        }, 400);
-        setTimeout(function(){
-          panelB.style.display = "none";
-          panelB.style.left = "";
-          panelB.style.top = "";
-          panelB.style.width = "";
-          document.body.classList.remove('collapsed');
-          toggleBtn.textContent = "Σύμπτυξη";
-          document.getElementById('infoPanelFull').style.display = "grid";
-          updateInfo(currentZ);
-          updateCanvasPositions();
-          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-        }, 1200);
+
+    document.getElementById('nextElement').addEventListener('click', function(){
+      let currentIndex = elements.findIndex(e => Number(e.number) === currentZ);
+      if (currentZ === 118) {
+        currentZ = 119;
+      } else if (currentZ === 119) {
+        currentZ = 120;
+      } else if (currentZ < 120 && currentIndex < elements.length - 1) {
+        currentZ = Number(elements[currentIndex + 1].number);
       }
-    });
-    
-    document.getElementById('nextElement').addEventListener('click', function() {
-      ignoreCanvasClick = true;
-      if(currentZ < 118) { 
-        currentZ++; 
-      } else if(currentZ === 118) { 
-        currentZ = 119; 
-      } else if(currentZ === 119) { 
-        currentZ = 120; 
-      }
-      redrawAll();
+      if(currentZ > 120) currentZ = 120;
       updateInfo(currentZ);
-      setTimeout(() => { ignoreCanvasClick = false; }, 100);
-    });
-    
-    document.getElementById('fillAll').addEventListener('click', function() {
-      currentZ = 121;
       redrawAll();
-      updateInfo(currentZ);
     });
-    
-    document.getElementById('reset').addEventListener('click', function() {
+
+    document.getElementById('fillAll').addEventListener('click', function(){
+      currentZ = 120;
+      updateInfo(currentZ);
+      redrawAll();
+    });
+
+    document.getElementById('toggleFBlock').addEventListener('click', function(){
+      document.body.classList.toggle('collapsed');
+      redrawAll();
+      setTimeout(() => {
+        updateBalloonPosition(lastClickedElement);
+      }, 100);
+    });
+
+    document.getElementById('reset').addEventListener('click', function(){
       currentZ = 3;
-      window.groupsInitialized = false;
-      window.periodsInitialized = false;
-      window.subshellsInitialized = false;
-      document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      let cp = document.getElementById('canvasPeriods');
-      if(cp) cp.style.display = "none";
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) csg.style.display = "none";
-      let cdg = document.getElementById('canvasD_groups');
-      if(cdg) cdg.style.display = "none";
-      let cpg = document.getElementById('canvasP_groups');
-      if(cpg) cpg.style.display = "none";
-      initializeCanvases();
-      initSubshellsCanvas();
       updateInfo(currentZ);
+      redrawAll();
     });
-    
+
+    // Ορίζουμε το loadElements στο global scope πριν την κλήση του
     window.loadElements = loadElements;
-    window.initializeCanvases = initializeCanvases;
-    window.updateInfo = updateInfo;
-    window.redrawAll = redrawAll;
-    window.initPeriodsCanvas = initPeriodsCanvas;
-    window.initGroupsCanvases = initGroupsCanvases;
-    window.BLOCKS_CONFIG = BLOCKS_CONFIG;
-    
-    window.addEventListener('load', updateRightPanelWidth);
+    function loadElements() {
+      fetch('elements.json')
+        .then(response => response.json())
+        .then(data => {
+          elements = sortElements(data);
+          // Καλούμε την initializeCanvases για αρχικοποίηση όλων των καμβάδων
+          initializeCanvases();
+          initSubshellsCanvas();
+          updateInfo(currentZ);
+          updateToggleButton();
+        })
+        .catch(err => console.error('Σφάλμα φόρτωσης:', err));
+    }
+
+    // Ορίζουμε την initializeCanvases στο global scope
+    function initializeCanvases() {
+      redrawAll();
+    }
+
     loadElements();
   </script>
 </body>
