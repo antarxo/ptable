@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
+  <!-- Εισαγωγή favicon για να αποφευχθεί το 404 error -->
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -45,8 +46,8 @@
       display: none;
       z-index: 5;
     }
-    #canvasD_groups { width: 418px; height: 40px; }
-    #canvasP_groups { width: 250px; height: 40px; }
+    #canvasD_groups { height: 40px; }
+    #canvasP_groups { height: 40px; }
     #canvasS_groups { width: 84px; height: 40px; }
     .canvas {
       position: absolute;
@@ -77,7 +78,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Το collapsed panel έχει υψηλότερο z-index και position absolute με προκαθορισμένες τιμές */
+    /* Το collapsed panel έχει υψηλότερο z-index και position absolute με σταθερές τιμές */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -86,7 +87,7 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      position: absolute;  /* Σιγουρευόμαστε ότι έχει absolute θέση */
+      position: absolute;
       left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
@@ -562,154 +563,26 @@
       });
       window.groupsInitialized = true;
     }
-    function repositionGroupCanvasesExpanded() {
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) { csg.style.top = "78px"; csg.style.left = "75px"; }
-      let canvasD = document.getElementById('canvasD');
-      let cdg = document.getElementById('canvasD_groups');
-      if(cdg && canvasD) { cdg.style.top = "78px"; cdg.style.left = canvasD.style.left; }
-      let canvasP = document.getElementById('canvasP');
-      let cpg = document.getElementById('canvasP_groups');
-      if(cpg && canvasP) { cpg.style.top = "78px"; cpg.style.left = canvasP.style.left; }
-    }
-    function drawElements(p, block) {
-      p.stroke(150);
-      p.strokeWeight(1);
-      let cellSize = 40;
-      let filter;
-      if(currentZ < 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
-      } else if(currentZ === 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
-      } else if(currentZ === 119) {
-        filter = e => e.block === block && Number(e.number) === 1;
-      } else if(currentZ === 120) {
-        filter = e => e.block === block && Number(e.number) === 2;
-      } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                              Number(e.number) === 1 || Number(e.number) === 2);
+    /* Σταθερές θέσεις για τους καμβάδες των ομάδων */
+    function setFixedGroupsPositions(state) {
+      // Για expanded: θέσεις όπως στους τομείς (159px)
+      if(state === "expanded") {
+        document.getElementById('canvasS_groups').style.left = "75px";
+        document.getElementById('canvasS_groups').style.top = "78px";
+        document.getElementById('canvasD_groups').style.left = "159px";
+        document.getElementById('canvasD_groups').style.top = "78px";
+        document.getElementById('canvasP_groups').style.left = "159px";
+        document.getElementById('canvasP_groups').style.top = "78px";
       }
-      elements.filter(filter).forEach(function(e) {
-        const pos = calculatePosition(e, e.block);
-        let displayNumber = Number(e.number);
-        if(Number(e.number) === 119) displayNumber = 1;
-        if(Number(e.number) === 120) displayNumber = 2;
-        if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
-          p.fill(window.getBlockColor(e.block));
-          p.textSize(16);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          p.noFill();
-          p.stroke(window.getBlockColor(e.block));
-          p.strokeWeight(3);
-          p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-          p.strokeWeight(1);
-        } else {
-          if(Number(e.number) === currentZ ||
-             ((currentZ === 119) && Number(e.number) === 1) ||
-             ((currentZ === 120) && Number(e.number) === 2)) {
-            if(Number(e.number) === 119) { p.fill("yellow"); }
-            else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
-            else { p.fill(window.getBlockColor(e.block)); }
-            p.textSize(16);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-            p.noFill();
-            p.stroke(window.getBlockColor(e.block));
-            p.strokeWeight(4);
-            p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-            if(flashActive) {
-              p.drawingContext.shadowBlur = 10;
-              p.drawingContext.shadowColor = "yellow";
-              p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-              p.drawingContext.shadowBlur = 0;
-            }
-            p.strokeWeight(1);
-          } else {
-            if(Number(e.number) === 119) { p.fill("yellow"); }
-            else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
-            else { p.fill(BLOCK_COLORS[e.block]); }
-            p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-            p.fill(0);
-            p.textSize(Number(e.number) > 99 ? 10 : 12);
-            p.textStyle(p.BOLD);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          }
-        }
-      });
-    }
-    function updateBalloonPosition(element) {
-      let cs = document.getElementById('canvasSubshells');
-      if(!cs) return;
-      cs.style.transition = "all 0.2s ease";
-      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
-      if(!blockCanvas) return;
-      let rect = blockCanvas.getBoundingClientRect();
-      let pos = calculatePosition(element, element.block);
-      let defaultLeft = rect.left + pos.x + 40;
-      let defaultTop = rect.top + pos.y + 40;
-      let leftPos = defaultLeft - 5;
-      let topPos = defaultTop;
-      let balloonWidth = cs.offsetWidth;
-      if(defaultLeft > window.innerWidth / 2) { leftPos = defaultLeft - (33 + balloonWidth); }
-      if(leftPos + balloonWidth > window.innerWidth) { leftPos = window.innerWidth - balloonWidth - 5; }
-      let infoCell = document.getElementById('leftPanelFull');
-      if(infoCell) {
-        let cellRect = infoCell.getBoundingClientRect();
-        if(defaultTop + cs.offsetHeight > cellRect.top) { topPos = defaultTop - (cs.offsetHeight + 23); }
+      // Για collapsed: σταθερές θέσεις διαφορετικές (π.χ. όπως στους τομείς collapsed)
+      else if(state === "collapsed") {
+        document.getElementById('canvasS_groups').style.left = "75px";
+        document.getElementById('canvasS_groups').style.top = "78px";
+        document.getElementById('canvasD_groups').style.left = "164px";
+        document.getElementById('canvasD_groups').style.top = "78px";
+        document.getElementById('canvasP_groups').style.left = "584px";
+        document.getElementById('canvasP_groups').style.top = "78px";
       }
-      cs.style.display = "block";
-      cs.style.left = leftPos + "px";
-      cs.style.top = topPos + "px";
-    }
-    function drawSubshells(data) {
-      if (!subshellsP) return;
-      let balloonHeight = 40, fontSize = 14, leftMargin = 2, extraMargin = 5;
-      subshellsP.clear();
-      subshellsP.textSize(fontSize);
-      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
-      let wPrev = subshellsP.textWidth(data.prev || "-");
-      let wCurrent = subshellsP.textWidth(data.current || "-");
-      let wNext = subshellsP.textWidth(data.next || "-");
-      let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 10, newWidth = Math.max(computedWidth, minWidth);
-      subshellsP.resizeCanvas(newWidth, balloonHeight);
-      subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
-      let rowHeight = balloonHeight / 3;
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.prevColor || "black");
-      subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
-      subshellsP.textStyle(p5.prototype.BOLD);
-      subshellsP.fill(data.currentColor || "black");
-      subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.nextColor || "black");
-      subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
-    }
-    /*================ Functions for Sectors Transition =================*/
-    function updateSectorsCollapsed() {
-      let cS = document.getElementById('canvasS');
-      if(cS) { cS.style.transition = "left 1.2s ease"; cS.style.left = "75px"; }
-      let cF = document.getElementById('canvasF');
-      if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = "179px"; }
-      let cD = document.getElementById('canvasD');
-      if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = "164px"; }
-      let cP = document.getElementById('canvasP');
-      if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = "584px"; }
-    }
-    function updateSectorsExpanded() {
-      let base = 159, shiftP = 0, shiftD = 0;
-      if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-      else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
-      else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
-      else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-      else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-      let cF = document.getElementById('canvasF');
-      if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = base + "px"; }
-      let cD = document.getElementById('canvasD');
-      if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = (base + shiftD) + "px"; }
-      let cP = document.getElementById('canvasP');
-      if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = (base + shiftP) + "px"; }
     }
     /*================ Toggle Panels: Expand/Collapse =================*/
     document.getElementById('toggleFBlock').addEventListener('click', function() {
@@ -717,9 +590,9 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        // Ακολουθία σύμπτυξης: μετακίνηση full panel και ενημέρωση του background με μεγαλύτερο delay
+        // Ακολουθία σύμπτυξης: μετακίνηση full panel και delay πριν την ενημέρωση του background
         updateSectorsCollapsed();
-        // Αυξάνουμε το delay σε 600ms πριν την μετάβαση
+        // Αυξάνουμε το delay σε 600ms πριν την μετάβαση του full panel
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
@@ -727,8 +600,10 @@
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 600);
         setTimeout(() => {
-          // Ενημερώνουμε το background αφού έχει ολοκληρωθεί η μετάβαση
+          // Ενημερώνουμε το background (που τώρα θα έχει σταθερές θέσεις για τις ομάδες)
           updateTableBackground();
+          // Θέτουμε και τις σταθερές θέσεις για τους καμβάδες των ομάδων σε collapsed λειτουργία
+          setFixedGroupsPositions("collapsed");
           // Με μικρό delay εμφανίζεται ο collapsed panel πάνω από τον full panel
           setTimeout(() => {
             collapsedPanel.style.display = "flex";
@@ -745,6 +620,8 @@
         fullPanel.style.zIndex = 40;
         collapsedPanel.style.display = "none";
         updateSectorsExpanded();
+        // Θέτουμε τις σταθερές θέσεις για τις ομάδες σε expanded λειτουργία
+        setFixedGroupsPositions("expanded");
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
         fullPanel.style.width = "calc(100vw - 920px)";
@@ -790,7 +667,10 @@
       initGroupsCanvases();
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(repositionGroupCanvasesExpanded, 800);
+      setTimeout(() => { 
+         // Θέτουμε τις σταθερές θέσεις για τις ομάδες σε expanded λειτουργία
+         setFixedGroupsPositions("expanded");
+      }, 800);
       document.getElementById('toggleFBlock').disabled = false;
     });
     document.getElementById('reset').addEventListener('click', function() {
@@ -875,11 +755,8 @@
         if(csg) { csg.style.display = "block"; }
         if(cdg) { cdg.style.display = "block"; }
         if(cpg) { cpg.style.display = "block"; }
-        let csgLeft = document.getElementById('canvasS_groups'); if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "75px"; }
-        let dLeft = document.getElementById('canvasD').style.left;
-        let cdgLeft = document.getElementById('canvasD_groups'); if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
-        let pLeft = document.getElementById('canvasP').style.left;
-        let cpgLeft = document.getElementById('canvasP_groups'); if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
+        // Σταθερές θέσεις για expanded
+        setFixedGroupsPositions("expanded");
         initGroupsCanvases();
       } else {
         let cp = document.getElementById('canvasPeriods'); if(cp) { cp.style.display = "none"; }
