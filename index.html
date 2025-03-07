@@ -42,10 +42,10 @@
     }
     /* Διάταξη εσωτερικών χώρων του infoPanelFull */
     #leftPanelFull {
-      width: 150px;
+      width: 200px;
     }
     #remarksFull {
-      width: calc(100% - 150px);
+      width: calc(100% - 200px);
     }
     #remarksFull .upper-right {
       display: flex;
@@ -344,8 +344,7 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                                                Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -522,8 +521,8 @@
     }
     
     // Τροποποιημένη updateBalloonPosition:
-    // Ελέγχουμε αν το defaultBottom (defaultTop + ύψος του Balloon) υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull.
-    // Αν ναι, το Balloon τοποθετείται πάνω από το κάτω όριο του κελιού με μετατόπιση ίση με (ύψος του Balloon + 44px).
+    // Αν το Balloon επικαλύπτει το ΠΑΝΩ όριο του στοιχείου leftPanelFull,
+    // τότε τοποθετείται ανεβάζοντάς το κατά (ύψος του Balloon + 44px).
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -546,10 +545,8 @@
       let infoCell = document.getElementById('leftPanelFull');
       if(infoCell) {
         let cellRect = infoCell.getBoundingClientRect();
-        // Αν το defaultBottom του Balloon (defaultTop + ύψος) είναι μεγαλύτερο από το πάνω όριο του leftPanelFull,
-        // τότε τοποθετούμε το Balloon πάνω από το κάτω όριο του κελιού με μετατόπιση (ύψος Balloon + 44px)
-        if(defaultTop + cs.offsetHeight > cellRect.top) {
-          topPos = cellRect.bottom - (cs.offsetHeight + 44);
+        if(defaultTop < cellRect.top) {
+          topPos = defaultTop - (cs.offsetHeight + 44);
         }
       }
       cs.style.display = "block";
