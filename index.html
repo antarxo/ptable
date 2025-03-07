@@ -138,13 +138,13 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική Πίνακα</div>
+  <div id="title">Διαδραστική καιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων -->
   <div id="canvasPeriods" class="canvas"></div>
   
   <!-- Καμβάδες Ομάδων -->
-  <!-- Οι καμβάδες των ομάδων δημιουργούνται ξεχωριστά, αλλά η θέση τους υπολογίζεται πάντα σε σχέση με τους αντίστοιχους τομείς -->
+  <!-- Οι καμβάδες των ομάδων δημιουργούνται ξεχωριστά, αλλά η θέση τους υπολογίζεται κάθε φορά σε σχέση με τους αντίστοιχους τομείς -->
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
@@ -187,7 +187,7 @@
     let flashActive = false;
     let lastClickedElement = null;
     let subshellsP;
-    // Μεταβλητή για να αποτρέψουμε διπλές ενέργειες στο "Συμπλήρωσε"
+    // Για αποτροπή διπλής εκτέλεσης του "Συμπλήρωσε"
     let fillAllDone = false;
     
     // Χρώματα τομέων
@@ -233,7 +233,8 @@
     
     // Δημιουργία καμβάδων ομάδων (S, D, P)
     function initGroupsCanvases() {
-      window.groupsInitialized = false;
+      // Αν έχουν ήδη δημιουργηθεί, δεν κάνουμε τίποτα
+      if(window.groupsInitialized) return;
       
       function drawGroupLabels(p, numGroups, newStart, oldLabels) {
         const rectWidth = 40;
@@ -245,9 +246,7 @@
           p.fill(0);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
-          // Νέα ονομασία (πάνω γραμμή)
           p.text((newStart + c).toString(), x + rectWidth/2, 10);
-          // Παλιά ονομασία (κάτω γραμμή)
           p.text(oldLabels[c], x + rectWidth/2, 30);
         }
       }
@@ -288,7 +287,7 @@
       window.groupsInitialized = true;
     }
     
-    // Επαναπροσδιορισμός θέσεων καμβάδων ομάδων σε σχέση με τους τομείς τους (για αναπτυγμένη διάταξη)
+    // Επαναπροσδιορισμός θέσεων καμβάδων ομάδων σε σχέση με τους τομείς
     function repositionGroupCanvasesExpanded() {
       let sCanvas = document.getElementById('canvasS');
       if(sCanvas) {
@@ -297,7 +296,6 @@
         gs.style.left = sRect.left + "px";
         gs.style.top = (sRect.top - 40) + "px";
       }
-      
       let dCanvas = document.getElementById('canvasD');
       if(dCanvas) {
         let gd = document.getElementById('canvasD_groups');
@@ -305,7 +303,6 @@
         gd.style.left = dRect.left + "px";
         gd.style.top = (dRect.top - 40) + "px";
       }
-      
       let pCanvas = document.getElementById('canvasP');
       if(pCanvas) {
         let gp = document.getElementById('canvasP_groups');
@@ -580,7 +577,6 @@
       let rect = blockCanvas.getBoundingClientRect();
       let pos = calculatePosition(element, element.block);
       let defaultTop = rect.top + pos.y + 40;
-      // Αν ανεβάσουμε το balloon κατά (balloonHeight+44), τότε κατεβάζουμε κατά 20px:
       let newTop = defaultTop - (cs.offsetHeight + 44) + 20;
       
       let defaultLeft = rect.left + pos.x + 40;
@@ -600,7 +596,6 @@
     window.addEventListener('resize', function() {
       updateRightPanelWidth();
       if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-      // Επαναϋπολογισμός θέσεων ομάδων κάθε φορά που αλλάζει το μέγεθος/θέση
       repositionGroupCanvasesExpanded();
     });
     
@@ -656,7 +651,6 @@
           };
         });
       });
-      // Όταν currentZ είναι 121 ή μεγαλύτερο (δηλαδή μετά το στοιχείο 2), εμφανίζονται οι περίοδοι και οι ομάδες
       if(currentZ >= 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
@@ -667,8 +661,10 @@
         csg.style.display = "block";
         cdg.style.display = "block";
         cpg.style.display = "block";
-        initGroupsCanvases();
-        // Επαναϋπολογισμός θέσεων ομάδων σε σχέση με τους τομείς
+        // Αν δεν έχουν δημιουργηθεί οι ομάδες, τότε τις δημιουργούμε μία φορά
+        if(!window.groupsInitialized) {
+          initGroupsCanvases();
+        }
         repositionGroupCanvasesExpanded();
         if(currentZ === 122) {
           currentZ = 123;
@@ -814,20 +810,19 @@
       updateInfo(currentZ);
       setTimeout(() => { 
         ignoreCanvasClick = false; 
-        // Κάθε φορά που οι τομείς αλλάζουν θέση, οι ομάδες επανυπολογίζονται
         repositionGroupCanvasesExpanded();
       }, 100);
     });
     
     // Χειριστής του κουμπιού "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
-      // Δεν αποτρέπουμε πλέον επανυπολογισμό των ομάδων – οι θέσεις τους καθορίζονται αυστηρά σε σχέση με τους τομείς.
       if(fillAllDone) return;
       fillAllDone = true;
       
       currentZ = 123;
       document.getElementById('canvasPeriods').style.display = 'block';
       
+      // Εμφανίζουμε τους καμβάδες των ομάδων
       let csg = document.getElementById('canvasS_groups');
       let cdg = document.getElementById('canvasD_groups');
       let cpg = document.getElementById('canvasP_groups');
@@ -835,11 +830,9 @@
       cdg.style.display = "block";
       cpg.style.display = "block";
       
-      initGroupsCanvases();
+      // Δεν καλούμε initGroupsCanvases εδώ αν θα κληθεί από redrawAll
       redrawAll();
       updateInfo(currentZ);
-      
-      // Επαναϋπολογισμός θέσεων ομάδων ώστε να ευθυγραμμίζονται με τους τομείς
       setTimeout(repositionGroupCanvasesExpanded, 100);
       
       document.getElementById('toggleFBlock').disabled = false;
