@@ -888,9 +888,11 @@
           redrawAll();
         }, 800);
       }
+      // Με την ολοκλήρωση των μετακινήσεων, προσθέτουμε delay 700ms για να διαβαστούν οι θέσεις των κελιών και να ενημερωθεί το Balloon
       setTimeout(function() {
+         window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-      }, 300);
+      }, 700);
     });
 
     document.getElementById('nextElement').addEventListener('click', function() {
