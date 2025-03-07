@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική καιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -824,8 +824,8 @@
       initGroupsCanvases();
       redrawAll();
       updateInfo(currentZ);
-      // Με αύξηση της καθυστέρησης για να ολοκληρωθεί η κίνηση των ομάδων χωρίς να απαιτείται το "Επόμενο"
-      setTimeout(repositionGroupCanvasesExpanded, 500);
+      // Με καθυστέρηση 800ms για να ολοκληρωθεί η κίνηση των ομάδων
+      setTimeout(repositionGroupCanvasesExpanded, 800);
       document.getElementById('toggleFBlock').disabled = false;
     });
     
@@ -857,7 +857,4 @@
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
     window.addEventListener('load', updateRightPanelWidth);
-    loadElements();
-  </script>
-</body>
-</html>
+    loadEle
