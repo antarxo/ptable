@@ -33,7 +33,7 @@
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
     /* Καμβάδες Περιόδων και Ομάδων */
-    /* Μετατόπιση: left από 6px σε 31px, top παραμένει 120px (θα προστεθούν και 4px στην JavaScript για τα άλλα στοιχεία) */
+    /* Αρχικά το left του canvasPeriods είναι 31px (6 + 25) */
     #canvasPeriods {
       position: absolute;
       left: 31px;
@@ -55,7 +55,7 @@
       transform: translateY(-10px);
     }
     /* Πίνακες Πληροφοριών: δύο panels */
-    /* Ο full πίνακας μετακινείται 5px χαμηλότερα (top: 428px -> 433px + 15px επιπλέον μετατόπιση = 448px) */
+    /* Ο full πίνακας μετακινείται 5px χαμηλότερα (top: 448px) */
     #infoPanelFull {
       display: flex;
       flex-direction: row;
@@ -77,7 +77,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Ο collapsed πίνακας μετακινείται 10px δεξιότερα (left: 848px -> 858px) */
+    /* Ο collapsed πίνακας μετακινείται 10px δεξιότερα (left: 858px) */
     body.collapsed #infoPanelFull {
       left: 858px;
       top: 112px;
@@ -140,7 +140,7 @@
     .p-block { background: #26FF31 !important; }
     .d-block { background: #3F99FF !important; }
     .f-block { background: #FFD051 !important; }
-    /* Θέσεις καμβάδων (πλήρης λειτουργία) – προσθήκη 3px και 4px */
+    /* Θέσεις καμβάδων (πλήρης λειτουργία) – προσθέτουμε 3px στο left και 4px στο top */
     .full #canvasS { top: 124px; left: 78px; z-index: 1; }
     .full #canvasF { top: 124px; left: 162px; width: 588px; z-index: 2; }
     .full #canvasD { top: 124px; left: 162px; width: 420px; z-index: 3; }
@@ -320,7 +320,7 @@
             const config = BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            // Θέσεις με πρόσθετη μετατόπιση: προστίθενται 3px στο left και 4px στο top σε σχέση με τις προηγούμενες τιμές.
+            // Θέσεις με πρόσθετη μετατόπιση: προστίθενται 3px στο left και 4px στο top
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "78px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "182px" : "167px"); }
@@ -333,7 +333,7 @@
             drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            // Ανίχνευση κλικ: για τον s τομέα χρησιμοποιούμε p.constrain ώστε να περιορίζουμε τα κελιά στο εύρος 1-2 (στήλες) και 1-7 (γραμμές)
+            // Ανίχνευση κλικ: για τον s τομέα περιορίζουμε τα κελιά στο εύρος 1-2 και 1-7
             p.mouseClicked = function() {
               if(p.skipNextClick || ignoreCanvasClick) { return; }
               let cellX, cellY;
@@ -361,7 +361,8 @@
                   (currentZ === 118 && Number(e.number) >= 3 && Number(e.number) <= 118) ||
                   (currentZ === 119 && Number(e.number) === 1) ||
                   (currentZ === 120 && Number(e.number) === 2) ||
-                  (currentZ >= 121 && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2))
+                  (currentZ >= 121 && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                      Number(e.number) === 1 || Number(e.number) === 2))
                 )
               );
               if(candidate) {
@@ -614,7 +615,7 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            // Θέσεις με πρόσθετη μετατόπιση: οι βασικές τιμές αναπροσαρμόζονται (base=162 αντί για 159)
+            // Θέσεις με πρόσθετη μετατόπιση: βασικό offset = 162px, με προσθήκη 3px και 4px
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "78px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "182px" : "167px"); }
@@ -782,18 +783,15 @@
       }
     }
     
-    // Νέα συνάρτηση: Αρχικές διαστάσεις του νέου background (να έχει το offset και μέγεθος του κελιού του στοιχείου 3)
+    // Νέα συνάρτηση: Αρχικές διαστάσεις του νέου background
     function updateTableBackground() {
-      // Αν το currentZ == 3, ψάχνουμε το στοιχείο 3
       let bbox;
       if(currentZ === 3) {
         let element3 = elements.find(e => Number(e.number) === 3);
         if(element3) {
-          // Βρίσκουμε σε ποιο block εμφανίζεται το στοιχείο 3
           let canvasEl = document.getElementById("canvas" + element3.block.toUpperCase());
           if(canvasEl) {
             let cellPos = calculatePosition(element3, element3.block);
-            // Λαμβάνουμε υπόψη και το offset του καμβά
             let rect = canvasEl.getBoundingClientRect();
             bbox = {
               left: rect.left + cellPos.x,
@@ -804,7 +802,6 @@
           }
         }
       }
-      // Αν δεν έχουμε βρεθεί bounding box (ή αν currentZ > 3), υπολογίζουμε το bounding box όλων των σχετικών καμβάδων
       if(!bbox) {
         const ids = ["canvasPeriods", "canvasS_groups", "canvasD_groups", "canvasP_groups", "canvasS", "canvasF", "canvasD", "canvasP"];
         let minLeft = Infinity, minTop = Infinity, maxRight = -Infinity, maxBottom = -Infinity;
@@ -822,11 +819,12 @@
       }
       let bg = document.getElementById("canvasTableBackground");
       if(bg && bbox) {
-        // Προσθέτουμε επιπλέον περιθώριο: πάνω και αριστερά αυξάνονται κατά 15px, πλάτος/ύψος +30px
-        bg.style.left = (bbox.left - 15) + "px";
-        bg.style.top = (bbox.top - 15) + "px";
-        bg.style.width = (bbox.width + 30) + "px";
-        bg.style.height = (bbox.height + 30) + "px";
+        // Μείωση του πλάτους/ύψους κατά 5px συνολικά, με κεντράρισμα (μετατόπιση +2.5px)
+        // Εδώ χρησιμοποιούμε ακέραιες τιμές: left και top αυξάνονται κατά 2 (δηλαδή αφαιρούμε 15-2 = 13)
+        bg.style.left = (bbox.left - 13) + "px";
+        bg.style.top = (bbox.top - 13) + "px";
+        bg.style.width = (bbox.width + 30 - 5) + "px";  // = bbox.width + 25
+        bg.style.height = (bbox.height + 30 - 5) + "px"; // = bbox.height + 25
       }
     }
     
@@ -844,6 +842,8 @@
       }
       redrawAll();
       updateInfo(currentZ);
+      // Με μικρό delay για να ενημερωθούν και οι διαστάσεις, καλέστε ξανά το updateTableBackground
+      setTimeout(updateTableBackground, 100);
       setTimeout(() => { ignoreCanvasClick = false; }, 100);
     });
     
