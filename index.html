@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">ΔιαδραστικήΠεριοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -187,6 +187,9 @@
     /* --- Global Variables & Config --- */
     let elements = [];
     let currentZ = 0;
+    // Προαιρετικά: θα μπορούσατε να ορίσετε μια μεταβλητή για έλεγχο εμφάνισης στοιχείων,
+    // όμως εδώ προσαρμόζουμε το currentZ ώστε να μην πληροί τα κριτήρια εμφάνισης.
+    
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -226,10 +229,8 @@
       } else if(currentZ === 118) {
         filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
       } else if(currentZ === 119) {
-        // Εμφάνιση του στοιχείου "1" μαζί με τα στοιχεία 3 έως 118
         filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1);
       } else if(currentZ === 120) {
-        // Εμφάνιση του στοιχείου "2" μαζί με τα στοιχεία 3 έως 118 και το στοιχείο 1
         filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
       } else {
         filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
@@ -746,6 +747,25 @@
       window.groupsInitialized = true;
     }
 
+    /* --- Συνάρτηση applyFillAll --- */
+    function applyFillAll(silent) {
+      if(!silent) {
+        currentZ = 123;
+      }
+      document.getElementById('canvasPeriods').style.display = 'block';
+      let csg = document.getElementById('canvasS_groups');
+      let cdg = document.getElementById('canvasD_groups');
+      let cpg = document.getElementById('canvasP_groups');
+      csg.style.display = "block";
+      cdg.style.display = "block";
+      cpg.style.display = "block";
+      initGroupsCanvases();
+      window.redrawAll();
+      setTimeout(() => { updateInfo(currentZ); }, 300);
+      setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
+      document.getElementById('toggleFBlock').disabled = false;
+    }
+
     /* --- Toggle Panels --- */
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -763,7 +783,6 @@
         setTimeout(() => {
           updateTableBackground();
           setTimeout(() => {
-            // Θέτουμε το collapsed panel στην ίδια θέση με το full panel και το φέρνουμε μπροστά (υψηλότερο z-index)
             collapsedPanel.style.left = fullPanel.style.left;
             collapsedPanel.style.top = fullPanel.style.top;
             collapsedPanel.style.display = "flex";
@@ -775,24 +794,18 @@
           }, 300);
         }, 1200);
       } else {
-        // Expand: πρώτα εξαφανίζεται ο collapsed πίνακας (fade out)
         collapsedPanel.style.transition = "opacity 0.3s ease";
         collapsedPanel.style.opacity = "0";
         setTimeout(() => {
           collapsedPanel.style.display = "none";
-          // Εμφανίζουμε τον full πίνακα με opacity 0 και αμέσως ξεκινάμε την μετάβαση
           fullPanel.style.display = "flex";
           fullPanel.style.zIndex = "40";
           fullPanel.style.opacity = "0";
-          // Δίνουμε ταυτόχρονα το computed shift στους τομείς και τις ομάδες
           window.updateSectors("expanded");
-          // Επίσης ενημερώνουμε αμέσως το background ώστε να ακολουθήσει
           updateTableBackground();
-          // Ορίζουμε αρχική θέση και μέγεθος για τον full πίνακα
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
-          // Με πολύ σύντομη καθυστέρηση ξεκινάμε την κίνηση και το fade in του full πίνακα
           setTimeout(() => {
             fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
             fullPanel.style.left = "20px";
@@ -800,7 +813,6 @@
             fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
             fullPanel.style.opacity = "1";
           }, 50);
-          // Όταν ολοκληρωθεί η μετάβαση, ενημερώνουμε το state
           setTimeout(() => {
             document.body.classList.remove('collapsed');
             toggleBtn.textContent = "Σύμπτυξη";
@@ -815,7 +827,7 @@
       }, 1700);
     });
 
-    // Τροποποίηση στο event handler του "Επόμενο":
+    /* --- Event handler για το κουμπί "Επόμενο" --- */
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 3) { currentZ = 3; }
@@ -828,24 +840,14 @@
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
     });
+
+    /* --- Τροποποίηση στο event handler του "FillAll" --- */
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
-      currentZ = 123;
-      document.getElementById('canvasPeriods').style.display = 'block';
-      let csg = document.getElementById('canvasS_groups');
-      let cdg = document.getElementById('canvasD_groups');
-      let cpg = document.getElementById('canvasP_groups');
-      csg.style.display = "block";
-      cdg.style.display = "block";
-      cpg.style.display = "block";
-      initGroupsCanvases();
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
-      document.getElementById('toggleFBlock').disabled = false;
+      applyFillAll(false);
     });
+
     document.getElementById('reset').addEventListener('click', function() {
-      // Αντί για currentZ = 0, ορίζουμε currentZ = 2 ώστε να μην εμφανίζεται "στοιχείο" 0
       currentZ = 2;
       window.groupsInitialized = false;
       window.periodsInitialized = false;
@@ -902,7 +904,6 @@
           };
         });
       });
-      // Εμφάνιση περιόδων (μόνο όταν currentZ >= 121)
       if(currentZ >= 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
@@ -910,7 +911,6 @@
       } else {
         let cp = document.getElementById('canvasPeriods'); if(cp) { cp.style.display = "none"; }
       }
-      // Εμφάνιση ομάδων (μόνο όταν currentZ >= 122)
       if(currentZ >= 122) {
         let csg = document.getElementById('canvasS_groups');
         let cdg = document.getElementById('canvasD_groups');
@@ -952,6 +952,14 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('load', updateTableBackground);
     loadElements();
+
+    // Εφαρμογή του FillAll χωρίς εμφάνιση στοιχείων (silent) πριν το πρώτο "Επόμενο"
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+         currentZ = 2; // Αρχική τιμή ώστε να μην εμφανίζονται στοιχεία
+         applyFillAll(true);
+      }, 500);
+    });
   </script>
 </body>
 </html>
