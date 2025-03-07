@@ -97,7 +97,7 @@
     }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
     #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
-    /* Balloon: ταχύτερη μετάβαση (0.5s) */
+    /* Balloon: ταχύτερη μετάβαση (0.3s) */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -109,7 +109,7 @@
       height: auto;
       z-index: 150;
       display: none;
-      transition: all 0.5s ease;
+      transition: all 0.3s ease;
     }
     /* Κουμπιά */
     #buttonPanel {
@@ -537,7 +537,8 @@
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
-      cs.style.transition = "all 0.5s ease"; // ταχύτερη μετάβαση για το balloon
+      // Ταχύτερη μετάβαση για το balloon (0.3s αντί για 0.5s)
+      cs.style.transition = "all 0.3s ease";
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
       let rect = blockCanvas.getBoundingClientRect();
@@ -638,6 +639,12 @@
       }
     }
     
+    // Ορισμός της συνάρτησης updateRightPanelWidth για την αποφυγή του σφάλματος
+    function updateRightPanelWidth() {
+      // Ενημέρωση πλάτους δεξιού panel, αν χρειάζεται.
+      // Δεδομένου ότι το πλάτος ορίζεται μέσω CSS μεταβλητής, προς το παρόν δεν απαιτείται περαιτέρω επεξεργασία.
+    }
+    
     window.addEventListener('resize', updateRightPanelWidth);
     window.addEventListener('resize', updateTableBackground);
     
@@ -729,7 +736,4 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('load', updateTableBackground);
     
-    loadElements();
-  </script>
-</body>
-</html>
+ 
