@@ -23,8 +23,8 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Canvas Background */
-    #canvasBackground {
+    /* Background για τον Περιοδικό Πίνακα (περιλαμβάνει τους καμβάδες τομέων, περιόδων και ομάδων) */
+    #canvasTableBackground {
       position: absolute;
       background: white;
       border: 1px solid rgba(0,0,0,0.1);
@@ -32,7 +32,28 @@
       z-index: -10;
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
-    /* Info Panel Full – αρχική κατάσταση */
+    /* Καμβάδες Περιόδων και Ομάδων */
+    #canvasPeriods {
+      position: absolute;
+      left: 6px;
+      top: 120px;
+      width: 42px;
+      height: 292px;
+      background: #f0f0f0;
+      display: none;
+      z-index: 5;
+    }
+    #canvasD_groups { width: 418px; height: 40px; }
+    #canvasP_groups { width: 250px; height: 40px; }
+    #canvasS_groups { width: 84px; height: 40px; }
+    /* Καμβάδες Τομέων */
+    .canvas {
+      position: absolute;
+      background: transparent;
+      transition: all 0.5s ease-in-out;
+      transform: translateY(-10px);
+    }
+    /* Πίνακες Πληροφοριών: δύο panels */
     #infoPanelFull {
       display: flex;
       flex-direction: row;
@@ -49,32 +70,16 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Ανακατανομή εσωτερικών χώρων */
-    #leftPanelFull {
-      width: 200px;
-    }
-    #remarksFull {
-      width: calc(100% - 200px);
-    }
-    #remarksFull .upper-right {
-      display: flex;
-      flex-direction: row;
-    }
-    #remarksFull .upper-right > .subshells-col {
-      width: 70%;
-      text-align: left;
-    }
-    #remarksFull .upper-right > .shells-msg-col {
-      width: 30%;
-      text-align: left;
-    }
-    /* Όταν το body έχει κλάση collapsed */
+    #leftPanelFull { width: 200px; }
+    #remarksFull { width: calc(100% - 200px); }
+    #remarksFull .upper-right { display: flex; flex-direction: row; }
+    #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
+    #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
     }
-    /* Info Panel Collapsed */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -90,14 +95,8 @@
       z-index: 40;
       text-align: left;
     }
-    /* Panels σε Collapsed */
-    #leftPanelCollapsed, #remarksCollapsed {
-      width: 100%;
-    }
-    #remarksCollapsed .right-wrapper {
-      display: flex;
-      flex-direction: column;
-    }
+    #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
+    #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
     /* Balloon */
     #canvasSubshells {
       position: absolute;
@@ -133,28 +132,7 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    .canvas {
-      position: absolute;
-      background: transparent;
-      transition: all 0.5s ease-in-out;
-      transform: translateY(-10px);
-    }
-    /* Καμβάδες Περιόδων και Ομάδων */
-    #canvasPeriods {
-      position: absolute;
-      left: 6px;
-      top: 120px;
-      width: 42px;
-      height: 292px;
-      background: #f0f0f0;
-      display: none;
-      z-index: 5;
-    }
-    /* Διάσταση για τους τομείς d, p, s */
-    #canvasD_groups { width: 418px; height: 40px; }
-    #canvasP_groups { width: 250px; height: 40px; }
-    #canvasS_groups { width: 84px; height: 40px; }
-    /* Χρώματα τομέων */
+    /* Χρώματα για blocks */
     .s-block { background: #FF477E !important; }
     .p-block { background: #26FF31 !important; }
     .d-block { background: #3F99FF !important; }
@@ -168,8 +146,8 @@
 </head>
 <body class="full">
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
-  <!-- Canvas Background -->
-  <div id="canvasBackground"></div>
+  <!-- Background για τον Περιοδικό Πίνακα -->
+  <div id="canvasTableBackground"></div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -271,7 +249,6 @@
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
-      // Θέτουμε το τρέχον στοιχείο ως επιλεγμένο
       selectedElement = element;
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
@@ -321,7 +298,7 @@
       };
       drawSubshells(subshellsData);
       updateBalloonPosition(element);
-      updateBackgroundCanvas();
+      updateTableBackground();
     }
     window.updateInfo = updateInfo;
     
@@ -496,7 +473,7 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Σχεδιάζουμε το περίγραμμα αν το στοιχείο είναι επιλεγμένο
+        // Σχεδιάζουμε περίγραμμα αν το στοιχείο είναι επιλεγμένο
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -544,8 +521,6 @@
     }
     
     // Τροποποιημένη updateBalloonPosition:
-    // Αν το defaultBottom (defaultTop + cs.offsetHeight) υπερβαίνει το πάνω όριο του leftPanelFull,
-    // τότε ορίζουμε topPos = defaultTop – (cs.offsetHeight + 23)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -711,6 +686,7 @@
         if(cpg) { cpg.style.display = "none"; }
       }
       updateToggleButton();
+      updateTableBackground();
     }
     
     function initPeriodsCanvas() {
@@ -772,23 +748,31 @@
       }
     }
     
-    // Νέα συνάρτηση για ενημέρωση του background canvas βάσει του info panel
-    function updateBackgroundCanvas() {
-      // Επιλέγουμε το σωστό info panel ανάλογα με την κατάσταση
-      let infoPanel = document.body.classList.contains('collapsed') ?
-        document.getElementById('infoPanelCollapsed') :
-        document.getElementById('infoPanelFull');
-      if(infoPanel) {
-        let bg = document.getElementById('canvasBackground');
-        bg.style.width = infoPanel.offsetWidth + "px";
-        bg.style.height = infoPanel.offsetHeight + "px";
-        bg.style.left = infoPanel.offsetLeft + "px";
-        bg.style.top = infoPanel.offsetTop + "px";
+    // Νέα συνάρτηση: Ενημέρωση του background για τον Περιοδικό Πίνακα
+    function updateTableBackground() {
+      const ids = ["canvasPeriods", "canvasS_groups", "canvasD_groups", "canvasP_groups", "canvasS", "canvasF", "canvasD", "canvasP"];
+      let minLeft = Infinity, minTop = Infinity, maxRight = -Infinity, maxBottom = -Infinity;
+      ids.forEach(id => {
+        let el = document.getElementById(id);
+        if(el) {
+          let rect = el.getBoundingClientRect();
+          minLeft = Math.min(minLeft, rect.left);
+          minTop = Math.min(minTop, rect.top);
+          maxRight = Math.max(maxRight, rect.right);
+          maxBottom = Math.max(maxBottom, rect.bottom);
+        }
+      });
+      let bg = document.getElementById("canvasTableBackground");
+      if(bg && minLeft !== Infinity) {
+        bg.style.left = minLeft + "px";
+        bg.style.top = minTop + "px";
+        bg.style.width = (maxRight - minLeft) + "px";
+        bg.style.height = (maxBottom - minTop) + "px";
       }
     }
     
     window.addEventListener('resize', updateRightPanelWidth);
-    window.addEventListener('resize', updateBackgroundCanvas);
+    window.addEventListener('resize', updateTableBackground);
     
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
@@ -875,7 +859,7 @@
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
     window.addEventListener('load', updateRightPanelWidth);
-    window.addEventListener('load', updateBackgroundCanvas);
+    window.addEventListener('load', updateTableBackground);
     
     loadElements();
   </script>
