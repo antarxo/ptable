@@ -59,13 +59,13 @@
       width: 30%;
       text-align: left;
     }
-    /* Όταν το body έχει κλάση collapsed, ο πίνακας μετακινείται/μεγεθύνεται */
+    /* Όταν το body έχει κλάση collapsed */
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
     }
-    /* Info Panel Collapsed – collapsed κατάσταση, κρυμμένος αρχικά */
+    /* Info Panel Collapsed */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -81,7 +81,7 @@
       z-index: 40;
       text-align: left;
     }
-    /* Εσωτερικά τμήματα των panels */
+    /* Panels σε Collapsed */
     #leftPanelCollapsed, #remarksCollapsed {
       width: 100%;
     }
@@ -89,7 +89,7 @@
       display: flex;
       flex-direction: column;
     }
-    /* Balloon – το canvas των υποστιβάδων */
+    /* Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -141,10 +141,9 @@
       display: none;
       z-index: 5;
     }
-    /* Οι καμβάδες για τους τομείς d και p έχουν ύψος 40px */
+    /* Διάσταση για τους τομείς d, p, s */
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px */
     #canvasS_groups { width: 84px; height: 40px; }
     /* Χρώματα τομέων */
     .s-block { background: #FF477E !important; }
@@ -353,6 +352,8 @@
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  // Προσθέτουμε console.log για έλεγχο αποθήκευσης
+                  console.log("Selected element:", candidate);
                   selectedElement = candidate;
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
@@ -534,8 +535,8 @@
     }
     
     // Τροποποιημένη updateBalloonPosition:
-    // Υπολογίζεται η προκαθορισμένη θέση (defaultTop). Αν το defaultBottom (defaultTop + cs.offsetHeight)
-    // υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull, τότε ανεβαίνει το Balloon κατά (cs.offsetHeight + 28)
+    // Αν το defaultBottom (defaultTop + cs.offsetHeight) υπερβαίνει το πάνω όριο του leftPanelFull,
+    // τότε ορίζουμε topPos = defaultTop – (cs.offsetHeight + 23)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -558,10 +559,8 @@
       let infoCell = document.getElementById('leftPanelFull');
       if(infoCell) {
         let cellRect = infoCell.getBoundingClientRect();
-        // Αν το defaultBottom (defaultTop + cs.offsetHeight) υπερβαίνει το πάνω όριο του leftPanelFull,
-        // τότε ανεβαίνει το Balloon κατά (cs.offsetHeight + 28px) επιπρόσθετα
         if(defaultTop + cs.offsetHeight > cellRect.top) {
-          topPos = defaultTop - (cs.offsetHeight + 28);
+          topPos = defaultTop - (cs.offsetHeight + 23);
         }
       }
       cs.style.display = "block";
@@ -638,6 +637,7 @@
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  console.log("Selected element:", candidate);
                   selectedElement = candidate;
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
