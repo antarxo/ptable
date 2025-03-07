@@ -91,7 +91,7 @@
       left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
-      z-index: 50;
+      z-index: 100;
       text-align: left;
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.3s ease;
       opacity: 1;
@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή </div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -763,8 +763,11 @@
         setTimeout(() => {
           updateTableBackground();
           setTimeout(() => {
+            // Θέτουμε το collapsed panel στην ίδια θέση με το full panel και το φέρνουμε μπροστά (υψηλότερο z-index)
+            collapsedPanel.style.left = fullPanel.style.left;
+            collapsedPanel.style.top = fullPanel.style.top;
             collapsedPanel.style.display = "flex";
-            collapsedPanel.style.zIndex = 50;
+            collapsedPanel.style.zIndex = 100;
             document.body.classList.add('collapsed');
             toggleBtn.textContent = "Ανάπτυξη";
             updateInfo(currentZ);
