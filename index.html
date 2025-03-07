@@ -79,7 +79,6 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    
     /* Canvas styles */
     .canvas {
       position: absolute;
@@ -101,7 +100,6 @@
       border: 1px solid rgba(0,0,0,0.2);
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
     /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
@@ -116,7 +114,6 @@
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
     #canvasS_groups { width: 84px; height: 40px; }
-    
     /* Χρώματα τομέων */
     .s-block { background: #FF477E !important; }
     .p-block { background: #26FF31 !important; }
@@ -169,14 +166,7 @@
   <canvas id="backgroundCanvas"></canvas>
   
   <script>
-    // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
-    let ignoreCanvasClick = false;
-    let currentZ = 3;
-    let flashActive = false;
-    let subshellsP;
-    let lastClickedElement = null; // για το Balloon
-    let selectedElement = null;    // δείκτης του κλικ (χωρίς να επηρεάζεται το currentZ)
-
+    // Βοηθητικές συναρτήσεις
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
@@ -200,7 +190,32 @@
       }
       return result.join(", ");
     }
+    // Ορισμός της messageForElement για επιστροφή μηνύματος βάσει στοιχείου
+    function messageForElement(element) {
+      if (element.block === 'f') {
+        return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+      } else {
+        let group = parseInt(element.col);
+        if (group === 1) {
+          return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
+        } else if (group === 2) {
+          return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
+        } else if (group === 13) {
+          return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
+        } else if (group >= 3 && group <= 12) {
+          return "Στοιχείο μετάπτωσης";
+        } else if (group === 14) {
+          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
+        } else if (group >= 15 && group <= 17) {
+          return `Θέλει να <strong>πάρεται</strong> ${18 - group} ηλεκτρόνια`;
+        } else if (group === 18) {
+          return "Ευγενές αέριο-Χημικά αδρανές";
+        }
+        return "";
+      }
+    }
     
+    // Δεδομένα και ταξινόμηση
     const BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -235,7 +250,7 @@
       window.periodsInitialized = true;
     }
     
-    // Φόρτωση στοιχείων
+    // Φόρτωση στοιχείων από αρχείο JSON
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -260,7 +275,7 @@
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
-      // Ο δείκτης του κλικ ορίζεται εδώ
+      // Ο δείκτης του κλικ ορίζεται εδώ χωρίς να αλλάζει το currentZ
       selectedElement = element;
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
@@ -343,7 +358,6 @@
                   console.log("Selected element:", candidate);
                   selectedElement = candidate;
                   window.updateInfo(candidate.number);
-                  // Αφαιρούμε το flashActive check που βασιζόταν στο currentZ
                   break;
                 }
               }
@@ -471,7 +485,6 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Σχεδιάζουμε περίγραμμα για το επιλεγμένο στοιχείο με "black"
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -645,7 +658,7 @@
       updateBackgroundCanvas();
     }
     
-    // Ενημέρωση του background canvas βάσει των διαστάσεων του container των στοιχείων
+    // Ενημέρωση του background canvas βάσει του container των στοιχείων
     function updateBackgroundCanvas() {
       let container = document.getElementById('elementsContainer');
       let bgCanvas = document.getElementById('backgroundCanvas');
@@ -665,7 +678,7 @@
       }
     }
     
-    // Απλή αναπροσαρμογή των group canvases (όπως προηγουμένως)
+    // Απλή αναπροσαρμογή των group canvases
     function repositionGroupCanvasesExpanded() {
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
@@ -690,7 +703,7 @@
       }
     }
     
-    // Event listeners για κουμπιά
+    // Event listeners για τα κουμπιά
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 118) { 
