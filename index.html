@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -299,7 +299,7 @@
       }
     };
 
-    // Ορισμός της updateBalloonPosition στο global scope.
+    // Ορίζουμε τη συνάρτηση updateBalloonPosition στο global scope.
     window.updateBalloonPosition = function(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -323,6 +323,32 @@
       cs.style.display = "block";
       cs.style.left = leftPos + "px";
       cs.style.top = topPos + "px";
+    };
+
+    // Ορίζουμε τη drawSubshells στο global scope.
+    window.drawSubshells = function(data) {
+      if (!subshellsP) return;
+      let balloonHeight = 40, fontSize = 14, leftMargin = 2, extraMargin = 5;
+      subshellsP.clear();
+      subshellsP.textSize(fontSize);
+      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
+      let wPrev = subshellsP.textWidth(data.prev || "-");
+      let wCurrent = subshellsP.textWidth(data.current || "-");
+      let wNext = subshellsP.textWidth(data.next || "-");
+      let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
+      let minWidth = 10, newWidth = Math.max(computedWidth, minWidth);
+      subshellsP.resizeCanvas(newWidth, balloonHeight);
+      subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
+      let rowHeight = balloonHeight / 3;
+      subshellsP.textStyle(p5.prototype.NORMAL);
+      subshellsP.fill(data.prevColor || "black");
+      subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
+      subshellsP.textStyle(p5.prototype.BOLD);
+      subshellsP.fill(data.currentColor || "black");
+      subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
+      subshellsP.textStyle(p5.prototype.NORMAL);
+      subshellsP.fill(data.nextColor || "black");
+      subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     };
 
     /* --- Global Variables --- */
@@ -576,9 +602,9 @@
           updateBalloonPosition(element);
           updateTableBackground();
           if(element.shells) {
-             drawSubshells({prev: element.shells, current: element.shells, next: element.shells});
+             window.drawSubshells({prev: element.shells, current: element.shells, next: element.shells});
           } else {
-             drawSubshells({prev: "-", current: "-", next: "-"});
+             window.drawSubshells({prev: "-", current: "-", next: "-"});
           }
       }, 500);
     }
@@ -706,15 +732,13 @@
       });
       window.groupsInitialized = true;
     }
-    /* --- Toggle Panels: Expand/Collapse --- */
+    /* --- Toggle Panels --- */
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        // Σύμπτυξη: οι τομείς και οι ομάδες μετακινούνται ταυτόχρονα
         window.updateSectorsCollapsed();
-        // Delay 600ms πριν τη μετάβαση του fullPanel
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
@@ -723,7 +747,6 @@
         }, 600);
         setTimeout(() => {
           updateTableBackground();
-          // Εφαρμόζουμε τα σταθερά shifting για τις ομάδες σε collapsed λειτουργία
           window.setFixedGroupsPositions("collapsed");
           setTimeout(() => {
             collapsedPanel.style.display = "flex";
@@ -735,7 +758,6 @@
           }, 300);
         }, 1200);
       } else {
-        // Επέκταση: ο collapsed panel κρύβεται και ο full panel επανέρχεται, μαζί με τις ομάδες
         fullPanel.style.display = "flex";
         fullPanel.style.zIndex = 40;
         collapsedPanel.style.display = "none";
@@ -786,9 +808,7 @@
       initGroupsCanvases();
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(() => { 
-         window.setFixedGroupsPositions("expanded");
-      }, 800);
+      setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
       document.getElementById('toggleFBlock').disabled = false;
     });
     document.getElementById('reset').addEventListener('click', function() {
