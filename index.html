@@ -129,11 +129,11 @@
     #canvasP_groups { width: 250px; height: 40px; }
     /* Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px (όπως και οι άλλοι) */ 
     #canvasS_groups { width: 84px; height: 40px; }
-    /* Χρώματα τομέων (από το αρχείο) */ 
-    .s-block { background: #ffcccc !important; }
-    .p-block { background: #ccffcc !important; }
-    .d-block { background: #ccccff !important; }
-    .f-block { background: #ffe5cc !important; }
+    /* Χρώματα τομέων */
+    .s-block { background: red !important; }
+    .p-block { background: darkgreen !important; }
+    .d-block { background: blue !important; }
+    .f-block { background: orange !important; }
     .full #canvasS { top: 120px; left: 50px; z-index: 1; }
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 3; }
@@ -189,10 +189,10 @@
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
       switch(b) {
-        case "s": return "#ffcccc";
-        case "p": return "#ccffcc";
-        case "d": return "#ccccff";
-        case "f": return "#ffe5cc";
+        case "s": return "red";
+        case "p": return "darkgreen";
+        case "d": return "blue";
+        case "f": return "orange";
         default: return "black";
       }
     }
@@ -215,7 +215,7 @@
       d: { cols: 10, rows: 7 },
       f: { cols: 14, rows: 7 }
     };
-    const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
+    const BLOCK_COLORS = { s: 'red', p: 'darkgreen', d: 'blue', f: 'orange' };
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
