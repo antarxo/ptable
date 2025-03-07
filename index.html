@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    :root { --rightPanelWidth: 124px; }
+    :root { --rightPanelWidth: 150px; }
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
@@ -57,22 +57,35 @@
     }
     /* Panels */
     #infoPanelFull {
-      flex-direction: column;
+      display: flex;
+      flex-direction: row;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
+      position: absolute;
       left: 20px;
       top: 443px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
-      text-align: left;
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
+      text-align: left;
       opacity: 1;
-      display: flex;
+    }
+    #leftPanelFull { width: 200px; }
+    #remarksFull { width: calc(100% - 200px); }
+    #remarksFull .upper-right { display: flex; flex-direction: row; }
+    #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
+    #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
+    /* Όταν είναι collapsed */
+    body.collapsed #infoPanelFull {
+      left: 858px;
+      top: 112px;
+      width: calc(100vw - 920px);
     }
     #infoPanelCollapsed {
+      display: none;
       flex-direction: column;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
@@ -86,8 +99,9 @@
       text-align: left;
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
       opacity: 1;
-      display: flex;
     }
+    #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
+    #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
     /* Balloon */
     #canvasSubshells {
       position: absolute;
@@ -96,6 +110,8 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
+      width: auto;
+      height: auto;
       z-index: 150;
       display: none;
       transition: all 0.2s ease;
@@ -374,6 +390,7 @@
           if(currentZ === 0) drawPlaceholderBackground();
           initializeCanvases();
           initSubshellsCanvas();
+          // Εδώ δεν καλείται updateInfo γιατί currentZ = 0 (δεν υπάρχει στοιχείο για εμφάνιση)
           updateToggleButton();
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
@@ -747,22 +764,10 @@
           window.redrawAll();
         }, 1200);
       }
-      // Καθυστέρηση 1.7 δευτερόλεπτα για ενημέρωση θέσεων και Balloon
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1700);
-      // ΕΝΣΩΜΑΤΩΜΕΝΟ DEBUG: Μετά από 1.8 δευτερόλεπτα καταγράφουμε τις computed τιμές left και top του collapsed panel
-      //setTimeout(() => {
-       //  let cp = document.getElementById('infoPanelCollapsed');
-       //  let computedStyle = window.getComputedStyle(cp);
-       //  console.log('Collapsed Panel - left:', computedStyle.left, 'top:', computedStyle.top);
-     // }, 1800);
-      // setTimeout(() => {
-      //   let cp = document.getElementById('infoPanelFull');
-       //  let computedStyle = window.getComputedStyle(cp);
-     //    console.log('Full Panel - left:', computedStyle.left, 'top:', computedStyle.top);
-    //  }, 1800);
     });
     // Event listeners ορίζονται μία φορά
     document.getElementById('nextElement').addEventListener('click', function() {
@@ -805,6 +810,7 @@
       let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
+      // Με το reset επαναφέρουμε και τον placeholder background για Ζ=3
       setTimeout(() => { updateInfo(currentZ); drawPlaceholderBackground(); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
