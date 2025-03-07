@@ -101,7 +101,7 @@
     }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
     #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
-    /* Balloon: μετάβαση επιταχυνόμενη από 0.2s */
+    /* Balloon: μετάβαση 0.2s */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -829,21 +829,23 @@
       updateTableBackground();
     }
     
-    // Εναλλαγή "Ανάπτυξε/Σύμπτυξε" με 0.8s μετάβαση και καθυστέρηση 500ms πριν την κίνηση
+    // Εναλλαγή "Ανάπτυξε/Σύμπτυξε" με μετάβαση 0.8s και καθυστέρηση 500ms πριν την κίνηση
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')){
-         // Collapse: ο πλήρης πίνακας ξεκινά μετά 500ms και η μετάβαση διαρκεί 0.8s
+         // Collapse: κρύβουμε το πλήρες πάνελ και εμφανίζουμε το συμπτυγμένο στην καθορισμένη θέση
          let fullPanel = document.getElementById('infoPanelFull');
          fullPanel.style.transition = "all 0.8s ease 0.5s";
          fullPanel.style.opacity = "0";
          setTimeout(() => {
            fullPanel.style.display = "none";
            let collapsedPanel = document.getElementById('infoPanelCollapsed');
+           // Θέτουμε ρητά τη θέση για το συμπτυγμένο πάνελ
+           collapsedPanel.style.left = "858px";
+           collapsedPanel.style.top = "112px";
            collapsedPanel.style.display = "flex";
            collapsedPanel.style.transition = "all 0.8s ease 0.5s";
            collapsedPanel.style.opacity = "0";
-           // Μικρή καθυστέρηση για να ενεργοποιηθεί το transition
            setTimeout(() => { collapsedPanel.style.opacity = "1"; }, 50);
            document.body.classList.add('collapsed');
            toggleBtn.textContent = "Ανάπτυξη";
@@ -851,13 +853,16 @@
            redrawAll();
          }, 1300);
       } else {
-         // Expand: ο συμπτυγμένος πίνακας ξεκινά μετά 500ms και η μετάβαση διαρκεί 0.8s
+         // Expand: κρύβουμε το συμπτυγμένο πάνελ και εμφανίζουμε το πλήρες στην καθορισμένη θέση
          let collapsedPanel = document.getElementById('infoPanelCollapsed');
          collapsedPanel.style.transition = "all 0.8s ease 0.5s";
          collapsedPanel.style.opacity = "0";
          setTimeout(() => {
            collapsedPanel.style.display = "none";
            let fullPanel = document.getElementById('infoPanelFull');
+           // Θέτουμε ρητά τη θέση για το πλήρες πάνελ
+           fullPanel.style.left = "20px";
+           fullPanel.style.top = "443px";
            fullPanel.style.display = "flex";
            fullPanel.style.transition = "all 0.8s ease 0.5s";
            fullPanel.style.opacity = "0";
@@ -868,7 +873,6 @@
            redrawAll();
          }, 1300);
       }
-      // Ενημέρωση θέσης του Balloon μετά από 300ms
       setTimeout(function() {
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 300);
