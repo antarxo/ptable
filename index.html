@@ -129,11 +129,11 @@
     #canvasP_groups { width: 250px; height: 40px; }
     /* Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px (αντί για 80px) */ 
     #canvasS_groups { width: 84px; height: 40px; }
-    /* Χρώματα τομέων (από εξωτερικό αρχείο) */ 
-    .s-block { background: #ffcccc !important; }
-    .p-block { background: #ccffcc !important; }
-    .d-block { background: #ccccff !important; }
-    .f-block { background: #ffe5cc !important; }
+    /* Νέα Χρώματα τομέων */ 
+    .s-block { background: #f4a460 !important; }
+    .p-block { background: #90ee90 !important; }
+    .d-block { background: #add8e6 !important; }
+    .f-block { background: #dda0dd !important; }
     .full #canvasS { top: 120px; left: 50px; z-index: 1; }
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 3; }
@@ -189,10 +189,10 @@
     function getBlockColor(b) {
       if(b === "dummy") return "gray";
       switch(b) {
-        case "s": return "#ffcccc";
-        case "p": return "#ccffcc";
-        case "d": return "#ccccff";
-        case "f": return "#ffe5cc";
+        case "s": return "#f4a460";
+        case "p": return "#90ee90";
+        case "d": return "#add8e6";
+        case "f": return "#dda0dd";
         default: return "black";
       }
     }
@@ -215,7 +215,7 @@
       d: { cols: 10, rows: 7 },
       f: { cols: 14, rows: 7 }
     };
-    const BLOCK_COLORS = { s: '#ffcccc', p: '#ccffcc', d: '#ccccff', f: '#ffe5cc' };
+    const BLOCK_COLORS = { s: '#f4a460', p: '#90ee90', d: '#add8e6', f: '#dda0dd' };
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
