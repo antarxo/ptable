@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Διαμόρφωση εσωτερικών χώρων του infoPanelFull: ο αριστερός χώρος σταθερός 150px, ο δεξιός χώρος με πάνω γραμμή 70%-30% */
+    /* Διάταξη εσωτερικών χώρων του infoPanelFull */
     #leftPanelFull {
       width: 150px;
     }
@@ -85,7 +85,7 @@
     #leftPanelCollapsed, #remarksCollapsed {
       width: 100%;
     }
-    /* Διάταξη για το collapsed panel (αν επιθυμείς παρόμοια διάταξη, μπορείς να το τροποποιήσεις) */
+    /* Διάταξη για το collapsed panel */
     #remarksCollapsed .right-wrapper {
       display: flex;
       flex-direction: column;
@@ -380,7 +380,7 @@
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Για τον s τομέα: ο καμβάς ομάδων τώρα έχει ύψος 40px (2 γραμμές)
+      // Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px (2 γραμμές)
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -521,7 +521,9 @@
       });
     }
     
-    // Τροποποιημένη συνάρτηση updateBalloonPosition σύμφωνα με τις οδηγίες
+    // Τροποποιημένη updateBalloonPosition:
+    // Ελέγχουμε αν το defaultBottom (defaultTop + ύψος του Balloon) υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull.
+    // Αν ναι, το Balloon τοποθετείται πάνω από το κάτω όριο του κελιού με μετατόπιση ίση με (ύψος του Balloon + 44px).
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -541,13 +543,12 @@
       if(leftPos + balloonWidth > window.innerWidth) {
         leftPos = window.innerWidth - balloonWidth - 5;
       }
-      // Διόρθωση θέσης: εάν το Balloon επικαλύπτει το ΠΑΝΩ όριο του πίνακα πληροφοριών
-      // (δηλαδή, εάν το defaultTop είναι μικρότερο από το πάνω όριο του στοιχείου leftPanelFull),
-      // τότε τοποθετούμε το Balloon πάνω από το κάτω τρέχον όριο του κελιού με μετατόπιση ίση με το ύψος του Balloon + 44px.
       let infoCell = document.getElementById('leftPanelFull');
       if(infoCell) {
         let cellRect = infoCell.getBoundingClientRect();
-        if(defaultTop < cellRect.top) {
+        // Αν το defaultBottom του Balloon (defaultTop + ύψος) είναι μεγαλύτερο από το πάνω όριο του leftPanelFull,
+        // τότε τοποθετούμε το Balloon πάνω από το κάτω όριο του κελιού με μετατόπιση (ύψος Balloon + 44px)
+        if(defaultTop + cs.offsetHeight > cellRect.top) {
           topPos = cellRect.bottom - (cs.offsetHeight + 44);
         }
       }
