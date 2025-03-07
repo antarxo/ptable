@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευήκού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -182,9 +182,6 @@
     let flashActive = false;
     let lastClickedElement = null;
     let subshellsP;
-    // Flags εμφάνισης ομάδων
-    let showOldGroups = false; // Παλιές ονομασίες (δεύτερη σειρά)
-    let showNewGroups = false; // Νέες ονομασίες (πρώτη σειρά)
     
     // Χρώματα τομέων
     const BLOCK_COLORS = { 
@@ -227,48 +224,25 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση initGroupsCanvases για την εμφάνιση των ομάδων
+    // Τροποποιημένη συνάρτηση initGroupsCanvases:
+    // Σε κάθε καμβά ομάδων (s, d, p) θα εμφανίζεται σε κάθε "κελί" και η νέα ονομασία (πάνω) και η παλιά (κάτω)
     function initGroupsCanvases() {
       window.groupsInitialized = false;
       
-      // Βοηθητική συνάρτηση για ζωγραφική των ετικετών ομάδων
       function drawGroupLabels(p, numGroups, newStart, oldLabels) {
         const rectWidth = 40;
-        const rectHeight = 20;
-        const padding = 2;
-        if (showOldGroups && showNewGroups) {
-          // Εμφάνιση και των δύο σειρών: νέες στην πρώτη, παλιές στη δεύτερη
-          for (let c = 0; c < numGroups; c++){
-            let x = c * (rectWidth + padding);
-            // Νέες ονομασίες (πάνω σειρά)
-            p.fill(240);
-            p.rect(x, 0, rectWidth, rectHeight);
-            p.fill(0);
-            p.text((newStart + c).toString(), x + rectWidth/2, 10);
-            // Παλιές ονομασίες (κάτω σειρά)
-            p.fill(240);
-            p.rect(x, 22, rectWidth, rectHeight);
-            p.fill(0);
-            p.text(oldLabels[c], x + rectWidth/2, 32);
-          }
-        } else if (showNewGroups) {
-          // Μόνο νέες ονομασίες (πάνω σειρά)
-          for (let c = 0; c < numGroups; c++){
-            let x = c * (rectWidth + padding);
-            p.fill(240);
-            p.rect(x, 0, rectWidth, rectHeight);
-            p.fill(0);
-            p.text((newStart + c).toString(), x + rectWidth/2, 10);
-          }
-        } else if (showOldGroups) {
-          // Μόνο παλιές ονομασίες (κάτω σειρά)
-          for (let c = 0; c < numGroups; c++){
-            let x = c * (rectWidth + padding);
-            p.fill(240);
-            p.rect(x, 22, rectWidth, rectHeight);
-            p.fill(0);
-            p.text(oldLabels[c], x + rectWidth/2, 32);
-          }
+        const totalHeight = 40; // Χώρος για δύο γραμμές
+        for (let c = 0; c < numGroups; c++){
+          let x = c * (rectWidth + 2);
+          p.fill(240);
+          p.rect(x, 0, rectWidth, totalHeight);
+          p.fill(0);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          // Νέα ονομασία στην πάνω γραμμή
+          p.text((newStart + c).toString(), x + rectWidth/2, 10);
+          // Παλιά ονομασία στην κάτω γραμμή
+          p.text(oldLabels[c], x + rectWidth/2, 30);
         }
       }
       
@@ -278,9 +252,6 @@
           let canvas = p.createCanvas(84, 40);
           canvas.parent("canvasS_groups");
           p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
-          p.textStyle(p.BOLD);
           p.background(240);
           drawGroupLabels(p, 2, 1, ["ΙΑ", "ΙΙΑ"]);
         };
@@ -292,9 +263,6 @@
           let canvas = p.createCanvas(418, 40);
           canvas.parent("canvasD_groups");
           p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
-          p.textStyle(p.BOLD);
           p.background(240);
           drawGroupLabels(p, 10, 3, ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"]);
         };
@@ -306,9 +274,6 @@
           let canvas = p.createCanvas(250, 40);
           canvas.parent("canvasP_groups");
           p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
-          p.textStyle(p.BOLD);
           p.background(240);
           drawGroupLabels(p, 6, 13, ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"]);
         };
@@ -684,13 +649,11 @@
         });
       });
       // Όταν currentZ είναι 121, δηλαδή μετά το στοιχείο 2 και με πάτημα "Επόμενο", εμφανίζονται
-      // οι περίοδοι και τα group canvases (με τις παλιές ονομασίες στη δεύτερη σειρά) στις σωστές θέσεις.
+      // οι περίοδοι και οι ομάδες (με παλιές ονομασίες που τώρα δείχνουν και τις νέες ταυτόχρονα)
       if(currentZ === 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
-        showOldGroups = true;
-        showNewGroups = false;
         let csg = document.getElementById('canvasS_groups');
         let cdg = document.getElementById('canvasD_groups');
         let cpg = document.getElementById('canvasP_groups');
@@ -700,31 +663,11 @@
         initGroupsCanvases();
         repositionGroupCanvasesExpanded();
       } else if (currentZ === 122) {
-        // Εμφάνιση και των δύο σειρών: οι νέες στην πρώτη σειρά και οι παλιές στη δεύτερη.
-        showOldGroups = true;
-        showNewGroups = true;
-        let csg = document.getElementById('canvasS_groups');
-        let cdg = document.getElementById('canvasD_groups');
-        let cpg = document.getElementById('canvasP_groups');
-        csg.style.display = "block";
-        cdg.style.display = "block";
-        cpg.style.display = "block";
-        initGroupsCanvases();
-        repositionGroupCanvasesExpanded();
-      } else if (currentZ >= 123) {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "block"; }
-        // Στο τελικό στάδιο τα groups παραμένουν σταθερά.
-      } else {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "none"; }
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "none"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "none"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "none"; }
+        // Αν απαιτηθεί, μπορούμε να επεκτείνουμε εδώ, αλλά ο κώδικας πλέον απεικονίζει πάντοτε και τις δύο ονομασίες.
+        currentZ = 123;
+        document.getElementById('toggleFBlock').disabled = false;
       }
+      
       updateToggleButton();
       
       // Μετατόπιση τομέων d και p μετά το 20 (όπως στην αρχική λογική)
@@ -851,20 +794,13 @@
         currentZ = 120; // Προστίθεται ο ήλιος (στοιχείο 2)
       } else if (currentZ === 120) {
         // Μετά το στοιχείο 2, με πάτημα του "Επόμενο" εμφανίζονται
-        // οι περίοδοι και οι ομάδες (παλιές ονομασίες)
+        // οι περίοδοι και οι ομάδες (με παλιές ονομασίες που τώρα δείχνουν και τις νέες ταυτόχρονα)
         document.getElementById('canvasPeriods').style.display = 'block';
         initPeriodsCanvas();
         currentZ = 121;
       } else if (currentZ === 121) {
-        // Αν χρειαστεί, εδώ μπορούμε να επεκτείνουμε για να αλλάξουν τα flags για εμφάνιση νέων ονομασιών
-        // αλλά για το συγκεκριμένο αίτημα αφήνουμε τις παλιές ονομασίες να εμφανίζονται (δεύτερη σειρά).
-        showOldGroups = true;
-        showNewGroups = false;
         currentZ = 122;
       } else if (currentZ === 122) {
-        // Εμφάνιση και των δύο σειρών: νέες (πάνω σειρά) και παλιές (κάτω σειρά)
-        showOldGroups = true;
-        showNewGroups = true;
         currentZ = 123;
         document.getElementById('toggleFBlock').disabled = false;
       }
@@ -882,8 +818,6 @@
     // Χειριστής του κουμπιού "Συμπλήρωσε" (στο τέλος εμφανίζονται και οι δύο σειρές)
     document.getElementById('fillAll').addEventListener('click', function() {
       currentZ = 123;
-      showOldGroups = true;
-      showNewGroups = true;
       document.getElementById('canvasPeriods').style.display = 'block';
       document.getElementById('toggleFBlock').disabled = false;
       redrawAll();
@@ -898,8 +832,6 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
-      showOldGroups = false;
-      showNewGroups = false;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
       let cp = document.getElementById('canvasPeriods');
       if(cp) cp.style.display = "none";
