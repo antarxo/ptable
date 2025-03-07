@@ -72,10 +72,10 @@
     .upper-right { display: flex; flex-direction: row; }
     .subshells-col { width: 100%; text-align: left; }
     .shells-msg-col { width: 100%; text-align: left; margin-top: 10px; }
-    /* Balloon – το canvas των υποστιβάδων με transition 1.5s */
+    /* Balloon – το canvas των υποστιβάδων */
     #canvasSubshells {
       position: absolute;
-      background: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.95); /* Μείωση διαφάνειας: πιο αδιαφανές */
       border: 1px solid #333;
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
@@ -127,7 +127,7 @@
     /* Οι καμβάδες για τους τομείς d και p έχουν ύψος 40px */ 
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
-    /* Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px */ 
+    /* Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px */
     #canvasS_groups { width: 84px; height: 40px; }
     /* Χρώματα τομέων */
     .s-block { background: #FF477E !important; }
@@ -521,6 +521,15 @@
       }
       if(leftPos + balloonWidth > window.innerWidth) {
         leftPos = window.innerWidth - balloonWidth - 5;
+      }
+      // Διόρθωση θέσης: αν το Balloon επικαλύπτει το κάτω όριο του κελιού του πίνακα πληροφοριών,
+      // μετακινείστε το πάνω κατά (ύψος του Balloon + 44px)
+      let infoCell = document.getElementById('leftPanelFull');
+      if(infoCell) {
+        let cellRect = infoCell.getBoundingClientRect();
+        if(defaultTop + cs.offsetHeight > cellRect.bottom) {
+          topPos = cellRect.bottom - (cs.offsetHeight + 44);
+        }
       }
       cs.style.display = "block";
       cs.style.left = leftPos + "px";
