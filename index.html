@@ -772,6 +772,31 @@
       }
     }
     
+    // Προσθέτουμε τη λειτουργία repositionGroupCanvasesExpanded για επανατοποθέτηση των group canvases μετά το fillAll
+    function repositionGroupCanvasesExpanded() {
+      if(!document.body.classList.contains('collapsed')) {
+        let base = 134, shiftP = 0, shiftD = 0;
+        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
+        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
+        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.left = base + "px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.left = (base + shiftD) + "px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.left = (base + shiftP) + "px"; }
+        
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.top = "78px"; csg.style.left = "50px"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.top = "78px"; cdg.style.left = cD.style.left; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.top = "78px"; cpg.style.left = cP.style.left; }
+      }
+    }
+    
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 118) { 
