@@ -32,6 +32,8 @@
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: -10;
+      /* Αρχικά κρυφό μέχρι το currentZ να γίνει 3 */
+      display: none;
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
     /* Καμβάδες Περιόδων και Ομάδων */
@@ -154,7 +156,7 @@
 </head>
 <body class="full">
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
-  <!-- Background -->
+  <!-- Background: αρχικά αθέατος μέχρι το currentZ να γίνει 3 -->
   <div id="canvasTableBackground"></div>
   
   <!-- Canvases Περιοδικών/Ομάδων -->
@@ -266,6 +268,17 @@
       }
     }
 
+    // Εμφάνιση του background canvas μόνο όταν το currentZ γίνει 3,
+    // με μια μικρή καθυστέρηση για να προλάβει τυχόν καθυστερήσεις στη μέτρηση των θέσεων.
+    function updateBackgroundCanvas() {
+      if(currentZ >= 3) {
+        setTimeout(() => {
+          updateTableBackground();
+          document.getElementById('canvasTableBackground').style.display = "block";
+        }, 100);
+      }
+    }
+
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -290,7 +303,7 @@
     }
 
     let ignoreCanvasClick = false;
-    let currentZ = 3;  // Αρχική τιμή ώστε να περιέχεται το στοιχείο 3
+    let currentZ = 3;  // Αρχική τιμή (η οποία τώρα ενεργοποιεί και τον background canvas)
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null;
@@ -378,6 +391,7 @@
           setTimeout(() => {
             updateInfo(currentZ);
             window.cellPositions = computeCellPositions();
+            updateBackgroundCanvas(); // Ενεργοποίηση του background canvas μόλις το currentZ είναι 3
           }, 300);
           updateToggleButton();
         })
@@ -944,6 +958,8 @@
       initializeCanvases();
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); }, 300);
+      // Επανακρύβουμε το background canvas μέχρι το currentZ να γίνει πάλι 3
+      document.getElementById('canvasTableBackground').style.display = "none";
     });
 
     window.loadElements = loadElements;
