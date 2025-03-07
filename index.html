@@ -32,8 +32,7 @@
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: -10;
-      /* Αρχικά κρυφό μέχρι το currentZ να γίνει 3 */
-      display: none;
+      display: none; /* Αρχικά κρυφό μέχρι το currentZ να γίνει 3 */
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
     /* Καμβάδες Περιόδων και Ομάδων */
@@ -71,8 +70,7 @@
       top: 443px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
-      /* Μετάβαση για left, top, width, height, opacity: 0.8s με delay 0.5s */
-      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, height 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
+      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
       text-align: left;
       opacity: 1;
     }
@@ -95,18 +93,17 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      /* Σταθερή θέση για το collapsed πάνελ */
       left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
       z-index: 40;
       text-align: left;
-      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, height 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
+      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
       opacity: 1;
     }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
     #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
-    /* Balloon: μετάβαση 0.2s */
+    /* Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -156,7 +153,7 @@
 </head>
 <body class="full">
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
-  <!-- Background: αρχικά αθέατος μέχρι το currentZ να γίνει 3 -->
+  <!-- Background -->
   <div id="canvasTableBackground"></div>
   
   <!-- Canvases Περιοδικών/Ομάδων -->
@@ -171,7 +168,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Panels Πληροφοριών -->
+  <!-- Panels -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -194,15 +191,13 @@
   
   <script>
     /*================ Global Variables and Helpers ================*/
-    let elements = []; // Global variable for elements
-
+    let elements = [];
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
       d: { cols: 10, rows: 7 },
       f: { cols: 14, rows: 7 }
     };
-
     window.getBlockColor = function(b) {
       if(b === "dummy") return "gray";
       switch(b) {
@@ -213,14 +208,12 @@
         default: return "black";
       }
     };
-
     window.BLOCK_COLORS = {
       s: "#FF477E",
       p: "#26FF31",
       d: "#3F99FF",
       f: "#FFD051"
     };
-
     window.formatShells = function(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -233,7 +226,6 @@
       }
       return result.join(", ");
     };
-
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -267,9 +259,6 @@
         return "";
       }
     }
-
-    // Εμφάνιση του background canvas μόνο όταν το currentZ γίνει 3,
-    // με μια μικρή καθυστέρηση για να προλάβει τυχόν καθυστερήσεις στη μέτρηση των θέσεων.
     function updateBackgroundCanvas() {
       if(currentZ >= 3) {
         setTimeout(() => {
@@ -278,7 +267,6 @@
         }, 100);
       }
     }
-
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -301,14 +289,12 @@
       });
       window.periodsInitialized = true;
     }
-
     let ignoreCanvasClick = false;
-    let currentZ = 3;  // Αρχική τιμή (η οποία τώρα ενεργοποιεί και τον background canvas)
+    let currentZ = 3;
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null;
     let selectedElement = null;
-
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -320,7 +306,6 @@
       }
       return { x: x, y: y };
     }
-
     function isRevealed(e) {
       if(currentZ < 118) return Number(e.number) >= 3 && Number(e.number) <= currentZ;
       else if(currentZ === 118) return Number(e.number) >= 3 && Number(e.number) <= 118;
@@ -328,7 +313,6 @@
       else if(currentZ === 120) return Number(e.number) === 2;
       else return (Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2;
     }
-
     function computeCellPositions() {
       const cellSize = 40;
       let positions = { s: [], p: [], d: [], f: [] };
@@ -351,7 +335,6 @@
       });
       return positions;
     }
-
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
@@ -378,9 +361,7 @@
       bg.style.width = newWidth + "px";
       bg.style.height = newHeight + "px";
     }
-
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
-
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -391,41 +372,34 @@
           setTimeout(() => {
             updateInfo(currentZ);
             window.cellPositions = computeCellPositions();
-            updateBackgroundCanvas(); // Ενεργοποίηση του background canvas μόλις το currentZ είναι 3
+            updateBackgroundCanvas();
           }, 300);
           updateToggleButton();
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
-
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
       else if(clickedZ === 120) { currentNum = 2; }
       else { currentNum = clickedZ; }
-      
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
       selectedElement = element;
-      
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
       if(clickedZ === 119) { displayZ = 1; }
       else if(clickedZ === 120) { displayZ = 2; }
-      
       let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
                      `<span style="font-size:3em; font-weight:bold; color:${window.getBlockColor(element.block)};">${element.symbol}</span> ` +
                      `<span style="font-style: italic;">${element.name}</span>`;
-      
       let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
       let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
-      
       let prevStr = `<div style="color:${window.getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
       let currentStr = `<div style="font-weight:bold; color:${window.getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
       let nextStr = `<div style="color:${window.getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
       let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${window.formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
-      
       document.getElementById('leftPanelFull').innerHTML = infoHTML;
       document.getElementById('remarksFull').innerHTML = `<div class="right-wrapper">
                                 <div class="upper-right">
@@ -445,7 +419,6 @@
                                 </div>
                                 <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
                               </div>`;
-      
       setTimeout(() => {
           window.cellPositions = computeCellPositions();
           updateBalloonPosition(element);
@@ -458,7 +431,6 @@
       }, 500);
     }
     window.updateInfo = updateInfo;
-
     function initializeCanvases() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -489,7 +461,6 @@
                   globalY >= pos.top && globalY <= pos.bottom
               );
               if(candidate) {
-                console.log("Selected element:", candidate.element);
                 selectedElement = candidate.element;
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
@@ -501,7 +472,6 @@
         });
       });
     }
-
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -514,7 +484,6 @@
       });
       window.subshellsInitialized = true;
     }
-
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -586,27 +555,16 @@
       });
       window.groupsInitialized = true;
     }
-
     function repositionGroupCanvasesExpanded() {
       let csg = document.getElementById('canvasS_groups');
-      if(csg) {
-        csg.style.top = "78px";
-        csg.style.left = "75px";
-      }
+      if(csg) { csg.style.top = "78px"; csg.style.left = "75px"; }
       let canvasD = document.getElementById('canvasD');
       let cdg = document.getElementById('canvasD_groups');
-      if(cdg && canvasD) {
-        cdg.style.top = "78px";
-        cdg.style.left = canvasD.style.left;
-      }
+      if(cdg && canvasD) { cdg.style.top = "78px"; cdg.style.left = canvasD.style.left; }
       let canvasP = document.getElementById('canvasP');
       let cpg = document.getElementById('canvasP_groups');
-      if(cpg && canvasP) {
-        cpg.style.top = "78px";
-        cpg.style.left = canvasP.style.left;
-      }
+      if(cpg && canvasP) { cpg.style.top = "78px"; cpg.style.left = canvasP.style.left; }
     }
-
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -673,7 +631,6 @@
         }
       });
     }
-
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -687,30 +644,20 @@
       let leftPos = defaultLeft - 5;
       let topPos = defaultTop;
       let balloonWidth = cs.offsetWidth;
-      if(defaultLeft > window.innerWidth / 2) {
-        leftPos = defaultLeft - (33 + balloonWidth);
-      }
-      if(leftPos + balloonWidth > window.innerWidth) {
-        leftPos = window.innerWidth - balloonWidth - 5;
-      }
+      if(defaultLeft > window.innerWidth / 2) { leftPos = defaultLeft - (33 + balloonWidth); }
+      if(leftPos + balloonWidth > window.innerWidth) { leftPos = window.innerWidth - balloonWidth - 5; }
       let infoCell = document.getElementById('leftPanelFull');
       if(infoCell) {
         let cellRect = infoCell.getBoundingClientRect();
-        if(defaultTop + cs.offsetHeight > cellRect.top) {
-          topPos = defaultTop - (cs.offsetHeight + 23);
-        }
+        if(defaultTop + cs.offsetHeight > cellRect.top) { topPos = defaultTop - (cs.offsetHeight + 23); }
       }
       cs.style.display = "block";
       cs.style.left = leftPos + "px";
       cs.style.top = topPos + "px";
     }
-
     function drawSubshells(data) {
       if (!subshellsP) return;
-      let balloonHeight = 40;
-      let fontSize = 14;
-      let leftMargin = 2;
-      let extraMargin = 5;
+      let balloonHeight = 40, fontSize = 14, leftMargin = 2, extraMargin = 5;
       subshellsP.clear();
       subshellsP.textSize(fontSize);
       subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
@@ -718,11 +665,9 @@
       let wCurrent = subshellsP.textWidth(data.current || "-");
       let wNext = subshellsP.textWidth(data.next || "-");
       let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 10;
-      let newWidth = Math.max(computedWidth, minWidth);
+      let minWidth = 10, newWidth = Math.max(computedWidth, minWidth);
       subshellsP.resizeCanvas(newWidth, balloonHeight);
       subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
-      
       let rowHeight = balloonHeight / 3;
       subshellsP.textStyle(p5.prototype.NORMAL);
       subshellsP.fill(data.prevColor || "black");
@@ -734,28 +679,20 @@
       subshellsP.fill(data.nextColor || "black");
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
-
-    /*================ Toggle Panels with Movement, Resizing and Fade ================*/
+    /*================ Toggle Panels: Expand/Collapse =================*/
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
-
       if(!document.body.classList.contains('collapsed')){
         // Collapse sequence:
-        // 1. Διαβάζουμε τη θέση και το μέγεθος του collapsedPanel (είναι ήδη ορισμένα).
-        // 2. Μετακινούμε το fullPanel από left:20px; top:443px; στην θέση left:858px; top:112px σε 0.8s.
-        // 3. Μετά από 0.4s αλλάζει το width του fullPanel σε calc(100vw - 920px).
-        // 4. Μετά το τέλος της μετάβασης το fullPanel εξαφανίζεται και εμφανίζεται το collapsedPanel.
         fullPanel.style.transition = "left 0.8s ease, top 0.8s ease";
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
-        
         setTimeout(() => {
           fullPanel.style.transition += ", width 0.4s ease";
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
-        
         setTimeout(() => {
           fullPanel.style.opacity = "0";
           fullPanel.style.display = "none";
@@ -773,24 +710,20 @@
         }, 800);
       } else {
         // Expand sequence:
-        // 1. Διαβάζουμε τη θέση και το μέγεθος του fullPanel στην αρχική του κατάσταση και το εμφανίζουμε εκεί.
-        // 2. Το fullPanel μετακινείται μετά από 0.4s στη θέση του collapsedPanel (το οποίο βρίσκεται αθέατο εκεί)
-        //    με τελικό μέγεθος collapsed (width: calc(100vw - 920px)) στην θέση left:858px; top:112px σε 0.8s.
-        // 3. Το fullPanel στη συνέχεια εξαφανίζεται. Η διαδικασία τελειώνει με delay 500ms.
+        // 1. Εμφανίζουμε το fullPanel στην αρχική του κατάσταση.
         fullPanel.style.display = "flex";
-        // Εμφανίζουμε το fullPanel στην αρχική του κατάσταση:
         fullPanel.style.left = "20px";
         fullPanel.style.top = "443px";
         fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
         fullPanel.style.opacity = "1";
-        
+        // 2. Μετά από 0.4s, μετακινείται στη θέση του collapsedPanel με τελικό μέγεθος collapsed.
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
-        
+        // 3. Το fullPanel εξαφανίζεται μετά από delay 500ms.
         setTimeout(() => {
           fullPanel.style.display = "none";
           collapsedPanel.style.display = "none";
@@ -798,29 +731,23 @@
           toggleBtn.textContent = "Σύμπτυξη";
           updateInfo(currentZ);
           window.redrawAll();
-        }, 900); // 500ms delay μετά την ολοκλήρωση της μετακίνησης
+        }, 900);
       }
-      // Με την ολοκλήρωση των μετακινήσεων, προσθέτουμε delay 700ms για να διαβαστούν οι θέσεις των κελιών και να ενημερωθεί το Balloon.
+      // Ανανέωση θέσεων με delay 700ms μετά το τέλος των μετακινήσεων.
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 700);
     });
-
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
-      if(currentZ < 118) { 
-        currentZ++; 
-      } else if(currentZ === 118) { 
-        currentZ = 119; 
-      } else if(currentZ === 119) { 
-        currentZ = 120; 
-      }
+      if(currentZ < 118) { currentZ++; }
+      else if(currentZ === 118) { currentZ = 119; }
+      else if(currentZ === 119) { currentZ = 120; }
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
     });
-
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
@@ -837,7 +764,6 @@
       setTimeout(repositionGroupCanvasesExpanded, 800);
       document.getElementById('toggleFBlock').disabled = false;
     });
-
     document.getElementById('reset').addEventListener('click', function() {
       currentZ = 3;
       window.groupsInitialized = false;
@@ -856,11 +782,9 @@
       initializeCanvases();
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); }, 300);
-      // Επανακρύβουμε το background canvas μέχρι το currentZ να γίνει πάλι 3.
       document.getElementById('canvasTableBackground').style.display = "none";
     });
-
-    // Εκχώρηση του redrawAll στο window ώστε να είναι προσβάσιμο από όλα τα scopes.
+    // Εξασφαλίζουμε ότι η redrawAll είναι μοναδική και προσβάσιμη.
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -883,9 +807,8 @@
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function(event) {
-              if(p.skipNextClick) { return; }
-              let globalX = event.clientX;
-              let globalY = event.clientY;
+              if(p.skipNextClick) return;
+              let globalX = event.clientX, globalY = event.clientY;
               let posData = window.cellPositions;
               let blockPositions = posData ? posData[block] : [];
               let candidate = blockPositions.find(pos =>
@@ -893,7 +816,6 @@
                   globalY >= pos.top && globalY <= pos.bottom
               );
               if(candidate) {
-                console.log("Selected element:", candidate.element);
                 selectedElement = candidate.element;
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
@@ -907,29 +829,21 @@
       if(!document.body.classList.contains('collapsed')) {
         let base = 159, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
+        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
         else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
         else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = base + "px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = (base + shiftP) + "px"; }
+        let cF = document.getElementById('canvasF'); if(cF) { cF.style.left = base + "px"; }
+        let cD = document.getElementById('canvasD'); if(cD) { cD.style.left = (base + shiftD) + "px"; }
+        let cP = document.getElementById('canvasP'); if(cP) { cP.style.left = (base + shiftP) + "px"; }
       } else {
-        let cS = document.getElementById('canvasS');
-        if(cS) { cS.style.left = "75px"; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = "179px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = "164px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = "584px"; }
+        let cS = document.getElementById('canvasS'); if(cS) { cS.style.left = "75px"; }
+        let cF = document.getElementById('canvasF'); if(cF) { cF.style.left = "179px"; }
+        let cD = document.getElementById('canvasD'); if(cD) { cD.style.left = "164px"; }
+        let cP = document.getElementById('canvasP'); if(cP) { cP.style.left = "584px"; }
       }
       if(currentZ >= 121) {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "block"; }
+        let cp = document.getElementById('canvasPeriods'); if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
         let csg = document.getElementById('canvasS_groups');
         let cdg = document.getElementById('canvasD_groups');
@@ -937,43 +851,30 @@
         if(csg) { csg.style.display = "block"; }
         if(cdg) { cdg.style.display = "block"; }
         if(cpg) { cpg.style.display = "block"; }
-        let csgLeft = document.getElementById('canvasS_groups');
-        if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "75px"; }
+        let csgLeft = document.getElementById('canvasS_groups'); if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "75px"; }
         let dLeft = document.getElementById('canvasD').style.left;
-        let cdgLeft = document.getElementById('canvasD_groups');
-        if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
+        let cdgLeft = document.getElementById('canvasD_groups'); if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
         let pLeft = document.getElementById('canvasP').style.left;
-        let cpgLeft = document.getElementById('canvasP_groups');
-        if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
+        let cpgLeft = document.getElementById('canvasP_groups'); if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
         initGroupsCanvases();
       } else {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "none"; }
-        let csg = document.getElementById('canvasS_groups');
-        if(csg) { csg.style.display = "none"; }
-        let cdg = document.getElementById('canvasD_groups');
-        if(cdg) { cdg.style.display = "none"; }
-        let cpg = document.getElementById('canvasP_groups');
-        if(cpg) { cpg.style.display = "none"; }
+        let cp = document.getElementById('canvasPeriods'); if(cp) { cp.style.display = "none"; }
+        let csg = document.getElementById('canvasS_groups'); if(csg) { csg.style.display = "none"; }
+        let cdg = document.getElementById('canvasD_groups'); if(cdg) { cdg.style.display = "none"; }
+        let cpg = document.getElementById('canvasP_groups'); if(cpg) { cpg.style.display = "none"; }
       }
       updateToggleButton();
       updateTableBackground();
     };
-
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
-      if(currentZ < 118) { 
-        currentZ++; 
-      } else if(currentZ === 118) { 
-        currentZ = 119; 
-      } else if(currentZ === 119) { 
-        currentZ = 120; 
-      }
+      if(currentZ < 118) { currentZ++; }
+      else if(currentZ === 118) { currentZ = 119; }
+      else if(currentZ === 119) { currentZ = 120; }
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
     });
-
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
@@ -990,7 +891,6 @@
       setTimeout(repositionGroupCanvasesExpanded, 800);
       document.getElementById('toggleFBlock').disabled = false;
     });
-
     document.getElementById('reset').addEventListener('click', function() {
       currentZ = 3;
       window.groupsInitialized = false;
@@ -998,30 +898,22 @@
       window.subshellsInitialized = false;
       selectedElement = null;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      let cp = document.getElementById('canvasPeriods');
-      if(cp) cp.style.display = "none";
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) csg.style.display = "none";
-      let cdg = document.getElementById('canvasD_groups');
-      if(cdg) cdg.style.display = "none";
-      let cpg = document.getElementById('canvasP_groups');
-      if(cpg) cpg.style.display = "none";
+      let cp = document.getElementById('canvasPeriods'); if(cp) cp.style.display = "none";
+      let csg = document.getElementById('canvasS_groups'); if(csg) csg.style.display = "none";
+      let cdg = document.getElementById('canvasD_groups'); if(cdg) cdg.style.display = "none";
+      let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
-
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
-    // window.redrawAll έχει εκχωρηθεί παραπάνω
     window.initPeriodsCanvas = initPeriodsCanvas;
     window.initGroupsCanvases = initGroupsCanvases;
-
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('load', updateTableBackground);
-
     loadElements();
   </script>
 </body>
