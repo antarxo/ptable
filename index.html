@@ -96,7 +96,7 @@
     }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
     #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
-    /* Balloon: μετάβαση από 1.5s σε 0.2s */
+    /* Balloon: μετάβαση επιταχυνόμενη από 1.5s σε 0.2s */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -191,7 +191,19 @@
       f: { cols: 14, rows: 7 }
     };
 
-    // Dummy συναρτήσεις για βοήθεια
+    // Ορισμός της getBlockColor ως global συνάρτηση
+    window.getBlockColor = function(b) {
+      if(b === "dummy") return "gray";
+      switch(b) {
+        case "s": return "#FF477E";
+        case "p": return "#26FF31";
+        case "d": return "#3F99FF";
+        case "f": return "#FFD051";
+        default: return "black";
+      }
+    };
+
+    // Dummy συναρτήσεις βοήθειας
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -269,7 +281,7 @@
       return { x: x, y: y };
     }
     
-    // isRevealed: ελέγχει αν ένα στοιχείο έχει "αποκαλυφθεί" βάσει του currentZ
+    // isRevealed: ελέγχει αν ένα στοιχείο έχει αποκαλυφθεί βάσει του currentZ
     function isRevealed(e) {
       if(currentZ < 118) return Number(e.number) >= 3 && Number(e.number) <= currentZ;
       else if(currentZ === 118) return Number(e.number) >= 3 && Number(e.number) <= 118;
@@ -278,7 +290,7 @@
       else return (Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2;
     }
     
-    // computeCellPositions: υπολογίζει και αποθηκεύει τις απόλυτες θέσεις (bounding boxes) των αποκαλυφθέντων κελιών
+    // computeCellPositions: υπολογίζει τις απόλυτες θέσεις (bounding boxes) των αποκαλυφθέντων κελιών
     function computeCellPositions() {
       const cellSize = 40;
       let positions = { s: [], p: [], d: [], f: [] };
@@ -302,7 +314,7 @@
       return positions;
     }
     
-    // updateTableBackground: υπολογίζει δυναμικά το μέγεθος του background βάσει των αποκαλυφθέντων κελιών.
+    // updateTableBackground: υπολογίζει δυναμικά το μέγεθος του background βάσει των αποκαλυφθέντων κελιών
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
@@ -418,7 +430,6 @@
             drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            // Χρήση προ-υπολογισμένων θέσεων για ακριβή ανίχνευση κλικ
             p.mouseClicked = function(event) {
               if(p.skipNextClick || ignoreCanvasClick) return;
               let globalX = event.clientX;
