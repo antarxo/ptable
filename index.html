@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
+  <!-- Εισαγωγή favicon για να αποφευχθεί το 404 error -->
+  <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -203,6 +205,20 @@
       }
     };
 
+    // Ορισμός της formatShells ως global συνάρτηση
+    window.formatShells = function(shellsStr) {
+      if(!shellsStr) return "";
+      let shellNumbers = shellsStr.split(",").map(s => s.trim());
+      const labels = ["K", "L", "M", "N", "O", "P", "Q"];
+      let result = [];
+      for(let i = 0; i < shellNumbers.length; i++){
+        let text = labels[i] + "(" + shellNumbers[i] + ")";
+        if(i === shellNumbers.length - 1) { text = "<strong>" + text + "</strong>"; }
+        result.push(text);
+      }
+      return result.join(", ");
+    };
+
     // Dummy συναρτήσεις βοήθειας
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
@@ -370,16 +386,16 @@
       else if(clickedZ === 120) { displayZ = 2; }
       
       let infoHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${displayZ}</span> ` +
-                     `<span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span> ` +
+                     `<span style="font-size:3em; font-weight:bold; color:${window.getBlockColor(element.block)};">${element.symbol}</span> ` +
                      `<span style="font-style: italic;">${element.name}</span>`;
       
       let prev = elements.find(e => Number(e.number) === (currentNum - 1)) || { subshells: "-", number:"", block:"dummy" };
       let next = elements.find(e => Number(e.number) === (currentNum + 1)) || { subshells: "-", number:"", block:"dummy" };
       
-      let prevStr = `<div style="color:${getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
-      let currentStr = `<div style="font-weight:bold; color:${getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
-      let nextStr = `<div style="color:${getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
-      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
+      let prevStr = `<div style="color:${window.getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
+      let currentStr = `<div style="font-weight:bold; color:${window.getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
+      let nextStr = `<div style="color:${window.getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
+      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${window.formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       
       document.getElementById('leftPanelFull').innerHTML = infoHTML;
@@ -561,12 +577,12 @@
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
-          p.fill(getBlockColor(e.block));
+          p.fill(window.getBlockColor(e.block));
           p.textSize(16);
           p.textAlign(p.CENTER, p.CENTER);
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
           p.noFill();
-          p.stroke(getBlockColor(e.block));
+          p.stroke(window.getBlockColor(e.block));
           p.strokeWeight(3);
           p.rect(pos.x, pos.y, cellSize, cellSize, 5);
           p.strokeWeight(1);
@@ -576,12 +592,12 @@
              ((currentZ === 120) && Number(e.number) === 2)) {
             if(Number(e.number) === 119) { p.fill("yellow"); }
             else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
-            else { p.fill(getBlockColor(e.block)); }
+            else { p.fill(window.getBlockColor(e.block)); }
             p.textSize(16);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
             p.noFill();
-            p.stroke(getBlockColor(e.block));
+            p.stroke(window.getBlockColor(e.block));
             p.strokeWeight(4);
             p.rect(pos.x, pos.y, cellSize, cellSize, 5);
             if(flashActive) {
