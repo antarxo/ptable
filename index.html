@@ -73,10 +73,10 @@
       transition: all 1.2s ease;
     }
     #infoPanelCollapsed > div { margin-bottom: 10px; }
-    /* Το Balloon: transition 1s */
+    /* Το Balloon: λιγότερο διαφανές (0.95) και αρχική θέση */
     #canvasSubshells {
       position: absolute;
-      background: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.95);
       border: 1px solid #333;
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική καιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -224,7 +224,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // initGroupsCanvases: Για κάθε καμβά ομάδων (s, d, p) εμφανίζονται ταυτόχρονα οι νέες (πάνω γραμμή) και οι παλιές (κάτω γραμμή)
+    // initGroupsCanvases: Εμφανίζει για κάθε καμβά ομάδων (s, d, p) ταυτόχρονα τις νέες (πάνω γραμμή) και τις παλιές (κάτω γραμμή)
     function initGroupsCanvases() {
       window.groupsInitialized = false;
       
@@ -238,9 +238,9 @@
           p.fill(0);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
-          // Νέα ονομασία στην πάνω γραμμή
+          // Νέα ονομασία (πάνω γραμμή)
           p.text((newStart + c).toString(), x + rectWidth/2, 10);
-          // Παλιά ονομασία στην κάτω γραμμή
+          // Παλιά ονομασία (κάτω γραμμή)
           p.text(oldLabels[c], x + rectWidth/2, 30);
         }
       }
@@ -565,9 +565,8 @@
       subshellsP.redraw();
     }
     
-    // Τροποποιημένη συνάρτηση updateBalloonPosition:
-    // Από την υπολογιζόμενη θέση, το balloon ανεβαίνει κατά (balloonHeight+44) px,
-    // δηλαδή, το κάτω του άκρο μετατοπίζεται στην πάνω γωνία του κελιού.
+    // updateBalloonPosition: Ανεβάζει το balloon από την υπολογιζόμενη θέση κατά (balloonHeight+44) px,
+    // και στη συνέχεια το κατεβάζει κατά 20px (δηλαδή, το κάτω του άκρο τοποθετείται 20px πιο κάτω από την πάνω γωνία του κελιού).
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -576,12 +575,10 @@
       if(!blockCanvas) return;
       let rect = blockCanvas.getBoundingClientRect();
       let pos = calculatePosition(element, element.block);
-      // defaultTop: η υπολογιζόμενη θέση δίπλα στο κελί
       let defaultTop = rect.top + pos.y + 40;
-      // Αντί για να συγκρίνουμε με κάτι άλλο, ανεβάζουμε το balloon από την defaultTop κατά (balloonHeight+44)
-      let newTop = defaultTop - (cs.offsetHeight + 44);
+      // Αν ανεβάσουμε το balloon κατά (balloonHeight+44), τότε κατεβάζουμε κατά 20px από αυτό:
+      let newTop = defaultTop - (cs.offsetHeight + 44) + 20;
       
-      // Οριζόντια προσαρμογή όπως πριν
       let defaultLeft = rect.left + pos.x + 40;
       let leftPos = defaultLeft - 5;
       let balloonWidth = cs.offsetWidth;
@@ -673,7 +670,6 @@
       
       updateToggleButton();
       
-      // Μετατόπιση τομέων d και p μετά το 20 (όπως στην αρχική λογική)
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -796,8 +792,6 @@
       } else if (currentZ === 119) {
         currentZ = 120; // Προστίθεται ο ήλιος (στοιχείο 2)
       } else if (currentZ === 120) {
-        // Μετά το στοιχείο 2, με πάτημα του "Επόμενο" εμφανίζονται
-        // οι περίοδοι και οι ομάδες (με ορθά ονόματα που ακολουθούν τη θέση των τομέων)
         document.getElementById('canvasPeriods').style.display = 'block';
         initPeriodsCanvas();
         currentZ = 121;
@@ -819,12 +813,11 @@
     });
     
     // Χειριστής του κουμπιού "Συμπλήρωσε":
-    // Εάν ο πίνακας είναι ήδη πλήρης (currentZ==123) το κουμπί δεν ενεργεί περαιτέρω.
+    // Εάν ο πίνακας είναι ήδη πλήρης (currentZ == 123) το κουμπί δεν ενεργεί περαιτέρω.
     document.getElementById('fillAll').addEventListener('click', function() {
-      if(currentZ === 123) return; // Αν είναι ήδη πλήρης, δεν κάνουμε κάτι.
+      if(currentZ === 123) return;
       currentZ = 123;
       document.getElementById('canvasPeriods').style.display = 'block';
-      // Εμφάνιση των group canvases
       let csg = document.getElementById('canvasS_groups');
       let cdg = document.getElementById('canvasD_groups');
       let cpg = document.getElementById('canvasP_groups');
@@ -834,7 +827,6 @@
       initGroupsCanvases();
       redrawAll();
       updateInfo(currentZ);
-      // Με μικρό delay τοποθετούμε τους καμβάδες των ομάδων ώστε να ακολουθούν τα κελιά των τομέων
       setTimeout(repositionGroupCanvasesExpanded, 100);
       document.getElementById('toggleFBlock').disabled = false;
     });
