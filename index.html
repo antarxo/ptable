@@ -676,6 +676,31 @@
       subshellsP.fill(data.nextColor || "black");
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     }
+    /*================ Functions for Sectors Transition =================*/
+    function updateSectorsCollapsed() {
+      let cS = document.getElementById('canvasS');
+      if(cS) { cS.style.transition = "left 1.2s ease"; cS.style.left = "75px"; }
+      let cF = document.getElementById('canvasF');
+      if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = "179px"; }
+      let cD = document.getElementById('canvasD');
+      if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = "164px"; }
+      let cP = document.getElementById('canvasP');
+      if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = "584px"; }
+    }
+    function updateSectorsExpanded() {
+      let base = 159, shiftP = 0, shiftD = 0;
+      if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+      else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
+      else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
+      else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+      else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
+      let cF = document.getElementById('canvasF');
+      if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = base + "px"; }
+      let cD = document.getElementById('canvasD');
+      if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = (base + shiftD) + "px"; }
+      let cP = document.getElementById('canvasP');
+      if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = (base + shiftP) + "px"; }
+    }
     /*================ Toggle Panels: Expand/Collapse =================*/
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
@@ -683,15 +708,16 @@
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
         // Collapse sequence:
-        // 1. Το fullPanel είναι ήδη στην αρχική του θέση (left:20px; top:443px; width:calc(100vw - var(--rightPanelWidth) - 105px)).
-        // 2. Μετά από 0.4s, ξεκινά η μετακίνηση του fullPanel σε 0.8s προς τη θέση του collapsedPanel (left:858px; top:112px; width:calc(100vw - 920px)).
+        // Ξεκινάμε αμέσως το shifting των τομέων (διάρκεια 1,2 δευτερόλεπτα)
+        updateSectorsCollapsed();
+        // Μετά από 0,4 δευτερόλεπτα ξεκινά η μετακίνηση του fullPanel (διάρκεια 0,8 δευτερόλεπτα) από την αρχική του θέση προς τη θέση του collapsedPanel.
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
-        // 3. Στο τέλος της μετακίνησης (σε 1.2s συνολικά), το fullPanel εξαφανίζεται αμέσως και εμφανίζεται το collapsed.
+        // Σε 1,2 δευτερόλεπτα ολοκληρώνεται η μετακίνηση του fullPanel και αμέσως γίνεται η ανταλλαγή: κρύβεται το fullPanel και εμφανίζεται το collapsedPanel.
         setTimeout(() => {
           fullPanel.style.display = "none";
           collapsedPanel.style.display = "flex";
@@ -702,21 +728,23 @@
         }, 1200);
       } else {
         // Expand sequence:
-        // 1. Το collapsed εξαφανίζεται και αμέσως το fullPanel εμφανίζεται στην θέση του collapsed (left:858px; top:112px; width:calc(100vw - 920px)).
+        // Ξεκινάμε αμέσως το shifting των τομέων προς τις expanded θέσεις (διάρκεια 1,2 δευτερόλεπτα)
+        updateSectorsExpanded();
+        // Κρύβουμε το collapsedPanel και εμφανίζεται αμέσως το fullPanel στην θέση του collapsed (δηλαδή, στην αρχική θέση collapsed).
         collapsedPanel.style.display = "none";
         fullPanel.style.display = "flex";
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
         fullPanel.style.width = "calc(100vw - 920px)";
         fullPanel.style.opacity = "1";
-        // 2. Μετά από 0.4s, ξεκινά η μετακίνηση του fullPanel σε 0.8s στην κανονική του θέση (left:20px; top:443px; width:calc(100vw - var(--rightPanelWidth) - 105px)).
+        // Μετά από 0,4 δευτερόλεπτα ξεκινά η μετακίνηση του fullPanel προς την expanded θέση του (διάρκεια 0,8 δευτερόλεπτα).
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "20px";
           fullPanel.style.top = "443px";
           fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
         }, 400);
-        // 3. Στο τέλος της μετακίνησης (σε 1.2s συνολικά), όλα βρίσκονται στη σωστή θέση.
+        // Σε 1,2 δευτερόλεπτα ολοκληρώνεται η μετακίνηση και αφαιρείται η κατάσταση collapsed.
         setTimeout(() => {
           document.body.classList.remove('collapsed');
           toggleBtn.textContent = "Σύμπτυξη";
@@ -724,7 +752,7 @@
           window.redrawAll();
         }, 1200);
       }
-      // Delay 500ms μετά το τέλος των μετακινήσεων (δηλαδή συνολικά 1.7s από την έναρξη) για ενημέρωση θέσεων και Balloon.
+      // Καθυστέρηση 500ms μετά το τέλος των μετακινήσεων (σύνολο 1,7 δευτερόλεπτα από την έναρξη) για ενημέρωση θέσεων και Balloon.
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
@@ -762,14 +790,10 @@
       window.subshellsInitialized = false;
       selectedElement = null;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      let cp = document.getElementById('canvasPeriods');
-      if(cp) cp.style.display = "none";
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) csg.style.display = "none";
-      let cdg = document.getElementById('canvasD_groups');
-      if(cdg) cdg.style.display = "none";
-      let cpg = document.getElementById('canvasP_groups');
-      if(cpg) cpg.style.display = "none";
+      let cp = document.getElementById('canvasPeriods'); if(cp) cp.style.display = "none";
+      let csg = document.getElementById('canvasS_groups'); if(csg) csg.style.display = "none";
+      let cdg = document.getElementById('canvasD_groups'); if(cdg) cdg.style.display = "none";
+      let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); }, 300);
@@ -857,47 +881,6 @@
       updateToggleButton();
       updateTableBackground();
     };
-    document.getElementById('nextElement').addEventListener('click', function() {
-      ignoreCanvasClick = true;
-      if(currentZ < 118) { currentZ++; }
-      else if(currentZ === 118) { currentZ = 119; }
-      else if(currentZ === 119) { currentZ = 120; }
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(() => { ignoreCanvasClick = false; }, 300);
-    });
-    document.getElementById('fillAll').addEventListener('click', function() {
-      if(currentZ === 123) return;
-      currentZ = 123;
-      document.getElementById('canvasPeriods').style.display = 'block';
-      let csg = document.getElementById('canvasS_groups');
-      let cdg = document.getElementById('canvasD_groups');
-      let cpg = document.getElementById('canvasP_groups');
-      csg.style.display = "block";
-      cdg.style.display = "block";
-      cpg.style.display = "block";
-      initGroupsCanvases();
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(repositionGroupCanvasesExpanded, 800);
-      document.getElementById('toggleFBlock').disabled = false;
-    });
-    document.getElementById('reset').addEventListener('click', function() {
-      currentZ = 3;
-      window.groupsInitialized = false;
-      window.periodsInitialized = false;
-      window.subshellsInitialized = false;
-      selectedElement = null;
-      document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      let cp = document.getElementById('canvasPeriods'); if(cp) cp.style.display = "none";
-      let csg = document.getElementById('canvasS_groups'); if(csg) csg.style.display = "none";
-      let cdg = document.getElementById('canvasD_groups'); if(cdg) cdg.style.display = "none";
-      let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
-      initializeCanvases();
-      initSubshellsCanvas();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      document.getElementById('canvasTableBackground').style.display = "none";
-    });
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
