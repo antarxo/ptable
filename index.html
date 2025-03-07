@@ -136,7 +136,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική ριοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -738,29 +738,10 @@
           };
         });
       });
-      if(!document.body.classList.contains('collapsed')) {
-        let base = 134, shiftP = 0, shiftD = 0;
-        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
-        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        let cF = document.getElementById('canvasF');
-        if(cF) { cF.style.left = base + "px"; }
-        let cD = document.getElementById('canvasD');
-        if(cD) { cD.style.left = (base + shiftD) + "px"; }
-        let cP = document.getElementById('canvasP');
-        if(cP) { cP.style.left = (base + shiftP) + "px"; }
-      }
-      if(!document.body.classList.contains('collapsed')) {
-        // Αναδιατάσσουμε τους καμβάδες ομάδων στο αναπτυγμένο περιβάλλον:
-        repositionGroupCanvasesExpanded();
-      }
-      if(currentZ >= 121) {
+      if(currentZ >= 121 && currentZ <= 122) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
-        // Για τα καμβάδες ομάδων:
         if(currentZ === 121) {
           // Εμφάνιση _μόνο_ της παλιάς ονομασίας
           showOldGroups = true;
@@ -774,8 +755,8 @@
           initGroupsCanvases();
           repositionGroupCanvasesExpanded();
         } else if (currentZ === 122) {
-          // Εμφάνιση _μόνο_ της νέας ονομασίας
-          showOldGroups = false;
+          // Εμφάνιση και της παλιάς και της νέας ονομασίας (και οι δύο σειρές)
+          showOldGroups = true;
           showNewGroups = true;
           let csg = document.getElementById('canvasS_groups');
           let cdg = document.getElementById('canvasD_groups');
@@ -786,6 +767,10 @@
           initGroupsCanvases();
           repositionGroupCanvasesExpanded();
         }
+      } else if (currentZ >= 123) {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "block"; }
+        // Στο τελικό στάδιο δεν επανασχεδιάζονται οι καμβάδες ομάδων.
       } else {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "none"; }
@@ -915,8 +900,8 @@
         showNewGroups = false;
         currentZ = 122;
       } else if (currentZ === 122) {
-        // Εμφάνιση _μόνο_ της νέας ονομασίας (αντικαθιστώντας την παλιά)
-        showOldGroups = false;
+        // Εμφάνιση και της παλιάς και της νέας ονομασίας (και οι δύο σειρές)
+        showOldGroups = true;
         showNewGroups = true;
         currentZ = 123;
         document.getElementById('toggleFBlock').disabled = false;
@@ -933,10 +918,10 @@
       }, 100);
     });
     
-    // Στην "Συμπλήρωσε", θέλουμε το τελικό στάδιο (μόνο η νέα ονομασία)
+    // Στην "Συμπλήρωσε", θέλουμε το τελικό στάδιο με εμφάνιση και των δύο σειρών ονομασίας
     document.getElementById('fillAll').addEventListener('click', function() {
       currentZ = 123;
-      showOldGroups = false;
+      showOldGroups = true;
       showNewGroups = true;
       document.getElementById('canvasPeriods').style.display = 'block';
       document.getElementById('toggleFBlock').disabled = false;
