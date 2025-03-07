@@ -32,7 +32,7 @@
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: -10;
-      display: none; /* Αρχικά κρυφό */
+      display: none;
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
     /* Καμβάδες */
@@ -78,7 +78,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Ο collapsed panel έχει υψηλότερο z-index */
+    /* Ο collapsed panel εμφανίζεται με υψηλότερο z-index */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -717,7 +717,7 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        // Ακολουθία σύμπτυξης:
+        // Ακολουθία σύμπτυξης: μετακίνηση full panel και ενημέρωση του background
         updateSectorsCollapsed();
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
@@ -726,17 +726,20 @@
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
         setTimeout(() => {
-          // Εμφάνιση collapsed panel με υψηλότερο z-index και μετά από μικρό delay εξαφάνιση του full panel
-          collapsedPanel.style.display = "flex";
-          collapsedPanel.style.zIndex = 50;
-          document.body.classList.add('collapsed');
-          toggleBtn.textContent = "Ανάπτυξη";
-          updateInfo(currentZ);
-          window.redrawAll();
-          setTimeout(() => { fullPanel.style.display = "none"; }, 300);
+          // Ο full panel έχει φτάσει στη θέση του και ενημερώνουμε το background
+          updateTableBackground();
+          // Με μικρό delay εμφανίζεται ο collapsed panel πάνω από τον full panel
+          setTimeout(() => {
+            collapsedPanel.style.display = "flex";
+            collapsedPanel.style.zIndex = 50;
+            document.body.classList.add('collapsed');
+            toggleBtn.textContent = "Ανάπτυξη";
+            updateInfo(currentZ);
+            window.redrawAll();
+          }, 300);
         }, 1200);
       } else {
-        // Ακολουθία ανάπτυξης:
+        // Ακολουθία επέκτασης: ο collapsed panel κρύβεται και ο full panel επανέρχεται
         fullPanel.style.display = "flex";
         fullPanel.style.zIndex = 40;
         collapsedPanel.style.display = "none";
