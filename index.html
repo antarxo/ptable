@@ -141,7 +141,7 @@
       display: none;
       z-index: 5;
     }
-    /* Οι καμβάδες για τους τομείς d και p έχουν ύψος 40px */ 
+    /* Οι καμβάδες για τους τομείς d και p έχουν ύψος 40px */
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
     /* Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px */
@@ -251,7 +251,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα περιεχόμενα των panels
+    // updateInfo: ενημερώνει τα περιεχόμενα των panels και θέτει το επιλεγμένο στοιχείο
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -261,7 +261,7 @@
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
-      // Διατήρηση του επιλεγμένου στοιχείου ως το τρέχον για το έντονο περίγραμμα
+      // Θέτουμε το τρέχον στοιχείο ως επιλεγμένο
       selectedElement = element;
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
@@ -478,14 +478,15 @@
       } else if(currentZ === 120) {
         filter = e => e.block === block && Number(e.number) === 2;
       } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                              Number(e.number) === 1 || Number(e.number) === 2);
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Αν το στοιχείο είναι το επιλεγμένο, σχεδιάζουμε το περίγραμμα με strokeWeight 6
+        // Αν το στοιχείο είναι επιλεγμένο, σχεδιάζουμε το περίγραμμα με strokeWeight 3
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -493,7 +494,7 @@
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
           p.noFill();
           p.stroke(getBlockColor(e.block));
-          p.strokeWeight(6);
+          p.strokeWeight(3);
           p.rect(pos.x, pos.y, 40, 40, 5);
           p.strokeWeight(1);
         } else {
@@ -533,8 +534,8 @@
     }
     
     // Τροποποιημένη updateBalloonPosition:
-    // Αρχικά υπολογίζεται η προκαθορισμένη θέση (defaultTop). Αν το defaultBottom (defaultTop + ύψος του Balloon)
-    // υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull, τότε ανεβαίνει το Balloon κατά (ύψος του Balloon + 32px)
+    // Υπολογίζεται η προκαθορισμένη θέση (defaultTop). Αν το defaultBottom (defaultTop + cs.offsetHeight)
+    // υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull, τότε ανεβαίνει το Balloon κατά (cs.offsetHeight + 28)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -557,10 +558,10 @@
       let infoCell = document.getElementById('leftPanelFull');
       if(infoCell) {
         let cellRect = infoCell.getBoundingClientRect();
-        // Αν το defaultBottom (defaultTop + ύψος του Balloon) υπερβαίνει το πάνω όριο του leftPanelFull,
-        // τότε ανεβαίνει το Balloon κατά (ύψος του Balloon + 32px) επιπρόσθετα
+        // Αν το defaultBottom (defaultTop + cs.offsetHeight) υπερβαίνει το πάνω όριο του leftPanelFull,
+        // τότε ανεβαίνει το Balloon κατά (cs.offsetHeight + 28px) επιπρόσθετα
         if(defaultTop + cs.offsetHeight > cellRect.top) {
-          topPos = defaultTop - (cs.offsetHeight + 32);
+          topPos = defaultTop - (cs.offsetHeight + 28);
         }
       }
       cs.style.display = "block";
