@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστικκού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -567,7 +567,7 @@
     }
     
     // Τροποποιημένη συνάρτηση updateBalloonPosition:
-    // Εάν το balloon επικαλύπτει τον πίνακα πληροφοριών, μετακινείται ψηλότερα κατά το ύψος του balloon + 30px.
+    // Εάν το balloon επικαλύπτει τον πίνακα πληροφοριών, μετακινείται ψηλότερα κατά (ύψος του balloon + 40px)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -595,10 +595,10 @@
       }
       if(infoPanel) {
         let panelRect = infoPanel.getBoundingClientRect();
-        // Εάν το κάτω μέρος του balloon (topPos + balloonHeight) είναι κάτω από την κορυφή του infoPanel,
-        // μετακινούμε το balloon ψηλότερα κατά balloonHeight + 30px.
+        // Αν το κάτω μέρος του balloon (topPos + balloonHeight) βρίσκεται κάτω από την κορυφή του infoPanel,
+        // μετακινούμε το balloon ψηλότερα κατά (balloonHeight + 40px).
         if(topPos + balloonHeight > panelRect.top) {
-          topPos = panelRect.top - (balloonHeight + 30);
+          topPos = panelRect.top - (balloonHeight + 40);
         }
       }
       cs.style.display = "block";
@@ -663,8 +663,7 @@
           };
         });
       });
-      // Όταν currentZ είναι 121, δηλαδή μετά το στοιχείο 2 και με πάτημα "Επόμενο", εμφανίζονται
-      // οι περίοδοι και οι ομάδες (με παλιές ονομασίες που τώρα δείχνουν και τις νέες ταυτόχρονα)
+      // Όταν currentZ είναι 121, δηλαδή μετά το στοιχείο 2, εμφανίζονται οι περίοδοι και οι ομάδες
       if(currentZ === 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
@@ -829,10 +828,20 @@
       }, 100);
     });
     
-    // Χειριστής του κουμπιού "Συμπλήρωσε" (στο τέλος εμφανίζονται και οι δύο σειρές)
+    // Χειριστής του κουμπιού "Συμπλήρωσε"
+    // Ο πίνακας παίρνει την τελική μορφή (όλες οι ομάδες, περίοδοι κ.λπ.)
     document.getElementById('fillAll').addEventListener('click', function() {
       currentZ = 123;
       document.getElementById('canvasPeriods').style.display = 'block';
+      // Εμφάνιση και των group canvases
+      let csg = document.getElementById('canvasS_groups');
+      let cdg = document.getElementById('canvasD_groups');
+      let cpg = document.getElementById('canvasP_groups');
+      csg.style.display = "block";
+      cdg.style.display = "block";
+      cpg.style.display = "block";
+      initGroupsCanvases();
+      repositionGroupCanvasesExpanded();
       document.getElementById('toggleFBlock').disabled = false;
       redrawAll();
       updateInfo(currentZ);
