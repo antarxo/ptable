@@ -48,7 +48,6 @@
     #canvasD_groups, #canvasP_groups, #canvasS_groups {
       height: 40px;
       width: auto;
-      /* Τα εμφανίζουμε με το JavaScript όταν απαιτείται */
     }
     .canvas {
       position: absolute;
@@ -181,6 +180,24 @@
   </div>
   
   <script>
+    /* --- Βοηθητικές Συναρτήσεις --- */
+    // Ορισμός της formatShells για μορφοποίηση των στοιχείων των "shells"
+    function formatShells(shellsStr) {
+      if (!shellsStr) return "";
+      let shellNumbers = shellsStr.split(",").map(s => s.trim());
+      const labels = ["K", "L", "M", "N", "O", "P", "Q"];
+      let result = [];
+      for (let i = 0; i < shellNumbers.length; i++) {
+        let text = labels[i] + "(" + shellNumbers[i] + ")";
+        // Τονίστε την τελευταία στρώση
+        if (i === shellNumbers.length - 1) {
+          text = "<strong>" + text + "</strong>";
+        }
+        result.push(text);
+      }
+      return result.join(", ");
+    }
+    
     /* --- Global Variables & Config --- */
     let elements = [];
     let currentZ = 0;
@@ -211,7 +228,7 @@
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
-    // Παράδειγμα βασικής συνάρτησης σχεδίασης, που σχεδιάζει ένα πλέγμα
+    // Παράδειγμα συνάρτησης σχεδίασης στοιχείων (grid)
     window.drawElements = function(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -278,7 +295,7 @@
         }
       });
     };
-    // Συνάρτηση για το shifting των καμβάδων (παραμένει όπως πριν)
+    // Συνάρτηση για τη μετατόπιση των καμβάδων (παραμένει όπως πριν)
     window.updateSectors = function(state) {
       let base = 159, shiftP = 0, shiftD = 0;
       if(state === "collapsed") {
@@ -616,7 +633,7 @@
     /* --- Toggle Panels --- */
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
-      // Απλώς αλλάζουμε το state του body: όταν υπάρχει το class "collapsed" τα CSS για τα panels αλλάζουν
+      // Αλλαγή του state μέσω του class "collapsed" στο body
       if(!document.body.classList.contains('collapsed')){
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
@@ -626,7 +643,6 @@
       }
       updateInfo(currentZ);
       window.redrawAll();
-      // Ενημέρωση θέσεων του balloon μετά τη μετάβαση
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
@@ -813,7 +829,6 @@
     window.initPeriodsCanvas = initPeriodsCanvas;
     window.initGroupsCanvases = initGroupsCanvases;
     window.addEventListener('load', function() {
-      // Ενημέρωση της μεταβλητής --rightPanelWidth
       let rp = document.getElementById('buttonPanel');
       if(rp) {
         let width = rp.offsetWidth;
