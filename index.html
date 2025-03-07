@@ -32,7 +32,7 @@
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: -10;
-      display: none; /* Κρυφό μέχρι το currentZ να γίνει 3 */
+      display: none; /* Αρχικά κρυφό */
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
     /* Καμβάδες */
@@ -190,6 +190,8 @@
   <script>
     /*================ Global Variables and Helpers =================*/
     let elements = [];
+    // Αρχική τιμή currentZ = 0 ώστε να μην εμφανίζεται το στοιχείο, αλλά να σχεδιάζεται ο placeholder
+    let currentZ = 0;
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -265,6 +267,26 @@
         }, 100);
       }
     }
+    // Νέα συνάρτηση για σχεδίαση placeholder του background canvas (62x62) στην θέση του κελιού με Ζ=3
+    function drawPlaceholderBackground() {
+      if(elements.length === 0) return;
+      let element = elements.find(e => Number(e.number) === 3);
+      if(!element) return;
+      let canvasEl = document.getElementById("canvas" + element.block.toUpperCase());
+      if(!canvasEl) return;
+      let rect = canvasEl.getBoundingClientRect();
+      let pos = calculatePosition(element, element.block);
+      let left = rect.left + pos.x;
+      let top = rect.top + pos.y;
+      let bg = document.getElementById("canvasTableBackground");
+      if(bg) {
+         bg.style.left = left + "px";
+         bg.style.top = top + "px";
+         bg.style.width = "62px";
+         bg.style.height = "62px";
+         bg.style.display = "block";
+      }
+    }
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -288,7 +310,6 @@
       window.periodsInitialized = true;
     }
     let ignoreCanvasClick = false;
-    let currentZ = 3;
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null;
@@ -365,13 +386,11 @@
         .then(response => response.json())
         .then(data => {
           elements = sortElements(data);
+          // Σχεδιάζουμε τον placeholder background όταν currentZ = 0
+          if(currentZ === 0) drawPlaceholderBackground();
           initializeCanvases();
           initSubshellsCanvas();
-          setTimeout(() => {
-            updateInfo(currentZ);
-            window.cellPositions = computeCellPositions();
-            updateBackgroundCanvas();
-          }, 300);
+          // Εδώ δεν καλείται updateInfo γιατί currentZ = 0 (δεν υπάρχει στοιχείο για εμφάνιση)
           updateToggleButton();
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
@@ -708,16 +727,13 @@
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
         // Collapse sequence:
-        // Ξεκινάμε αμέσως το shifting των τομέων (διάρκεια 1,2 δευτερόλεπτα)
         updateSectorsCollapsed();
-        // Μετά από 0,4 δευτερόλεπτα ξεκινά η μετακίνηση του fullPanel (διάρκεια 0,8 δευτερόλεπτα) προς τη θέση του collapsedPanel.
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
-        // Σε 1,2 δευτερόλεπτα ολοκληρώνεται η μετακίνηση και γίνεται η ανταλλαγή: κρύβεται το fullPanel και εμφανίζεται το collapsedPanel.
         setTimeout(() => {
           fullPanel.style.display = "none";
           collapsedPanel.style.display = "flex";
@@ -728,23 +744,19 @@
         }, 1200);
       } else {
         // Expand sequence:
-        // Ξεκινάμε αμέσως το shifting των τομέων προς τις expanded θέσεις (διάρκεια 1,2 δευτερόλεπτα)
         updateSectorsExpanded();
-        // Κρύβουμε το collapsedPanel και εμφανίζεται αμέσως το fullPanel στην θέση του collapsed.
         collapsedPanel.style.display = "none";
         fullPanel.style.display = "flex";
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
         fullPanel.style.width = "calc(100vw - 920px)";
         fullPanel.style.opacity = "1";
-        // Μετά από 0,4 δευτερόλεπτα ξεκινά η μετακίνηση του fullPanel προς την expanded θέση του (διάρκεια 0,8 δευτερόλεπτα).
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "20px";
           fullPanel.style.top = "443px";
           fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
         }, 400);
-        // Σε 1,2 δευτερόλεπτα ολοκληρώνεται η μετακίνηση και αφαιρείται η κατάσταση collapsed.
         setTimeout(() => {
           document.body.classList.remove('collapsed');
           toggleBtn.textContent = "Σύμπτυξη";
@@ -752,16 +764,17 @@
           window.redrawAll();
         }, 1200);
       }
-      // Καθυστέρηση 500ms μετά το τέλος των μετακινήσεων (σύνολο 1,7 δευτερόλεπτων από την έναρξη) για ενημέρωση θέσεων και Balloon.
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1700);
     });
-    // Event listeners (ορίζονται μόνο μία φορά)
+    // Event listeners ορίζονται μία φορά
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
-      if(currentZ < 118) { currentZ++; }
+      // Όταν πατηθεί "Επόμενο", αλλάζουμε currentZ από 0 σε 3 (και το updateInfo θα εμφανίσει το κελί του στοιχείου με Ζ=3)
+      if(currentZ < 3) { currentZ = 3; }
+      else if(currentZ < 118) { currentZ++; }
       else if(currentZ === 118) { currentZ = 119; }
       else if(currentZ === 119) { currentZ = 120; }
       window.redrawAll();
@@ -785,7 +798,7 @@
       document.getElementById('toggleFBlock').disabled = false;
     });
     document.getElementById('reset').addEventListener('click', function() {
-      currentZ = 3;
+      currentZ = 0;
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
@@ -797,7 +810,8 @@
       let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
+      // Με το reset επαναφέρουμε και τον placeholder background για Ζ=3
+      setTimeout(() => { updateInfo(currentZ); drawPlaceholderBackground(); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
     // Μοναδική συνάρτηση redrawAll στο window.
