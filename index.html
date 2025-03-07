@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική  του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -187,6 +187,8 @@
     /* --- Global Variables & Config --- */
     let elements = [];
     let currentZ = 0;
+    // Flag για το αν έχει πατηθεί η fillAll για πρώτη φορά
+    let fillAllFirstTime = true;
     
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
@@ -387,7 +389,7 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     };
 
-    /* --- Βοηθητικές συναρτήσεις και φόρτωση --- */
+    /* --- Βοηθητικές συναρτήσεις & φόρτωση --- */
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -742,113 +744,7 @@
       window.groupsInitialized = true;
     }
 
-    /* --- runInvisibleSequence --- */
-    function runInvisibleSequence() {
-      // Απενεργοποίηση CSS μεταβάσεων για τα panels ώστε να μην φαίνονται οι κινήσεις
-      let panels = [document.getElementById('infoPanelFull'), document.getElementById('infoPanelCollapsed')];
-      panels.forEach(function(panel) {
-        if(panel) { panel.style.transition = 'none'; }
-      });
-      
-      // Διάφορες καθυστερήσεις για να εξασφαλίσουμε ότι κάθε βήμα ολοκληρώνεται πριν το επόμενο.
-      // 1. Collapse (αν δεν είναι ήδη collapsed)
-      if(!document.body.classList.contains('collapsed')) {
-        document.getElementById('toggleFBlock').click();
-      }
-      
-      setTimeout(function() {
-        // 2. Expand (αν έχει συμπτυχθεί)
-        if(document.body.classList.contains('collapsed')) {
-          document.getElementById('toggleFBlock').click();
-        }
-        
-        setTimeout(function() {
-          // 3. Reset
-          document.getElementById('reset').click();
-          
-          // Επαναφορά των CSS μεταβάσεων μετά από 100 ms.
-          setTimeout(function(){
-            panels.forEach(function(panel) {
-              if(panel) { panel.style.transition = ''; }
-            });
-          }, 100);
-        }, 800);
-      }, 1000);
-    }
-
-    /* --- Event listeners --- */
-    document.getElementById('toggleFBlock').addEventListener('click', function() {
-      let toggleBtn = document.getElementById('toggleFBlock');
-      let fullPanel = document.getElementById('infoPanelFull');
-      let collapsedPanel = document.getElementById('infoPanelCollapsed');
-      if(!document.body.classList.contains('collapsed')){
-        window.updateSectors("collapsed");
-        setTimeout(() => {
-          fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
-          fullPanel.style.left = "858px";
-          fullPanel.style.top = "112px";
-          fullPanel.style.width = "calc(100vw - 920px)";
-        }, 600);
-        setTimeout(() => {
-          updateTableBackground();
-          setTimeout(() => {
-            collapsedPanel.style.left = fullPanel.style.left;
-            collapsedPanel.style.top = fullPanel.style.top;
-            collapsedPanel.style.display = "flex";
-            collapsedPanel.style.zIndex = 100;
-            document.body.classList.add('collapsed');
-            toggleBtn.textContent = "Ανάπτυξη";
-            updateInfo(currentZ);
-            window.redrawAll();
-          }, 300);
-        }, 1200);
-      } else {
-        collapsedPanel.style.transition = "opacity 0.3s ease";
-        collapsedPanel.style.opacity = "0";
-        setTimeout(() => {
-          collapsedPanel.style.display = "none";
-          fullPanel.style.display = "flex";
-          fullPanel.style.zIndex = "40";
-          fullPanel.style.opacity = "0";
-          window.updateSectors("expanded");
-          updateTableBackground();
-          fullPanel.style.left = "858px";
-          fullPanel.style.top = "112px";
-          fullPanel.style.width = "calc(100vw - 920px)";
-          setTimeout(() => {
-            fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
-            fullPanel.style.left = "20px";
-            fullPanel.style.top = "443px";
-            fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-            fullPanel.style.opacity = "1";
-          }, 50);
-          setTimeout(() => {
-            document.body.classList.remove('collapsed');
-            toggleBtn.textContent = "Σύμπτυξη";
-            updateInfo(currentZ);
-            window.redrawAll();
-          }, 900);
-        }, 300);
-      }
-      setTimeout(function() {
-         window.cellPositions = computeCellPositions();
-         if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-      }, 1700);
-    });
-
-    document.getElementById('nextElement').addEventListener('click', function() {
-      ignoreCanvasClick = true;
-      if(currentZ < 3) { currentZ = 3; }
-      else if(currentZ < 118) { currentZ++; }
-      else if(currentZ === 118) { currentZ = 119; }
-      else if(currentZ === 119) { currentZ = 120; }
-      else if(currentZ === 120) { currentZ = 121; }
-      else if(currentZ === 121) { currentZ = 122; }
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(() => { ignoreCanvasClick = false; }, 300);
-    });
-
+    /* --- Επεξεργασία του event handler για το "Συμπλήρωσε" --- */
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
@@ -859,11 +755,24 @@
       csg.style.display = "block";
       cdg.style.display = "block";
       cpg.style.display = "block";
-      initGroupsCanvases();
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
-      document.getElementById('toggleFBlock').disabled = false;
+      
+      if(fillAllFirstTime) {
+        // Πρώτη φορά: ειδική διαδικασία
+        initGroupsCanvases(); // Αρχικοποίηση των καμβάδων των ομάδων με τις προκαθορισμένες διαστάσεις και ετικέτες
+        window.redrawAll();    // Επανασχεδιασμός του περιβάλλοντος σε Expanded mode (οι θέσεις των ομάδων, το left κλπ, υπολογίζονται εδώ)
+        setTimeout(() => { updateInfo(currentZ); }, 300);
+        setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
+        // Ενεργοποίηση του κουμπιού "Σύμπτυξη"
+        document.getElementById('toggleFBlock').disabled = false;
+        fillAllFirstTime = false;
+      } else {
+        // Μετέπειτα, ακολουθεί η κανονική διαδικασία (που μπορεί να είναι ίδια με πριν)
+        initGroupsCanvases();
+        window.redrawAll();
+        setTimeout(() => { updateInfo(currentZ); }, 300);
+        setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
+        document.getElementById('toggleFBlock').disabled = false;
+      }
     });
 
     document.getElementById('reset').addEventListener('click', function() {
@@ -881,6 +790,21 @@
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); drawPlaceholderBackground(); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
+      // Επαναφορά του flag αν χρειάζεται
+      fillAllFirstTime = true;
+    });
+
+    document.getElementById('nextElement').addEventListener('click', function() {
+      ignoreCanvasClick = true;
+      if(currentZ < 3) { currentZ = 3; }
+      else if(currentZ < 118) { currentZ++; }
+      else if(currentZ === 118) { currentZ = 119; }
+      else if(currentZ === 119) { currentZ = 120; }
+      else if(currentZ === 120) { currentZ = 121; }
+      else if(currentZ === 121) { currentZ = 122; }
+      window.redrawAll();
+      setTimeout(() => { updateInfo(currentZ); }, 300);
+      setTimeout(() => { ignoreCanvasClick = false; }, 300);
     });
 
     window.redrawAll = function redrawAll() {
@@ -972,11 +896,6 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('load', updateTableBackground);
     loadElements();
-
-    // Δοκιμαστική κλήση της αόρατης ακολουθίας (collapse → expand → reset) μετά από 3 δευτερόλεπτα
-    window.addEventListener('load', function() {
-      setTimeout(runInvisibleSequence, 3000);
-    });
   </script>
 </body>
 </html>
