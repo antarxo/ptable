@@ -25,17 +25,17 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Background για τον Περιοδικό Πίνακα */
+    /* Background */
     #canvasTableBackground {
       position: absolute;
       background: white;
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: -10;
-      display: none;
+      display: none; /* Κρυφό μέχρι το currentZ να γίνει 3 */
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
-    /* Καμβάδες Περιόδων και Ομάδων */
+    /* Καμβάδες */
     #canvasPeriods {
       position: absolute;
       left: 31px;
@@ -49,14 +49,13 @@
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
     #canvasS_groups { width: 84px; height: 40px; }
-    /* Καμβάδες Τομέων */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Πίνακες Πληροφοριών */
+    /* Panels */
     #infoPanelFull {
       display: flex;
       flex-direction: row;
@@ -79,7 +78,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Στην collapsed κατάσταση το infoPanelFull μετακινείται */
+    /* Όταν είναι collapsed */
     body.collapsed #infoPanelFull {
       left: 858px;
       top: 112px;
@@ -117,7 +116,7 @@
       display: none;
       transition: all 0.2s ease;
     }
-    /* Κουμπιά */
+    /* Buttons */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -143,7 +142,7 @@
     .p-block { background: #26FF31 !important; }
     .d-block { background: #3F99FF !important; }
     .f-block { background: #FFD051 !important; }
-    /* Θέσεις καμβάδων (full) */
+    /* Θέσεις καμβάδων στο full mode */
     .full #canvasS { top: 120px; left: 75px; z-index: 1; }
     .full #canvasF { top: 120px; left: 159px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 159px; width: 420px; z-index: 3; }
@@ -156,13 +155,12 @@
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
-  <!-- Canvases Περιοδικών/Ομάδων -->
+  <!-- Canvases -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Canvases Τομέων -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -181,7 +179,7 @@
   <!-- Balloon -->
   <div id="canvasSubshells" class="canvas"></div>
   
-  <!-- Κουμπιά -->
+  <!-- Buttons -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -190,7 +188,7 @@
   </div>
   
   <script>
-    /*================ Global Variables and Helpers ================*/
+    /*================ Global Variables and Helpers =================*/
     let elements = [];
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
@@ -684,55 +682,49 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        // Collapse sequence (παραμένει όπως προηγουμένως)
-        fullPanel.style.transition = "left 0.8s ease, top 0.8s ease";
-        fullPanel.style.left = "858px";
-        fullPanel.style.top = "112px";
-        setTimeout(() => {
-          fullPanel.style.transition += ", width 0.4s ease";
-          fullPanel.style.width = "calc(100vw - 920px)";
-        }, 400);
-        setTimeout(() => {
-          fullPanel.style.opacity = "0";
-          fullPanel.style.display = "none";
-          collapsedPanel.style.display = "flex";
-          collapsedPanel.style.left = "858px";
-          collapsedPanel.style.top = "112px";
-          collapsedPanel.style.width = "calc(100vw - 920px)";
-          collapsedPanel.style.opacity = "0";
-          collapsedPanel.style.transition = "opacity 0.4s ease";
-          setTimeout(() => { collapsedPanel.style.opacity = "1"; }, 50);
-          document.body.classList.add('collapsed');
-          toggleBtn.textContent = "Ανάπτυξη";
-          updateInfo(currentZ);
-          window.redrawAll();
-        }, 800);
-      } else {
-        // Expand sequence:
-        // 1. Εμφάνιση του fullPanel στην αρχική του κατάσταση.
-        fullPanel.style.display = "flex";
-        fullPanel.style.left = "20px";
-        fullPanel.style.top = "443px";
-        fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-        fullPanel.style.opacity = "1";
-        // 2. Μετά από 0.4s, ξεκινά η μετακίνηση του fullPanel στη θέση του collapsedPanel με τελικό collapsed μέγεθος, σε 0.8s.
+        // Collapse sequence:
+        // 1. Το fullPanel είναι ήδη στην αρχική του θέση (left:20px; top:443px; width:calc(100vw - var(--rightPanelWidth) - 105px)).
+        // 2. Μετά από 0.4s, ξεκινά η μετακίνηση του fullPanel σε 0.8s προς τη θέση του collapsedPanel (left:858px; top:112px; width:calc(100vw - 920px)).
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
-        // 3. Αμέσως μετά την ολοκλήρωση της μετακίνησης (δηλαδή μετά 1.2s συνολικά), το fullPanel εξαφανίζεται.
+        // 3. Στο τέλος της μετακίνησης (σε 1.2s συνολικά), το fullPanel εξαφανίζεται αμέσως και εμφανίζεται το collapsed.
         setTimeout(() => {
           fullPanel.style.display = "none";
-          collapsedPanel.style.display = "none";
+          collapsedPanel.style.display = "flex";
+          document.body.classList.add('collapsed');
+          toggleBtn.textContent = "Ανάπτυξη";
+          updateInfo(currentZ);
+          window.redrawAll();
+        }, 1200);
+      } else {
+        // Expand sequence:
+        // 1. Το collapsed εξαφανίζεται και αμέσως το fullPanel εμφανίζεται στην θέση του collapsed (left:858px; top:112px; width:calc(100vw - 920px)).
+        collapsedPanel.style.display = "none";
+        fullPanel.style.display = "flex";
+        fullPanel.style.left = "858px";
+        fullPanel.style.top = "112px";
+        fullPanel.style.width = "calc(100vw - 920px)";
+        fullPanel.style.opacity = "1";
+        // 2. Μετά από 0.4s, ξεκινά η μετακίνηση του fullPanel σε 0.8s στην κανονική του θέση (left:20px; top:443px; width:calc(100vw - var(--rightPanelWidth) - 105px)).
+        setTimeout(() => {
+          fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
+          fullPanel.style.left = "20px";
+          fullPanel.style.top = "443px";
+          fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
+        }, 400);
+        // 3. Στο τέλος της μετακίνησης (σε 1.2s συνολικά), όλα βρίσκονται στη σωστή θέση.
+        setTimeout(() => {
           document.body.classList.remove('collapsed');
           toggleBtn.textContent = "Σύμπτυξη";
           updateInfo(currentZ);
           window.redrawAll();
         }, 1200);
       }
-      // Delay 500ms μετά το τέλος των μετακινήσεων για ενημέρωση θέσεων.
+      // Delay 500ms μετά το τέλος των μετακινήσεων (δηλαδή συνολικά 1.7s από την έναρξη) για ενημέρωση θέσεων και Balloon.
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
@@ -770,15 +762,20 @@
       window.subshellsInitialized = false;
       selectedElement = null;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      let cp = document.getElementById('canvasPeriods'); if(cp) cp.style.display = "none";
-      let csg = document.getElementById('canvasS_groups'); if(csg) csg.style.display = "none";
-      let cdg = document.getElementById('canvasD_groups'); if(cdg) cdg.style.display = "none";
-      let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
+      let cp = document.getElementById('canvasPeriods');
+      if(cp) cp.style.display = "none";
+      let csg = document.getElementById('canvasS_groups');
+      if(csg) csg.style.display = "none";
+      let cdg = document.getElementById('canvasD_groups');
+      if(cdg) cdg.style.display = "none";
+      let cpg = document.getElementById('canvasP_groups');
+      if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
+    // Μοναδική συνάρτηση redrawAll στο window.
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
