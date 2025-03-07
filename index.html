@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική καιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική  Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -650,8 +650,8 @@
           };
         });
       });
-      // Όταν currentZ είναι 121, δηλαδή μετά το στοιχείο 2, εμφανίζονται οι περίοδοι και οι ομάδες
-      if(currentZ === 121) {
+      // Όταν currentZ είναι 121 ή μεγαλύτερο (δηλαδή μετά το στοιχείο 2), εμφανίζονται οι περίοδοι και οι ομάδες
+      if(currentZ >= 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
@@ -663,9 +663,10 @@
         cpg.style.display = "block";
         initGroupsCanvases();
         repositionGroupCanvasesExpanded();
-      } else if (currentZ === 122) {
-        currentZ = 123;
-        document.getElementById('toggleFBlock').disabled = false;
+        if(currentZ === 122) {
+          currentZ = 123;
+          document.getElementById('toggleFBlock').disabled = false;
+        }
       }
       
       updateToggleButton();
@@ -812,8 +813,9 @@
       }, 100);
     });
     
-    // Χειριστής του κουμπιού "Συμπλήρωσε":
+    // Χειριστής του κουμπιού "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
+      if(currentZ === 123) return;
       currentZ = 123;
       document.getElementById('canvasPeriods').style.display = 'block';
       
