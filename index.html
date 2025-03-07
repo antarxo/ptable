@@ -136,7 +136,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική  Περιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -755,7 +755,7 @@
           initGroupsCanvases();
           repositionGroupCanvasesExpanded();
         } else if (currentZ === 122) {
-          // Εμφάνιση και της παλιάς και της νέας ονομασίας
+          // Εμφάνιση και της παλιάς και της νέας ονομασίας (και οι δύο σειρές)
           showOldGroups = true;
           showNewGroups = true;
           let csg = document.getElementById('canvasS_groups');
@@ -767,9 +767,9 @@
           initGroupsCanvases();
           repositionGroupCanvasesExpanded();
         } else if (currentZ >= 123) {
-          // Στο τελικό στάδιο δεν επανασχεδιάζονται οι καμβάδες ομάδων
           let cp = document.getElementById('canvasPeriods');
           if(cp) { cp.style.display = "block"; }
+          // Σε αυτό το στάδιο δεν επανασχεδιάζονται οι καμβάδες των ομάδων.
         }
       } else {
         let cp = document.getElementById('canvasPeriods');
@@ -918,7 +918,7 @@
       }, 100);
     });
     
-    // Στην "Συμπλήρωσε", θέλουμε το τελικό στάδιο με εμφάνιση και των δύο σειρών ονομασίας
+    // Χειριστής του κουμπιού "Συμπλήρωσε" (μόνο στο τελικό στάδιο εμφανίζονται και οι δύο σειρές)
     document.getElementById('fillAll').addEventListener('click', function() {
       currentZ = 123;
       showOldGroups = true;
