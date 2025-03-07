@@ -69,8 +69,9 @@
       top: 443px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
-      transition: all 1.5s ease;
+      transition: all 0.5s ease;
       text-align: left;
+      opacity: 1;
     }
     #leftPanelFull { width: 200px; }
     #remarksFull { width: calc(100% - 200px); }
@@ -95,10 +96,12 @@
       width: calc(100vw - 920px);
       z-index: 40;
       text-align: left;
+      transition: all 0.5s ease;
+      opacity: 1;
     }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
     #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
-    /* Balloon: μετάβαση επιταχυνόμενη από 1.5s σε 0.2s */
+    /* Balloon: μετάβαση επιταχυνόμενη από 0.2s */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -386,7 +389,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα panels και επαναϋπολογίζει τις θέσεις
+    // updateInfo: ενημερώνει τα panels, τη θέση και το περιεχόμενο του Balloon
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -435,10 +438,17 @@
                                 <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
                               </div>`;
       
+      // Με καθυστέρηση ενημερώνεται το balloon: τόσο η θέση όσο και το περιεχόμενο (χρησιμοποιείται εδώ ένα placeholder για το περιεχόμενο)
       setTimeout(() => {
           window.cellPositions = computeCellPositions();
           updateBalloonPosition(element);
           updateTableBackground();
+          // Ενημέρωση περιεχομένου του Balloon (π.χ. εμφάνιση του στοιχείου "shells" ως placeholder)
+          if(element.shells) {
+             drawSubshells({prev: element.shells, current: element.shells, next: element.shells});
+          } else {
+             drawSubshells({prev: "-", current: "-", next: "-"});
+          }
       }, 300);
     }
     window.updateInfo = updateInfo;
@@ -823,22 +833,43 @@
       updateTableBackground();
     }
     
+    // Εναλλαγή μεταξύ "Ανάπτυξε" και "Σύμπτυξε" με transition και καθυστέρηση ώστε να ενημερωθούν οι νέες θέσεις
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
-      if(!document.body.classList.contains('collapsed')) {
-         document.body.classList.add('collapsed');
-         toggleBtn.textContent = "Ανάπτυξη";
-         document.getElementById('infoPanelFull').style.display = "none";
-         document.getElementById('infoPanelCollapsed').style.display = "flex";
-         updateInfo(currentZ);
+      if(!document.body.classList.contains('collapsed')){
+         // Collapse: ο πλήρης πίνακας μεταβαίνει στη νέα του θέση και, μετά από 500ms, εξαφανίζεται
+         document.getElementById('infoPanelFull').style.transition = "all 0.5s ease";
+         document.getElementById('infoPanelFull').style.opacity = "0";
+         setTimeout(() => {
+           document.getElementById('infoPanelFull').style.display = "none";
+           // Εμφάνιση του συμπτυγμένου πίνακα με transition (αρχικά με 0 opacity)
+           let collapsedPanel = document.getElementById('infoPanelCollapsed');
+           collapsedPanel.style.display = "flex";
+           collapsedPanel.style.opacity = "0";
+           setTimeout(() => { collapsedPanel.style.opacity = "1"; }, 50);
+           document.body.classList.add('collapsed');
+           toggleBtn.textContent = "Ανάπτυξη";
+           updateInfo(currentZ);
+           redrawAll();
+         }, 500);
       } else {
-         document.body.classList.remove('collapsed');
-         toggleBtn.textContent = "Σύμπτυξη";
-         document.getElementById('infoPanelCollapsed').style.display = "none";
-         document.getElementById('infoPanelFull').style.display = "flex";
-         updateInfo(currentZ);
+         // Expand: ο συμπτυγμένος πίνακας μεταβαίνει και εξαφανίζεται
+         document.getElementById('infoPanelCollapsed').style.transition = "all 0.5s ease";
+         document.getElementById('infoPanelCollapsed').style.opacity = "0";
+         setTimeout(() => {
+           document.getElementById('infoPanelCollapsed').style.display = "none";
+           // Εμφάνιση του πλήρους πίνακα με transition
+           let fullPanel = document.getElementById('infoPanelFull');
+           fullPanel.style.display = "flex";
+           fullPanel.style.opacity = "0";
+           setTimeout(() => { fullPanel.style.opacity = "1"; }, 50);
+           document.body.classList.remove('collapsed');
+           toggleBtn.textContent = "Σύμπτυξη";
+           updateInfo(currentZ);
+           redrawAll();
+         }, 500);
       }
-      redrawAll();
+      // Καθυστέρηση 300ms για την ενημέρωση της θέσης του Balloon
       setTimeout(function() {
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 300);
