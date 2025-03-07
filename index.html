@@ -421,7 +421,7 @@
         } else if(group >= 3 && group <= 12) {
           return "Στοιχείο μετάπτωσης";
         } else if(group === 14) {
-          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
+          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρε</strong> 4 ηλεκτρόνια";
         } else if(group >= 15 && group <= 17) {
           return `Θέλει να <strong>πάρεται</strong> ${18 - group} ηλεκτρόνια`;
         } else if(group === 18) {
@@ -742,35 +742,38 @@
       window.groupsInitialized = true;
     }
 
-    /* --- Νέα συνάρτηση: runInvisibleSequence --- */
+    /* --- runInvisibleSequence --- */
     function runInvisibleSequence() {
-      // Επιλέγουμε τα panels για προσωρινή απενεργοποίηση των μεταβάσεων
-      let panels = [
-        document.getElementById('infoPanelFull'),
-        document.getElementById('infoPanelCollapsed')
-      ];
+      // Απενεργοποίηση CSS μεταβάσεων για τα panels ώστε να μην φαίνονται οι κινήσεις
+      let panels = [document.getElementById('infoPanelFull'), document.getElementById('infoPanelCollapsed')];
       panels.forEach(function(panel) {
         if(panel) { panel.style.transition = 'none'; }
       });
       
-      // Αν δεν είναι ήδη "συμπτυγμένη" η διεπαφή, εκτελούμε την "Σύμπτυξη"
+      // Διάφορες καθυστερήσεις για να εξασφαλίσουμε ότι κάθε βήμα ολοκληρώνεται πριν το επόμενο.
+      // 1. Collapse (αν δεν είναι ήδη collapsed)
       if(!document.body.classList.contains('collapsed')) {
         document.getElementById('toggleFBlock').click();
       }
-      // Αμέσως μετά, αν έχει συμπτυχθεί, εκτελούμε την "Εμφάνιση" (ανάπτυξη)
-      if(document.body.classList.contains('collapsed')) {
-        document.getElementById('toggleFBlock').click();
-      }
       
-      // Τέλος, εκτελούμε το Reset
-      document.getElementById('reset').click();
-      
-      // Επαναφορά των CSS μεταβάσεων μετά από λίγο (π.χ. 100 ms)
-      setTimeout(function(){
-        panels.forEach(function(panel) {
-          if(panel) { panel.style.transition = ''; }
-        });
-      }, 100);
+      setTimeout(function() {
+        // 2. Expand (αν έχει συμπτυχθεί)
+        if(document.body.classList.contains('collapsed')) {
+          document.getElementById('toggleFBlock').click();
+        }
+        
+        setTimeout(function() {
+          // 3. Reset
+          document.getElementById('reset').click();
+          
+          // Επαναφορά των CSS μεταβάσεων μετά από 100 ms.
+          setTimeout(function(){
+            panels.forEach(function(panel) {
+              if(panel) { panel.style.transition = ''; }
+            });
+          }, 100);
+        }, 800);
+      }, 1000);
     }
 
     /* --- Event listeners --- */
@@ -970,9 +973,7 @@
     window.addEventListener('load', updateTableBackground);
     loadElements();
 
-    // Δοκιμαστική κλήση της αόρατης ακολουθίας: collapse → expand → reset
-    // Μπορείς να καλέσεις runInvisibleSequence() όποτε το επιθυμείς.
-    // Για παράδειγμα, μετά από 3 δευτερόλεπτα από το φόρτωμα της σελίδας:
+    // Δοκιμαστική κλήση της αόρατης ακολουθίας (collapse → expand → reset) μετά από 3 δευτερόλεπτα
     window.addEventListener('load', function() {
       setTimeout(runInvisibleSequence, 3000);
     });
