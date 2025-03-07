@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική  Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -774,7 +774,7 @@
         collapsedPanel.style.opacity = "0";
         setTimeout(() => {
           collapsedPanel.style.display = "none";
-          // Ετοιμάζουμε τον full πίνακα με αρχικά δεδομένα (opacity 0)
+          // Εμφανίζουμε τον full πίνακα με opacity 0 και αμέσως ξεκινάμε την μετάβαση
           fullPanel.style.display = "flex";
           fullPanel.style.zIndex = "40";
           fullPanel.style.opacity = "0";
@@ -808,8 +808,10 @@
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1700);
     });
+    // Τροποποίηση στο event handler του "Επόμενο":
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
+      // Σε αυτό το handler δεν καθαρίζουμε τους καμβάδες, έτσι ώστε τα προηγούμενα στοιχεία να παραμένουν
       if(currentZ < 3) { currentZ = 3; }
       else if(currentZ < 118) { currentZ++; }
       else if(currentZ === 118) { currentZ = 119; }
