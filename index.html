@@ -21,28 +21,9 @@
       transform: translateX(-50%);
       font-size: 24px;
       font-weight: bold;
-      z-index: 60;
+      z-index: 50;
     }
-    /* Ενδεικτικός πίνακας στοιχείων (τα canvases του πίνακα στοιχείων) */
-    #elementsContainer {
-      position: absolute;
-      top: 120px;
-      left: 50px;
-      /* Το πλάτος και το ύψος θα ρυθμίζονται δυναμικά */
-      z-index: 40;
-      transition: all 1s ease;
-    }
-    /* Το background του πίνακα στοιχείων */
-    #elementsBackground {
-      position: absolute;
-      top: 120px;
-      left: 50px;
-      z-index: 35; /* Πίσω από τα canvases του πίνακα */
-      transition: all 0.8s ease;
-      background: linear-gradient(135deg, #d0e1f9, #4d648d);
-      border-radius: 8px;
-    }
-    /* Info Panel Full */
+    /* Info Panel Full – αρχική κατάσταση */
     #infoPanelFull {
       display: flex;
       flex-direction: row;
@@ -55,7 +36,7 @@
       left: 20px;
       top: 428px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
-      z-index: 50;
+      z-index: 40;
       transition: all 1.5s ease;
       text-align: left;
     }
@@ -78,12 +59,13 @@
       width: 30%;
       text-align: left;
     }
-    /* Info Panel Collapsed */
+    /* Όταν το body έχει κλάση collapsed */
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
     }
+    /* Info Panel Collapsed */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -96,17 +78,14 @@
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
-      z-index: 50;
+      z-index: 40;
       text-align: left;
     }
+    /* Panels σε Collapsed */
     #leftPanelCollapsed, #remarksCollapsed {
       width: 100%;
     }
-    #remarksCollapsed .right-wrapper {
-      display: flex;
-      flex-direction: column;
-    }
-    /* Balloon (πρόχειρος καμβάς) */
+    /* Balloon */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -128,7 +107,6 @@
       display: flex;
       flex-direction: column;
       gap: 5px;
-      z-index: 80;
     }
     button {
       background-color: #008CBA;
@@ -142,12 +120,17 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* Καμβάδες τομέων (S, F, D, P κ.λπ.) – τοποθετούνται μέσα στο #elementsContainer */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
+    }
+    /* Νέο στοιχείο για το gradient background */
+    #backgroundCanvas {
+      position: absolute;
+      z-index: 0;
+      transition: all 0.5s ease-in-out;
     }
     /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
@@ -160,6 +143,7 @@
       display: none;
       z-index: 5;
     }
+    /* Διάσταση για τους τομείς d, p, s */
     #canvasD_groups { width: 418px; height: 40px; }
     #canvasP_groups { width: 250px; height: 40px; }
     #canvasS_groups { width: 84px; height: 40px; }
@@ -178,24 +162,19 @@
 <body class="full">
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   
-  <!-- Background για τον πίνακα στοιχείων -->
-  <div id="elementsBackground"></div>
+  <!-- Καμβάδες Περιόδων και Ομάδων -->
+  <div id="canvasPeriods" class="canvas"></div>
+  <div id="canvasS_groups" class="canvas"></div>
+  <div id="canvasD_groups" class="canvas"></div>
+  <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Container για τα canvases του πίνακα στοιχείων -->
-  <div id="elementsContainer">
-    <!-- Καμβάδες Τομέων -->
-    <div id="canvasS" class="canvas"></div>
-    <div id="canvasF" class="canvas"></div>
-    <div id="canvasD" class="canvas"></div>
-    <div id="canvasP" class="canvas"></div>
-    <!-- Καμβάδες Περιόδων και Ομάδων -->
-    <div id="canvasPeriods" class="canvas"></div>
-    <div id="canvasS_groups" class="canvas"></div>
-    <div id="canvasD_groups" class="canvas"></div>
-    <div id="canvasP_groups" class="canvas"></div>
-  </div>
+  <!-- Καμβάδες Τομέων -->
+  <div id="canvasS" class="canvas"></div>
+  <div id="canvasF" class="canvas"></div>
+  <div id="canvasD" class="canvas"></div>
+  <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακες Πληροφοριών -->
+  <!-- Πίνακες Πληροφοριών: δύο panels -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -215,6 +194,9 @@
     <button id="toggleFBlock">Σύμπτυξη</button>
     <button id="reset">Reset</button>
   </div>
+  
+  <!-- Νέο στοιχείο για το background με gradient -->
+  <canvas id="backgroundCanvas" class="canvas-background"></canvas>
   
   <script>
     // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
@@ -259,18 +241,6 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // Λειτουργία για ενημέρωση του background του πίνακα στοιχείων
-    function updateElementsBackground() {
-      const container = document.getElementById('elementsContainer');
-      const bg = document.getElementById('elementsBackground');
-      if(container && bg) {
-        const rect = container.getBoundingClientRect();
-        bg.style.width = rect.width + "px";
-        bg.style.height = rect.height + "px";
-        // Μπορείς να προσθέσεις επιπλέον CSS transitions εδώ αν επιθυμείς
-      }
-    }
-    
     // Φόρτωση στοιχείων
     function loadElements() {
       fetch('elements.json')
@@ -281,7 +251,7 @@
           initSubshellsCanvas();
           updateInfo(currentZ);
           updateToggleButton();
-          updateElementsBackground();
+          updateBackgroundCanvas();
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
@@ -296,7 +266,8 @@
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
-      selectedElement = element; // Επιλέγουμε το τρέχον στοιχείο
+      // Θέτουμε το τρέχον στοιχείο ως επιλεγμένο
+      selectedElement = element;
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
       if(clickedZ === 119) { displayZ = 1; }
@@ -345,10 +316,11 @@
       };
       drawSubshells(subshellsData);
       updateBalloonPosition(element);
+      updateBackgroundCanvas();
     }
     window.updateInfo = updateInfo;
     
-    // Δημιουργία των canvases για κάθε block μέσα στον container των στοιχείων
+    // Δημιουργία των canvases για κάθε block
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -380,8 +352,8 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || 
-                                                                    Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                                                Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -401,7 +373,6 @@
           };
         });
       });
-      updateElementsBackground();
     }
     
     function initSubshellsCanvas() {
@@ -522,6 +493,7 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
+        // Αν το στοιχείο είναι επιλεγμένο, σχεδιάζουμε το περίγραμμα με αυξημένο πάχος για καλύτερη ορατότητα
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -529,7 +501,7 @@
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
           p.noFill();
           p.stroke(getBlockColor(e.block));
-          p.strokeWeight(3);
+          p.strokeWeight(5);
           p.rect(pos.x, pos.y, 40, 40, 5);
           p.strokeWeight(1);
         } else {
@@ -568,7 +540,8 @@
       });
     }
     
-    // updateBalloonPosition: Αν το defaultBottom (defaultTop + cs.offsetHeight) υπερβαίνει το πάνω όριο του leftPanelFull,
+    // Τροποποιημένη updateBalloonPosition:
+    // Αν το defaultBottom (defaultTop + cs.offsetHeight) υπερβαίνει το πάνω όριο του leftPanelFull,
     // τότε ορίζουμε topPos = defaultTop – (cs.offsetHeight + 23)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
@@ -664,8 +637,7 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                                                Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -738,7 +710,7 @@
         if(cpg) { cpg.style.display = "none"; }
       }
       updateToggleButton();
-      updateElementsBackground();
+      updateBackgroundCanvas();
     }
     
     function initPeriodsCanvas() {
@@ -849,6 +821,7 @@
       initializeCanvases();
       initSubshellsCanvas();
       updateInfo(currentZ);
+      updateBackgroundCanvas();
     });
     
     document.getElementById('toggleFBlock').addEventListener('click', function() {
@@ -876,6 +849,32 @@
       }, 1500);
     });
     
+    // Νέο κομμάτι: Δημιουργία και ενημέρωση του background canvas με gradient
+    function updateBackgroundCanvas() {
+      let infoPanel;
+      if (document.body.classList.contains('collapsed')) {
+        infoPanel = document.getElementById('infoPanelCollapsed');
+      } else {
+        infoPanel = document.getElementById('infoPanelFull');
+      }
+      let bgCanvas = document.getElementById('backgroundCanvas');
+      if (infoPanel && bgCanvas) {
+        let rect = infoPanel.getBoundingClientRect();
+        bgCanvas.width = rect.width;
+        bgCanvas.height = rect.height;
+        bgCanvas.style.left = rect.left + 'px';
+        bgCanvas.style.top = rect.top + 'px';
+        
+        let ctx = bgCanvas.getContext('2d');
+        let gradient = ctx.createLinearGradient(0, 0, bgCanvas.width, 0);
+        gradient.addColorStop(0, "#ff7e5f");
+        gradient.addColorStop(1, "#feb47b");
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+      }
+    }
+    
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
@@ -884,13 +883,13 @@
     window.initGroupsCanvases = initGroupsCanvases;
     window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
-    window.addEventListener('load', () => {
+    window.addEventListener('load', function() {
       updateRightPanelWidth();
-      updateElementsBackground();
+      updateBackgroundCanvas();
     });
-    window.addEventListener('resize', () => {
+    window.addEventListener('resize', function() {
       updateRightPanelWidth();
-      updateElementsBackground();
+      updateBackgroundCanvas();
     });
     
     loadElements();
