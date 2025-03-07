@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
-  <!-- Εισαγωγή favicon για να αποφευχθεί το 404 error -->
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -78,7 +77,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Ο collapsed panel εμφανίζεται με υψηλότερο z-index */
+    /* Το collapsed panel έχει υψηλότερο z-index και position absolute με προκαθορισμένες τιμές */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -87,6 +86,7 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
+      position: absolute;  /* Σιγουρευόμαστε ότι έχει absolute θέση */
       left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
@@ -717,16 +717,17 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        // Ακολουθία σύμπτυξης: μετακίνηση full panel και ενημέρωση του background
+        // Ακολουθία σύμπτυξης: μετακίνηση full panel και ενημέρωση του background με μεγαλύτερο delay
         updateSectorsCollapsed();
+        // Αυξάνουμε το delay σε 600ms πριν την μετάβαση
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
-        }, 400);
+        }, 600);
         setTimeout(() => {
-          // Ο full panel έχει φτάσει στη θέση του και ενημερώνουμε το background
+          // Ενημερώνουμε το background αφού έχει ολοκληρωθεί η μετάβαση
           updateTableBackground();
           // Με μικρό delay εμφανίζεται ο collapsed panel πάνω από τον full panel
           setTimeout(() => {
