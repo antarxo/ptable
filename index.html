@@ -123,8 +123,8 @@
       display: none;
       z-index: 5;
     }
-    /* Στον αναπτυγμένο πίνακα, οι καμβάδες ομάδων τοποθετούνται πάνω από τις s,d,p */
-    /* Οι θέσεις εδώ θα καθορίζονται δυναμικά μέσω JavaScript όταν το σώμα δεν έχει class "collapsed" */
+    /* Στον αναπτυγμένο πίνακα, οι καμβάδες ομάδων τοποθετούνται πάνω από τις s, d, p */
+    /* Οι θέσεις καθορίζονται δυναμικά μέσω JavaScript */
     #canvasS_groups, #canvasD_groups, #canvasP_groups {
       width: auto; height: auto; display: none; z-index: 50;
     }
@@ -136,7 +136,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή </div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -371,46 +371,35 @@
     }
     
     // Επανατοποθέτηση καμβάδων ομάδων στον αναπτυγμένο πίνακα.
-    // Αν εμφανίζονται και οι δύο σειρές (νέα και παλιά), χρησιμοποιούμε offset 20 (ώστε η νέα σειρά να εμφανίζεται στη σωστή θέση).
+    // Αν εμφανίζονται και οι δύο σειρές (νέα και παλιά), χρησιμοποιείται offset 20, αλλιώς offset 40.
     function repositionGroupCanvasesExpanded() {
       if(document.body.classList.contains('collapsed')) return;
-      // Για κάθε block s, d, p
+      // Για block s
       let sCanvas = document.getElementById('canvasS');
       if(sCanvas) {
         let gs = document.getElementById('canvasS_groups');
         let sTop = parseInt(window.getComputedStyle(sCanvas).top) || 120;
         let sLeft = window.getComputedStyle(sCanvas).left;
         gs.style.left = sLeft;
-        // Αν εμφανίζονται και οι δύο σειρές, χρησιμοποιούμε offset 20, αλλιώς offset 40.
-        if(showOldGroups && showNewGroups) {
-          gs.style.top = (sTop - 20) + "px";
-        } else {
-          gs.style.top = (sTop - 40) + "px";
-        }
+        gs.style.top = (sTop - (showOldGroups && showNewGroups ? 20 : 40)) + "px";
       }
+      // Για block d
       let dCanvas = document.getElementById('canvasD');
       if(dCanvas) {
         let gd = document.getElementById('canvasD_groups');
         let dTop = parseInt(window.getComputedStyle(dCanvas).top) || 120;
         let dLeft = window.getComputedStyle(dCanvas).left;
         gd.style.left = dLeft;
-        if(showOldGroups && showNewGroups) {
-          gd.style.top = (dTop - 20) + "px";
-        } else {
-          gd.style.top = (dTop - 40) + "px";
-        }
+        gd.style.top = (dTop - (showOldGroups && showNewGroups ? 20 : 40)) + "px";
       }
+      // Για block p
       let pCanvas = document.getElementById('canvasP');
       if(pCanvas) {
         let gp = document.getElementById('canvasP_groups');
         let pTop = parseInt(window.getComputedStyle(pCanvas).top) || 120;
         let pLeft = window.getComputedStyle(pCanvas).left;
         gp.style.left = pLeft;
-        if(showOldGroups && showNewGroups) {
-          gp.style.top = (pTop - 20) + "px";
-        } else {
-          gp.style.top = (pTop - 40) + "px";
-        }
+        gp.style.top = (pTop - (showOldGroups && showNewGroups ? 20 : 40)) + "px";
       }
     }
     
@@ -751,6 +740,21 @@
           };
         });
       });
+      // Ενσωμάτωση μετατόπισης τομέων d και p (μόνο όταν το σώμα δεν είναι συμπτυγμένο)
+      if(!document.body.classList.contains('collapsed')) {
+        let base = 134, shiftP = 0, shiftD = 0;
+        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
+        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
+        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.left = base + "px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.left = (base + shiftD) + "px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.left = (base + shiftP) + "px"; }
+      }
       if(currentZ >= 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
@@ -908,7 +912,7 @@
         initPeriodsCanvas();
         currentZ = 121;
       } else if (currentZ === 121) {
-        // Εμφάνιση _μόνο_ της παλιάς ονομασίας, στις θέσεις του αναπτυγμένου πίνακα
+        // Εμφάνιση _μόνο_ της παλιάς ονομασίας
         showOldGroups = true;
         showNewGroups = false;
         currentZ = 122;
@@ -924,7 +928,6 @@
       updateInfo(currentZ);
       setTimeout(() => { 
         ignoreCanvasClick = false; 
-        // Εάν δεν είναι συμπτυγμένος, αναδιατάσσουμε τους καμβάδες ομάδων στην αναπτυγμένη θέση.
         if(!document.body.classList.contains('collapsed')){
           repositionGroupCanvasesExpanded();
         }
