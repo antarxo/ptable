@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -253,31 +253,41 @@
       });
     };
 
-    // Μεταφέρουμε τις updateSectorsCollapsed και updateSectorsExpanded στο global scope.
-    window.updateSectorsCollapsed = function() {
-      let cS = document.getElementById('canvasS');
-      if(cS) { cS.style.transition = "left 1.2s ease"; cS.style.left = "75px"; }
-      let cF = document.getElementById('canvasF');
-      if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = "179px"; }
-      let cD = document.getElementById('canvasD');
-      if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = "164px"; }
-      let cP = document.getElementById('canvasP');
-      if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = "584px"; }
-    };
-
-    window.updateSectorsExpanded = function() {
+    // Ενοποιημένη συνάρτηση για το shifting των τομέων και των ομάδων.
+    window.updateSectors = function(state) {
       let base = 159, shiftP = 0, shiftD = 0;
-      if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-      else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
-      else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
-      else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-      else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-      let cF = document.getElementById('canvasF');
-      if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = base + "px"; }
-      let cD = document.getElementById('canvasD');
-      if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = (base + shiftD) + "px"; }
-      let cP = document.getElementById('canvasP');
-      if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = (base + shiftP) + "px"; }
+      if(state === "collapsed") {
+        let cS = document.getElementById('canvasS');
+        if(cS) { cS.style.transition = "left 1.2s ease"; cS.style.left = "75px"; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = "179px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = "164px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = "584px"; }
+        let cD_groups = document.getElementById('canvasD_groups');
+        if(cD_groups) { cD_groups.style.transition = "left 1.2s ease"; cD_groups.style.left = "164px"; }
+        let cP_groups = document.getElementById('canvasP_groups');
+        if(cP_groups) { cP_groups.style.transition = "left 1.2s ease"; cP_groups.style.left = "584px"; }
+        window.setFixedGroupsPositions("collapsed");
+      } else {
+        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
+        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
+        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = base + "px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = (base + shiftD) + "px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = (base + shiftP) + "px"; }
+        let cD_groups = document.getElementById('canvasD_groups');
+        if(cD_groups) { cD_groups.style.transition = "left 1.2s ease"; cD_groups.style.left = (base + shiftD) + "px"; }
+        let cP_groups = document.getElementById('canvasP_groups');
+        if(cP_groups) { cP_groups.style.transition = "left 1.2s ease"; cP_groups.style.left = (base + shiftP) + "px"; }
+        window.setFixedGroupsPositions("expanded");
+      }
     };
 
     // Συνάρτηση για σταθερές θέσεις των ομάδων.
@@ -738,7 +748,7 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        window.updateSectorsCollapsed();
+        window.updateSectors("collapsed");
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
@@ -747,7 +757,6 @@
         }, 600);
         setTimeout(() => {
           updateTableBackground();
-          window.setFixedGroupsPositions("collapsed");
           setTimeout(() => {
             collapsedPanel.style.display = "flex";
             collapsedPanel.style.zIndex = 50;
@@ -761,8 +770,7 @@
         fullPanel.style.display = "flex";
         fullPanel.style.zIndex = 40;
         collapsedPanel.style.display = "none";
-        window.updateSectorsExpanded();
-        window.setFixedGroupsPositions("expanded");
+        window.updateSectors("expanded");
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
         fullPanel.style.width = "calc(100vw - 920px)";
