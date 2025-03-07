@@ -151,7 +151,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστικήικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -724,9 +724,9 @@
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       let fullPanel = document.getElementById('infoPanelFull');
-      let collapsedPanel = document.getElementById('infoPanelCollapsed');
+      // ΔΕΝ θα αλλάζουμε την εμφάνιση του fullPanel, απλά θα μετακινούμε και θα αλλάζουμε το μέγεθός του.
       if(!document.body.classList.contains('collapsed')){
-        // Collapse sequence:
+        // Ακολουθία σύμπτυξης:
         updateSectorsCollapsed();
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
@@ -735,18 +735,15 @@
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
         setTimeout(() => {
-          fullPanel.style.display = "none";
-          collapsedPanel.style.display = "flex";
+          // Δεν κρύβουμε πλέον το fullPanel, απλώς ενημερώνουμε την κλάση collapsed.
           document.body.classList.add('collapsed');
           toggleBtn.textContent = "Ανάπτυξη";
           updateInfo(currentZ);
           window.redrawAll();
         }, 1200);
       } else {
-        // Expand sequence:
+        // Ακολουθία ανάπτυξης:
         updateSectorsExpanded();
-        collapsedPanel.style.display = "none";
-        fullPanel.style.display = "flex";
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
         fullPanel.style.width = "calc(100vw - 920px)";
@@ -758,17 +755,6 @@
           fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
         }, 400);
         setTimeout(() => {
-           // ΕΝΣΩΜΑΤΩΜΕΝΟ DEBUG: Μετά από 1.8 δευτερόλεπτα καταγράφουμε τις computed τιμές left και top του collapsed panel
-      setTimeout(() => {
-        let cp = document.getElementById('infoPanelCollapsed');
-         let computedStyle = window.getComputedStyle(cp);
-        console.log('Collapsed Panel - left:', computedStyle.left, 'top:', computedStyle.top);
-      }, 1800);
-       setTimeout(() => {
-         let cp = document.getElementById('infoPanelFull');
-         let computedStyle = window.getComputedStyle(cp);
-         console.log('Full Panel - left:', computedStyle.left, 'top:', computedStyle.top);
-      }, 1800);
           document.body.classList.remove('collapsed');
           toggleBtn.textContent = "Σύμπτυξη";
           updateInfo(currentZ);
@@ -779,7 +765,6 @@
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1700);
-
     });
     // Event listeners ορίζονται μία φορά
     document.getElementById('nextElement').addEventListener('click', function() {
