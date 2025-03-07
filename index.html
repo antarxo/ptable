@@ -768,6 +768,17 @@
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1700);
+ // ΕΝΣΩΜΑΤΩΜΕΝΟ DEBUG: Μετά από 1.8 δευτερόλεπτα καταγράφουμε τις computed τιμές left και top του collapsed panel
+      setTimeout(() => {
+        let cp = document.getElementById('infoPanelCollapsed');
+         let computedStyle = window.getComputedStyle(cp);
+        console.log('Collapsed Panel - left:', computedStyle.left, 'top:', computedStyle.top);
+      }, 1800);
+       setTimeout(() => {
+         let cp = document.getElementById('infoPanelFull');
+         let computedStyle = window.getComputedStyle(cp);
+         console.log('Full Panel - left:', computedStyle.left, 'top:', computedStyle.top);
+      }, 1800);
     });
     // Event listeners ορίζονται μία φορά
     document.getElementById('nextElement').addEventListener('click', function() {
