@@ -69,7 +69,7 @@
       top: 443px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
-      transition: all 0.5s ease;
+      transition: all 0.8s ease 0.5s;
       text-align: left;
       opacity: 1;
     }
@@ -96,7 +96,7 @@
       width: calc(100vw - 920px);
       z-index: 40;
       text-align: left;
-      transition: all 0.5s ease;
+      transition: all 0.8s ease 0.5s;
       opacity: 1;
     }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
@@ -208,7 +208,7 @@
       }
     };
 
-    // Ορισμός της BLOCK_COLORS ως global μεταβλητή για διόρθωση του σφάλματος
+    // Ορισμός της BLOCK_COLORS ως global μεταβλητή
     window.BLOCK_COLORS = {
       s: "#FF477E",
       p: "#26FF31",
@@ -317,7 +317,7 @@
       else return (Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2;
     }
     
-    // computeCellPositions: υπολογίζει τις απόλυτες θέσεις (bounding boxes) των αποκαλυφθέντων κελιών
+    // computeCellPositions: υπολογίζει τις απόλυτες θέσεις των αποκαλυφθέντων κελιών
     function computeCellPositions() {
       const cellSize = 40;
       let positions = { s: [], p: [], d: [], f: [] };
@@ -341,13 +341,12 @@
       return positions;
     }
     
-    // updateTableBackground: τώρα περιλαμβάνει και τους καμβάδες περιόδων και ομάδων
+    // updateTableBackground: περιλαμβάνει και τους καμβάδες περιόδων/ομάδων
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
       let all = [];
       Object.keys(positions).forEach(block => { all = all.concat(positions[block]); });
-      // Προσθήκη των καμβάδων περιόδων και ομάδων
       const additionalIDs = ["canvasPeriods", "canvasS_groups", "canvasD_groups", "canvasP_groups"];
       additionalIDs.forEach(id => {
           const elem = document.getElementById(id);
@@ -389,7 +388,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα panels, τη θέση και το περιεχόμενο του Balloon
+    // updateInfo: ενημερώνει τα panels και το Balloon, καλώντας drawSubshells στο τέλος
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -438,12 +437,11 @@
                                 <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
                               </div>`;
       
-      // Με καθυστέρηση ενημερώνεται το balloon: τόσο η θέση όσο και το περιεχόμενο (χρησιμοποιείται εδώ ένα placeholder για το περιεχόμενο)
       setTimeout(() => {
           window.cellPositions = computeCellPositions();
           updateBalloonPosition(element);
           updateTableBackground();
-          // Ενημέρωση περιεχομένου του Balloon (π.χ. εμφάνιση του στοιχείου "shells" ως placeholder)
+          // Ενημέρωση του Balloon με τις υποστιβάδες όπως στον πίνακα πληροφοριών
           if(element.shells) {
              drawSubshells({prev: element.shells, current: element.shells, next: element.shells});
           } else {
@@ -486,7 +484,6 @@
               if(candidate) {
                 console.log("Selected element:", candidate.element);
                 selectedElement = candidate.element;
-                // Ενημέρωση θέσης Balloon κατά το κλικ
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
@@ -767,7 +764,6 @@
               if(candidate) {
                 console.log("Selected element:", candidate.element);
                 selectedElement = candidate.element;
-                // Ενημέρωση θέσης Balloon και κλικ στο κελί
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
@@ -833,43 +829,46 @@
       updateTableBackground();
     }
     
-    // Εναλλαγή μεταξύ "Ανάπτυξε" και "Σύμπτυξε" με transition και καθυστέρηση ώστε να ενημερωθούν οι νέες θέσεις
+    // Εναλλαγή "Ανάπτυξε/Σύμπτυξε" με 0.8s μετάβαση και καθυστέρηση 500ms πριν την κίνηση
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')){
-         // Collapse: ο πλήρης πίνακας μεταβαίνει στη νέα του θέση και, μετά από 500ms, εξαφανίζεται
-         document.getElementById('infoPanelFull').style.transition = "all 0.5s ease";
-         document.getElementById('infoPanelFull').style.opacity = "0";
+         // Collapse: ο πλήρης πίνακας ξεκινά μετά 500ms και η μετάβαση διαρκεί 0.8s
+         let fullPanel = document.getElementById('infoPanelFull');
+         fullPanel.style.transition = "all 0.8s ease 0.5s";
+         fullPanel.style.opacity = "0";
          setTimeout(() => {
-           document.getElementById('infoPanelFull').style.display = "none";
-           // Εμφάνιση του συμπτυγμένου πίνακα με transition (αρχικά με 0 opacity)
+           fullPanel.style.display = "none";
            let collapsedPanel = document.getElementById('infoPanelCollapsed');
            collapsedPanel.style.display = "flex";
+           collapsedPanel.style.transition = "all 0.8s ease 0.5s";
            collapsedPanel.style.opacity = "0";
+           // Μικρή καθυστέρηση για να ενεργοποιηθεί το transition
            setTimeout(() => { collapsedPanel.style.opacity = "1"; }, 50);
            document.body.classList.add('collapsed');
            toggleBtn.textContent = "Ανάπτυξη";
            updateInfo(currentZ);
            redrawAll();
-         }, 500);
+         }, 1300);
       } else {
-         // Expand: ο συμπτυγμένος πίνακας μεταβαίνει και εξαφανίζεται
-         document.getElementById('infoPanelCollapsed').style.transition = "all 0.5s ease";
-         document.getElementById('infoPanelCollapsed').style.opacity = "0";
+         // Expand: ο συμπτυγμένος πίνακας ξεκινά μετά 500ms και η μετάβαση διαρκεί 0.8s
+         let collapsedPanel = document.getElementById('infoPanelCollapsed');
+         collapsedPanel.style.transition = "all 0.8s ease 0.5s";
+         collapsedPanel.style.opacity = "0";
          setTimeout(() => {
-           document.getElementById('infoPanelCollapsed').style.display = "none";
-           // Εμφάνιση του πλήρους πίνακα με transition
+           collapsedPanel.style.display = "none";
            let fullPanel = document.getElementById('infoPanelFull');
            fullPanel.style.display = "flex";
+           fullPanel.style.transition = "all 0.8s ease 0.5s";
            fullPanel.style.opacity = "0";
            setTimeout(() => { fullPanel.style.opacity = "1"; }, 50);
            document.body.classList.remove('collapsed');
            toggleBtn.textContent = "Σύμπτυξη";
            updateInfo(currentZ);
            redrawAll();
-         }, 500);
+         }, 1300);
       }
-      // Καθυστέρηση 300ms για την ενημέρωση της θέσης του Balloon
+      // Ενημέρωση θέσης του Balloon μετά από 300ms
       setTimeout(function() {
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 300);
