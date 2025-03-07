@@ -35,7 +35,7 @@
     /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
-      left: 31px; /* αρχικά 6px + 25px μετατόπιση */
+      left: 31px;
       top: 120px;
       width: 42px;
       height: 292px;
@@ -75,7 +75,6 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Σ collapsed */
     body.collapsed #infoPanelFull {
       left: 858px;
       top: 112px;
@@ -142,7 +141,6 @@
     .full #canvasF { top: 120px; left: 159px; width: 588px; z-index: 2; }
     .full #canvasD { top: 120px; left: 159px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 159px; width: 252px; z-index: 4; }
-    /* Σ collapsed */
     body.collapsed #canvasF { top: 220px; }
   </style>
 </head>
@@ -185,7 +183,15 @@
   </div>
   
   <script>
-    // Dummy συναρτήσεις (π.χ. updateRightPanelWidth, updateToggleButton, messageForElement, initPeriodsCanvas)
+    // Ορισμός της BLOCKS_CONFIG ως global μεταβλητή
+    window.BLOCKS_CONFIG = {
+      s: { cols: 2, rows: 7 },
+      p: { cols: 6, rows: 7 },
+      d: { cols: 10, rows: 7 },
+      f: { cols: 14, rows: 7 }
+    };
+
+    // Dummy συναρτήσεις για βοήθεια
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -250,7 +256,7 @@
     let lastClickedElement = null;
     let selectedElement = null;
     
-    // Η συνάρτηση calculatePosition υπολογίζει το offset μέσα στον καμβά
+    // calculatePosition: υπολογίζει το offset του κελιού μέσα στον καμβά
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
@@ -263,7 +269,7 @@
       return { x: x, y: y };
     }
     
-    // Συνάρτηση isRevealed: ελέγχει αν ένα στοιχείο έχει αποκαλυφθεί βάσει του currentZ
+    // isRevealed: ελέγχει αν ένα στοιχείο έχει "αποκαλυφθεί" βάσει του currentZ
     function isRevealed(e) {
       if(currentZ < 118) return Number(e.number) >= 3 && Number(e.number) <= currentZ;
       else if(currentZ === 118) return Number(e.number) >= 3 && Number(e.number) <= 118;
@@ -272,7 +278,7 @@
       else return (Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2;
     }
     
-    // computeCellPositions: υπολογίζει τις απόλυτες θέσεις των κελιών για κάθε block
+    // computeCellPositions: υπολογίζει και αποθηκεύει τις απόλυτες θέσεις (bounding boxes) των αποκαλυφθέντων κελιών
     function computeCellPositions() {
       const cellSize = 40;
       let positions = { s: [], p: [], d: [], f: [] };
@@ -296,11 +302,10 @@
       return positions;
     }
     
-    // Νέος updateTableBackground: δυναμικός υπολογισμός βάσει των θέσεων όλων των αποκαλυφθέντων κελιών
+    // updateTableBackground: υπολογίζει δυναμικά το μέγεθος του background βάσει των αποκαλυφθέντων κελιών.
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
-      // Συγκεντρώνουμε όλες τις θέσεις από όλα τα blocks
       let all = [];
       Object.keys(positions).forEach(block => { all = all.concat(positions[block]); });
       if(all.length === 0) return;
@@ -317,7 +322,7 @@
       bg.style.height = newHeight + "px";
     }
     
-    // Συνάρτηση για φόρτωση και ταξινόμηση των στοιχείων
+    // Φόρτωση και ταξινόμηση στοιχείων
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
     function loadElements() {
@@ -327,7 +332,6 @@
           elements = sortElements(data);
           initializeCanvases();
           initSubshellsCanvas();
-          // Καθυστέρηση για ορθό υπολογισμό θέσεων πριν την ενημέρωση
           setTimeout(() => {
             updateInfo(currentZ);
             window.cellPositions = computeCellPositions();
@@ -337,7 +341,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα panels και καλεί τον επαναϋπολογισμό των θέσεων
+    // updateInfo: ενημερώνει τα panels και επαναϋπολογίζει τις θέσεις
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -386,7 +390,6 @@
                                 <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
                               </div>`;
       
-      // Επαναϋπολογισμός θέσεων και background μετά από καθυστέρηση
       setTimeout(() => {
           window.cellPositions = computeCellPositions();
           updateBalloonPosition(element);
@@ -397,10 +400,10 @@
     
     // Δημιουργία καμβάδων για κάθε block
     function initializeCanvases() {
-      Object.keys(BLOCKS_CONFIG).forEach(function(block) {
+      Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
           p.setup = function() {
-            const config = BLOCKS_CONFIG[block];
+            const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             if(document.body.classList.contains('collapsed')){
@@ -415,7 +418,7 @@
             drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            // Νέα ανίχνευση κλικ χρησιμοποιώντας προ-υπολογισμένες θέσεις
+            // Χρήση προ-υπολογισμένων θέσεων για ακριβή ανίχνευση κλικ
             p.mouseClicked = function(event) {
               if(p.skipNextClick || ignoreCanvasClick) return;
               let globalX = event.clientX;
@@ -429,7 +432,6 @@
               if(candidate) {
                 console.log("Selected element:", candidate.element);
                 selectedElement = candidate.element;
-                // Καθυστέρηση για ορθό update
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
                 setTimeout(() => { flashActive = false; redrawAll(); }, 200);
@@ -593,7 +595,6 @@
       });
     }
     
-    // Ενημέρωση της θέσης του Balloon με καθυστέρηση (0.2s μετάβαση)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -656,12 +657,12 @@
     }
     
     function redrawAll() {
-      Object.keys(BLOCKS_CONFIG).forEach(function(block) {
+      Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
         if(canvasDiv) { canvasDiv.innerHTML = ""; }
         new p5(function(p) {
           p.setup = function() {
-            const config = BLOCKS_CONFIG[block];
+            const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
@@ -753,7 +754,6 @@
       updateTableBackground();
     }
     
-    // Διαχείριση toggle (σύμπτυξη/ανάπτυξη) χωρίς επικαλύψεις: πρώτα κρύβουμε το ενεργό panel και στη συνέχεια εμφανίζουμε το νέο
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')) {
@@ -832,7 +832,6 @@
     window.redrawAll = redrawAll;
     window.initPeriodsCanvas = initPeriodsCanvas;
     window.initGroupsCanvases = initGroupsCanvases;
-    window.BLOCKS_CONFIG = BLOCKS_CONFIG;
     
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('load', updateTableBackground);
