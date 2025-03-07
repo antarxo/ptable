@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική  Πίνακα</div>
+  <div id="title">Διαδραστική καιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -224,7 +224,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // initGroupsCanvases: Προσθέτουμε έλεγχο ώστε να μην κατασκευάζεται ξανά αν έχει ήδη κατασκευαστεί
+    // initGroupsCanvases: Προσθέτουμε έλεγχο ώστε να μην ξανακατασκευάζεται αν έχει ήδη κατασκευαστεί
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       
@@ -824,7 +824,8 @@
       initGroupsCanvases();
       redrawAll();
       updateInfo(currentZ);
-      setTimeout(repositionGroupCanvasesExpanded, 100);
+      // Με αύξηση της καθυστέρησης για να ολοκληρωθεί η κίνηση των ομάδων χωρίς να απαιτείται το "Επόμενο"
+      setTimeout(repositionGroupCanvasesExpanded, 500);
       document.getElementById('toggleFBlock').disabled = false;
     });
     
