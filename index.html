@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική δικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -241,7 +241,7 @@
           p.textStyle(p.BOLD);
           p.background(240);
           if(showOldGroups && !showNewGroups) {
-            // Εμφάνιση _μόνο_ της παλιάς ονομασίας (δεύτερη σειρά)
+            // Παλιές ονομασίες στη δεύτερη σειρά
             for (let c = 0; c < 2; c++){
               let x = c * (40 + 2);
               p.fill(240);
@@ -250,7 +250,7 @@
               p.text((c===0)?"ΙΑ":"ΙΙΑ", x + 20, 32);
             }
           } else if(showNewGroups && !showOldGroups) {
-            // Εμφάνιση _μόνο_ της νέας ονομασίας (πρώτη σειρά)
+            // Νέες ονομασίες στην πρώτη σειρά
             for (let c = 0; c < 2; c++){
               let x = c * (40 + 2);
               p.fill(240);
@@ -259,15 +259,15 @@
               p.text((c+1).toString(), x + 20, 10);
             }
           } else if(showOldGroups && showNewGroups) {
-            // Εμφάνιση και των δύο σειρών: Νέες στην πρώτη (y=0) και παλιές στη δεύτερη (y=22)
+            // Εμφάνιση και των δύο σειρών: οι νέες (πρώτη σειρά) και οι παλιές (δεύτερη σειρά)
             for (let c = 0; c < 2; c++){
               let x = c * (40 + 2);
-              // Νέες ονομασίες (πρώτη σειρά)
+              // Νέες ονομασίες στην πρώτη σειρά
               p.fill(240);
               p.rect(x, 0, 40, 20);
               p.fill(0);
               p.text((c+1).toString(), x + 20, 10);
-              // Παλιές ονομασίες (δεύτερη σειρά)
+              // Παλιές ονομασίες στη δεύτερη σειρά
               p.fill(240);
               p.rect(x, 22, 40, 20);
               p.fill(0);
@@ -307,12 +307,12 @@
             const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
             for(let c = 0; c < 10; c++){
               let x = c * (40 + 2);
-              // Νέες ονομασίες (πρώτη σειρά)
+              // Νέες ονομασίες στην πρώτη σειρά
               p.fill(240);
               p.rect(x, 0, 40, 20);
               p.fill(0);
               p.text((c+3).toString(), x + 20, 10);
-              // Παλιές ονομασίες (δεύτερη σειρά)
+              // Παλιές ονομασίες στη δεύτερη σειρά
               p.fill(240);
               p.rect(x, 22, 40, 20);
               p.fill(0);
@@ -352,12 +352,12 @@
             const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
             for(let c = 0; c < 6; c++){
               let x = c * (40 + 2);
-              // Νέες ονομασίες (πρώτη σειρά)
+              // Νέες ονομασίες στην πρώτη σειρά
               p.fill(240);
               p.rect(x, 0, 40, 20);
               p.fill(0);
               p.text((c+13).toString(), x + 20, 10);
-              // Παλιές ονομασίες (δεύτερη σειρά)
+              // Παλιές ονομασίες στη δεύτερη σειρά
               p.fill(240);
               p.rect(x, 22, 40, 20);
               p.fill(0);
@@ -369,7 +369,7 @@
       window.groupsInitialized = true;
     }
     
-    // Επανατοποθέτηση καμβάδων ομάδων: Τώρα οι καμβάδες τοποθετούνται με σταθερό offset 40.
+    // Επανατοποθέτηση καμβάδων ομάδων: Οι καμβάδες τοποθετούνται με offset 40 από το canvas των στοιχείων.
     function repositionGroupCanvasesExpanded() {
       if(document.body.classList.contains('collapsed')) return;
       let sCanvas = document.getElementById('canvasS');
@@ -735,12 +735,12 @@
           };
         });
       });
-      // Εμφάνιση περιοδών και ομάδων μόνο όταν το currentZ είναι 121 ή 122
+      // Όταν currentZ είναι 121, δηλαδή μετά το στοιχείο 2 και με πάτημα "Επόμενο", εμφανίζονται
+      // οι περίοδοι και τα group canvases (με τις παλιές ονομασίες στη δεύτερη σειρά) στις σωστές θέσεις.
       if(currentZ === 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
-        // Εμφάνιση _μόνο_ της παλιάς ονομασίας (δεύτερη σειρά)
         showOldGroups = true;
         showNewGroups = false;
         let csg = document.getElementById('canvasS_groups');
@@ -752,7 +752,7 @@
         initGroupsCanvases();
         repositionGroupCanvasesExpanded();
       } else if (currentZ === 122) {
-        // Εμφάνιση και των δύο σειρών: οι νέες (πρώτη σειρά) και οι παλιές (δεύτερη σειρά)
+        // Εμφάνιση και των δύο σειρών: οι νέες στην πρώτη σειρά και οι παλιές στη δεύτερη.
         showOldGroups = true;
         showNewGroups = true;
         let csg = document.getElementById('canvasS_groups');
@@ -766,7 +766,7 @@
       } else if (currentZ >= 123) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
-        // Στο τελικό στάδιο τα groups παραμένουν αμετάβλητα.
+        // Στο τελικό στάδιο τα groups παραμένουν σταθερά.
       } else {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "none"; }
@@ -779,7 +779,7 @@
       }
       updateToggleButton();
       
-      // Μετατόπιση τομέων d και p μετά το 20 (όπως πριν)
+      // Μετατόπιση τομέων d και p μετά το 20 (όπως στην αρχική λογική)
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -902,12 +902,13 @@
       } else if (currentZ === 119) {
         currentZ = 120; // Προστίθεται ο ήλιος (στοιχείο 2)
       } else if (currentZ === 120) {
-        // Εμφάνιση περιόδων
+        // Μετά το στοιχείο 2, με πάτημα του "Επόμενο" εμφανίζονται οι περίοδοι και οι ομάδες (παλιές ονομασίες)
         document.getElementById('canvasPeriods').style.display = 'block';
         initPeriodsCanvas();
         currentZ = 121;
       } else if (currentZ === 121) {
-        // Εμφάνιση _μόνο_ της παλιάς ονομασίας (δεύτερη σειρά) – θα εμφανιστούν μετά το πάτημα "Επόμενο"
+        // Αν χρειαστεί, εδώ μπορούμε να επεκτείνουμε για να αλλάξουν τα flags για εμφάνιση νέων ονομασιών
+        // αλλά για το συγκεκριμένο αίτημα αφήνουμε τις παλιές ονομασίες να εμφανίζονται (δεύτερη σειρά).
         showOldGroups = true;
         showNewGroups = false;
         currentZ = 122;
