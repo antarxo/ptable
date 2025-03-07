@@ -202,6 +202,7 @@
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null; // για το Balloon
+    let selectedElement = null;    // για έντονο περίγραμμα στο κλικ
 
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
@@ -350,7 +351,10 @@
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  // Αποθήκευση του επιλεγμένου στοιχείου για έντονο περίγραμμα
+                  selectedElement = candidate;
                   window.updateInfo(candidate.number);
+                  // Εμφάνιση "flash" αν το στοιχείο είναι τρέχον
                   if(candidate.number === currentZ) {
                     flashActive = true;
                     setTimeout(() => { flashActive = false; redrawAll(); }, 200);
@@ -485,37 +489,49 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        if(Number(e.number) === currentZ ||
-           ((currentZ === 119) && Number(e.number) === 1) ||
-           ((currentZ === 120) && Number(e.number) === 2)) {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
-          else { p.fill(getBlockColor(e.block)); }
+        // Έλεγχος για το επιλεγμένο στοιχείο: αν το στοιχείο είναι επιλεγμένο, σχεδιάζεται με έντονο περίγραμμα
+        if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
+          p.fill(getBlockColor(e.block));
           p.textSize(16);
           p.textAlign(p.CENTER, p.CENTER);
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
           p.noFill();
           p.stroke(getBlockColor(e.block));
-          p.strokeWeight(4);
-          p.strokeJoin(p.ROUND);
+          p.strokeWeight(6); // Πιο έντονο περίγραμμα
           p.rect(pos.x, pos.y, 40, 40, 5);
-          if(flashActive) {
-            p.drawingContext.shadowBlur = 10;
-            p.drawingContext.shadowColor = "yellow";
-            p.rect(pos.x, pos.y, 40, 40, 5);
-            p.drawingContext.shadowBlur = 0;
-          }
           p.strokeWeight(1);
         } else {
-          if(Number(e.number) === 119) { p.fill("yellow"); }
-          else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
-          else { p.fill(BLOCK_COLORS[e.block]); }
-          p.rect(pos.x, pos.y, 40, 40, 5);
-          p.fill(0);
-          p.textSize(Number(e.number) > 99 ? 10 : 12);
-          p.textStyle(p.BOLD);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          if(Number(e.number) === currentZ ||
+             ((currentZ === 119) && Number(e.number) === 1) ||
+             ((currentZ === 120) && Number(e.number) === 2)) {
+            if(Number(e.number) === 119) { p.fill("yellow"); }
+            else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
+            else { p.fill(getBlockColor(e.block)); }
+            p.textSize(16);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+            p.noFill();
+            p.stroke(getBlockColor(e.block));
+            p.strokeWeight(4);
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            if(flashActive) {
+              p.drawingContext.shadowBlur = 10;
+              p.drawingContext.shadowColor = "yellow";
+              p.rect(pos.x, pos.y, 40, 40, 5);
+              p.drawingContext.shadowBlur = 0;
+            }
+            p.strokeWeight(1);
+          } else {
+            if(Number(e.number) === 119) { p.fill("yellow"); }
+            else if(Number(e.number) === 120) { p.fill(BLOCK_COLORS["s"]); }
+            else { p.fill(BLOCK_COLORS[e.block]); }
+            p.rect(pos.x, pos.y, 40, 40, 5);
+            p.fill(0);
+            p.textSize(Number(e.number) > 99 ? 10 : 12);
+            p.textStyle(p.BOLD);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          }
         }
       });
     }
@@ -623,6 +639,7 @@
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
+                  selectedElement = candidate;
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
                     flashActive = true;
@@ -787,6 +804,7 @@
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
+      selectedElement = null;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
       let cp = document.getElementById('canvasPeriods');
       if(cp) cp.style.display = "none";
