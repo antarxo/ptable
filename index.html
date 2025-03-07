@@ -93,7 +93,7 @@
       width: calc(100vw - 920px);
       z-index: 50;
       text-align: left;
-      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
+      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.3s ease;
       opacity: 1;
     }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική  Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -749,6 +749,7 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
+        // Collapse: ενημερώνουμε τους τομείς/ομάδες ως collapsed
         window.updateSectors("collapsed");
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
@@ -768,26 +769,39 @@
           }, 300);
         }, 1200);
       } else {
-        fullPanel.style.display = "flex";
-        fullPanel.style.zIndex = 40;
-        collapsedPanel.style.display = "none";
-        window.updateSectors("expanded");
-        fullPanel.style.left = "858px";
-        fullPanel.style.top = "112px";
-        fullPanel.style.width = "calc(100vw - 920px)";
-        fullPanel.style.opacity = "1";
+        // Expand: πρώτα εξαφανίζεται ο collapsed πίνακας (fade out)
+        collapsedPanel.style.transition = "opacity 0.3s ease";
+        collapsedPanel.style.opacity = "0";
         setTimeout(() => {
-          fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
-          fullPanel.style.left = "20px";
-          fullPanel.style.top = "443px";
-          fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-        }, 400);
-        setTimeout(() => {
-          document.body.classList.remove('collapsed');
-          toggleBtn.textContent = "Σύμπτυξη";
-          updateInfo(currentZ);
-          window.redrawAll();
-        }, 1200);
+          collapsedPanel.style.display = "none";
+          // Ετοιμάζουμε τον full πίνακα με αρχικά δεδομένα (opacity 0)
+          fullPanel.style.display = "flex";
+          fullPanel.style.zIndex = "40";
+          fullPanel.style.opacity = "0";
+          // Δίνουμε ταυτόχρονα το computed shift στους τομείς και τις ομάδες
+          window.updateSectors("expanded");
+          // Επίσης ενημερώνουμε αμέσως το background ώστε να ακολουθήσει
+          updateTableBackground();
+          // Ορίζουμε αρχική θέση και μέγεθος για τον full πίνακα
+          fullPanel.style.left = "858px";
+          fullPanel.style.top = "112px";
+          fullPanel.style.width = "calc(100vw - 920px)";
+          // Με πολύ σύντομη καθυστέρηση ξεκινάμε την κίνηση και το fade in του full πίνακα
+          setTimeout(() => {
+            fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
+            fullPanel.style.left = "20px";
+            fullPanel.style.top = "443px";
+            fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
+            fullPanel.style.opacity = "1";
+          }, 50);
+          // Όταν ολοκληρωθεί η μετάβαση, ενημερώνουμε το state
+          setTimeout(() => {
+            document.body.classList.remove('collapsed');
+            toggleBtn.textContent = "Σύμπτυξη";
+            updateInfo(currentZ);
+            window.redrawAll();
+          }, 900);
+        }, 300);
       }
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
