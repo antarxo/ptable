@@ -135,7 +135,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευήκού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -227,10 +227,52 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // initGroupsCanvases: Δημιουργεί τους καμβάδες για τις ομάδες σύμφωνα με τα flags.
+    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση initGroupsCanvases για την εμφάνιση των ομάδων
     function initGroupsCanvases() {
       window.groupsInitialized = false;
-      // Canvas για s
+      
+      // Βοηθητική συνάρτηση για ζωγραφική των ετικετών ομάδων
+      function drawGroupLabels(p, numGroups, newStart, oldLabels) {
+        const rectWidth = 40;
+        const rectHeight = 20;
+        const padding = 2;
+        if (showOldGroups && showNewGroups) {
+          // Εμφάνιση και των δύο σειρών: νέες στην πρώτη, παλιές στη δεύτερη
+          for (let c = 0; c < numGroups; c++){
+            let x = c * (rectWidth + padding);
+            // Νέες ονομασίες (πάνω σειρά)
+            p.fill(240);
+            p.rect(x, 0, rectWidth, rectHeight);
+            p.fill(0);
+            p.text((newStart + c).toString(), x + rectWidth/2, 10);
+            // Παλιές ονομασίες (κάτω σειρά)
+            p.fill(240);
+            p.rect(x, 22, rectWidth, rectHeight);
+            p.fill(0);
+            p.text(oldLabels[c], x + rectWidth/2, 32);
+          }
+        } else if (showNewGroups) {
+          // Μόνο νέες ονομασίες (πάνω σειρά)
+          for (let c = 0; c < numGroups; c++){
+            let x = c * (rectWidth + padding);
+            p.fill(240);
+            p.rect(x, 0, rectWidth, rectHeight);
+            p.fill(0);
+            p.text((newStart + c).toString(), x + rectWidth/2, 10);
+          }
+        } else if (showOldGroups) {
+          // Μόνο παλιές ονομασίες (κάτω σειρά)
+          for (let c = 0; c < numGroups; c++){
+            let x = c * (rectWidth + padding);
+            p.fill(240);
+            p.rect(x, 22, rectWidth, rectHeight);
+            p.fill(0);
+            p.text(oldLabels[c], x + rectWidth/2, 32);
+          }
+        }
+      }
+      
+      // Καμβάς για τις ομάδες του s
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -240,43 +282,11 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          if(showOldGroups && !showNewGroups) {
-            // Παλιές ονομασίες στη δεύτερη σειρά
-            for (let c = 0; c < 2; c++){
-              let x = c * (40 + 2);
-              p.fill(240);
-              p.rect(x, 22, 40, 20);
-              p.fill(0);
-              p.text((c===0)?"ΙΑ":"ΙΙΑ", x + 20, 32);
-            }
-          } else if(showNewGroups && !showOldGroups) {
-            // Νέες ονομασίες στην πρώτη σειρά
-            for (let c = 0; c < 2; c++){
-              let x = c * (40 + 2);
-              p.fill(240);
-              p.rect(x, 0, 40, 20);
-              p.fill(0);
-              p.text((c+1).toString(), x + 20, 10);
-            }
-          } else if(showOldGroups && showNewGroups) {
-            // Εμφάνιση και των δύο σειρών: οι νέες (πρώτη σειρά) και οι παλιές (δεύτερη σειρά)
-            for (let c = 0; c < 2; c++){
-              let x = c * (40 + 2);
-              // Νέες ονομασίες στην πρώτη σειρά
-              p.fill(240);
-              p.rect(x, 0, 40, 20);
-              p.fill(0);
-              p.text((c+1).toString(), x + 20, 10);
-              // Παλιές ονομασίες στη δεύτερη σειρά
-              p.fill(240);
-              p.rect(x, 22, 40, 20);
-              p.fill(0);
-              p.text((c===0)?"ΙΑ":"ΙΙΑ", x + 20, 32);
-            }
-          }
+          drawGroupLabels(p, 2, 1, ["ΙΑ", "ΙΙΑ"]);
         };
       });
-      // Canvas για d
+      
+      // Καμβάς για τις ομάδες του d
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -286,42 +296,11 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          if(showOldGroups && !showNewGroups) {
-            const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
-            for(let c = 0; c < 10; c++){
-              let x = c * (40 + 2);
-              p.fill(240);
-              p.rect(x, 22, 40, 20);
-              p.fill(0);
-              p.text(oldLabels[c], x + 20, 32);
-            }
-          } else if(showNewGroups && !showOldGroups) {
-            for(let c = 0; c < 10; c++){
-              let x = c * (40 + 2);
-              p.fill(240);
-              p.rect(x, 0, 40, 20);
-              p.fill(0);
-              p.text((c+3).toString(), x + 20, 10);
-            }
-          } else if(showOldGroups && showNewGroups) {
-            const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
-            for(let c = 0; c < 10; c++){
-              let x = c * (40 + 2);
-              // Νέες ονομασίες στην πρώτη σειρά
-              p.fill(240);
-              p.rect(x, 0, 40, 20);
-              p.fill(0);
-              p.text((c+3).toString(), x + 20, 10);
-              // Παλιές ονομασίες στη δεύτερη σειρά
-              p.fill(240);
-              p.rect(x, 22, 40, 20);
-              p.fill(0);
-              p.text(oldLabels[c], x + 20, 32);
-            }
-          }
+          drawGroupLabels(p, 10, 3, ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"]);
         };
       });
-      // Canvas για p
+      
+      // Καμβάς για τις ομάδες του p
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
@@ -331,41 +310,10 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          if(showOldGroups && !showNewGroups) {
-            const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
-            for(let c = 0; c < 6; c++){
-              let x = c * (40 + 2);
-              p.fill(240);
-              p.rect(x, 22, 40, 20);
-              p.fill(0);
-              p.text(oldLabels[c], x + 20, 32);
-            }
-          } else if(showNewGroups && !showOldGroups) {
-            for(let c = 0; c < 6; c++){
-              let x = c * (40 + 2);
-              p.fill(240);
-              p.rect(x, 0, 40, 20);
-              p.fill(0);
-              p.text((c+13).toString(), x + 20, 10);
-            }
-          } else if(showOldGroups && showNewGroups) {
-            const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
-            for(let c = 0; c < 6; c++){
-              let x = c * (40 + 2);
-              // Νέες ονομασίες στην πρώτη σειρά
-              p.fill(240);
-              p.rect(x, 0, 40, 20);
-              p.fill(0);
-              p.text((c+13).toString(), x + 20, 10);
-              // Παλιές ονομασίες στη δεύτερη σειρά
-              p.fill(240);
-              p.rect(x, 22, 40, 20);
-              p.fill(0);
-              p.text(oldLabels[c], x + 20, 32);
-            }
-          }
+          drawGroupLabels(p, 6, 13, ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"]);
         };
       });
+      
       window.groupsInitialized = true;
     }
     
@@ -902,7 +850,8 @@
       } else if (currentZ === 119) {
         currentZ = 120; // Προστίθεται ο ήλιος (στοιχείο 2)
       } else if (currentZ === 120) {
-        // Μετά το στοιχείο 2, με πάτημα του "Επόμενο" εμφανίζονται οι περίοδοι και οι ομάδες (παλιές ονομασίες)
+        // Μετά το στοιχείο 2, με πάτημα του "Επόμενο" εμφανίζονται
+        // οι περίοδοι και οι ομάδες (παλιές ονομασίες)
         document.getElementById('canvasPeriods').style.display = 'block';
         initPeriodsCanvas();
         currentZ = 121;
@@ -913,7 +862,7 @@
         showNewGroups = false;
         currentZ = 122;
       } else if (currentZ === 122) {
-        // Εμφάνιση και των δύο σειρών: νέες (πρώτη σειρά) και παλιές (δεύτερη σειρά)
+        // Εμφάνιση και των δύο σειρών: νέες (πάνω σειρά) και παλιές (κάτω σειρά)
         showOldGroups = true;
         showNewGroups = true;
         currentZ = 123;
