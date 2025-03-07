@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή </div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -842,7 +842,8 @@
       document.getElementById('toggleFBlock').disabled = false;
     });
     document.getElementById('reset').addEventListener('click', function() {
-      currentZ = 0;
+      // Αντί για currentZ = 0, ορίζουμε currentZ = 2 ώστε να μην εμφανίζεται "στοιχείο" 0
+      currentZ = 2;
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
@@ -898,6 +899,29 @@
           };
         });
       });
+      // Εμφάνιση περιόδων (μόνο όταν currentZ >= 121)
+      if(currentZ >= 121) {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "block"; }
+        initPeriodsCanvas();
+      } else {
+        let cp = document.getElementById('canvasPeriods'); if(cp) { cp.style.display = "none"; }
+      }
+      // Εμφάνιση ομάδων (μόνο όταν currentZ >= 122)
+      if(currentZ >= 122) {
+        let csg = document.getElementById('canvasS_groups');
+        let cdg = document.getElementById('canvasD_groups');
+        let cpg = document.getElementById('canvasP_groups');
+        if(csg) { csg.style.display = "block"; }
+        if(cdg) { cdg.style.display = "block"; }
+        if(cpg) { cpg.style.display = "block"; }
+        window.setFixedGroupsPositions("expanded");
+        initGroupsCanvases();
+      } else {
+        let csg = document.getElementById('canvasS_groups'); if(csg) { csg.style.display = "none"; }
+        let cdg = document.getElementById('canvasD_groups'); if(cdg) { cdg.style.display = "none"; }
+        let cpg = document.getElementById('canvasP_groups'); if(cpg) { cpg.style.display = "none"; }
+      }
       if(!document.body.classList.contains('collapsed')) {
         let base = 159, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -913,23 +937,6 @@
         let cF = document.getElementById('canvasF'); if(cF) { cF.style.left = "179px"; }
         let cD = document.getElementById('canvasD'); if(cD) { cD.style.left = "164px"; }
         let cP = document.getElementById('canvasP'); if(cP) { cP.style.left = "584px"; }
-      }
-      if(currentZ >= 121) {
-        let cp = document.getElementById('canvasPeriods'); if(cp) { cp.style.display = "block"; }
-        initPeriodsCanvas();
-        let csg = document.getElementById('canvasS_groups');
-        let cdg = document.getElementById('canvasD_groups');
-        let cpg = document.getElementById('canvasP_groups');
-        if(csg) { csg.style.display = "block"; }
-        if(cdg) { cdg.style.display = "block"; }
-        if(cpg) { cpg.style.display = "block"; }
-        window.setFixedGroupsPositions("expanded");
-        initGroupsCanvases();
-      } else {
-        let cp = document.getElementById('canvasPeriods'); if(cp) { cp.style.display = "none"; }
-        let csg = document.getElementById('canvasS_groups'); if(csg) { csg.style.display = "none"; }
-        let cdg = document.getElementById('canvasD_groups'); if(cdg) { cdg.style.display = "none"; }
-        let cpg = document.getElementById('canvasP_groups'); if(cpg) { cpg.style.display = "none"; }
       }
       updateToggleButton();
       updateTableBackground();
