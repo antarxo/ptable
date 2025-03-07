@@ -35,7 +35,7 @@
     /* Καμβάδες Περιόδων και Ομάδων */
     #canvasPeriods {
       position: absolute;
-      left: 31px; /* μετατοπισμός 25px δεξιότερα από 6px */
+      left: 31px; /* αρχικά 6px + 25px μετατόπιση */
       top: 120px;
       width: 42px;
       height: 292px;
@@ -64,7 +64,7 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 428px;
+      top: 443px; /* αρχικά 428px + 15px χαμηλότερα */
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
@@ -75,11 +75,13 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
+    /* Όταν το body έχει κλάση collapsed, μετακινείται 10px δεξιότερα */
     body.collapsed #infoPanelFull {
-      left: 848px;
+      left: 858px; /* 848px + 10px */
       top: 112px;
       width: calc(100vw - 920px);
     }
+    /* Info Panel Collapsed */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -88,8 +90,8 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       padding: 20px;
-      position: absolute;
-      left: 848px;
+      /* Σε collapsed χρησιμοποιούμε την ίδια θέση που έχει ο full πίνακας σε collapsed (με left 858px) */
+      left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
       z-index: 40;
@@ -317,7 +319,7 @@
             const config = BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            // Ενημέρωση θέσης με μετατόπιση 25px δεξιότερα
+            // Θέσεις με μετατόπιση 25px (έχουμε ήδη ενημερώσει τα CSS)
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "75px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
@@ -330,13 +332,13 @@
             drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            // Νέα λογική για ανίχνευση κλικ μέσω υπολογισμού "κελιών"
+            // Νέα λογική ανίχνευσης κλικ: υπολογισμός κελιών με χρήση constrain για τον s τομέα
             p.mouseClicked = function() {
               if(p.skipNextClick || ignoreCanvasClick) { return; }
               let cellX, cellY;
               if(block === 's') {
-                cellX = Math.floor(p.mouseX / 42) + 1;
-                cellY = Math.floor(p.mouseY / 42) + 1;
+                cellX = p.constrain(Math.floor(p.mouseX / 42) + 1, 1, 2);
+                cellY = p.constrain(Math.floor(p.mouseY / 42) + 1, 1, 7);
               } else if(block === 'f' || block === 'd') {
                 cellX = Math.floor(p.mouseX / 42) + 3;
                 cellY = Math.floor(p.mouseY / 42) + 1;
@@ -349,7 +351,7 @@
                   cellY = Math.floor(p.mouseY / 42) + 1;
                 }
               }
-              // Εύρεση στοιχείου με βάση τα κελιά και τις συνθήκες του currentZ
+              // Εύρεση του στοιχείου που αντιστοιχεί στα υπολογισμένα κελιά
               let candidate = elements.find(e => 
                 e.block === block &&
                 Number(e.col) === cellX &&
@@ -612,7 +614,7 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            // Ενημέρωση θέσης με μετατόπιση 25px
+            // Θέσεις με μετατόπιση 25px
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "75px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
@@ -628,8 +630,8 @@
               if(p.skipNextClick) { return; }
               let cellX, cellY;
               if(block === 's') {
-                cellX = Math.floor(p.mouseX / 42) + 1;
-                cellY = Math.floor(p.mouseY / 42) + 1;
+                cellX = p.constrain(Math.floor(p.mouseX / 42) + 1, 1, 2);
+                cellY = p.constrain(Math.floor(p.mouseY / 42) + 1, 1, 7);
               } else if(block === 'f' || block === 'd') {
                 cellX = Math.floor(p.mouseX / 42) + 3;
                 cellY = Math.floor(p.mouseY / 42) + 1;
@@ -780,7 +782,7 @@
       }
     }
     
-    // Νέα συνάρτηση: Ενημέρωση του background για τον Περιοδικό Πίνακα με επιπλέον περιθώριο 10px γύρω
+    // Νέα συνάρτηση: Ενημέρωση του background για τον Περιοδικό Πίνακα με επιπλέον περιθώριο 5px (πάνω και αριστερά 15px συνολικά)
     function updateTableBackground() {
       const ids = ["canvasPeriods", "canvasS_groups", "canvasD_groups", "canvasP_groups", "canvasS", "canvasF", "canvasD", "canvasP"];
       let minLeft = Infinity, minTop = Infinity, maxRight = -Infinity, maxBottom = -Infinity;
@@ -796,11 +798,11 @@
       });
       let bg = document.getElementById("canvasTableBackground");
       if(bg && minLeft !== Infinity) {
-        // Προσθέτουμε περιθώριο 10px γύρω από το bounding box
-        bg.style.left = (minLeft - 10) + "px";
-        bg.style.top = (minTop - 10) + "px";
-        bg.style.width = (maxRight - minLeft + 20) + "px";
-        bg.style.height = (maxBottom - minTop + 20) + "px";
+        // Αύξηση του πάνω και αριστερού περιθωρίου κατά 5, δηλαδή 15px συνολικά
+        bg.style.left = (minLeft - 15) + "px";
+        bg.style.top = (minTop - 15) + "px";
+        bg.style.width = (maxRight - minLeft + 30) + "px";
+        bg.style.height = (maxBottom - minTop + 30) + "px";
       }
     }
     
