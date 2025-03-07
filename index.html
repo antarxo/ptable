@@ -123,9 +123,12 @@
       display: none;
       z-index: 5;
     }
-    /* Οι καμβάδες ομάδων (s, d, p) τοποθετούνται δυναμικά */
+    /* Οι καμβάδες ομάδων (S, D, P) – οι θέσεις τους ορίζονται πάντα σε σχέση με τους τομείς */
     #canvasS_groups, #canvasD_groups, #canvasP_groups {
-      width: auto; height: auto; display: none; z-index: 50;
+      width: auto; 
+      height: auto; 
+      display: none; 
+      z-index: 50;
     }
     .full #canvasS { top: 120px; left: 50px; z-index: 1; }
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 2; }
@@ -135,11 +138,13 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική καιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική Πίνακα</div>
   
-  <!-- Καμβάδες Περιόδων και Ομάδων -->
+  <!-- Καμβάδες Περιόδων -->
   <div id="canvasPeriods" class="canvas"></div>
-  <!-- Οι καμβάδες ομάδων ξεκινούν κρυμμένοι -->
+  
+  <!-- Καμβάδες Ομάδων -->
+  <!-- Οι καμβάδες των ομάδων δημιουργούνται ξεχωριστά, αλλά η θέση τους υπολογίζεται πάντα σε σχέση με τους αντίστοιχους τομείς -->
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
@@ -182,7 +187,7 @@
     let flashActive = false;
     let lastClickedElement = null;
     let subshellsP;
-    // Μεταβλητή για να αποτρέψουμε επανέλεγχο των ομάδων μετά το πρώτο πάτημα
+    // Μεταβλητή για να αποτρέψουμε διπλές ενέργειες στο "Συμπλήρωσε"
     let fillAllDone = false;
     
     // Χρώματα τομέων
@@ -226,7 +231,7 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
-    // initGroupsCanvases: Εμφανίζει για κάθε καμβά ομάδων (s, d, p) τις νέες (πάνω γραμμή) και τις παλιές (κάτω γραμμή)
+    // Δημιουργία καμβάδων ομάδων (S, D, P)
     function initGroupsCanvases() {
       window.groupsInitialized = false;
       
@@ -283,10 +288,8 @@
       window.groupsInitialized = true;
     }
     
-    // repositionGroupCanvasesExpanded: Τοποθετεί τους καμβάδες των ομάδων ώστε να "ακολουθούν" τη θέση των τομέων (για αναπτυγμένο πίνακα)
+    // Επαναπροσδιορισμός θέσεων καμβάδων ομάδων σε σχέση με τους τομείς τους (για αναπτυγμένη διάταξη)
     function repositionGroupCanvasesExpanded() {
-      if(document.body.classList.contains('collapsed')) return;
-      
       let sCanvas = document.getElementById('canvasS');
       if(sCanvas) {
         let gs = document.getElementById('canvasS_groups');
@@ -303,31 +306,6 @@
         gd.style.top = (dRect.top - 40) + "px";
       }
       
-      let pCanvas = document.getElementById('canvasP');
-      if(pCanvas) {
-        let gp = document.getElementById('canvasP_groups');
-        let pRect = pCanvas.getBoundingClientRect();
-        gp.style.left = pRect.left + "px";
-        gp.style.top = (pRect.top - 40) + "px";
-      }
-    }
-    
-    // repositionGroupCanvasesAll: Τοποθετεί τους καμβάδες των ομάδων ανεξάρτητα από το αν ο πίνακας είναι αναπτυγμένος ή συνεπτυγμένος.
-    function repositionGroupCanvasesAll() {
-      let sCanvas = document.getElementById('canvasS');
-      if(sCanvas) {
-        let gs = document.getElementById('canvasS_groups');
-        let sRect = sCanvas.getBoundingClientRect();
-        gs.style.left = sRect.left + "px";
-        gs.style.top = (sRect.top - 40) + "px";
-      }
-      let dCanvas = document.getElementById('canvasD');
-      if(dCanvas) {
-        let gd = document.getElementById('canvasD_groups');
-        let dRect = dCanvas.getBoundingClientRect();
-        gd.style.left = dRect.left + "px";
-        gd.style.top = (dRect.top - 40) + "px";
-      }
       let pCanvas = document.getElementById('canvasP');
       if(pCanvas) {
         let gp = document.getElementById('canvasP_groups');
@@ -592,8 +570,7 @@
       subshellsP.redraw();
     }
     
-    // updateBalloonPosition: Ανεβάζει το balloon από την υπολογιζόμενη θέση κατά (balloonHeight+44) px,
-    // και στη συνέχεια το κατεβάζει κατά 20px (δηλαδή, το κάτω του άκρο τοποθετείται 20px πιο κάτω από την πάνω γωνία του κελιού).
+    // updateBalloonPosition: Τοποθετεί το balloon με βάση την θέση του στοιχείου
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -603,7 +580,7 @@
       let rect = blockCanvas.getBoundingClientRect();
       let pos = calculatePosition(element, element.block);
       let defaultTop = rect.top + pos.y + 40;
-      // Αν ανεβάσουμε το balloon κατά (balloonHeight+44), τότε κατεβάζουμε κατά 20px από αυτό:
+      // Αν ανεβάσουμε το balloon κατά (balloonHeight+44), τότε κατεβάζουμε κατά 20px:
       let newTop = defaultTop - (cs.offsetHeight + 44) + 20;
       
       let defaultLeft = rect.left + pos.x + 40;
@@ -623,6 +600,8 @@
     window.addEventListener('resize', function() {
       updateRightPanelWidth();
       if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+      // Επαναϋπολογισμός θέσεων ομάδων κάθε φορά που αλλάζει το μέγεθος/θέση
+      repositionGroupCanvasesExpanded();
     });
     
     function redrawAll() {
@@ -689,7 +668,7 @@
         cdg.style.display = "block";
         cpg.style.display = "block";
         initGroupsCanvases();
-        // Στο redrawAll καλούμε τη repositionGroupCanvasesExpanded για την αναπτυγμένη διάταξη
+        // Επαναϋπολογισμός θέσεων ομάδων σε σχέση με τους τομείς
         repositionGroupCanvasesExpanded();
         if(currentZ === 122) {
           currentZ = 123;
@@ -835,15 +814,14 @@
       updateInfo(currentZ);
       setTimeout(() => { 
         ignoreCanvasClick = false; 
-        if(!document.body.classList.contains('collapsed')){
-          repositionGroupCanvasesExpanded();
-        }
+        // Κάθε φορά που οι τομείς αλλάζουν θέση, οι ομάδες επανυπολογίζονται
+        repositionGroupCanvasesExpanded();
       }, 100);
     });
     
     // Χειριστής του κουμπιού "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
-      // Αν έχει ήδη γίνει το πρώτο πάτημα, δεν κάνουμε τίποτα για τις ομάδες
+      // Δεν αποτρέπουμε πλέον επανυπολογισμό των ομάδων – οι θέσεις τους καθορίζονται αυστηρά σε σχέση με τους τομείς.
       if(fillAllDone) return;
       fillAllDone = true;
       
@@ -861,8 +839,8 @@
       redrawAll();
       updateInfo(currentZ);
       
-      // Εδώ καλούμε την νέα συνάρτηση που τοποθετεί τις ομάδες ανεξάρτητα από την κατάσταση του πίνακα
-      setTimeout(repositionGroupCanvasesAll, 100);
+      // Επαναϋπολογισμός θέσεων ομάδων ώστε να ευθυγραμμίζονται με τους τομείς
+      setTimeout(repositionGroupCanvasesExpanded, 100);
       
       document.getElementById('toggleFBlock').disabled = false;
     });
