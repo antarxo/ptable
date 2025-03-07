@@ -78,12 +78,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Όταν είναι collapsed */
-    body.collapsed #infoPanelFull {
-      left: 858px;
-      top: 112px;
-      width: calc(100vw - 920px);
-    }
+    /* Ο collapsed panel έχει υψηλότερο z-index */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -95,7 +90,7 @@
       left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
-      z-index: 40;
+      z-index: 50;
       text-align: left;
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
       opacity: 1;
@@ -151,7 +146,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστικήικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -190,7 +185,6 @@
   <script>
     /*================ Global Variables and Helpers =================*/
     let elements = [];
-    // Αρχική τιμή currentZ = 0 ώστε να μην εμφανίζεται το στοιχείο, αλλά να σχεδιάζεται ο placeholder
     let currentZ = 0;
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
@@ -267,7 +261,6 @@
         }, 100);
       }
     }
-    // Νέα συνάρτηση για σχεδίαση placeholder του background canvas (62x62) στην θέση του κελιού με Ζ=3
     function drawPlaceholderBackground() {
       if(elements.length === 0) return;
       let element = elements.find(e => Number(e.number) === 3);
@@ -386,11 +379,9 @@
         .then(response => response.json())
         .then(data => {
           elements = sortElements(data);
-          // Σχεδιάζουμε τον placeholder background όταν currentZ = 0
           if(currentZ === 0) drawPlaceholderBackground();
           initializeCanvases();
           initSubshellsCanvas();
-          // Εδώ δεν καλείται updateInfo γιατί currentZ = 0 (δεν υπάρχει στοιχείο για εμφάνιση)
           updateToggleButton();
         })
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
@@ -724,7 +715,7 @@
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       let fullPanel = document.getElementById('infoPanelFull');
-      // ΔΕΝ θα αλλάζουμε την εμφάνιση του fullPanel, απλά θα μετακινούμε και θα αλλάζουμε το μέγεθός του.
+      let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
         // Ακολουθία σύμπτυξης:
         updateSectorsCollapsed();
@@ -735,14 +726,20 @@
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
         setTimeout(() => {
-          // Δεν κρύβουμε πλέον το fullPanel, απλώς ενημερώνουμε την κλάση collapsed.
+          // Εμφάνιση collapsed panel με υψηλότερο z-index και μετά από μικρό delay εξαφάνιση του full panel
+          collapsedPanel.style.display = "flex";
+          collapsedPanel.style.zIndex = 50;
           document.body.classList.add('collapsed');
           toggleBtn.textContent = "Ανάπτυξη";
           updateInfo(currentZ);
           window.redrawAll();
+          setTimeout(() => { fullPanel.style.display = "none"; }, 300);
         }, 1200);
       } else {
         // Ακολουθία ανάπτυξης:
+        fullPanel.style.display = "flex";
+        fullPanel.style.zIndex = 40;
+        collapsedPanel.style.display = "none";
         updateSectorsExpanded();
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
@@ -766,10 +763,8 @@
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1700);
     });
-    // Event listeners ορίζονται μία φορά
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
-      // Όταν πατηθεί "Επόμενο", αλλάζουμε currentZ από 0 σε 3 (και το updateInfo θα εμφανίσει το κελί του στοιχείου με Ζ=3)
       if(currentZ < 3) { currentZ = 3; }
       else if(currentZ < 118) { currentZ++; }
       else if(currentZ === 118) { currentZ = 119; }
@@ -807,11 +802,9 @@
       let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
-      // Με το reset επαναφέρουμε και τον placeholder background για Ζ=3
       setTimeout(() => { updateInfo(currentZ); drawPlaceholderBackground(); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
-    // Μοναδική συνάρτηση redrawAll στο window.
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
