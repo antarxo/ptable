@@ -494,7 +494,7 @@
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
-                setTimeout(() => { flashActive = false; redrawAll(); }, 200);
+                setTimeout(() => { flashActive = false; window.redrawAll(); }, 200);
               }
             };
           };
@@ -769,16 +769,16 @@
           document.body.classList.add('collapsed');
           toggleBtn.textContent = "Ανάπτυξη";
           updateInfo(currentZ);
-          redrawAll();
+          window.redrawAll();
         }, 800);
       } else {
         // Expand sequence:
         // 1. Διαβάζουμε τη θέση και το μέγεθος του fullPanel στην αρχική του κατάσταση και το εμφανίζουμε εκεί.
-        // 2. Το fullPanel μετακινείται μετά από 0.4s στη θέση του collapsedPanel (το οποίο βρίσκεται αθέατο εκεί) με τελικό μέγεθος collapsed 
-        //    (width: calc(100vw - 920px)) στην θέση left:858px; top:112px σε 0.8s.
+        // 2. Το fullPanel μετακινείται μετά από 0.4s στη θέση του collapsedPanel (το οποίο βρίσκεται αθέατο εκεί)
+        //    με τελικό μέγεθος collapsed (width: calc(100vw - 920px)) στην θέση left:858px; top:112px σε 0.8s.
         // 3. Το fullPanel στη συνέχεια εξαφανίζεται. Η διαδικασία τελειώνει με delay 500ms.
         fullPanel.style.display = "flex";
-        // Εμφανίζουμε το fullPanel στην αρχική του θέση και μέγεθος
+        // Εμφανίζουμε το fullPanel στην αρχική του κατάσταση:
         fullPanel.style.left = "20px";
         fullPanel.style.top = "443px";
         fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
@@ -797,8 +797,8 @@
           document.body.classList.remove('collapsed');
           toggleBtn.textContent = "Σύμπτυξη";
           updateInfo(currentZ);
-          redrawAll();
-        }, 900); // 500ms delay after transition end (400ms delay + 800ms transition ~900ms total)
+          window.redrawAll();
+        }, 900); // 500ms delay μετά την ολοκλήρωση της μετακίνησης
       }
       // Με την ολοκλήρωση των μετακινήσεων, προσθέτουμε delay 700ms για να διαβαστούν οι θέσεις των κελιών και να ενημερωθεί το Balloon.
       setTimeout(function() {
@@ -816,7 +816,7 @@
       } else if(currentZ === 119) { 
         currentZ = 120; 
       }
-      redrawAll();
+      window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
     });
@@ -832,7 +832,7 @@
       cdg.style.display = "block";
       cpg.style.display = "block";
       initGroupsCanvases();
-      redrawAll();
+      window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(repositionGroupCanvasesExpanded, 800);
       document.getElementById('toggleFBlock').disabled = false;
@@ -860,10 +860,162 @@
       document.getElementById('canvasTableBackground').style.display = "none";
     });
 
+    // Εκχώρηση του redrawAll στο window ώστε να είναι προσβάσιμο από όλα τα scopes.
+    window.redrawAll = function redrawAll() {
+      Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
+        let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
+        if(canvasDiv) { canvasDiv.innerHTML = ""; }
+        new p5(function(p) {
+          p.setup = function() {
+            const config = window.BLOCKS_CONFIG[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+            canvas.parent("canvas" + block.toUpperCase());
+            canvas.elt.style.height = config.rows * 42 + "px";
+            if(document.body.classList.contains('collapsed')){
+              if(block === 's') { canvas.elt.style.left = "75px"; }
+              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
+              else if(block === 'p') { canvas.elt.style.left = "584px"; }
+            } else {
+              if(block === 's') { canvas.elt.style.left = "75px"; }
+              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "159px"; }
+            }
+            drawElements(p, block);
+            p.skipNextClick = true;
+            setTimeout(() => { p.skipNextClick = false; }, 100);
+            p.mouseClicked = function(event) {
+              if(p.skipNextClick) { return; }
+              let globalX = event.clientX;
+              let globalY = event.clientY;
+              let posData = window.cellPositions;
+              let blockPositions = posData ? posData[block] : [];
+              let candidate = blockPositions.find(pos =>
+                  globalX >= pos.left && globalX <= pos.right &&
+                  globalY >= pos.top && globalY <= pos.bottom
+              );
+              if(candidate) {
+                console.log("Selected element:", candidate.element);
+                selectedElement = candidate.element;
+                updateBalloonPosition(candidate.element);
+                setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
+                flashActive = true;
+                setTimeout(() => { flashActive = false; window.redrawAll(); }, 200);
+              }
+            };
+          };
+        });
+      });
+      if(!document.body.classList.contains('collapsed')) {
+        let base = 159, shiftP = 0, shiftD = 0;
+        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); shiftD = 0; }
+        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; shiftD = 0; }
+        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.left = base + "px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.left = (base + shiftD) + "px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.left = (base + shiftP) + "px"; }
+      } else {
+        let cS = document.getElementById('canvasS');
+        if(cS) { cS.style.left = "75px"; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.left = "179px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.left = "164px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.left = "584px"; }
+      }
+      if(currentZ >= 121) {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "block"; }
+        initPeriodsCanvas();
+        let csg = document.getElementById('canvasS_groups');
+        let cdg = document.getElementById('canvasD_groups');
+        let cpg = document.getElementById('canvasP_groups');
+        if(csg) { csg.style.display = "block"; }
+        if(cdg) { cdg.style.display = "block"; }
+        if(cpg) { cpg.style.display = "block"; }
+        let csgLeft = document.getElementById('canvasS_groups');
+        if(csgLeft) { csgLeft.style.top = "78px"; csgLeft.style.left = "75px"; }
+        let dLeft = document.getElementById('canvasD').style.left;
+        let cdgLeft = document.getElementById('canvasD_groups');
+        if(cdgLeft) { cdgLeft.style.top = "78px"; cdgLeft.style.left = dLeft; }
+        let pLeft = document.getElementById('canvasP').style.left;
+        let cpgLeft = document.getElementById('canvasP_groups');
+        if(cpgLeft) { cpgLeft.style.top = "78px"; cpgLeft.style.left = pLeft; }
+        initGroupsCanvases();
+      } else {
+        let cp = document.getElementById('canvasPeriods');
+        if(cp) { cp.style.display = "none"; }
+        let csg = document.getElementById('canvasS_groups');
+        if(csg) { csg.style.display = "none"; }
+        let cdg = document.getElementById('canvasD_groups');
+        if(cdg) { cdg.style.display = "none"; }
+        let cpg = document.getElementById('canvasP_groups');
+        if(cpg) { cpg.style.display = "none"; }
+      }
+      updateToggleButton();
+      updateTableBackground();
+    };
+
+    document.getElementById('nextElement').addEventListener('click', function() {
+      ignoreCanvasClick = true;
+      if(currentZ < 118) { 
+        currentZ++; 
+      } else if(currentZ === 118) { 
+        currentZ = 119; 
+      } else if(currentZ === 119) { 
+        currentZ = 120; 
+      }
+      window.redrawAll();
+      setTimeout(() => { updateInfo(currentZ); }, 300);
+      setTimeout(() => { ignoreCanvasClick = false; }, 300);
+    });
+
+    document.getElementById('fillAll').addEventListener('click', function() {
+      if(currentZ === 123) return;
+      currentZ = 123;
+      document.getElementById('canvasPeriods').style.display = 'block';
+      let csg = document.getElementById('canvasS_groups');
+      let cdg = document.getElementById('canvasD_groups');
+      let cpg = document.getElementById('canvasP_groups');
+      csg.style.display = "block";
+      cdg.style.display = "block";
+      cpg.style.display = "block";
+      initGroupsCanvases();
+      window.redrawAll();
+      setTimeout(() => { updateInfo(currentZ); }, 300);
+      setTimeout(repositionGroupCanvasesExpanded, 800);
+      document.getElementById('toggleFBlock').disabled = false;
+    });
+
+    document.getElementById('reset').addEventListener('click', function() {
+      currentZ = 3;
+      window.groupsInitialized = false;
+      window.periodsInitialized = false;
+      window.subshellsInitialized = false;
+      selectedElement = null;
+      document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
+      let cp = document.getElementById('canvasPeriods');
+      if(cp) cp.style.display = "none";
+      let csg = document.getElementById('canvasS_groups');
+      if(csg) csg.style.display = "none";
+      let cdg = document.getElementById('canvasD_groups');
+      if(cdg) cdg.style.display = "none";
+      let cpg = document.getElementById('canvasP_groups');
+      if(cpg) cpg.style.display = "none";
+      initializeCanvases();
+      initSubshellsCanvas();
+      setTimeout(() => { updateInfo(currentZ); }, 300);
+      document.getElementById('canvasTableBackground').style.display = "none";
+    });
+
     window.loadElements = loadElements;
     window.initializeCanvases = initializeCanvases;
     window.updateInfo = updateInfo;
-    window.redrawAll = redrawAll;
+    // window.redrawAll έχει εκχωρηθεί παραπάνω
     window.initPeriodsCanvas = initPeriodsCanvas;
     window.initGroupsCanvases = initGroupsCanvases;
 
