@@ -562,6 +562,27 @@
       window.groupsInitialized = true;
     }
     
+    // Συνάρτηση για αναπροσαρμογή θέσεων των group canvases όταν είναι expanded
+    function repositionGroupCanvasesExpanded() {
+      let csg = document.getElementById('canvasS_groups');
+      if(csg) {
+        csg.style.top = "78px";
+        csg.style.left = "75px";
+      }
+      let canvasD = document.getElementById('canvasD');
+      let cdg = document.getElementById('canvasD_groups');
+      if(cdg && canvasD) {
+        cdg.style.top = "78px";
+        cdg.style.left = canvasD.style.left;
+      }
+      let canvasP = document.getElementById('canvasP');
+      let cpg = document.getElementById('canvasP_groups');
+      if(cpg && canvasP) {
+        cpg.style.top = "78px";
+        cpg.style.left = canvasP.style.left;
+      }
+    }
+    
     function drawElements(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
