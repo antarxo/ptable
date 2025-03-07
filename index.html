@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Διάταξη εσωτερικών χώρων του infoPanelFull */
+    /* Ανακατανομή εσωτερικών χώρων: */
     #leftPanelFull {
       width: 200px;
     }
@@ -59,7 +59,7 @@
       width: 30%;
       text-align: left;
     }
-    /* Όταν το body έχει κλάση collapsed, ο full πίνακας μετακινείται/μεγεθύνεται */
+    /* Όταν το body έχει κλάση collapsed, ο πίνακας μετακινείται/μεγεθύνεται */
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
@@ -81,11 +81,10 @@
       z-index: 40;
       text-align: left;
     }
-    /* Εσωτερικά τμήματα των info panels */
+    /* Εσωτερικά τμήματα των panels */
     #leftPanelCollapsed, #remarksCollapsed {
       width: 100%;
     }
-    /* Διάταξη για το collapsed panel */
     #remarksCollapsed .right-wrapper {
       display: flex;
       flex-direction: column;
@@ -351,10 +350,9 @@
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                  // Αποθήκευση του επιλεγμένου στοιχείου για έντονο περίγραμμα
+                  // Θέτουμε το επιλεγμένο στοιχείο για έντονο περίγραμμα
                   selectedElement = candidate;
                   window.updateInfo(candidate.number);
-                  // Εμφάνιση "flash" αν το στοιχείο είναι τρέχον
                   if(candidate.number === currentZ) {
                     flashActive = true;
                     setTimeout(() => { flashActive = false; redrawAll(); }, 200);
@@ -383,7 +381,6 @@
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Για τον s τομέα: ο καμβάς ομάδων έχει ύψος 40px (2 γραμμές)
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -393,15 +390,12 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πρώτη γραμμή
           p.text("1", 20, 10);
           p.text("2", 62, 10);
-          // Δεύτερη γραμμή
           p.text("ΙΑ", 20, 30);
           p.text("ΙΙΑ", 62, 30);
         };
       });
-      // Για τους τομείς d και p:
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -482,14 +476,15 @@
       } else if(currentZ === 120) {
         filter = e => e.block === block && Number(e.number) === 2;
       } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                              Number(e.number) === 1 || Number(e.number) === 2);
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Έλεγχος για το επιλεγμένο στοιχείο: αν το στοιχείο είναι επιλεγμένο, σχεδιάζεται με έντονο περίγραμμα
+        // Αν το στοιχείο είναι επιλεγμένο, σχεδιάζουμε το περίγραμμά του πιο έντονα
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -497,7 +492,7 @@
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
           p.noFill();
           p.stroke(getBlockColor(e.block));
-          p.strokeWeight(6); // Πιο έντονο περίγραμμα
+          p.strokeWeight(6); // Πιο παχύ περίγραμμα
           p.rect(pos.x, pos.y, 40, 40, 5);
           p.strokeWeight(1);
         } else {
@@ -537,8 +532,8 @@
     }
     
     // Τροποποιημένη updateBalloonPosition:
-    // Αν το Balloon επικαλύπτει το ΠΑΝΩ όριο του στοιχείου leftPanelFull,
-    // τότε τοποθετείται ανεβάζοντάς το κατά (ύψος του Balloon + 44px).
+    // Κρατάμε την προκαθορισμένη θέση (defaultTop) και, αν το defaultBottom (defaultTop + ύψος του Balloon)
+    // υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull, ανεβαίνουμε το Balloon κατά (ύψος του Balloon + 44px)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -561,7 +556,8 @@
       let infoCell = document.getElementById('leftPanelFull');
       if(infoCell) {
         let cellRect = infoCell.getBoundingClientRect();
-        if(defaultTop < cellRect.top) {
+        // Ελέγχουμε αν το defaultBottom (defaultTop + ύψος του Balloon) υπερβαίνει το πάνω όριο του leftPanelFull.
+        if(defaultTop + cs.offsetHeight > cellRect.top) {
           topPos = defaultTop - (cs.offsetHeight + 44);
         }
       }
@@ -780,7 +776,6 @@
       setTimeout(() => { ignoreCanvasClick = false; }, 100);
     });
     
-    // Λειτουργία "Συμπλήρωσε" με καθυστέρηση 800ms
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
@@ -794,7 +789,6 @@
       initGroupsCanvases();
       redrawAll();
       updateInfo(currentZ);
-      // Αλλαγή καθυστέρησης από 500 σε 800ms
       setTimeout(repositionGroupCanvasesExpanded, 800);
       document.getElementById('toggleFBlock').disabled = false;
     });
@@ -819,7 +813,6 @@
       updateInfo(currentZ);
     });
     
-    // Toggle handler: Full <-> Collapsed με εφέ 1.5s
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')) {
