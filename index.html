@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού </div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -386,12 +386,8 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     };
 
-    /* --- Global Variables --- */
-    let currentZ = 0;
-    // (Το array elements φορτώνεται από το elements.json όπως στον αρχικό κώδικα)
-    
-    /* --- Helper Functions --- */
-    window.formatShells = function(shellsStr) {
+    /* --- Βοηθητικές Συναρτήσεις & Φόρτωση --- */
+    function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
       const labels = ["K", "L", "M", "N", "O", "P", "Q"];
@@ -402,16 +398,13 @@
         result.push(text);
       }
       return result.join(", ");
-    };
+    }
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
         let width = rp.offsetWidth;
         document.documentElement.style.setProperty('--rightPanelWidth', width + 'px');
       }
-    }
-    function updateToggleButton() {
-      document.getElementById('toggleFBlock').disabled = false;
     }
     function messageForElement(element) {
       if(element.block === 'f') {
@@ -591,7 +584,7 @@
       let prevStr = `<div style="color:${window.getBlockColor(prev.block)};">Ζ=${(prev.subshells === "-") ? "-" : (prev.number + " " + prev.subshells)}</div>`;
       let currentStr = `<div style="font-weight:bold; color:${window.getBlockColor(element.block)};">Ζ=${element.number} ${element.subshells}</div>`;
       let nextStr = `<div style="color:${window.getBlockColor(next.block)};">Ζ=${next.number || ""} ${next.subshells}</div>`;
-      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${window.formatShells(element.shells || "")}</div>` +
+      let shellsAndMsg = `<div><strong>Στιβάδες:</strong> ${formatShells(element.shells || "")}</div>` +
                          `<div style="font-style: italic;">${messageForElement(element)}</div>`;
       document.getElementById('leftPanelFull').innerHTML = infoHTML;
       document.getElementById('remarksFull').innerHTML = `<div class="right-wrapper">
