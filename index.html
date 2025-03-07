@@ -32,7 +32,7 @@
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: -10;
-      display: none; /* Αρχικά κρυφό μέχρι το currentZ να γίνει 3 */
+      display: none;
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
     /* Καμβάδες Περιόδων και Ομάδων */
@@ -79,7 +79,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Στην collapsed κατάσταση το infoPanelFull μετακινείται (αλλά δεν εμφανίζεται) */
+    /* Στην collapsed κατάσταση το infoPanelFull μετακινείται */
     body.collapsed #infoPanelFull {
       left: 858px;
       top: 112px;
@@ -452,8 +452,7 @@
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function(event) {
               if(p.skipNextClick || ignoreCanvasClick) return;
-              let globalX = event.clientX;
-              let globalY = event.clientY;
+              let globalX = event.clientX, globalY = event.clientY;
               let posData = window.cellPositions;
               let blockPositions = posData ? posData[block] : [];
               let candidate = blockPositions.find(pos =>
@@ -685,7 +684,7 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        // Collapse sequence:
+        // Collapse sequence (παραμένει όπως προηγουμένως)
         fullPanel.style.transition = "left 0.8s ease, top 0.8s ease";
         fullPanel.style.left = "858px";
         fullPanel.style.top = "112px";
@@ -710,20 +709,20 @@
         }, 800);
       } else {
         // Expand sequence:
-        // 1. Εμφανίζουμε το fullPanel στην αρχική του κατάσταση.
+        // 1. Εμφάνιση του fullPanel στην αρχική του κατάσταση.
         fullPanel.style.display = "flex";
         fullPanel.style.left = "20px";
         fullPanel.style.top = "443px";
         fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
         fullPanel.style.opacity = "1";
-        // 2. Μετά από 0.4s, μετακινείται στη θέση του collapsedPanel με τελικό μέγεθος collapsed.
+        // 2. Μετά από 0.4s, ξεκινά η μετακίνηση του fullPanel στη θέση του collapsedPanel με τελικό collapsed μέγεθος, σε 0.8s.
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
         }, 400);
-        // 3. Το fullPanel εξαφανίζεται μετά από delay 500ms.
+        // 3. Αμέσως μετά την ολοκλήρωση της μετακίνησης (δηλαδή μετά 1.2s συνολικά), το fullPanel εξαφανίζεται.
         setTimeout(() => {
           fullPanel.style.display = "none";
           collapsedPanel.style.display = "none";
@@ -731,13 +730,13 @@
           toggleBtn.textContent = "Σύμπτυξη";
           updateInfo(currentZ);
           window.redrawAll();
-        }, 900);
+        }, 1200);
       }
-      // Ανανέωση θέσεων με delay 700ms μετά το τέλος των μετακινήσεων.
+      // Delay 500ms μετά το τέλος των μετακινήσεων για ενημέρωση θέσεων.
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-      }, 700);
+      }, 1700);
     });
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
@@ -771,20 +770,15 @@
       window.subshellsInitialized = false;
       selectedElement = null;
       document.querySelectorAll('.canvas').forEach(canvas => { canvas.innerHTML = ""; });
-      let cp = document.getElementById('canvasPeriods');
-      if(cp) cp.style.display = "none";
-      let csg = document.getElementById('canvasS_groups');
-      if(csg) csg.style.display = "none";
-      let cdg = document.getElementById('canvasD_groups');
-      if(cdg) cdg.style.display = "none";
-      let cpg = document.getElementById('canvasP_groups');
-      if(cpg) cpg.style.display = "none";
+      let cp = document.getElementById('canvasPeriods'); if(cp) cp.style.display = "none";
+      let csg = document.getElementById('canvasS_groups'); if(csg) csg.style.display = "none";
+      let cdg = document.getElementById('canvasD_groups'); if(cdg) cdg.style.display = "none";
+      let cpg = document.getElementById('canvasP_groups'); if(cpg) cpg.style.display = "none";
       initializeCanvases();
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
-    // Εξασφαλίζουμε ότι η redrawAll είναι μοναδική και προσβάσιμη.
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
