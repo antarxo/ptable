@@ -40,7 +40,7 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Ανακατανομή εσωτερικών χώρων: */
+    /* Ανακατανομή εσωτερικών χώρων */
     #leftPanelFull {
       width: 200px;
     }
@@ -201,7 +201,7 @@
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null; // για το Balloon
-    let selectedElement = null;    // για έντονο περίγραμμα στο κλικ
+    let selectedElement = null;    // για έντονο περίγραμμα
 
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
@@ -261,6 +261,8 @@
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
+      // Διατήρηση του επιλεγμένου στοιχείου ως το τρέχον για το έντονο περίγραμμα
+      selectedElement = element;
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
       if(clickedZ === 119) { displayZ = 1; }
@@ -344,13 +346,13 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                                                Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
                 if(p.mouseX >= pos.x && p.mouseX <= pos.x + 40 &&
                    p.mouseY >= pos.y && p.mouseY <= pos.y + 40) {
-                  // Θέτουμε το επιλεγμένο στοιχείο για έντονο περίγραμμα
                   selectedElement = candidate;
                   window.updateInfo(candidate.number);
                   if(candidate.number === currentZ) {
@@ -476,15 +478,14 @@
       } else if(currentZ === 120) {
         filter = e => e.block === block && Number(e.number) === 2;
       } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                              Number(e.number) === 1 || Number(e.number) === 2);
+        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
       }
       elements.filter(filter).forEach(function(e) {
         const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Αν το στοιχείο είναι επιλεγμένο, σχεδιάζουμε το περίγραμμά του πιο έντονα
+        // Αν το στοιχείο είναι το επιλεγμένο, σχεδιάζουμε το περίγραμμα με strokeWeight 6
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -492,7 +493,7 @@
           p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
           p.noFill();
           p.stroke(getBlockColor(e.block));
-          p.strokeWeight(6); // Πιο παχύ περίγραμμα
+          p.strokeWeight(6);
           p.rect(pos.x, pos.y, 40, 40, 5);
           p.strokeWeight(1);
         } else {
@@ -532,8 +533,8 @@
     }
     
     // Τροποποιημένη updateBalloonPosition:
-    // Κρατάμε την προκαθορισμένη θέση (defaultTop) και, αν το defaultBottom (defaultTop + ύψος του Balloon)
-    // υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull, ανεβαίνουμε το Balloon κατά (ύψος του Balloon + 44px)
+    // Αρχικά υπολογίζεται η προκαθορισμένη θέση (defaultTop). Αν το defaultBottom (defaultTop + ύψος του Balloon)
+    // υπερβαίνει το πάνω όριο του στοιχείου leftPanelFull, τότε ανεβαίνει το Balloon κατά (ύψος του Balloon + 32px)
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -556,9 +557,10 @@
       let infoCell = document.getElementById('leftPanelFull');
       if(infoCell) {
         let cellRect = infoCell.getBoundingClientRect();
-        // Ελέγχουμε αν το defaultBottom (defaultTop + ύψος του Balloon) υπερβαίνει το πάνω όριο του leftPanelFull.
+        // Αν το defaultBottom (defaultTop + ύψος του Balloon) υπερβαίνει το πάνω όριο του leftPanelFull,
+        // τότε ανεβαίνει το Balloon κατά (ύψος του Balloon + 32px) επιπρόσθετα
         if(defaultTop + cs.offsetHeight > cellRect.top) {
-          topPos = defaultTop - (cs.offsetHeight + 44);
+          topPos = defaultTop - (cs.offsetHeight + 32);
         }
       }
       cs.style.display = "block";
