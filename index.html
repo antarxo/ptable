@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική  Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -290,14 +290,15 @@
       }
     };
 
-    // Συνάρτηση για σταθερές θέσεις των ομάδων.
+    // Συνάρτηση για τις θέσεις των ομάδων. Στην expanded κατάσταση δεν επανακαθορίζουμε το left για τις ομάδες,
+    // ώστε να διατηρηθεί το computed shifting από την updateSectors.
     window.setFixedGroupsPositions = function(state) {
       if(state === "expanded") {
         document.getElementById('canvasS_groups').style.left = "75px";
         document.getElementById('canvasS_groups').style.top = "78px";
-        document.getElementById('canvasD_groups').style.left = "159px";
+        // Για τις ομάδες D και P αφήνουμε το left όπως έχει υπολογιστεί από την updateSectors,
+        // απλώς ορίζουμε το top.
         document.getElementById('canvasD_groups').style.top = "78px";
-        document.getElementById('canvasP_groups').style.left = "159px";
         document.getElementById('canvasP_groups').style.top = "78px";
       } else if(state === "collapsed") {
         document.getElementById('canvasS_groups').style.left = "75px";
