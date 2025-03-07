@@ -338,12 +338,21 @@
       return positions;
     }
     
-    // updateTableBackground: υπολογίζει δυναμικά το μέγεθος του background βάσει των αποκαλυφθέντων κελιών
+    // updateTableBackground: τώρα περιλαμβάνει και τους καμβάδες περιόδων και ομάδων
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
       let all = [];
       Object.keys(positions).forEach(block => { all = all.concat(positions[block]); });
+      // Προσθήκη των καμβάδων περιόδων και ομάδων
+      const additionalIDs = ["canvasPeriods", "canvasS_groups", "canvasD_groups", "canvasP_groups"];
+      additionalIDs.forEach(id => {
+          const elem = document.getElementById(id);
+          if(elem && elem.style.display !== "none") {
+             let rect = elem.getBoundingClientRect();
+             all.push({left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom});
+          }
+      });
       if(all.length === 0) return;
       let minLeft = Math.min(...all.map(p => p.left));
       let maxRight = Math.max(...all.map(p => p.right));
@@ -467,6 +476,8 @@
               if(candidate) {
                 console.log("Selected element:", candidate.element);
                 selectedElement = candidate.element;
+                // Ενημέρωση θέσης Balloon κατά το κλικ
+                updateBalloonPosition(candidate.element);
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
                 setTimeout(() => { flashActive = false; redrawAll(); }, 200);
@@ -746,6 +757,8 @@
               if(candidate) {
                 console.log("Selected element:", candidate.element);
                 selectedElement = candidate.element;
+                // Ενημέρωση θέσης Balloon και κλικ στο κελί
+                updateBalloonPosition(candidate.element);
                 setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
                 setTimeout(() => { flashActive = false; redrawAll(); }, 200);
