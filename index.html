@@ -147,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">ΔιαδραστικήΠεριοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -187,8 +187,6 @@
     /* --- Global Variables & Config --- */
     let elements = [];
     let currentZ = 0;
-    // Προαιρετικά: θα μπορούσατε να ορίσετε μια μεταβλητή για έλεγχο εμφάνισης στοιχείων,
-    // όμως εδώ προσαρμόζουμε το currentZ ώστε να μην πληροί τα κριτήρια εμφάνισης.
     
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
@@ -213,7 +211,7 @@
       }
     };
 
-    /* --- Ορισμός updateToggleButton --- */
+    /* --- updateToggleButton --- */
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
@@ -286,7 +284,7 @@
       });
     };
 
-    /* --- Συνάρτηση για το shifting των τομέων και ομάδων --- */
+    /* --- Συνάρτηση updateSectors --- */
     window.updateSectors = function(state) {
       let base = 159, shiftP = 0, shiftD = 0;
       if(state === "collapsed") {
@@ -323,7 +321,6 @@
       }
     };
 
-    // Θέσεις των ομάδων – στην expanded κατάσταση διατηρούμε το computed shifting για το left
     window.setFixedGroupsPositions = function(state) {
       if(state === "expanded") {
         document.getElementById('canvasS_groups').style.left = "75px";
@@ -340,7 +337,6 @@
       }
     };
 
-    // Ορισμός της συνάρτησης updateBalloonPosition – όπως στον αρχικό κώδικα
     window.updateBalloonPosition = function(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -366,7 +362,6 @@
       cs.style.top = topPos + "px";
     };
 
-    // Συνάρτηση drawSubshells για το περιεχόμενο του balloon
     window.drawSubshells = function(data) {
       if (!subshellsP) return;
       let balloonHeight = 40, fontSize = 14, leftMargin = 2, extraMargin = 5;
@@ -392,7 +387,7 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     };
 
-    /* --- Βοηθητικές Συναρτήσεις & Φόρτωση --- */
+    /* --- Βοηθητικές συναρτήσεις και φόρτωση --- */
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -747,32 +742,43 @@
       window.groupsInitialized = true;
     }
 
-    /* --- Συνάρτηση applyFillAll --- */
-    function applyFillAll(silent) {
-      if(!silent) {
-        currentZ = 123;
+    /* --- Νέα συνάρτηση: runInvisibleSequence --- */
+    function runInvisibleSequence() {
+      // Επιλέγουμε τα panels για προσωρινή απενεργοποίηση των μεταβάσεων
+      let panels = [
+        document.getElementById('infoPanelFull'),
+        document.getElementById('infoPanelCollapsed')
+      ];
+      panels.forEach(function(panel) {
+        if(panel) { panel.style.transition = 'none'; }
+      });
+      
+      // Αν δεν είναι ήδη "συμπτυγμένη" η διεπαφή, εκτελούμε την "Σύμπτυξη"
+      if(!document.body.classList.contains('collapsed')) {
+        document.getElementById('toggleFBlock').click();
       }
-      document.getElementById('canvasPeriods').style.display = 'block';
-      let csg = document.getElementById('canvasS_groups');
-      let cdg = document.getElementById('canvasD_groups');
-      let cpg = document.getElementById('canvasP_groups');
-      csg.style.display = "block";
-      cdg.style.display = "block";
-      cpg.style.display = "block";
-      initGroupsCanvases();
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
-      document.getElementById('toggleFBlock').disabled = false;
+      // Αμέσως μετά, αν έχει συμπτυχθεί, εκτελούμε την "Εμφάνιση" (ανάπτυξη)
+      if(document.body.classList.contains('collapsed')) {
+        document.getElementById('toggleFBlock').click();
+      }
+      
+      // Τέλος, εκτελούμε το Reset
+      document.getElementById('reset').click();
+      
+      // Επαναφορά των CSS μεταβάσεων μετά από λίγο (π.χ. 100 ms)
+      setTimeout(function(){
+        panels.forEach(function(panel) {
+          if(panel) { panel.style.transition = ''; }
+        });
+      }, 100);
     }
 
-    /* --- Toggle Panels --- */
+    /* --- Event listeners --- */
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        // Collapse: ενημερώνουμε τους τομείς/ομάδες ως collapsed
         window.updateSectors("collapsed");
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
@@ -827,24 +833,34 @@
       }, 1700);
     });
 
-    /* --- Event handler για το κουμπί "Επόμενο" --- */
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 3) { currentZ = 3; }
       else if(currentZ < 118) { currentZ++; }
       else if(currentZ === 118) { currentZ = 119; }
       else if(currentZ === 119) { currentZ = 120; }
-      else if(currentZ === 120) { currentZ = 121; }  // Εμφάνιση περιόδων
-      else if(currentZ === 121) { currentZ = 122; }  // Εμφάνιση ομάδων
+      else if(currentZ === 120) { currentZ = 121; }
+      else if(currentZ === 121) { currentZ = 122; }
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
     });
 
-    /* --- Τροποποίηση στο event handler του "FillAll" --- */
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
-      applyFillAll(false);
+      currentZ = 123;
+      document.getElementById('canvasPeriods').style.display = 'block';
+      let csg = document.getElementById('canvasS_groups');
+      let cdg = document.getElementById('canvasD_groups');
+      let cpg = document.getElementById('canvasP_groups');
+      csg.style.display = "block";
+      cdg.style.display = "block";
+      cpg.style.display = "block";
+      initGroupsCanvases();
+      window.redrawAll();
+      setTimeout(() => { updateInfo(currentZ); }, 300);
+      setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
+      document.getElementById('toggleFBlock').disabled = false;
     });
 
     document.getElementById('reset').addEventListener('click', function() {
@@ -863,6 +879,7 @@
       setTimeout(() => { updateInfo(currentZ); drawPlaceholderBackground(); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
+
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
@@ -953,12 +970,11 @@
     window.addEventListener('load', updateTableBackground);
     loadElements();
 
-    // Εφαρμογή του FillAll χωρίς εμφάνιση στοιχείων (silent) πριν το πρώτο "Επόμενο"
+    // Δοκιμαστική κλήση της αόρατης ακολουθίας: collapse → expand → reset
+    // Μπορείς να καλέσεις runInvisibleSequence() όποτε το επιθυμείς.
+    // Για παράδειγμα, μετά από 3 δευτερόλεπτα από το φόρτωμα της σελίδας:
     window.addEventListener('load', function() {
-      setTimeout(function() {
-         currentZ = 2; // Αρχική τιμή ώστε να μην εμφανίζονται στοιχεία
-         applyFillAll(true);
-      }, 500);
+      setTimeout(runInvisibleSequence, 3000);
     });
   </script>
 </body>
