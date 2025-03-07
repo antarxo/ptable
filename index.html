@@ -46,7 +46,6 @@
       display: none;
       z-index: 5;
     }
-    /* Οι καμβάδες για τις ομάδες έχουν μόνο καθορισμένο height (το width θα οριστεί από τους p5 instances) */
     #canvasD_groups { height: 40px; }
     #canvasP_groups { height: 40px; }
     #canvasS_groups { width: 84px; height: 40px; }
@@ -79,7 +78,7 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Το collapsed panel – εδώ δίνουμε position: absolute και συγκεκριμένες τιμές left, top */
+    /* Collapsed Panel */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -148,7 +147,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική  Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -186,7 +185,7 @@
   
   <script>
     /* --- Global Functions --- */
-    // Βάζουμε τις συναρτήσεις στο global scope (ως ιδιότητες του window) για να είναι προσβάσιμες από τα p5 instances.
+    // Μεταφέρουμε τη drawElements στο global scope.
     window.drawElements = function(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -254,6 +253,7 @@
       });
     };
 
+    // Μεταφέρουμε τις updateSectorsCollapsed και updateSectorsExpanded στο global scope.
     window.updateSectorsCollapsed = function() {
       let cS = document.getElementById('canvasS');
       if(cS) { cS.style.transition = "left 1.2s ease"; cS.style.left = "75px"; }
@@ -280,7 +280,7 @@
       if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = (base + shiftP) + "px"; }
     };
 
-    // Η συνάρτηση για σταθερές θέσεις των ομάδων
+    // Συνάρτηση για σταθερές θέσεις των ομάδων.
     window.setFixedGroupsPositions = function(state) {
       if(state === "expanded") {
         document.getElementById('canvasS_groups').style.left = "75px";
@@ -297,6 +297,32 @@
         document.getElementById('canvasP_groups').style.left = "584px";
         document.getElementById('canvasP_groups').style.top = "78px";
       }
+    };
+
+    // Ορισμός της updateBalloonPosition στο global scope.
+    window.updateBalloonPosition = function(element) {
+      let cs = document.getElementById('canvasSubshells');
+      if(!cs) return;
+      cs.style.transition = "all 0.2s ease";
+      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
+      if(!blockCanvas) return;
+      let rect = blockCanvas.getBoundingClientRect();
+      let pos = calculatePosition(element, element.block);
+      let defaultLeft = rect.left + pos.x + 40;
+      let defaultTop = rect.top + pos.y + 40;
+      let leftPos = defaultLeft - 5;
+      let topPos = defaultTop;
+      let balloonWidth = cs.offsetWidth;
+      if(defaultLeft > window.innerWidth / 2) { leftPos = defaultLeft - (33 + balloonWidth); }
+      if(leftPos + balloonWidth > window.innerWidth) { leftPos = window.innerWidth - balloonWidth - 5; }
+      let infoCell = document.getElementById('leftPanelFull');
+      if(infoCell) {
+        let cellRect = infoCell.getBoundingClientRect();
+        if(defaultTop + cs.offsetHeight > cellRect.top) { topPos = defaultTop - (cs.offsetHeight + 23); }
+      }
+      cs.style.display = "block";
+      cs.style.left = leftPos + "px";
+      cs.style.top = topPos + "px";
     };
 
     /* --- Global Variables --- */
@@ -680,7 +706,7 @@
       });
       window.groupsInitialized = true;
     }
-    /* --- Toggle Panels --- */
+    /* --- Toggle Panels: Expand/Collapse --- */
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       let fullPanel = document.getElementById('infoPanelFull');
@@ -688,7 +714,7 @@
       if(!document.body.classList.contains('collapsed')){
         // Σύμπτυξη: οι τομείς και οι ομάδες μετακινούνται ταυτόχρονα
         window.updateSectorsCollapsed();
-        // Χρησιμοποιούμε delay 600ms πριν τη μετάβαση του fullPanel
+        // Delay 600ms πριν τη μετάβαση του fullPanel
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
           fullPanel.style.left = "858px";
@@ -697,7 +723,7 @@
         }, 600);
         setTimeout(() => {
           updateTableBackground();
-          // Εφαρμόζουμε τα ίδια shifting για τις ομάδες (εδώ είτε σταθερό είτε υπολογιζόμενο – εδώ χρησιμοποιούμε τη συνάρτηση setFixedGroupsPositions για collapsed)
+          // Εφαρμόζουμε τα σταθερά shifting για τις ομάδες σε collapsed λειτουργία
           window.setFixedGroupsPositions("collapsed");
           setTimeout(() => {
             collapsedPanel.style.display = "flex";
@@ -709,7 +735,7 @@
           }, 300);
         }, 1200);
       } else {
-        // Επέκταση: ο collapsed κρύβεται και ο full επανέρχεται, μαζί με τις ομάδες
+        // Επέκταση: ο collapsed panel κρύβεται και ο full panel επανέρχεται, μαζί με τις ομάδες
         fullPanel.style.display = "flex";
         fullPanel.style.zIndex = 40;
         collapsedPanel.style.display = "none";
