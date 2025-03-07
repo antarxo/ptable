@@ -183,7 +183,7 @@
     let lastClickedElement = null;
     let subshellsP;
     
-    // Χρώματα τομέων - μόνη αλλαγή: νέα χρώματα
+    // Χρώματα τομέων - αλλαγή σύμφωνα με τις νέες τιμές
     const BLOCK_COLORS = { 
       s: "#ffcccc",
       f: "#ffe5cc",
@@ -811,9 +811,8 @@
     });
     
     // Χειριστής του κουμπιού "Συμπλήρωσε":
-    // Εάν ο πίνακας είναι ήδη πλήρης (currentZ == 123) το κουμπί δεν ενεργεί περαιτέρω.
+    // Αφαιρέσαμε τον έλεγχο (if(currentZ === 123) return;) ώστε να μην υστερεί ένα κλικ
     document.getElementById('fillAll').addEventListener('click', function() {
-      if(currentZ === 123) return;
       currentZ = 123;
       document.getElementById('canvasPeriods').style.display = 'block';
       let csg = document.getElementById('canvasS_groups');
