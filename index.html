@@ -33,10 +33,9 @@
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
     /* Καμβάδες Περιόδων και Ομάδων */
-    /* Αρχικά το left του canvasPeriods είναι 31px (6 + 25) */
     #canvasPeriods {
       position: absolute;
-      left: 31px;
+      left: 31px; /* 6+25 */
       top: 120px;
       width: 42px;
       height: 292px;
@@ -54,8 +53,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Πίνακες Πληροφοριών: δύο panels */
-    /* Ο full πίνακας μετακινείται 5px χαμηλότερα (top: 448px) */
+    /* Πίνακες Πληροφοριών */
     #infoPanelFull {
       display: flex;
       flex-direction: row;
@@ -66,7 +64,7 @@
       padding: 20px;
       position: absolute;
       left: 20px;
-      top: 448px;
+      top: 448px; /* μετακινημένος 5px χαμηλότερα */
       width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: all 1.5s ease;
@@ -77,13 +75,12 @@
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* Ο collapsed πίνακας μετακινείται 10px δεξιότερα (left: 858px) */
+    /* Στην collapsed λειτουργία, ο πίνακας μετακινείται 10px δεξιότερα */
     body.collapsed #infoPanelFull {
       left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
     }
-    /* Info Panel Collapsed */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -140,12 +137,11 @@
     .p-block { background: #26FF31 !important; }
     .d-block { background: #3F99FF !important; }
     .f-block { background: #FFD051 !important; }
-    /* Θέσεις καμβάδων (πλήρης λειτουργία) – προσθέτουμε 3px στο left και 4px στο top */
+    /* Θέσεις καμβάδων – προσθήκη 3px στο left και 4px στο top */
     .full #canvasS { top: 124px; left: 78px; z-index: 1; }
     .full #canvasF { top: 124px; left: 162px; width: 588px; z-index: 2; }
     .full #canvasD { top: 124px; left: 162px; width: 420px; z-index: 3; }
     .full #canvasP { top: 124px; left: 162px; width: 252px; z-index: 4; }
-    /* Στην collapsed λειτουργία, οι μεταθέσεις ενημερώνονται ανάλογα */
     body.collapsed #canvasF { top: 220px; }
   </style>
 </head>
@@ -166,7 +162,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Πίνακες Πληροφοριών: δύο panels -->
+  <!-- Πίνακες Πληροφοριών -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -188,9 +184,9 @@
   </div>
   
   <script>
-    // Dummy συνάρτηση για το repositionGroupCanvasesExpanded ώστε να μην προκύπτει σφάλμα.
+    // Dummy συνάρτηση για το repositionGroupCanvasesExpanded ώστε να μην εμφανίζεται σφάλμα.
     function repositionGroupCanvasesExpanded() {
-      updateTableBackground();
+      setTimeout(updateTableBackground, 300);
     }
     
     // Βασικές μεταβλητές και βοηθητικές συναρτήσεις
@@ -249,7 +245,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα περιεχόμενα των panels και θέτει το επιλεγμένο στοιχείο
+    // updateInfo ενημερώνει τα info panels και καλεί updateTableBackground
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -308,11 +304,12 @@
       };
       drawSubshells(subshellsData);
       updateBalloonPosition(element);
-      updateTableBackground();
+      // Δίνουμε μεγαλύτερη καθυστέρηση (300ms) πριν την ενημέρωση του background
+      setTimeout(updateTableBackground, 300);
     }
     window.updateInfo = updateInfo;
     
-    // Δημιουργία των canvases για κάθε block
+    // Δημιουργία καμβάδων για κάθε block
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
@@ -320,7 +317,7 @@
             const config = BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            // Θέσεις με πρόσθετη μετατόπιση: προστίθενται 3px στο left και 4px στο top
+            // Θέσεις: προστίθενται 3px στο left και 4px στο top
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "78px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "182px" : "167px"); }
@@ -333,23 +330,29 @@
             drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            // Ανίχνευση κλικ: για τον s τομέα περιορίζουμε τα κελιά στο εύρος 1-2 και 1-7
+            // Για τη βελτίωση του κλικ: υπολογίζουμε τις τοπικές συντεταγμένες με βάση το offset του καμβά.
             p.mouseClicked = function() {
               if(p.skipNextClick || ignoreCanvasClick) { return; }
+              let localX = p.mouseX;
+              let localY = p.mouseY;
+              // Αντί να χρησιμοποιούμε το p.mouseX απευθείας, αφαιρούμε το offset του καμβά
+              let canvasOffset = p._renderer.elt.getBoundingClientRect();
+              localX = p.mouseX - canvasOffset.left;
+              localY = p.mouseY - canvasOffset.top;
               let cellX, cellY;
               if(block === 's') {
-                cellX = p.constrain(Math.floor(p.mouseX / 42) + 1, 1, 2);
-                cellY = p.constrain(Math.floor(p.mouseY / 42) + 1, 1, 7);
+                cellX = p.constrain(Math.floor(localX / 42) + 1, 1, 2);
+                cellY = p.constrain(Math.floor(localY / 42) + 1, 1, 7);
               } else if(block === 'f' || block === 'd') {
-                cellX = Math.floor(p.mouseX / 42) + 3;
-                cellY = Math.floor(p.mouseY / 42) + 1;
+                cellX = Math.floor(localX / 42) + 3;
+                cellY = Math.floor(localY / 42) + 1;
               } else if(block === 'p') {
-                if(currentZ < 20 && Math.floor(p.mouseY / 42) === 0) {
-                  cellX = Math.floor(p.mouseX / 42) + 18;
+                if(currentZ < 20 && Math.floor(localY / 42) === 0) {
+                  cellX = Math.floor(localX / 42) + 18;
                   cellY = 1;
                 } else {
-                  cellX = Math.floor(p.mouseX / 42) + 13;
-                  cellY = Math.floor(p.mouseY / 42) + 1;
+                  cellX = Math.floor(localX / 42) + 13;
+                  cellY = Math.floor(localY / 42) + 1;
                 }
               }
               let candidate = elements.find(e => 
@@ -361,8 +364,7 @@
                   (currentZ === 118 && Number(e.number) >= 3 && Number(e.number) <= 118) ||
                   (currentZ === 119 && Number(e.number) === 1) ||
                   (currentZ === 120 && Number(e.number) === 2) ||
-                  (currentZ >= 121 && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                      Number(e.number) === 1 || Number(e.number) === 2))
+                  (currentZ >= 121 && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2))
                 )
               );
               if(candidate) {
@@ -496,7 +498,6 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Σχεδιάζουμε περίγραμμα αν το στοιχείο είναι επιλεγμένο
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -543,7 +544,7 @@
       });
     }
     
-    // Τροποποιημένη updateBalloonPosition:
+    // updateBalloonPosition παραμένει όπως είχε
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -615,7 +616,6 @@
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
             canvas.elt.style.height = config.rows * 42 + "px";
-            // Θέσεις με πρόσθετη μετατόπιση: βασικό offset = 162px, με προσθήκη 3px και 4px
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "78px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "182px" : "167px"); }
@@ -629,20 +629,23 @@
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = function() {
               if(p.skipNextClick) { return; }
+              let canvasOffset = p._renderer.elt.getBoundingClientRect();
+              let localX = p.mouseX - canvasOffset.left;
+              let localY = p.mouseY - canvasOffset.top;
               let cellX, cellY;
               if(block === 's') {
-                cellX = p.constrain(Math.floor(p.mouseX / 42) + 1, 1, 2);
-                cellY = p.constrain(Math.floor(p.mouseY / 42) + 1, 1, 7);
+                cellX = p.constrain(Math.floor(localX / 42) + 1, 1, 2);
+                cellY = p.constrain(Math.floor(localY / 42) + 1, 1, 7);
               } else if(block === 'f' || block === 'd') {
-                cellX = Math.floor(p.mouseX / 42) + 3;
-                cellY = Math.floor(p.mouseY / 42) + 1;
+                cellX = Math.floor(localX / 42) + 3;
+                cellY = Math.floor(localY / 42) + 1;
               } else if(block === 'p') {
-                if(currentZ < 20 && Math.floor(p.mouseY / 42) === 0) {
-                  cellX = Math.floor(p.mouseX / 42) + 18;
+                if(currentZ < 20 && Math.floor(localY / 42) === 0) {
+                  cellX = Math.floor(localX / 42) + 18;
                   cellY = 1;
                 } else {
-                  cellX = Math.floor(p.mouseX / 42) + 13;
-                  cellY = Math.floor(p.mouseY / 42) + 1;
+                  cellX = Math.floor(localX / 42) + 13;
+                  cellY = Math.floor(localY / 42) + 1;
                 }
               }
               let candidate = elements.find(e => 
@@ -654,7 +657,8 @@
                   (currentZ === 118 && Number(e.number) >= 3 && Number(e.number) <= 118) ||
                   (currentZ === 119 && Number(e.number) === 1) ||
                   (currentZ === 120 && Number(e.number) === 2) ||
-                  (currentZ >= 121 && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2))
+                  (currentZ >= 121 && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                      Number(e.number) === 1 || Number(e.number) === 2))
                 )
               );
               if(candidate) {
@@ -783,7 +787,7 @@
       }
     }
     
-    // Νέα συνάρτηση: Αρχικές διαστάσεις του νέου background
+    // Η συνάρτηση updateTableBackground τώρα μειώνει το πλάτος/ύψος κατά 5px και κεντράρει τα περιεχόμενα.
     function updateTableBackground() {
       let bbox;
       if(currentZ === 3) {
@@ -819,12 +823,11 @@
       }
       let bg = document.getElementById("canvasTableBackground");
       if(bg && bbox) {
-        // Μείωση του πλάτους/ύψους κατά 5px συνολικά, με κεντράρισμα (μετατόπιση +2.5px)
-        // Εδώ χρησιμοποιούμε ακέραιες τιμές: left και top αυξάνονται κατά 2 (δηλαδή αφαιρούμε 15-2 = 13)
+        // Μειώνουμε το πρόσθετο περιθώριο κατά 5px: τώρα προσθέτουμε 25px αντί για 30px και μετατοπίζουμε κατά 13px αντί για 15px.
         bg.style.left = (bbox.left - 13) + "px";
         bg.style.top = (bbox.top - 13) + "px";
-        bg.style.width = (bbox.width + 30 - 5) + "px";  // = bbox.width + 25
-        bg.style.height = (bbox.height + 30 - 5) + "px"; // = bbox.height + 25
+        bg.style.width = (bbox.width + 25) + "px";
+        bg.style.height = (bbox.height + 25) + "px";
       }
     }
     
@@ -842,8 +845,8 @@
       }
       redrawAll();
       updateInfo(currentZ);
-      // Με μικρό delay για να ενημερωθούν και οι διαστάσεις, καλέστε ξανά το updateTableBackground
-      setTimeout(updateTableBackground, 100);
+      // Με καθυστέρηση 300ms για να ενημερωθεί σωστά το background
+      setTimeout(updateTableBackground, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 100);
     });
     
@@ -889,11 +892,12 @@
       if(!document.body.classList.contains('collapsed')) {
          document.body.classList.add('collapsed');
          toggleBtn.textContent = "Ανάπτυξη";
+         // Με καθυστέρηση 800ms για να πάρουν οι collapsed τιμές σωστά θέση
          setTimeout(function() {
            document.getElementById('infoPanelFull').style.display = "none";
            document.getElementById('infoPanelCollapsed').style.display = "flex";
            updateInfo(currentZ);
-         }, 1500);
+         }, 800);
       } else {
          document.body.classList.remove('collapsed');
          toggleBtn.textContent = "Σύμπτυξη";
@@ -901,7 +905,7 @@
            document.getElementById('infoPanelCollapsed').style.display = "none";
            document.getElementById('infoPanelFull').style.display = "flex";
            updateInfo(currentZ);
-         }, 1500);
+         }, 800);
       }
       redrawAll();
       setTimeout(function() {
