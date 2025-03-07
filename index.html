@@ -225,13 +225,13 @@
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
     // Τροποποιημένη συνάρτηση initGroupsCanvases:
-    // Σε κάθε καμβά ομάδων (s, d, p) θα εμφανίζεται σε κάθε "κελί" και η νέα ονομασία (πάνω) και η παλιά (κάτω)
+    // Σε κάθε καμβά ομάδων (s, d, p) εμφανίζονται ταυτόχρονα οι νέες (πάνω γραμμή) και οι παλιές (κάτω γραμμή)
     function initGroupsCanvases() {
       window.groupsInitialized = false;
       
       function drawGroupLabels(p, numGroups, newStart, oldLabels) {
         const rectWidth = 40;
-        const totalHeight = 40; // Χώρος για δύο γραμμές
+        const totalHeight = 40; // χώροι για δύο γραμμές
         for (let c = 0; c < numGroups; c++){
           let x = c * (rectWidth + 2);
           p.fill(240);
@@ -566,7 +566,8 @@
       subshellsP.redraw();
     }
     
-    // updateBalloonPosition (όπως πριν)
+    // Τροποποιημένη συνάρτηση updateBalloonPosition:
+    // Εάν το balloon επικαλύπτει τον πίνακα πληροφοριών, μετακινείται ψηλότερα κατά το ύψος του balloon + 30px.
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -580,11 +581,25 @@
       let leftPos = defaultLeft - 5;
       let topPos = defaultTop;
       let balloonWidth = cs.offsetWidth;
+      let balloonHeight = cs.offsetHeight;
       if(defaultLeft > window.innerWidth / 2) {
         leftPos = defaultLeft - (33 + balloonWidth);
       }
       if(leftPos + balloonWidth > window.innerWidth) {
         leftPos = window.innerWidth - balloonWidth - 5;
+      }
+      // Έλεγχος για επικάλυψη του info panel
+      let infoPanel = document.getElementById('infoPanelFull');
+      if(document.body.classList.contains('collapsed')) {
+        infoPanel = document.getElementById('infoPanelCollapsed');
+      }
+      if(infoPanel) {
+        let panelRect = infoPanel.getBoundingClientRect();
+        // Εάν το κάτω μέρος του balloon (topPos + balloonHeight) είναι κάτω από την κορυφή του infoPanel,
+        // μετακινούμε το balloon ψηλότερα κατά balloonHeight + 30px.
+        if(topPos + balloonHeight > panelRect.top) {
+          topPos = panelRect.top - (balloonHeight + 30);
+        }
       }
       cs.style.display = "block";
       cs.style.left = leftPos + "px";
@@ -663,7 +678,6 @@
         initGroupsCanvases();
         repositionGroupCanvasesExpanded();
       } else if (currentZ === 122) {
-        // Αν απαιτηθεί, μπορούμε να επεκτείνουμε εδώ, αλλά ο κώδικας πλέον απεικονίζει πάντοτε και τις δύο ονομασίες.
         currentZ = 123;
         document.getElementById('toggleFBlock').disabled = false;
       }
