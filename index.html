@@ -136,7 +136,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική ριοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   
   <!-- Καμβάδες Περιόδων και Ομάδων -->
   <div id="canvasPeriods" class="canvas"></div>
@@ -738,7 +738,7 @@
           };
         });
       });
-      if(currentZ >= 121 && currentZ <= 122) {
+      if(currentZ >= 121) {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "block"; }
         initPeriodsCanvas();
@@ -755,7 +755,7 @@
           initGroupsCanvases();
           repositionGroupCanvasesExpanded();
         } else if (currentZ === 122) {
-          // Εμφάνιση και της παλιάς και της νέας ονομασίας (και οι δύο σειρές)
+          // Εμφάνιση και της παλιάς και της νέας ονομασίας
           showOldGroups = true;
           showNewGroups = true;
           let csg = document.getElementById('canvasS_groups');
@@ -766,11 +766,11 @@
           cpg.style.display = "block";
           initGroupsCanvases();
           repositionGroupCanvasesExpanded();
+        } else if (currentZ >= 123) {
+          // Στο τελικό στάδιο δεν επανασχεδιάζονται οι καμβάδες ομάδων
+          let cp = document.getElementById('canvasPeriods');
+          if(cp) { cp.style.display = "block"; }
         }
-      } else if (currentZ >= 123) {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "block"; }
-        // Στο τελικό στάδιο δεν επανασχεδιάζονται οι καμβάδες ομάδων.
       } else {
         let cp = document.getElementById('canvasPeriods');
         if(cp) { cp.style.display = "none"; }
