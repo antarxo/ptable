@@ -185,7 +185,7 @@
   
   <script>
     /* --- Global Functions --- */
-    // Η drawElements σχεδιάζει όλα τα στοιχεία που πρέπει να εμφανίζονται βάσει του currentZ.
+    // Μεταφέρουμε τη drawElements στο global scope.
     window.drawElements = function(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -253,16 +253,22 @@
       });
     };
 
-    // Η updateSectors δίνει το computed shifting ταυτόχρονα στους τομείς και στις ομάδες.
+    // Ενοποιημένη συνάρτηση για το shifting των τομέων και των ομάδων.
     window.updateSectors = function(state) {
       let base = 159, shiftP = 0, shiftD = 0;
       if(state === "collapsed") {
-        document.getElementById('canvasS').style.left = "75px";
-        document.getElementById('canvasF').style.left = "179px";
-        document.getElementById('canvasD').style.left = "164px";
-        document.getElementById('canvasP').style.left = "584px";
-        document.getElementById('canvasD_groups').style.left = "164px";
-        document.getElementById('canvasP_groups').style.left = "584px";
+        let cS = document.getElementById('canvasS');
+        if(cS) { cS.style.transition = "left 1.2s ease"; cS.style.left = "75px"; }
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = "179px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = "164px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = "584px"; }
+        let cD_groups = document.getElementById('canvasD_groups');
+        if(cD_groups) { cD_groups.style.transition = "left 1.2s ease"; cD_groups.style.left = "164px"; }
+        let cP_groups = document.getElementById('canvasP_groups');
+        if(cP_groups) { cP_groups.style.transition = "left 1.2s ease"; cP_groups.style.left = "584px"; }
         window.setFixedGroupsPositions("collapsed");
       } else {
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -270,20 +276,28 @@
         else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
         else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
         else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        document.getElementById('canvasF').style.left = base + "px";
-        document.getElementById('canvasD').style.left = (base + shiftD) + "px";
-        document.getElementById('canvasP').style.left = (base + shiftP) + "px";
-        document.getElementById('canvasD_groups').style.left = (base + shiftD) + "px";
-        document.getElementById('canvasP_groups').style.left = (base + shiftP) + "px";
+        let cF = document.getElementById('canvasF');
+        if(cF) { cF.style.transition = "left 1.2s ease"; cF.style.left = base + "px"; }
+        let cD = document.getElementById('canvasD');
+        if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = (base + shiftD) + "px"; }
+        let cP = document.getElementById('canvasP');
+        if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = (base + shiftP) + "px"; }
+        let cD_groups = document.getElementById('canvasD_groups');
+        if(cD_groups) { cD_groups.style.transition = "left 1.2s ease"; cD_groups.style.left = (base + shiftD) + "px"; }
+        let cP_groups = document.getElementById('canvasP_groups');
+        if(cP_groups) { cP_groups.style.transition = "left 1.2s ease"; cP_groups.style.left = (base + shiftP) + "px"; }
         window.setFixedGroupsPositions("expanded");
       }
     };
 
-    // Στη setFixedGroupsPositions, στην expanded κατάσταση ορίζουμε μόνο τις τιμές top, ώστε να μην αντικατασταθούν οι υπολογιζόμενες τιμές left.
+    // Συνάρτηση για τις θέσεις των ομάδων. Στην expanded κατάσταση δεν επανακαθορίζουμε το left για τις ομάδες,
+    // ώστε να διατηρηθεί το computed shifting από την updateSectors.
     window.setFixedGroupsPositions = function(state) {
       if(state === "expanded") {
         document.getElementById('canvasS_groups').style.left = "75px";
         document.getElementById('canvasS_groups').style.top = "78px";
+        // Για τις ομάδες D και P αφήνουμε το left όπως έχει υπολογιστεί από την updateSectors,
+        // απλώς ορίζουμε το top.
         document.getElementById('canvasD_groups').style.top = "78px";
         document.getElementById('canvasP_groups').style.top = "78px";
       } else if(state === "collapsed") {
@@ -296,7 +310,7 @@
       }
     };
 
-    // Η updateBalloonPosition παραμένει ως έχει.
+    // Ορίζουμε τη συνάρτηση updateBalloonPosition στο global scope.
     window.updateBalloonPosition = function(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -322,7 +336,7 @@
       cs.style.top = topPos + "px";
     };
 
-    // Η drawSubshells παραμένει ως έχει.
+    // Ορίζουμε τη drawSubshells στο global scope.
     window.drawSubshells = function(data) {
       if (!subshellsP) return;
       let balloonHeight = 40, fontSize = 14, leftMargin = 2, extraMargin = 5;
@@ -613,8 +627,6 @@
             const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            // Σημείωση: ΔΕΝ καθαρίζουμε το περιεχόμενο του καμβά (δεν κάνουμε innerHTML = ""),
-            // ώστε να διατηρούνται τα προηγούμενα στοιχεία.
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "75px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
@@ -737,6 +749,7 @@
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
+        // Collapse: ενημερώνουμε τους τομείς/ομάδες ως collapsed
         window.updateSectors("collapsed");
         setTimeout(() => {
           fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
@@ -756,18 +769,24 @@
           }, 300);
         }, 1200);
       } else {
+        // Expand: πρώτα εξαφανίζεται ο collapsed πίνακας (fade out)
         collapsedPanel.style.transition = "opacity 0.3s ease";
         collapsedPanel.style.opacity = "0";
         setTimeout(() => {
           collapsedPanel.style.display = "none";
+          // Εμφανίζουμε τον full πίνακα με opacity 0 και αμέσως ξεκινάμε την μετάβαση
           fullPanel.style.display = "flex";
           fullPanel.style.zIndex = "40";
           fullPanel.style.opacity = "0";
+          // Δίνουμε ταυτόχρονα το computed shift στους τομείς και τις ομάδες
           window.updateSectors("expanded");
+          // Επίσης ενημερώνουμε αμέσως το background ώστε να ακολουθήσει
           updateTableBackground();
+          // Ορίζουμε αρχική θέση και μέγεθος για τον full πίνακα
           fullPanel.style.left = "858px";
           fullPanel.style.top = "112px";
           fullPanel.style.width = "calc(100vw - 920px)";
+          // Με πολύ σύντομη καθυστέρηση ξεκινάμε την κίνηση και το fade in του full πίνακα
           setTimeout(() => {
             fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
             fullPanel.style.left = "20px";
@@ -775,6 +794,7 @@
             fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
             fullPanel.style.opacity = "1";
           }, 50);
+          // Όταν ολοκληρωθεί η μετάβαση, ενημερώνουμε το state
           setTimeout(() => {
             document.body.classList.remove('collapsed');
             toggleBtn.textContent = "Σύμπτυξη";
@@ -788,9 +808,10 @@
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
       }, 1700);
     });
-    // Στον χειριστή "Επόμενο" δεν καθαρίζουμε τους καμβάδες, ώστε τα προηγούμενα στοιχεία να παραμένουν.
+    // Τροποποίηση στο event handler του "Επόμενο":
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
+      // Σε αυτό το handler δεν καθαρίζουμε τους καμβάδες, έτσι ώστε τα προηγούμενα στοιχεία να παραμένουν
       if(currentZ < 3) { currentZ = 3; }
       else if(currentZ < 118) { currentZ++; }
       else if(currentZ === 118) { currentZ = 119; }
@@ -831,10 +852,10 @@
       setTimeout(() => { updateInfo(currentZ); drawPlaceholderBackground(); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
     });
-    // Τροποποιημένη η redrawAll ώστε να μην καθαρίζει τους καμβάδες – ξανασχεδιάζει όλα τα στοιχεία (παλαιά και νέα) μαζί.
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
-        // Δεν διαγράφουμε το περιεχόμενο του καμβά, έτσι ώστε τα προηγούμενα να παραμένουν.
+        let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
+        if(canvasDiv) { canvasDiv.innerHTML = ""; }
         new p5(function(p) {
           p.setup = function() {
             const config = window.BLOCKS_CONFIG[block];
@@ -852,6 +873,23 @@
             window.drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
+            p.mouseClicked = function(event) {
+              if(p.skipNextClick) return;
+              let globalX = event.clientX, globalY = event.clientY;
+              let posData = window.cellPositions;
+              let blockPositions = posData ? posData[block] : [];
+              let candidate = blockPositions.find(pos =>
+                  globalX >= pos.left && globalX <= pos.right &&
+                  globalY >= pos.top && globalY <= pos.bottom
+              );
+              if(candidate) {
+                selectedElement = candidate.element;
+                updateBalloonPosition(candidate.element);
+                setTimeout(() => { window.updateInfo(candidate.element.number); }, 300);
+                flashActive = true;
+                setTimeout(() => { flashActive = false; window.redrawAll(); }, 200);
+              }
+            };
           };
         });
       });
