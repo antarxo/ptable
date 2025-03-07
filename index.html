@@ -224,6 +224,12 @@
       }
     };
 
+    // Προσθέτουμε μια βασική υλοποίηση της updateToggleButton για να ενημερώνει το κουμπί "Σύμπτυξη"
+    function updateToggleButton() {
+      // Εδώ μπορείτε να προσθέσετε επιπλέον λογική αν απαιτείται.
+      document.getElementById('toggleFBlock').disabled = false;
+    }
+
     // Ορισμός της συνάρτησης drawElements για τη σχεδίαση του grid ή άλλων στοιχείων
     window.drawElements = function(p, block) {
       const config = window.BLOCKS_CONFIG[block];
@@ -312,7 +318,6 @@
       else currentNum = clickedZ;
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
-      // Ενημέρωση των panels (απλό παράδειγμα)
       document.getElementById('leftPanelFull').innerHTML =
          `<span style="font-size:1.3em; font-weight:bold;">Ζ=${currentNum}</span> ` +
          `<span style="font-size:3em; font-weight:bold; color:${window.getBlockColor(element.block)};">${element.symbol}</span> ` +
@@ -349,7 +354,6 @@
     // Συνάρτηση initGroupsCanvases για τους καμβάδες των ομάδων
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Αρχικοποίηση καμβά για canvasS_groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -365,7 +369,6 @@
           p.text("ΙΙΑ", 62, 30);
         };
       });
-      // Αρχικοποίηση καμβά για canvasD_groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -384,7 +387,6 @@
           }
         };
       });
-      // Αρχικοποίηση καμβά για canvasP_groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
