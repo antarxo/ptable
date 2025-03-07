@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Info Panel (χρησιμοποιούμε μόνο το Full panel για ομαλή μετάβαση) */
+    /* Info Panel – χρησιμοποιούμε μόνο το full panel για ομαλή μετάβαση */
     #infoPanelFull {
       display: flex;
       flex-direction: row;
@@ -40,15 +40,11 @@
       transition: all 1.5s ease;
       text-align: left;
     }
-    /* Οι μεταβολές όταν το body έχει κλάση collapsed */
     body.collapsed #infoPanelFull {
       left: 848px;
       top: 112px;
       width: calc(100vw - 920px);
     }
-    /* (Μπορείτε να διαγράψετε το infoPanelCollapsed αν δεν το χρειάζεστε) */
-    #infoPanelCollapsed { display: none; }
-    
     /* Balloon */
     #canvasSubshells {
       position: absolute;
@@ -61,7 +57,6 @@
       display: none;
       transition: all 1.5s ease;
     }
-    
     /* Κουμπιά */
     #buttonPanel {
       position: fixed;
@@ -92,18 +87,19 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Container για τα στοιχεία του πίνακα */
+    /* Container για τον πίνακα στοιχείων */
     #elementsContainer {
       position: absolute;
-      /* Θα ορίσουμε τις διαστάσεις δυναμικά με βάση τα στοιχεία */
       z-index: 10;
     }
-    /* Ο νέος background καμβάς για τον πίνακα στοιχείων */
+    /* Background canvas για τον πίνακα στοιχείων */
     #backgroundCanvas {
       position: absolute;
-      z-index: 1;
+      z-index: 0;
       transition: all 0.5s ease-in-out;
       pointer-events: none;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     /* Καμβάδες Περιόδων και Ομάδων */
@@ -126,7 +122,7 @@
     .p-block { background: #26FF31 !important; }
     .d-block { background: #3F99FF !important; }
     .f-block { background: #FFD051 !important; }
-    /* Τοποθέτηση καμβάδων στοιχείων (με βάση τις αρχικές ρυθμίσεις) */
+    /* Τοποθέτηση καμβάδων στοιχείων */
     .full #canvasS { top: 120px; left: 50px; z-index: 11; }
     .full #canvasF { top: 120px; left: 134px; width: 588px; z-index: 12; }
     .full #canvasD { top: 120px; left: 134px; width: 420px; z-index: 13; }
@@ -143,7 +139,7 @@
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
   
-  <!-- Container για τα στοιχεία του Πίνακα -->
+  <!-- Container για τον πίνακα στοιχείων -->
   <div id="elementsContainer">
     <div id="canvasS" class="canvas"></div>
     <div id="canvasF" class="canvas"></div>
@@ -151,7 +147,7 @@
     <div id="canvasP" class="canvas"></div>
   </div>
   
-  <!-- Πίνακας Πληροφοριών (χρησιμοποιούμε μόνο αυτόν) -->
+  <!-- Πίνακας Πληροφοριών -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -169,7 +165,7 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Ο background καμβάς για τον πίνακα στοιχείων -->
+  <!-- Background canvas για τον πίνακα στοιχείων -->
   <canvas id="backgroundCanvas"></canvas>
   
   <script>
@@ -179,7 +175,7 @@
     let flashActive = false;
     let subshellsP;
     let lastClickedElement = null; // για το Balloon
-    let selectedElement = null;    // για έντονο περίγραμμα
+    let selectedElement = null;    // δείκτης του κλικ (χωρίς να επηρεάζεται το currentZ)
 
     function convertClickedToCurrent(clickedZ) { return clickedZ; }
     function getBlockColor(b) {
@@ -215,6 +211,30 @@
     let elements = [];
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
     
+    // Ορισμός της initPeriodsCanvas για τους καμβάδες περιόδων
+    function initPeriodsCanvas() {
+      if(window.periodsInitialized) return;
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(40, 292);
+          canvas.parent("canvasPeriods");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(12);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+          for (let i = 0; i < 7; i++) {
+            p.fill(240);
+            p.rect(0, i * 42, 40, 40);
+            p.fill(0);
+            p.text(periodLabels[i], 20, i * 42 + 20);
+          }
+        };
+      });
+      window.periodsInitialized = true;
+    }
+    
     // Φόρτωση στοιχείων
     function loadElements() {
       fetch('elements.json')
@@ -230,7 +250,7 @@
         .catch(err => console.error('Σφάλμα φόρτωσης:', err));
     }
     
-    // updateInfo: ενημερώνει τα περιεχόμενα του info panel και ορίζει το επιλεγμένο στοιχείο
+    // updateInfo: ενημερώνει τα περιεχόμενα του info panel
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -240,6 +260,7 @@
       const element = elements.find(e => Number(e.number) === currentNum);
       if(!element) return;
       lastClickedElement = element;
+      // Ο δείκτης του κλικ ορίζεται εδώ
       selectedElement = element;
       
       let displayZ = (Number(element.number) >= 119 ? Number(element.number) - 118 : Number(element.number));
@@ -281,16 +302,14 @@
     }
     window.updateInfo = updateInfo;
     
-    // Δημιουργία των canvases για κάθε block – τα τοποθετούμε μέσα στο container "elementsContainer"
+    // Δημιουργία των canvases για κάθε block μέσα στον container
     function initializeCanvases() {
       Object.keys(BLOCKS_CONFIG).forEach(function(block) {
         new p5(function(p) {
           p.setup = function() {
             const config = BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
-            // Τοποθετούμε όλα τα canvas στον container
             canvas.parent("elementsContainer");
-            // Ορίζουμε το id του canvas για ευκολότερο χειρισμό
             canvas.elt.id = "canvas" + block.toUpperCase();
             canvas.elt.style.height = config.rows * 42 + "px";
             if(document.body.classList.contains('collapsed')){
@@ -302,7 +321,6 @@
               else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "134px"; }
             }
             drawElements(p, block);
-            // Αφαιρούμε προσωρινά το skipNextClick για να μην παρεμποδίζεται το click
             p.skipNextClick = false;
             p.mouseClicked = function() {
               let candidates;
@@ -325,10 +343,7 @@
                   console.log("Selected element:", candidate);
                   selectedElement = candidate;
                   window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
-                    flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                  }
+                  // Αφαιρούμε το flashActive check που βασιζόταν στο currentZ
                   break;
                 }
               }
@@ -456,7 +471,7 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Εάν το στοιχείο είναι επιλεγμένο, σχεδιάζουμε περίγραμμα με "black"
+        // Σχεδιάζουμε περίγραμμα για το επιλεγμένο στοιχείο με "black"
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(getBlockColor(e.block));
           p.textSize(16);
@@ -596,7 +611,8 @@
               } else if(currentZ === 120) {
                 candidates = elements.filter(e => e.block === block && Number(e.number) === 2);
               } else {
-                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2));
+                candidates = elements.filter(e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                                                Number(e.number) === 1 || Number(e.number) === 2));
               }
               for(let candidate of candidates) {
                 let pos = calculatePosition(candidate, candidate.block);
@@ -605,10 +621,6 @@
                   console.log("Selected element:", candidate);
                   selectedElement = candidate;
                   window.updateInfo(candidate.number);
-                  if(candidate.number === currentZ) {
-                    flashActive = true;
-                    setTimeout(() => { flashActive = false; redrawAll(); }, 200);
-                  }
                   break;
                 }
               }
@@ -616,7 +628,6 @@
           };
         });
       });
-      // Θέτουμε τις μεταβολές θέσεων για τους καμβάδες στοιχείων (ο ίδιος υπολογισμός όπως προηγουμένως)
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
         if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
@@ -631,42 +642,30 @@
         let cP = document.getElementById('canvasP');
         if(cP) { cP.style.left = (base + shiftP) + "px"; }
       }
-      // Ενημερώνουμε τον background καμβά του πίνακα στοιχείων
       updateBackgroundCanvas();
     }
     
-    // Υπολογισμός του union bounding box όλων των παιδιών του container
+    // Ενημέρωση του background canvas βάσει των διαστάσεων του container των στοιχείων
     function updateBackgroundCanvas() {
       let container = document.getElementById('elementsContainer');
       let bgCanvas = document.getElementById('backgroundCanvas');
       if (container && bgCanvas) {
-        let children = container.children;
-        if(children.length === 0) return;
-        let minLeft = Infinity, minTop = Infinity, maxRight = -Infinity, maxBottom = -Infinity;
-        for(let i = 0; i < children.length; i++){
-          let rect = children[i].getBoundingClientRect();
-          minLeft = Math.min(minLeft, rect.left);
-          minTop = Math.min(minTop, rect.top);
-          maxRight = Math.max(maxRight, rect.right);
-          maxBottom = Math.max(maxBottom, rect.bottom);
-        }
-        let width = maxRight - minLeft;
-        let height = maxBottom - minTop;
-        bgCanvas.width = width;
-        bgCanvas.height = height;
-        bgCanvas.style.left = minLeft + 'px';
-        bgCanvas.style.top = minTop + 'px';
+        let rect = container.getBoundingClientRect();
+        bgCanvas.width = rect.width;
+        bgCanvas.height = rect.height;
+        bgCanvas.style.left = rect.left + 'px';
+        bgCanvas.style.top = rect.top + 'px';
         
         let ctx = bgCanvas.getContext('2d');
-        let gradient = ctx.createLinearGradient(0, 0, width, 0);
+        let gradient = ctx.createLinearGradient(0, 0, rect.width, 0);
         gradient.addColorStop(0, "#ff7e5f");
         gradient.addColorStop(1, "#feb47b");
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
+        ctx.fillRect(0, 0, rect.width, rect.height);
       }
     }
     
-    // Απλή επανατοποθέτηση των group canvases (όπως προηγουμένως)
+    // Απλή αναπροσαρμογή των group canvases (όπως προηγουμένως)
     function repositionGroupCanvasesExpanded() {
       if(!document.body.classList.contains('collapsed')) {
         let base = 134, shiftP = 0, shiftD = 0;
@@ -691,7 +690,7 @@
       }
     }
     
-    // Event listener για το "Επόμενο"
+    // Event listeners για κουμπιά
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 118) { 
@@ -706,7 +705,6 @@
       setTimeout(() => { ignoreCanvasClick = false; }, 100);
     });
     
-    // Event listener για το "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
@@ -724,7 +722,6 @@
       document.getElementById('toggleFBlock').disabled = false;
     });
     
-    // Event listener για το "Reset"
     document.getElementById('reset').addEventListener('click', function() {
       currentZ = 3;
       window.groupsInitialized = false;
@@ -746,10 +743,8 @@
       updateBackgroundCanvas();
     });
     
-    // Event listener για το toggle μεταξύ collapsed και full mode.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
-      // Απλά αλλάζουμε την κλάση του body; το info panel έχει CSS transition για left και top.
       if(!document.body.classList.contains('collapsed')) {
          document.body.classList.add('collapsed');
          toggleBtn.textContent = "Ανάπτυξη";
@@ -757,7 +752,6 @@
          document.body.classList.remove('collapsed');
          toggleBtn.textContent = "Σύμπτυξη";
       }
-      // Ενημέρωση θέσεων και info panel αμέσως για ομαλή μετάβαση.
       updateInfo(currentZ);
       redrawAll();
       setTimeout(function() {
