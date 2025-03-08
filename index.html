@@ -152,7 +152,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κΠεριοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
@@ -337,7 +337,7 @@
     
     // Ενημέρωση θέσεων ονομάτων ομάδων
     function updateGroupsPositions() {
-      // Το s πάντοτε παραμένει σταθερό
+      // Το s παραμένει σταθερό
       document.getElementById('canvasS_groups').style.left = "75px";
       if(document.body.classList.contains('collapsed')){
         document.getElementById('canvasD_groups').style.left = "164px";
@@ -364,8 +364,8 @@
     }
     
     // Διόρθωση του canvasTableBackground:
-    // Στο full mode (χωρίς collapsed) χρησιμοποιούμε τις διαστάσεις του collapsed,
-    // ενώ στο collapsed mode χρησιμοποιούμε τις διαστάσεις του full (κανονικές).
+    // Όταν το σώμα δεν έχει την κλάση collapsed (full mode), χρησιμοποιούμε τις διαστάσεις του collapsed (ανταλλαγμένες: πλάτος = newHeight, ύψος = newWidth)
+    // Όταν έχει την κλάση collapsed, χρησιμοποιούμε τις κανονικές διαστάσεις.
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
@@ -392,13 +392,13 @@
       let newHeight = (maxBottom - minTop) + margin * 2;
       let bg = document.getElementById("canvasTableBackground");
       if(!document.body.classList.contains('collapsed')) {
-         // Full mode: χρησιμοποιούμε τις διαστάσεις του collapsed (rotation 90°)
+         // Full mode: background χρησιμοποιεί τις ανταλλαγμένες διαστάσεις (collapsed)
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = newHeight + "px";
          bg.style.height = newWidth + "px";
       } else {
-         // Collapsed mode: χρησιμοποιούμε τις κανονικές διαστάσεις
+         // Collapsed mode: χρησιμοποιούμε τις κανονικές διαστάσεις (full)
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = newWidth + "px";
@@ -525,7 +525,6 @@
             const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            // Ορισμός pointer-events ώστε να λαμβάνουν τα events
             canvas.elt.style.pointerEvents = "auto";
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "75px"; }
@@ -539,7 +538,7 @@
             window.drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = debounce(function() {
+            p.mousePressed = debounce(function() {
               if(p.skipNextClick || ignoreCanvasClick) return;
               if(!p.canvas || !p.canvas.elt) return;
               let rect = p.canvas.elt.getBoundingClientRect();
@@ -552,14 +551,14 @@
                   globalY >= pos.top && globalY <= pos.bottom
               );
               if(candidate) {
-                console.log("Canvas mouseClicked:", "Block:", block, "Coords:", globalX, globalY, "Element number:", candidate.element.number);
+                console.log("Canvas mousePressed:", "Block:", block, "Coords:", globalX, globalY, "Element number:", candidate.element.number);
                 selectedElement = candidate.element;
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
                 setTimeout(() => { flashActive = false; window.redrawAll(); }, 200);
               } else {
-                console.log("Canvas mouseClicked: No element found for coords", globalX, globalY);
+                console.log("Canvas mousePressed: No element found for coords", globalX, globalY);
               }
             }, 300);
           };
@@ -675,12 +674,10 @@
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 3) { currentZ = 3; }
-      else if(currentZ < 118) { currentZ++; }
-      else if(currentZ === 118) { currentZ = 119; }
-      else if(currentZ === 119) { currentZ = 120; }
-      else if(currentZ === 120) { currentZ = 121; }
-      else if(currentZ === 121) { currentZ = 122; }
+      else if(currentZ < 122) { currentZ++; }  // Αύξηση μέχρι 122 (περίοδοι)
+      else if(currentZ === 122) { currentZ = 123; }
       logCurrentZ("Next Button Click:");
+      updateGroupsPositions();  // Ενημέρωση και των ομάδων
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
@@ -733,7 +730,7 @@
             window.drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = debounce(function(event) {
+            p.mousePressed = debounce(function(event) {
               if(p.skipNextClick) return;
               if(!p.canvas || !p.canvas.elt) return;
               let rect = p.canvas.elt.getBoundingClientRect();
@@ -746,7 +743,7 @@
                   globalY >= pos.top && globalY <= pos.bottom
               );
               if(candidate) {
-                console.log("Canvas mouseClicked (redraw):", "Block:", block, "Coords:", globalX, globalY, "Element number:", candidate.element.number);
+                console.log("Canvas mousePressed (redraw):", "Block:", block, "Coords:", globalX, globalY, "Element number:", candidate.element.number);
                 selectedElement = candidate.element;
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { updateInfo(candidate.element.number); }, 300);
@@ -847,7 +844,6 @@
     window.initPeriodsCanvas = initPeriodsCanvas;
     
     // Διορθωμένη υλοποίηση για το Balloon:
-    // Ενημερώνει τη θέση, θέτει z-index υψηλό, εμφανίζει το στοιχείο και καλεί redraw.
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
