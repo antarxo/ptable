@@ -389,14 +389,10 @@
       } else {
         let base = 159;
         let shiftD = 0, shiftP = 0;
-        if(currentZ <= 20)
-          { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30)
-          { shiftP = 42 * (currentZ - 20); }
-        else if(currentZ >= 31 && currentZ <= 56)
-          { shiftP = 42 * 10; }
-        else if(currentZ >= 57 && currentZ <= 70)
-          { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
+        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
+        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
+        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
+        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
         else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
         document.getElementById('canvasD_groups').style.left = (base + shiftD) + "px";
         document.getElementById('canvasP_groups').style.left = (base + shiftP) + "px";
@@ -666,7 +662,12 @@
       logCurrentZ("Next Button Click:");
       updateGroupsPositions();
       window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
+      setTimeout(() => {
+        updateInfo(currentZ);
+        let bg = document.getElementById("canvasTableBackground");
+        console.log("Background Dimensions: ", bg.offsetWidth + " x " + bg.offsetHeight);
+        console.log("Background Top Left: ", bg.offsetLeft + ", " + bg.offsetTop);
+      }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
     });
     document.getElementById('fillAll').addEventListener('click', function() {
@@ -694,7 +695,7 @@
       document.getElementById('canvasTableBackground').style.display = "none";
       logCurrentZ("Reset Button Click:");
     });
-    /* --- Redraw everything --- */
+    /* --- Redraw Everything --- */
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
         let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
