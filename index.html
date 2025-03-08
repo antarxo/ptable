@@ -55,7 +55,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Info Panels – πάντοτε στο DOM, αλλά η ορατότητα ελέγχεται μέσω opacity & pointer-events */
+    /* Info Panels – πάντοτε στο DOM, αλλά η ορατότητά τους ελέγχεται μέσω opacity & pointer-events */
     #infoPanelFull, #infoPanelCollapsed {
       position: absolute;
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
@@ -143,7 +143,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική Περιοδικού Πίνακα</div>
   <!-- Background -->
   <div id="canvasTableBackground"></div>
   
@@ -181,7 +181,7 @@
   
   <script>
     /* --- Βοηθητικές Συναρτήσεις --- */
-    // Ορισμός της formatShells για μορφοποίηση των στοιχείων των "shells"
+    // Συνάρτηση για μορφοποίηση των στοιχείων των "shells"
     function formatShells(shellsStr) {
       if (!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -189,13 +189,38 @@
       let result = [];
       for (let i = 0; i < shellNumbers.length; i++) {
         let text = labels[i] + "(" + shellNumbers[i] + ")";
-        // Τονίστε την τελευταία στρώση
+        // Αν είναι η τελευταία στρώση, τονίζουμε τον αριθμό
         if (i === shellNumbers.length - 1) {
           text = "<strong>" + text + "</strong>";
         }
         result.push(text);
       }
       return result.join(", ");
+    }
+    
+    // Ορισμός της messageForElement ώστε να επιστρέφει ένα μήνυμα για το στοιχείο
+    function messageForElement(element) {
+      if (element.block === 'f') {
+        return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+      } else {
+        let group = parseInt(element.col);
+        if (group === 1) {
+          return (element.number === 1) ? "Θέλει να πάρει 1 ηλεκτρόνιο" : "Θέλει να δώσει 1 ηλεκτρόνιο";
+        } else if (group === 2) {
+          return `Θέλει να δώσει ${group} ηλεκτρόνια`;
+        } else if (group === 13) {
+          return `Θέλει να δώσει ${group - 10} ηλεκτρόνια`;
+        } else if (group >= 3 && group <= 12) {
+          return "Στοιχείο μετάπτωσης";
+        } else if (group === 14) {
+          return "Θέλει να δώσει ή να πάρει 4 ηλεκτρόνια";
+        } else if (group >= 15 && group <= 17) {
+          return `Θέλει να πάρει ${18 - group} ηλεκτρόνια`;
+        } else if (group === 18) {
+          return "Ευγενές αέριο - Χημικά αδρανές";
+        }
+        return "";
+      }
     }
     
     /* --- Global Variables & Config --- */
@@ -228,7 +253,6 @@
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
-    // Παράδειγμα συνάρτησης σχεδίασης στοιχείων (grid)
     window.drawElements = function(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -295,7 +319,6 @@
         }
       });
     };
-    // Συνάρτηση για τη μετατόπιση των καμβάδων (παραμένει όπως πριν)
     window.updateSectors = function(state) {
       let base = 159, shiftP = 0, shiftD = 0;
       if(state === "collapsed") {
@@ -633,7 +656,6 @@
     /* --- Toggle Panels --- */
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
-      // Αλλαγή του state μέσω του class "collapsed" στο body
       if(!document.body.classList.contains('collapsed')){
         document.body.classList.add('collapsed');
         toggleBtn.textContent = "Ανάπτυξη";
