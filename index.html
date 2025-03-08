@@ -102,7 +102,7 @@
       z-index: 150;
       transition: all 0.2s ease;
     }
-    /* Group canvases – τοποθετούνται πάνω από τους τομείς όπως στο αρχικό ptable good */
+    /* Group canvases – τοποθετούνται πάνω από τους τομείς όπως στο ptable good */
     #canvasS_groups { left: 75px; top: 78px; }
     #canvasD_groups { left: 164px; top: 78px; }
     #canvasP_groups { left: 584px; top: 78px; }
@@ -430,8 +430,7 @@
       else return ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
                    Number(e.number) === 1 || Number(e.number) === 2);
     }
-    // Ενημέρωση του background – Απλή αντιστροφή: για full (μη collapsed) χρησιμοποιεί τις "φυσικές" διαστάσεις, ενώ για collapsed
-    // αντιστρέφει (swap) το πλάτος και το ύψος.
+    // Ενημέρωση του background – αν το state είναι collapsed, swap το πλάτος με το ύψος.
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
@@ -441,8 +440,12 @@
       additionalIDs.forEach(id => {
           const elem = document.getElementById(id);
           if(elem && elem.style.display !== "none") {
-             let rect = elem.getBoundingClientRect();
-             all.push({left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom});
+             try {
+               let rect = elem.getBoundingClientRect();
+               all.push({left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom});
+             } catch(err) {
+               console.error("Error in getBoundingClientRect for", id, err);
+             }
           }
       });
       if(all.length === 0) return;
@@ -544,7 +547,7 @@
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = debounce(function() {
               if(p.skipNextClick || ignoreCanvasClick) return;
-              // Χρήση των p.mouseX και p.mouseY συν το offset του καμβά
+              if(!p.canvas || !p.canvas.elt) return;
               let rect = p.canvas.elt.getBoundingClientRect();
               let globalX = p.mouseX + rect.left;
               let globalY = p.mouseY + rect.top;
@@ -729,6 +732,7 @@
             setTimeout(() => { p.skipNextClick = false; }, 100);
             p.mouseClicked = debounce(function(event) {
               if(p.skipNextClick) return;
+              if(!p.canvas || !p.canvas.elt) return;
               let rect = p.canvas.elt.getBoundingClientRect();
               let globalX = p.mouseX + rect.left;
               let globalY = p.mouseY + rect.top;
