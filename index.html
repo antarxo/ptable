@@ -23,7 +23,7 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Background που δίνει το ύφος του "τραμπουλόχαρτου" με σκιά και περίγραμμα */
+    /* Background με σκιά και περίγραμμα */
     #canvasTableBackground {
       position: absolute;
       background: white;
@@ -32,7 +32,6 @@
       z-index: -10;
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
     }
-    /* Καμβάδες τομέων */
     #canvasPeriods {
       position: absolute;
       left: 31px;
@@ -46,51 +45,48 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.2);
       transition: all 0.5s ease-in-out;
     }
-    /* Καμβάδες για τους τομείς s,p,d,f */
     .canvas {
       position: absolute;
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Panels πληροφοριών (επιστρέφουμε στο αρχικό στυλ) */
+    /* Info Panels: επαναφέρουμε την αρχική δομή και animation */
     #infoPanelFull, #infoPanelCollapsed {
-      display: flex;
-      flex-direction: row;
+      position: absolute;
+      width: calc(100vw - var(--rightPanelWidth) - 105px);
+      padding: 20px;
       background: rgba(255,255,255,0.95);
       border: 2px solid #333;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      padding: 20px;
-      position: absolute;
-      text-align: left;
-      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
+      transition: left 0.8s ease, top 0.8s ease, opacity 0.8s ease;
     }
-    /* Full mode */
-    body:not(.collapsed) #infoPanelFull {
+    /* Full panel εμφανίζεται αρχικά */
+    #infoPanelFull {
       left: 20px;
       top: 443px;
-      width: calc(100vw - var(--rightPanelWidth) - 105px);
       opacity: 1;
-      pointer-events: auto;
       z-index: 40;
     }
-    body:not(.collapsed) #infoPanelCollapsed {
+    /* Collapsed panel: σταθερή θέση πάνω, με υψηλό z-index */
+    #infoPanelCollapsed {
+      left: 858px;
+      top: 112px;
       opacity: 0;
+      z-index: 100;
       pointer-events: none;
     }
-    /* Collapsed mode */
+    /* Όταν γίνεται το toggle, ο full panel μετακινείται και fade-out, ενώ ο collapsed fade-in */
     body.collapsed #infoPanelFull {
+      left: 858px;
+      top: 112px;
       opacity: 0;
       pointer-events: none;
     }
     body.collapsed #infoPanelCollapsed {
-      left: 858px;
-      top: 112px;
-      width: calc(100vw - 920px);
       opacity: 1;
       pointer-events: auto;
-      z-index: 100;
     }
     #leftPanelFull { width: 200px; }
     #remarksFull { width: calc(100% - 200px); }
@@ -99,7 +95,6 @@
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
     #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
-    /* Balloon info */
     #canvasSubshells {
       position: absolute;
       background: rgba(255,255,255,0.95);
@@ -143,12 +138,11 @@
   <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
-  <!-- Οι καμβάδες για τους τομείς s,p,d,f -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
-  <!-- Πίνακας πληροφοριών (επιστροφή στην αρχική δομή) -->
+  <!-- Info panels με αρχική δομή -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -158,8 +152,7 @@
     <div id="remarksCollapsed"></div>
   </div>
   <div id="canvasSubshells" class="canvas"></div>
-  <!-- Οι καμβάδες που απεικονίζουν τις 18 ομάδες του Π.Π. εμφανίζονται εξωτερικά -->
-  <!-- (Η υλοποίηση για αυτές γίνεται εξωτερικά και δεν ενσωματώνεται εδώ) -->
+  <!-- Οι καμβάδες για τις 18 ομάδες εμφανίζονται εξωτερικά (εκτός του κώδικα) -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -167,7 +160,7 @@
     <button id="reset">Reset</button>
   </div>
   <script>
-    /* Βοηθητικές συναρτήσεις & Config */
+    /* Βοηθητικές συναρτήσεις και Config */
     function formatShells(shellsStr) {
       if (!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -576,7 +569,6 @@
     });
     document.getElementById('reset').addEventListener('click', function() {
       currentZ = 2;
-      window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
       selectedElement = null;
