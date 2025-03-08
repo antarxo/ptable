@@ -330,7 +330,7 @@
       console.log(context, "currentZ:", currentZ);
       updateDebugPanel();
     }
-    /* --- Υπολογισμός θέσεων --- */
+    /* --- Position Calculation --- */
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's')
@@ -398,7 +398,7 @@
         document.getElementById('canvasP_groups').style.left = (base + shiftP) + "px";
       }
     }
-    /* --- Δυναμικός υπολογισμός background για "Επόμενο" --- */
+    /* --- Dynamic background calculation --- */
     function updateTableBackground() {
       const margin = 10;
       let positions = computeCellPositions();
@@ -420,20 +420,20 @@
       let normalHeight = maxBottom - minTop + margin * 2;
       let bg = document.getElementById("canvasTableBackground");
       if(!document.body.classList.contains('collapsed')) {
-         // Full mode: ανταλλαγή διαστάσεων (width = normalHeight, height = normalWidth)
-         bg.style.left = (minLeft - margin) + "px";
-         bg.style.top = (minTop - margin) + "px";
-         bg.style.width = normalHeight + "px";
-         bg.style.height = normalWidth + "px";
+         // Full mode: σταθερές τιμές για full mode
+         bg.style.width = "1410px";
+         bg.style.height = "380px";
+         bg.style.left = "21px";
+         bg.style.top = "40px";
       } else {
-         // Collapsed mode: κανονικές διαστάσεις
+         // Collapsed mode: δυναμικός υπολογισμός
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = normalWidth + "px";
          bg.style.height = normalHeight + "px";
       }
     }
-    /* --- Ενημέρωση info panel και balloon --- */
+    /* --- Update info panel and balloon --- */
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119)
@@ -637,10 +637,18 @@
       let toggleBtn = document.getElementById('toggleFBlock');
       if(!document.body.classList.contains('collapsed')) {
         document.body.classList.add('collapsed');
-        toggleBtn.textContent = "Ανάπτυξη";
+        toggleBtn.textContent = "Ανάπτυξε";
+        // Log στο "Ανάπτυξε"
+        let bg = document.getElementById("canvasTableBackground");
+        console.log("Expanded mode background dimensions: ", bg.offsetWidth + " x " + bg.offsetHeight,
+                    "Top Left: ", bg.offsetLeft + ", " + bg.offsetTop);
       } else {
         document.body.classList.remove('collapsed');
         toggleBtn.textContent = "Σύμπτυξη";
+        // Log στο "Σύμπτυξη"
+        let bg = document.getElementById("canvasTableBackground");
+        console.log("Collapsed mode background dimensions: ", bg.offsetWidth + " x " + bg.offsetHeight,
+                    "Top Left: ", bg.offsetLeft + ", " + bg.offsetTop);
       }
       logCurrentZ("Toggle Button Click:");
       updateInfo(currentZ);
@@ -649,11 +657,6 @@
       setTimeout(() => {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-         if(document.body.classList.contains('collapsed')) {
-           let bg = document.getElementById("canvasTableBackground");
-           console.log("Collapsed mode background dimensions: ", bg.offsetWidth + " x " + bg.offsetHeight,
-                       "Top Left: ", bg.offsetLeft + ", " + bg.offsetTop);
-         }
       }, 1700);
     });
     document.getElementById('nextElement').addEventListener('click', function() {
@@ -776,7 +779,7 @@
       updateTableBackground();
       window.cellPositions = computeCellPositions();
     };
-    /* --- Dynamic background calculation for "Επόμενο" --- */
+    /* --- Dynamic background calculation for "Next" --- */
     function updateTableBackground() {
       const margin = 10;
       let positions = computeCellPositions();
@@ -798,12 +801,13 @@
       let normalHeight = maxBottom - minTop + margin * 2;
       let bg = document.getElementById("canvasTableBackground");
       if(!document.body.classList.contains('collapsed')) {
-         // Full mode: exchange dimensions
-         bg.style.left = (minLeft - margin) + "px";
-         bg.style.top = (minTop - margin) + "px";
-         bg.style.width = normalHeight + "px";
-         bg.style.height = normalWidth + "px";
+         // Full mode: use fixed dimensions for full mode: 1410 x 380
+         bg.style.width = "1410px";
+         bg.style.height = "380px";
+         bg.style.left = "21px";
+         bg.style.top = "40px";
       } else {
+         // Collapsed mode: dynamic calculation
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = normalWidth + "px";
