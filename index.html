@@ -398,7 +398,7 @@
         document.getElementById('canvasP_groups').style.left = (base + shiftP) + "px";
       }
     }
-    /* --- Δυναμικός υπολογισμός background --- */
+    /* --- Δυναμικός υπολογισμός background για "Επόμενο" --- */
     function updateTableBackground() {
       const margin = 10;
       let positions = computeCellPositions();
@@ -649,6 +649,11 @@
       setTimeout(() => {
          window.cellPositions = computeCellPositions();
          if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+         if(document.body.classList.contains('collapsed')) {
+           let bg = document.getElementById("canvasTableBackground");
+           console.log("Collapsed mode background dimensions: ", bg.offsetWidth + " x " + bg.offsetHeight,
+                       "Top Left: ", bg.offsetLeft + ", " + bg.offsetTop);
+         }
       }, 1700);
     });
     document.getElementById('nextElement').addEventListener('click', function() {
@@ -771,7 +776,7 @@
       updateTableBackground();
       window.cellPositions = computeCellPositions();
     };
-    /* --- Dynamic background calculation --- */
+    /* --- Dynamic background calculation for "Επόμενο" --- */
     function updateTableBackground() {
       const margin = 10;
       let positions = computeCellPositions();
@@ -793,6 +798,7 @@
       let normalHeight = maxBottom - minTop + margin * 2;
       let bg = document.getElementById("canvasTableBackground");
       if(!document.body.classList.contains('collapsed')) {
+         // Full mode: exchange dimensions
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = normalHeight + "px";
