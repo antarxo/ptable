@@ -50,6 +50,7 @@
       background: transparent;
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
+      pointer-events: auto;
     }
     /* Info Panels */
     #infoPanelFull, #infoPanelCollapsed {
@@ -74,6 +75,7 @@
       opacity: 0;
       z-index: 100;
       pointer-events: none;
+      display: none; /* Αρχικά κρυφό */
     }
     body.collapsed #infoPanelFull {
       left: 858px;
@@ -84,6 +86,7 @@
     body.collapsed #infoPanelCollapsed {
       opacity: 1;
       pointer-events: auto;
+      display: block;
     }
     #leftPanelFull { width: 200px; }
     #remarksFull { width: calc(100% - 200px); }
@@ -101,6 +104,7 @@
       padding: 10px;
       z-index: 300;
       transition: all 0.2s ease;
+      display: none;
     }
     /* Group canvases */
     #canvasS_groups { left: 75px; top: 78px; }
@@ -148,7 +152,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κΠεριοδικού Πίνακα</div>
   <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
@@ -333,7 +337,7 @@
     
     // Ενημέρωση θέσεων ονομάτων ομάδων
     function updateGroupsPositions() {
-      // Για το s: δεν απαιτείται κανένα shift, πάντα "75px"
+      // Το s πάντοτε παραμένει σταθερό
       document.getElementById('canvasS_groups').style.left = "75px";
       if(document.body.classList.contains('collapsed')){
         document.getElementById('canvasD_groups').style.left = "164px";
@@ -360,7 +364,8 @@
     }
     
     // Διόρθωση του canvasTableBackground:
-    // Στο full mode χρησιμοποιούμε τις κανονικές διαστάσεις, ενώ στο collapsed ανταλλάσσουμε πλάτος με ύψος.
+    // Στο full mode (χωρίς collapsed) χρησιμοποιούμε τις διαστάσεις του collapsed,
+    // ενώ στο collapsed mode χρησιμοποιούμε τις διαστάσεις του full (κανονικές).
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
@@ -386,14 +391,14 @@
       let newWidth = (maxRight - minLeft) + margin * 2;
       let newHeight = (maxBottom - minTop) + margin * 2;
       let bg = document.getElementById("canvasTableBackground");
-      if(document.body.classList.contains('collapsed')) {
-         // Σε collapsed: ανταλλαγή (rotation 90°)
+      if(!document.body.classList.contains('collapsed')) {
+         // Full mode: χρησιμοποιούμε τις διαστάσεις του collapsed (rotation 90°)
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = newHeight + "px";
          bg.style.height = newWidth + "px";
       } else {
-         // Σε full: κανονικές διαστάσεις
+         // Collapsed mode: χρησιμοποιούμε τις κανονικές διαστάσεις
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = newWidth + "px";
@@ -520,6 +525,8 @@
             const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
+            // Ορισμός pointer-events ώστε να λαμβάνουν τα events
+            canvas.elt.style.pointerEvents = "auto";
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "75px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
@@ -566,6 +573,7 @@
         p.setup = function() {
           let canvas = p.createCanvas(10, 40);
           canvas.parent("canvasSubshells");
+          canvas.elt.style.pointerEvents = "auto";
           subshellsP = p;
           p.noLoop();
         };
@@ -839,7 +847,7 @@
     window.initPeriodsCanvas = initPeriodsCanvas;
     
     // Διορθωμένη υλοποίηση για το Balloon:
-    // Ενημερώνει τη θέση, θέτει z-index υψηλό και καλεί redraw του p5 canvas του subshells.
+    // Ενημερώνει τη θέση, θέτει z-index υψηλό, εμφανίζει το στοιχείο και καλεί redraw.
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -864,6 +872,7 @@
       cs.style.left = leftPos + "px";
       cs.style.top = topPos + "px";
       cs.style.display = "block";
+      console.log("Balloon updated at:", leftPos, topPos);
       if(subshellsP) { subshellsP.redraw(); }
     }
     
