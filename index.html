@@ -87,7 +87,7 @@
       left: 858px;
       top: 112px;
       width: calc(100vw - 920px);
-      z-index: 100;
+      z-index: 40;
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.3s ease;
       opacity: 1;
     }
@@ -923,62 +923,63 @@
     };
 
     /* ================================================================
-       Event Handlers: Buttons
+       Event Handlers: Buttons (Toggle, Next, Fill All, Reset)
     ============================================================== */
+    // Τροποποιημένος χειριστής για το toggle ώστε:
+    // - Οι αλλαγές στο background ξεκινούν πριν ή ταυτόχρονα με τις κινήσεις των τομέων/ομάδων.
+    // - Στην "Ανάπτυξε" ο full πίνακας ξεκινάει ως collapsed και μετά αναβαθμίζεται στο full.
+    // - Στην "Σύμπτυξη" όταν ο full φτάνει, εμφανίζεται πάνω του ο collapsed με υψηλότερο z-index.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       let fullPanel = document.getElementById('infoPanelFull');
       let collapsedPanel = document.getElementById('infoPanelCollapsed');
       if(!document.body.classList.contains('collapsed')){
-        window.updateSectors("collapsed");
-        updateTableBackground();
-        setTimeout(() => {
-          fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease";
-          fullPanel.style.left = "858px";
-          fullPanel.style.top = "112px";
-          fullPanel.style.width = "calc(100vw - 920px)";
-        }, 600);
-        setTimeout(() => {
-          setTimeout(() => {
+         // Collapse: Αρχική ενημέρωση background και τομέων
+         updateTableBackground();
+         window.updateSectors("collapsed");
+         // Άμεση μετάβαση του full πίνακα σε collapsed θέση
+         fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
+         fullPanel.style.left = "858px";
+         fullPanel.style.top = "112px";
+         fullPanel.style.width = "calc(100vw - 920px)";
+         // Μετά το τέλος της μετάβασης (0.8s), εμφάνιση του collapsed πίνακα πάνω από τον full με υψηλότερο z-index
+         setTimeout(() => {
             collapsedPanel.style.left = fullPanel.style.left;
             collapsedPanel.style.top = fullPanel.style.top;
             collapsedPanel.style.display = "flex";
-            collapsedPanel.style.zIndex = 100;
+            collapsedPanel.style.zIndex = "150";
             document.body.classList.add('collapsed');
             toggleBtn.textContent = "Σύμπτυξη";
             updateInfo(currentZ);
             window.redrawAll();
-          }, 300);
-        }, 1200);
+         }, 800);
       } else {
-        collapsedPanel.style.transition = "opacity 0.3s ease";
-        collapsedPanel.style.opacity = "0";
-        setTimeout(() => {
-          collapsedPanel.style.display = "none";
-          fullPanel.style.display = "flex";
-          fullPanel.style.zIndex = "40";
-          fullPanel.style.opacity = "0";
-          window.updateSectors("expanded");
-          updateTableBackground();
-          fullPanel.style.left = "858px";
-          fullPanel.style.top = "112px";
-          fullPanel.style.width = "calc(100vw - 920px)";
-          setTimeout(() => {
+         // Expand: Αρχικά fade out ο collapsed πίνακας
+         collapsedPanel.style.transition = "opacity 0.3s ease";
+         collapsedPanel.style.opacity = "0";
+         setTimeout(() => {
+            collapsedPanel.style.display = "none";
+            // Εμφάνιση του full πίνακα ξεκινώντας από collapsed θέση
+            fullPanel.style.display = "flex";
+            fullPanel.style.zIndex = "40";
+            fullPanel.style.opacity = "0";
+            updateTableBackground();
+            window.updateSectors("expanded");
+            // Μετάβαση του full πίνακα στη full θέση
             fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
             fullPanel.style.left = "20px";
             fullPanel.style.top = "443px";
             fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
             fullPanel.style.opacity = "1";
-          }, 50);
-          setTimeout(() => {
-            document.body.classList.remove('collapsed');
-            document.getElementById('canvasD_groups').classList.remove('emphasized');
-            document.getElementById('canvasP_groups').classList.remove('emphasized');
-            toggleBtn.textContent = "Σύμπτυξη";
-            updateInfo(currentZ);
-            window.redrawAll();
-          }, 900);
-        }, 300);
+            setTimeout(() => {
+              document.body.classList.remove('collapsed');
+              document.getElementById('canvasD_groups').classList.remove('emphasized');
+              document.getElementById('canvasP_groups').classList.remove('emphasized');
+              toggleBtn.textContent = "Σύμπτυξη";
+              updateInfo(currentZ);
+              window.redrawAll();
+            }, 800);
+         }, 300);
       }
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
