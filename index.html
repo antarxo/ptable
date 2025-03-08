@@ -189,7 +189,7 @@
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξη</button>
+    <button id="toggleFBlock">Σύμπτυξε</button>
     <button id="reset">Reset</button>
   </div>
   
@@ -948,7 +948,7 @@
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
-      fillAllPressed = true;  // Ορίστε το flag ως true αφού πατηθεί το "Συμπλήρωσε"
+      fillAllPressed = true;  // Ορίζουμε το flag αφού πατηθεί το "Συμπλήρωσε"
       document.getElementById('canvasPeriods').style.display = 'block';
       let csg = document.getElementById('canvasS_groups');
       let cdg = document.getElementById('canvasD_groups');
@@ -963,6 +963,61 @@
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { window.setFixedGroupsPositions("expanded"); }, 800);
       document.getElementById('toggleFBlock').disabled = false;
+    });
+
+    document.getElementById('toggleFBlock').addEventListener('click', function() {
+      let toggleBtn = document.getElementById('toggleFBlock');
+      let fullPanel = document.getElementById('infoPanelFull');
+      let collapsedPanel = document.getElementById('infoPanelCollapsed');
+      if(!document.body.classList.contains('collapsed')){
+         // Currently expanded → collapse.
+         updateTableBackground();
+         window.updateSectors("collapsed");
+         fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
+         fullPanel.style.left = "858px";
+         fullPanel.style.top = "112px";
+         fullPanel.style.width = "calc(100vw - 920px)";
+         setTimeout(() => {
+            collapsedPanel.style.left = fullPanel.style.left;
+            collapsedPanel.style.top = fullPanel.style.top;
+            collapsedPanel.style.display = "flex";
+            collapsedPanel.style.zIndex = "150";
+            document.body.classList.add('collapsed');
+            // When collapsed, show "Ανάπτυξε" (to expand)
+            toggleBtn.textContent = "Ανάπτυξε";
+            updateInfo(currentZ);
+            window.redrawAll();
+         }, 800);
+      } else {
+         // Currently collapsed → expand.
+         collapsedPanel.style.transition = "opacity 0.3s ease";
+         collapsedPanel.style.opacity = "0";
+         setTimeout(() => {
+            collapsedPanel.style.display = "none";
+            fullPanel.style.display = "flex";
+            fullPanel.style.zIndex = "40";
+            fullPanel.style.opacity = "0";
+            window.updateSectors("expanded");
+            fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
+            fullPanel.style.left = "20px";
+            fullPanel.style.top = "443px";
+            fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
+            fullPanel.style.opacity = "1";
+            setTimeout(() => {
+              document.body.classList.remove('collapsed');
+              document.getElementById('canvasD_groups').classList.remove('emphasized');
+              document.getElementById('canvasP_groups').classList.remove('emphasized');
+              // When expanded, show "Σύμπτυξε" (to collapse)
+              toggleBtn.textContent = "Σύμπτυξε";
+              updateInfo(currentZ);
+              window.redrawAll();
+            }, 800);
+         }, 300);
+      }
+      setTimeout(function() {
+         window.cellPositions = computeCellPositions();
+         if(lastClickedElement) updateBalloonPosition(lastClickedElement);
+      }, 1700);
     });
 
     document.getElementById('reset').addEventListener('click', function() {
