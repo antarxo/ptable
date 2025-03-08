@@ -148,7 +148,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κριοδικού Πίνακα</div>
   <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
@@ -258,179 +258,38 @@
       console.log(context, "currentZ:", currentZ);
       updateDebugPanel();
     }
-    window.drawElements = function(p, block) {
-      p.stroke(150);
-      p.strokeWeight(1);
-      let cellSize = 40;
-      let filter;
-      if(currentZ < 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
-      } else if(currentZ === 118) {
-        filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
-      } else if(currentZ === 119) {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1);
-      } else if(currentZ === 120) {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
+    
+    // Συνάρτηση για ενημέρωση των θέσεων των ονομάτων των ομάδων
+    function updateGroupsPositions() {
+      if(document.body.classList.contains('collapsed')){
+        // Σε collapsed mode χρησιμοποιούνται οι αρχικές (hard-coded) θέσεις
+        document.getElementById('canvasS_groups').style.left = "75px";
+        document.getElementById('canvasD_groups').style.left = "164px";
+        document.getElementById('canvasP_groups').style.left = "584px";
       } else {
-        filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                                              Number(e.number) === 1 || Number(e.number) === 2);
-      }
-      elements.filter(filter).forEach(function(e) {
-        const pos = calculatePosition(e, e.block);
-        let displayNumber = Number(e.number);
-        if(Number(e.number) === 119) displayNumber = 1;
-        if(Number(e.number) === 120) displayNumber = 2;
-        if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
-          p.fill(window.getBlockColor(e.block));
-          p.textSize(16);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          p.noFill();
-          p.stroke(window.getBlockColor(e.block));
-          p.strokeWeight(3);
-          p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-          p.strokeWeight(1);
+        // Σε full mode υπολογίζουμε τις μεταθέσεις με βάση το currentZ
+        let base = 159;
+        let shiftD = 0, shiftP = 0;
+        if(currentZ <= 20){
+          shiftP = 0; shiftD = 0;
+        } else if(currentZ >= 21 && currentZ <= 30){
+          shiftP = 42 * (currentZ - 20);
+        } else if(currentZ >= 31 && currentZ <= 56){
+          shiftP = 42 * 10;
+        } else if(currentZ >= 57 && currentZ <= 70){
+          shiftP = 42 * 10 + 42 * (currentZ - 56);
+          shiftD = 42 * (currentZ - 56);
         } else {
-          if(Number(e.number) === currentZ ||
-             ((currentZ === 119) && Number(e.number) === 1) ||
-             ((currentZ === 120) && Number(e.number) === 2)) {
-            if(Number(e.number) === 119) { p.fill("yellow"); }
-            else if(Number(e.number) === 120) { p.fill(window.BLOCK_COLORS["s"]); }
-            else { p.fill(window.getBlockColor(e.block)); }
-            p.textSize(16);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-            p.noFill();
-            p.stroke(window.getBlockColor(e.block));
-            p.strokeWeight(4);
-            p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-            if(flashActive) {
-              p.drawingContext.shadowBlur = 10;
-              p.drawingContext.shadowColor = "yellow";
-              p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-              p.drawingContext.shadowBlur = 0;
-            }
-            p.strokeWeight(1);
-          } else {
-            if(Number(e.number) === 119) { p.fill("yellow"); }
-            else if(Number(e.number) === 120) { p.fill(window.BLOCK_COLORS["s"]); }
-            else { p.fill(window.BLOCK_COLORS[e.block]); }
-            p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-            p.fill(0);
-            p.textSize(Number(e.number) > 99 ? 10 : 12);
-            p.textStyle(p.BOLD);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
-          }
+          shiftP = 42 * 10 + 42 * 14;
+          shiftD = 42 * 14;
         }
-      });
-    };
-    window.updateSectors = function(state) {
-      let base = 159, shiftP = 0, shiftD = 0;
-      if(state === "collapsed") {
-        document.getElementById('canvasS').style.left = "75px";
-        document.getElementById('canvasF').style.left = "179px";
-        document.getElementById('canvasD').style.left = "164px";
-        document.getElementById('canvasP').style.left = "584px";
-      } else {
-        if(currentZ <= 20) { shiftP = 0; shiftD = 0; }
-        else if(currentZ >= 21 && currentZ <= 30) { shiftP = 42 * (currentZ - 20); }
-        else if(currentZ >= 31 && currentZ <= 56) { shiftP = 42 * 10; }
-        else if(currentZ >= 57 && currentZ <= 70) { shiftP = 42 * 10 + 42 * (currentZ - 56); shiftD = 42 * (currentZ - 56); }
-        else { shiftP = 42 * 10 + 42 * 14; shiftD = 42 * 14; }
-        document.getElementById('canvasF').style.left = base + "px";
-        document.getElementById('canvasD').style.left = (base + shiftD) + "px";
-        document.getElementById('canvasP').style.left = (base + shiftP) + "px";
+        document.getElementById('canvasS_groups').style.left = base + "px";
+        document.getElementById('canvasD_groups').style.left = (base + shiftD) + "px";
+        document.getElementById('canvasP_groups').style.left = (base + shiftP) + "px";
       }
-    };
-    window.updateBalloonPosition = function(element) {
-      let cs = document.getElementById('canvasSubshells');
-      if(!cs) return;
-      cs.style.transition = "all 0.2s ease";
-      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
-      if(!blockCanvas) return;
-      let rect = blockCanvas.getBoundingClientRect();
-      let pos = calculatePosition(element, element.block);
-      let defaultLeft = rect.left + pos.x + 40;
-      let defaultTop = rect.top + pos.y + 40;
-      let leftPos = defaultLeft - 5;
-      let topPos = defaultTop;
-      let balloonWidth = cs.offsetWidth;
-      if(defaultLeft > window.innerWidth / 2) { leftPos = defaultLeft - (33 + balloonWidth); }
-      if(leftPos + balloonWidth > window.innerWidth) { leftPos = window.innerWidth - balloonWidth - 5; }
-      let infoCell = document.getElementById('leftPanelFull');
-      if(infoCell) {
-        let cellRect = infoCell.getBoundingClientRect();
-        if(defaultTop + cs.offsetHeight > cellRect.top) { topPos = defaultTop - (cs.offsetHeight + 23); }
-      }
-      cs.style.left = leftPos + "px";
-      cs.style.top = topPos + "px";
-      cs.style.display = "block";
-    };
-    window.drawSubshells = function(data) {
-      if (!subshellsP) return;
-      let balloonHeight = 40, fontSize = 14, leftMargin = 2, extraMargin = 5;
-      subshellsP.clear();
-      subshellsP.textSize(fontSize);
-      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
-      let wPrev = subshellsP.textWidth(data.prev || "-");
-      let wCurrent = subshellsP.textWidth(data.current || "-");
-      let wNext = subshellsP.textWidth(data.next || "-");
-      let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 10, newWidth = Math.max(computedWidth, minWidth);
-      subshellsP.resizeCanvas(newWidth, balloonHeight);
-      subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
-      let rowHeight = balloonHeight / 3;
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.prevColor || "black");
-      subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
-      subshellsP.textStyle(p5.prototype.BOLD);
-      subshellsP.fill(data.currentColor || "black");
-      subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.nextColor || "black");
-      subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
-    };
-    function calculatePosition(e, block) {
-      let x = 0, y = (e.row - 1) * 42;
-      if(block === 's') { x = (e.col - 1) * 42; }
-      else if(block === 'f' || block === 'd') { x = (e.col - 3) * 42; }
-      else if(block === 'p') {
-        if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
-        else { x = (e.col - 13) * 42; }
-      }
-      return { x: x, y: y };
     }
-    function computeCellPositions() {
-      const cellSize = 40;
-      let positions = { s: [], p: [], d: [], f: [] };
-      elements.forEach(e => {
-         if(!isRevealed(e)) return;
-         let canvasEl = document.getElementById("canvas" + e.block.toUpperCase());
-         if(!canvasEl) return;
-         let rect = canvasEl.getBoundingClientRect();
-         let pos = calculatePosition(e, e.block);
-         let absLeft = rect.left + pos.x;
-         let absTop = rect.top + pos.y;
-         positions[e.block].push({
-            number: e.number,
-            left: absLeft,
-            top: absTop,
-            right: absLeft + cellSize,
-            bottom: absTop + cellSize,
-            element: e
-         });
-      });
-      return positions;
-    }
-    function isRevealed(e) {
-      if(currentZ < 118) return Number(e.number) >= 3 && Number(e.number) <= currentZ;
-      else if(currentZ === 118) return Number(e.number) >= 3 && Number(e.number) <= 118;
-      else if(currentZ === 119) return ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1);
-      else if(currentZ === 120) return ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
-      else return ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
-                   Number(e.number) === 1 || Number(e.number) === 2);
-    }
-    // Ενημέρωση του background – αν το state είναι collapsed, swap το πλάτος με το ύψος.
+    
+    // Διόρθωση του canvasTableBackground για τις διαστάσεις
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
@@ -457,18 +316,23 @@
       let newHeight = (maxBottom - minTop) + margin * 2;
       let bg = document.getElementById("canvasTableBackground");
       if(document.body.classList.contains('collapsed')) {
-         bg.style.left = (minLeft - margin) + "px";
-         bg.style.top = (minTop - margin) + "px";
-         bg.style.width = newHeight + "px";   // swap width/height
-         bg.style.height = newWidth + "px";
-      } else {
+         // Στο collapsed mode χρησιμοποιούμε τις κανονικές διαστάσεις
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = newWidth + "px";
          bg.style.height = newHeight + "px";
+      } else {
+         // Στο full mode ανταλλάσσουμε το πλάτος με το ύψος (περιστροφή 90 μοιρών)
+         bg.style.left = (minLeft - margin) + "px";
+         bg.style.top = (minTop - margin) + "px";
+         bg.style.width = newHeight + "px";
+         bg.style.height = newWidth + "px";
       }
     }
+    
     function sortElements(data) { return data.sort((a, b) => Number(a.number) - Number(b.number)); }
+    
+    // Τροποποίηση της updateInfo για να διασφαλίσουμε ότι το balloon ενημερώνεται σωστά
     function updateInfo(clickedZ) {
       let currentNum;
       if(clickedZ === 119) { currentNum = 1; }
@@ -510,8 +374,10 @@
                                 </div>
                                 <div style="text-align:left; margin-top:10px;">${element.remarks || ""}</div>
                               </div>`;
+      // Προσθέτουμε καθυστέρηση για να έχουν ολοκληρωθεί οι μεταβάσεις πριν ενημερωθεί το balloon
       setTimeout(() => {
           window.cellPositions = computeCellPositions();
+          if(!window.subshellsInitialized) initSubshellsCanvas();
           updateBalloonPosition(element);
           updateTableBackground();
           if(element.shells) {
@@ -521,6 +387,7 @@
           }
       }, 500);
     }
+    
     let ignoreCanvasClick = false;
     let flashActive = false;
     let subshellsP;
@@ -666,6 +533,7 @@
       }
       logCurrentZ("Toggle Button Click:");
       updateInfo(currentZ);
+      updateGroupsPositions(); // Ενημέρωση θέσεων ομαδικών καμβάδων
       window.redrawAll();
       setTimeout(function() {
          window.cellPositions = computeCellPositions();
