@@ -24,11 +24,11 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Ενημερωμένη ετικέτα υπογραφής: font-size 1.5em, αχνό γκρι φόντο, padding και border-radius */
+    /* Ετικέτα υπογραφής: Μειωμένο font-size στα 0.5em με αχνό γκρι φόντο για διακριτική εμφάνιση */
     #signature {
-      font-size: 1.5em;
-      font-style: italic;
-      color: #555;
+      font-size: 0.5em;
+      font-weight: normal;
+      color: #666;
       background-color: #f0f0f0;
       padding: 2px 4px;
       border-radius: 4px;
@@ -347,10 +347,10 @@
 
     /* ================================================================
        Function: setFixedGroupsPositions
-       Αν το "Συμπλήρωσε" δεν έχει πατηθεί ακόμα, εξαναγκάζουμε τις ομάδες να κληθούν με expanded mode.
+       Εάν το κουμπί "Συμπλήρωσε" δεν έχει πατηθεί, ανεξάρτητα από την state,
+       αναγκάζουμε τις ομάδες να κληθούν με expanded mode.
     ============================================================== */
     window.setFixedGroupsPositions = function(state) {
-      // Αν το κουμπί "Συμπλήρωσε" δεν έχει πατηθεί, ανεξάρτητα από την state, θέτουμε expanded mode.
       if(!fillAllPressed) state = "expanded";
       if(state === "expanded") {
         document.getElementById('canvasS_groups').style.left = "75px";
