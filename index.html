@@ -24,9 +24,14 @@
       font-weight: bold;
       z-index: 50;
     }
+    /* Ενημερωμένη ετικέτα υπογραφής: λίγο μεγαλύτερη, με αχνό γκρι φόντο και διακριτικό styling */
     #signature {
-      font-size: 1.2em;
+      font-size: 1.4em;
       font-style: italic;
+      color: #555;
+      background-color: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 4px;
       margin-left: 10px;
       vertical-align: middle;
     }
@@ -35,11 +40,9 @@
       position: absolute;
       background: white;
       border: 1px solid rgba(0,0,0,0.1);
-      /* Σκιά 3px */
       box-shadow: 0 3px 3px rgba(0,0,0,0.2);
       z-index: -10;
       display: none;
-      /* Transition για όλες τις ιδιότητες σε 0.8s */
       transition: all 0.8s ease;
     }
     /* ==================== Καμβάδες ==================== */
@@ -63,10 +66,9 @@
     }
     /* ==================== Panels (Info Tables) ==================== */
     #infoPanelFull, #infoPanelCollapsed {
-      background: #fff;  /* Πλήρης αδιαφάνεια */
+      background: #fff;
       border: 2px solid #333;
       border-radius: 8px;
-      /* Σκιά 3px */
       box-shadow: 0 3px 3px rgba(0,0,0,0.3);
       padding: 20px;
       position: absolute;
@@ -351,7 +353,6 @@
         document.getElementById('canvasS_groups').style.top = "78px";
         document.getElementById('canvasD_groups').style.top = "78px";
         document.getElementById('canvasP_groups').style.top = "78px";
-        // Αφαίρεση έμφασης αν υπάρχει
         document.getElementById('canvasD_groups').classList.remove('emphasized');
         document.getElementById('canvasP_groups').classList.remove('emphasized');
       } else if(state === "collapsed") {
@@ -607,7 +608,7 @@
             bg.style.left = "18px";
             bg.style.top = "57px";
             bg.style.width = "1412px";
-            bg.style.height = "359px"; /* Μειωμένο κατά 5px από τα 364px */
+            bg.style.height = "359px";
          }
          return;
       }
@@ -925,68 +926,8 @@
     /* ================================================================
        Event Handlers: Buttons (Toggle, Next, Fill All, Reset)
     ============================================================== */
-    // Τροποποιημένος χειριστής για το toggle ώστε:
-    // - Οι αλλαγές στο background ξεκινούν πριν ή ταυτόχρονα με τις κινήσεις των τομέων/ομάδων.
-    // - Στην "Ανάπτυξε" ο full πίνακας ξεκινάει ως collapsed και μετά αναβαθμίζεται στο full.
-    // - Στην "Σύμπτυξη" όταν ο full φτάνει, εμφανίζεται πάνω του ο collapsed με υψηλότερο z-index.
-    document.getElementById('toggleFBlock').addEventListener('click', function() {
-      let toggleBtn = document.getElementById('toggleFBlock');
-      let fullPanel = document.getElementById('infoPanelFull');
-      let collapsedPanel = document.getElementById('infoPanelCollapsed');
-      if(!document.body.classList.contains('collapsed')){
-         // Collapse: Αρχική ενημέρωση background και τομέων
-         updateTableBackground();
-         window.updateSectors("collapsed");
-         // Άμεση μετάβαση του full πίνακα σε collapsed θέση
-         fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
-         fullPanel.style.left = "858px";
-         fullPanel.style.top = "112px";
-         fullPanel.style.width = "calc(100vw - 920px)";
-         // Μετά το τέλος της μετάβασης (0.8s), εμφάνιση του collapsed πίνακα πάνω από τον full με υψηλότερο z-index
-         setTimeout(() => {
-            collapsedPanel.style.left = fullPanel.style.left;
-            collapsedPanel.style.top = fullPanel.style.top;
-            collapsedPanel.style.display = "flex";
-            collapsedPanel.style.zIndex = "150";
-            document.body.classList.add('collapsed');
-            toggleBtn.textContent = "Σύμπτυξη";
-            updateInfo(currentZ);
-            window.redrawAll();
-         }, 800);
-      } else {
-         // Expand: Αρχικά fade out ο collapsed πίνακας
-         collapsedPanel.style.transition = "opacity 0.3s ease";
-         collapsedPanel.style.opacity = "0";
-         setTimeout(() => {
-            collapsedPanel.style.display = "none";
-            // Εμφάνιση του full πίνακα ξεκινώντας από collapsed θέση
-            fullPanel.style.display = "flex";
-            fullPanel.style.zIndex = "40";
-            fullPanel.style.opacity = "0";
-            updateTableBackground();
-            window.updateSectors("expanded");
-            // Μετάβαση του full πίνακα στη full θέση
-            fullPanel.style.transition = "left 0.8s ease, top 0.8s ease, width 0.8s ease, opacity 0.8s ease";
-            fullPanel.style.left = "20px";
-            fullPanel.style.top = "443px";
-            fullPanel.style.width = "calc(100vw - var(--rightPanelWidth) - 105px)";
-            fullPanel.style.opacity = "1";
-            setTimeout(() => {
-              document.body.classList.remove('collapsed');
-              document.getElementById('canvasD_groups').classList.remove('emphasized');
-              document.getElementById('canvasP_groups').classList.remove('emphasized');
-              toggleBtn.textContent = "Σύμπτυξη";
-              updateInfo(currentZ);
-              window.redrawAll();
-            }, 800);
-         }, 300);
-      }
-      setTimeout(function() {
-         window.cellPositions = computeCellPositions();
-         if(lastClickedElement) updateBalloonPosition(lastClickedElement);
-      }, 1700);
-    });
-
+    // Τροποποιημένος χειριστής για το "Επόμενο": προστίθεται το τελικό βήμα ώστε currentZ να γίνει 123,
+    // εξασφαλίζοντας ότι η τελική εικόνα θα είναι ίδια με αυτήν του "Συμπλήρωσε" (κατάσταση "Ανάπτυξε").
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 3) { currentZ = 3; }
@@ -995,6 +936,7 @@
       else if(currentZ === 119) { currentZ = 120; }
       else if(currentZ === 120) { currentZ = 121; }  // Εμφάνιση περιόδων
       else if(currentZ === 121) { currentZ = 122; }  // Εμφάνιση ομάδων
+      else if(currentZ === 122) { currentZ = 123; }  // Τελική κατάσταση (Ανάπτυξε)
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
@@ -1046,7 +988,6 @@
     window.addEventListener('load', updateRightPanelWidth);
     window.addEventListener('load', updateTableBackground);
     loadElements();
-    // Global variables for event handling
     let ignoreCanvasClick = false;
     let flashActive = false;
     let subshellsP;
