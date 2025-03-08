@@ -398,54 +398,57 @@
         document.getElementById('canvasP_groups').style.left = (base + shiftP) + "px";
       }
     }
-    /* --- Dynamic background calculation --- */
-function updateTableBackground() {
-    const margin = 10;
-    let bg = document.getElementById("canvasTableBackground");
-
-    if (currentZ === 123) {
-        // Στη λειτουργία "Συμπλήρωσε": Σταθερές τιμές
+    /* --- Δυναμικός υπολογισμός του background canvas --- */
+    function updateTableBackground() {
+      // Ορίζουμε ένα περιθώριο γύρω από τα ορατά στοιχεία
+      const margin = 10;
+      let bg = document.getElementById("canvasTableBackground");
+      
+      // Ελέγχουμε αν βρισκόμαστε στη λειτουργία "Συμπλήρωσε" (currentZ === 123)
+      if (currentZ === 123) {
+        // Ορισμός σταθερών τιμών για τη λειτουργία "Συμπλήρωσε"
         if (!document.body.classList.contains('collapsed')) {
-            // Full mode
-            bg.style.width = "1412px";
-            bg.style.height = "382px";
-            bg.style.left = "21px";  
-            bg.style.top = "58px";   
+          // Full mode
+          bg.style.width = "1412px";
+          bg.style.height = "382px";
+          bg.style.left = "21px";
+          bg.style.top = "58px";
         } else {
-            // Collapsed mode
-            bg.style.width = "827px";
-            bg.style.height = "458px";
-            bg.style.left = "21px";  
-            bg.style.top = "58px";   
+          // Collapsed mode
+          bg.style.width = "827px";
+          bg.style.height = "458px";
+          bg.style.left = "21px";
+          bg.style.top = "58px";
         }
-    } else {
-        // Λειτουργία "Επόμενο": Δυναμικός υπολογισμός με ανταλλαγή διαστάσεων
+      } else {
+        // Λειτουργία "Επόμενο": υπολογίζουμε το bounding box όλων των ορατών στοιχείων
         let positions = computeCellPositions();
-        let all = [];
-        Object.keys(positions).forEach(block => { all = all.concat(positions[block]); });
+        let allPositions = [];
+        Object.keys(positions).forEach(block => { 
+          allPositions = allPositions.concat(positions[block]); 
+        });
+        // Ελέγχουμε εάν ο καμβάς των period labels είναι ορατός και τον προσθέτουμε
         let cp = document.getElementById('canvasPeriods');
         if (cp && cp.style.display !== "none") {
-            let rect = cp.getBoundingClientRect();
-            all.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
+          let rect = cp.getBoundingClientRect();
+          allPositions.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
         }
-        if (all.length === 0) return;
-
-        let minLeft = Math.min(...all.map(p => p.left));
-        let maxRight = Math.max(...all.map(p => p.right));
-        let minTop = Math.min(...all.map(p => p.top));
-        let maxBottom = Math.max(...all.map(p => p.bottom));
-
+        if (allPositions.length === 0) return;
+        // Υπολογίζουμε τα όρια του bounding box
+        let minLeft = Math.min(...allPositions.map(p => p.left));
+        let maxRight = Math.max(...allPositions.map(p => p.right));
+        let minTop = Math.min(...allPositions.map(p => p.top));
+        let maxBottom = Math.max(...allPositions.map(p => p.bottom));
+        // Υπολογίζουμε το πλάτος και το ύψος, προσθέτοντας το margin
         let computedWidth = maxRight - minLeft + margin * 2;
         let computedHeight = maxBottom - minTop + margin * 2;
-
-        // Ανταλλαγή width με height
+        // Ορίζουμε τη θέση και τις διαστάσεις του background χωρίς ανταλλαγή (swap) διαστάσεων
         bg.style.left = (minLeft - margin) + "px";
         bg.style.top = (minTop - margin) + "px";
-        bg.style.width = computedHeight + "px";  
-        bg.style.height = computedWidth + "px";  
+        bg.style.width = computedWidth + "px";
+        bg.style.height = computedHeight + "px";
+      }
     }
-}
-
     /* --- Update info panel and balloon --- */
     function updateInfo(clickedZ) {
       let currentNum;
@@ -794,103 +797,6 @@ function updateTableBackground() {
       updateTableBackground();
       window.cellPositions = computeCellPositions();
     };
-    /* --- Dynamic background calculation --- */
-    function updateTableBackground() {
-      const margin = 10;
-      let bg = document.getElementById("canvasTableBackground");
-      if(currentZ === 123) {
-         // Στη λειτουργία "Συμπλήρωσε": σταθερές τιμές
-         if(!document.body.classList.contains('collapsed')) {
-           // Full mode
-           bg.style.width = "1412px";
-           bg.style.height = "382px";
-           bg.style.left = "58px";
-           bg.style.top = "21px";
-         } else {
-           // Collapsed mode
-           bg.style.width = "827px";
-           bg.style.height = "458px";
-           bg.style.left = "58px";
-           bg.style.top = "21px";
-         }
-      } else {
-         // Λειτουργία "Επόμενο": δυναμικός υπολογισμός με ανταλλαγή διαστάσεων (width = computed height, height = computed width)
-         let positions = computeCellPositions();
-         let all = [];
-         Object.keys(positions).forEach(block => { all = all.concat(positions[block]); });
-         let cp = document.getElementById('canvasPeriods');
-         if(cp && cp.style.display !== "none") {
-           let rect = cp.getBoundingClientRect();
-           all.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
-         }
-         if(all.length === 0) return;
-         let minLeft = Math.min(...all.map(p => p.left));
-         let maxRight = Math.max(...all.map(p => p.right));
-         let minTop = Math.min(...all.map(p => p.top));
-         let maxBottom = Math.max(...all.map(p => p.bottom));
-         let normalWidth = maxRight - minLeft + margin * 2;
-         let normalHeight = maxBottom - minTop + margin * 2;
-         bg.style.left = (minLeft - margin) + "px";
-         bg.style.top = (minTop - margin) + "px";
-         bg.style.width = normalHeight + "px";
-         bg.style.height = normalWidth + "px";
-      }
-    }
-    /* --- Balloon --- */
-    function updateBalloonPosition(element) {
-      let cs = document.getElementById('canvasSubshells');
-      if(!cs) return;
-      cs.style.transition = "all 0.2s ease";
-      cs.style.zIndex = "300";
-      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
-      if(!blockCanvas) return;
-      let rect = blockCanvas.getBoundingClientRect();
-      let pos = calculatePosition(element, element.block);
-      let defaultLeft = rect.left + pos.x + 40;
-      let defaultTop = rect.top + pos.y + 40;
-      let leftPos = defaultLeft - 5;
-      let topPos = defaultTop;
-      let balloonWidth = cs.offsetWidth;
-      if(defaultLeft > window.innerWidth / 2)
-         leftPos = defaultLeft - (33 + balloonWidth);
-      if(leftPos + balloonWidth > window.innerWidth)
-         leftPos = window.innerWidth - balloonWidth - 5;
-      let infoCell = document.getElementById('leftPanelFull');
-      if(infoCell) {
-        let cellRect = infoCell.getBoundingClientRect();
-        if(defaultTop + cs.offsetHeight > cellRect.top)
-           topPos = defaultTop - (cs.offsetHeight + 23);
-      }
-      cs.style.left = leftPos + "px";
-      cs.style.top = topPos + "px";
-      cs.style.display = "block";
-      console.log("Balloon updated at:", leftPos, topPos);
-      if(subshellsP) subshellsP.redraw();
-    }
-    function drawSubshells(data) {
-      if(!subshellsP) return;
-      let balloonHeight = 40, fontSize = 14, leftMargin = 2, extraMargin = 5;
-      subshellsP.clear();
-      subshellsP.textSize(fontSize);
-      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
-      let wPrev = subshellsP.textWidth(data.prev || "-");
-      let wCurrent = subshellsP.textWidth(data.current || "-");
-      let wNext = subshellsP.textWidth(data.next || "-");
-      let computedWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-      let minWidth = 10, newWidth = Math.max(computedWidth, minWidth);
-      subshellsP.resizeCanvas(newWidth, balloonHeight);
-      subshellsP.canvas.style.cssText = 'width: ' + newWidth + 'px !important; height: ' + balloonHeight + 'px !important;';
-      let rowHeight = balloonHeight / 3;
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.prevColor || "black");
-      subshellsP.text(data.prev || "-", leftMargin, rowHeight/2);
-      subshellsP.textStyle(p5.prototype.BOLD);
-      subshellsP.fill(data.currentColor || "black");
-      subshellsP.text(data.current || "-", leftMargin, rowHeight + rowHeight/2);
-      subshellsP.textStyle(p5.prototype.NORMAL);
-      subshellsP.fill(data.nextColor || "black");
-      subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
-    }
     /* --- Placeholder background --- */
     function drawPlaceholderBackground() {
       if(elements.length === 0) return;
