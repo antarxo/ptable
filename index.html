@@ -399,48 +399,53 @@
       }
     }
     /* --- Dynamic background calculation --- */
-    function updateTableBackground() {
-      const margin = 10;
-      let bg = document.getElementById("canvasTableBackground");
-      if(currentZ === 123) {
-        // Στην λειτουργία "Συμπλήρωσε"
-        if(!document.body.classList.contains('collapsed')) {
-          // Full mode σταθερές τιμές
-          bg.style.width = "1412px";
-          bg.style.height = "382px";
-          bg.style.left = "58px";  // left 58
-          bg.style.top = "21px";   // top 21
+function updateTableBackground() {
+    const margin = 10;
+    let bg = document.getElementById("canvasTableBackground");
+
+    if (currentZ === 123) {
+        // Στη λειτουργία "Συμπλήρωσε": Σταθερές τιμές
+        if (!document.body.classList.contains('collapsed')) {
+            // Full mode
+            bg.style.width = "1412px";
+            bg.style.height = "382px";
+            bg.style.left = "21px";  // Διορθώθηκε!
+            bg.style.top = "58px";   // Διορθώθηκε!
         } else {
-          // Collapsed σταθερές τιμές
-          bg.style.width = "827px";
-          bg.style.height = "458px";
-          bg.style.left = "58px";
-          bg.style.top = "21px";
+            // Collapsed mode
+            bg.style.width = "827px";
+            bg.style.height = "458px";
+            bg.style.left = "21px";  // Διορθώθηκε!
+            bg.style.top = "58px";   // Διορθώθηκε!
         }
-      } else {
-        // Λειτουργία "Επόμενο": δυναμικός υπολογισμός με ανταλλαγή διαστάσεων (width = computed height, height = computed width)
+    } else {
+        // Λειτουργία "Επόμενο": Δυναμικός υπολογισμός με ανταλλαγή διαστάσεων
         let positions = computeCellPositions();
         let all = [];
         Object.keys(positions).forEach(block => { all = all.concat(positions[block]); });
         let cp = document.getElementById('canvasPeriods');
-        if(cp && cp.style.display !== "none") {
-          let rect = cp.getBoundingClientRect();
-          all.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
+        if (cp && cp.style.display !== "none") {
+            let rect = cp.getBoundingClientRect();
+            all.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
         }
-        if(all.length === 0) return;
+        if (all.length === 0) return;
+
         let minLeft = Math.min(...all.map(p => p.left));
         let maxRight = Math.max(...all.map(p => p.right));
         let minTop = Math.min(...all.map(p => p.top));
         let maxBottom = Math.max(...all.map(p => p.bottom));
-        let normalWidth = maxRight - minLeft + margin * 2;
-        let normalHeight = maxBottom - minTop + margin * 2;
-        // Εδώ ανταλλάσσουμε τις διαστάσεις: width = normalHeight, height = normalWidth
+
+        let computedWidth = maxRight - minLeft + margin * 2;
+        let computedHeight = maxBottom - minTop + margin * 2;
+
+        // Ανταλλαγή width με height
         bg.style.left = (minLeft - margin) + "px";
         bg.style.top = (minTop - margin) + "px";
-        bg.style.width = normalHeight + "px";
-        bg.style.height = normalWidth + "px";
-      }
+        bg.style.width = computedHeight + "px";  // Ανταλλαγή!
+        bg.style.height = computedWidth + "px";  // Ανταλλαγή!
     }
+}
+
     /* --- Update info panel and balloon --- */
     function updateInfo(clickedZ) {
       let currentNum;
