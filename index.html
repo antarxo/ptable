@@ -135,7 +135,6 @@
     .full #canvasD { top: 120px; left: 159px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 159px; width: 252px; z-index: 4; }
     body.collapsed #canvasF { top: 220px; }
-
     /* Debug Panel */
     #debugPanel {
       position: fixed;
@@ -151,7 +150,7 @@
   </style>
 </head>
 <body class="full">
-  <div id="title">Διαδραστική ιοδικού Πίνακα</div>
+  <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
   <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
@@ -159,7 +158,6 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Καμβάδες για τις ομάδες -->
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
@@ -181,11 +179,16 @@
     <button id="reset">Reset</button>
   </div>
   
-  <!-- Debug panel για εμφάνιση του currentZ -->
   <div id="debugPanel">currentZ: 0</div>
   
   <script>
-    /* Βοηθητικές συναρτήσεις και Config */
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
     function formatShells(shellsStr) {
       if (!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -248,7 +251,6 @@
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
     }
-    // Debug functions
     function updateDebugPanel() {
       var dbg = document.getElementById("debugPanel");
       if(dbg) { dbg.textContent = "currentZ: " + currentZ; }
@@ -532,7 +534,7 @@
             window.drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = function(event) {
+            p.mouseClicked = debounce(function(event) {
               if(p.skipNextClick || ignoreCanvasClick) return;
               let globalX = event.clientX, globalY = event.clientY;
               let posData = window.cellPositions;
@@ -551,7 +553,7 @@
               } else {
                 console.log("Canvas mouseClicked: No element found for coords", globalX, globalY);
               }
-            };
+            }, 300);
           };
         });
       });
@@ -568,10 +570,8 @@
       });
       window.subshellsInitialized = true;
     }
-    // Νέα συνάρτηση για τους καμβάδες των ομάδων
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Καμβάς για τις ομάδες 1-2
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -581,15 +581,12 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Νέα: 1 και 2
           p.text("1", 20, 10);
           p.text("2", 62, 10);
-          // Παλιά: ΙΑ, ΙΙΑ
           p.text("ΙΑ", 20, 30);
           p.text("ΙΙΑ", 62, 30);
         };
       });
-      // Καμβάς για τις ομάδες 3-12
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -599,7 +596,6 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Νέα ονόματα για τις ομάδες 3 έως 12
           for(let c = 0; c < 10; c++){
             let x = c * (40 + 2);
             p.fill(240);
@@ -607,7 +603,6 @@
             p.fill(0);
             p.text((c+3).toString(), x + 20, 10);
           }
-          // Παλιά ονόματα για τις ομάδες 3 έως 12
           const oldLabels = ["IIIB", "IVB", "VB", "VIB", "VIIB", "VIIIB", "VIIIB", "VIIIB", "IB", "IIB"];
           for(let c = 0; c < 10; c++){
             let x = c * (40 + 2);
@@ -618,7 +613,6 @@
           }
         };
       });
-      // Καμβάς για τις ομάδες 13-18
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
@@ -628,7 +622,6 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Νέα ονόματα για τις ομάδες 13 έως 18
           for(let c = 0; c < 6; c++){
             let x = c * (40 + 2);
             p.fill(240);
@@ -636,7 +629,6 @@
             p.fill(0);
             p.text((c+13).toString(), x + 20, 10);
           }
-          // Παλιά ονόματα για τις ομάδες 13 έως 18
           const oldLabels = ["IIIA", "IVA", "VA", "VIA", "VIIA", "VIIIA"];
           for(let c = 0; c < 6; c++){
             let x = c * (40 + 2);
@@ -683,7 +675,6 @@
       if(currentZ === 123) return;
       currentZ = 123;
       document.getElementById('canvasPeriods').style.display = 'block';
-      // Κλήση για εμφάνιση των ομάδων
       initGroupsCanvases();
       logCurrentZ("FillAll Button Click:");
       window.redrawAll();
@@ -725,7 +716,7 @@
             window.drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = function(event) {
+            p.mouseClicked = debounce(function(event) {
               if(p.skipNextClick) return;
               let globalX = event.clientX, globalY = event.clientY;
               let posData = window.cellPositions;
@@ -742,7 +733,7 @@
                 flashActive = true;
                 setTimeout(() => { flashActive = false; window.redrawAll(); }, 200);
               }
-            };
+            }, 300);
           };
         });
       });
