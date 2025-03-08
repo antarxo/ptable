@@ -99,7 +99,7 @@
       border-radius: 10px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
       padding: 10px;
-      z-index: 150;
+      z-index: 300;
       transition: all 0.2s ease;
     }
     /* Group canvases */
@@ -251,7 +251,7 @@
       }
     };
     
-    // Ορισμός της συνάρτησης drawElements ώστε να μπορεί να καλείται μέσω window.drawElements
+    // Ορισμός της drawElements στο window ώστε να είναι διαθέσιμη παντού
     window.drawElements = function(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -331,10 +331,11 @@
       updateDebugPanel();
     }
     
-    // Συνάρτηση για ενημέρωση των θέσεων των ονομάτων των ομάδων
+    // Ενημέρωση θέσεων ονομάτων ομάδων
     function updateGroupsPositions() {
+      // Για το s: δεν απαιτείται κανένα shift, πάντα "75px"
+      document.getElementById('canvasS_groups').style.left = "75px";
       if(document.body.classList.contains('collapsed')){
-        document.getElementById('canvasS_groups').style.left = "75px";
         document.getElementById('canvasD_groups').style.left = "164px";
         document.getElementById('canvasP_groups').style.left = "584px";
       } else {
@@ -353,13 +354,13 @@
           shiftP = 42 * 10 + 42 * 14;
           shiftD = 42 * 14;
         }
-        document.getElementById('canvasS_groups').style.left = base + "px";
         document.getElementById('canvasD_groups').style.left = (base + shiftD) + "px";
         document.getElementById('canvasP_groups').style.left = (base + shiftP) + "px";
       }
     }
     
-    // Διόρθωση του canvasTableBackground για τις διαστάσεις
+    // Διόρθωση του canvasTableBackground:
+    // Στο full mode χρησιμοποιούμε τις κανονικές διαστάσεις, ενώ στο collapsed ανταλλάσσουμε πλάτος με ύψος.
     function updateTableBackground() {
       const cellSize = 40, margin = 10;
       let positions = computeCellPositions();
@@ -386,19 +387,21 @@
       let newHeight = (maxBottom - minTop) + margin * 2;
       let bg = document.getElementById("canvasTableBackground");
       if(document.body.classList.contains('collapsed')) {
-         bg.style.left = (minLeft - margin) + "px";
-         bg.style.top = (minTop - margin) + "px";
-         bg.style.width = newWidth + "px";
-         bg.style.height = newHeight + "px";
-      } else {
+         // Σε collapsed: ανταλλαγή (rotation 90°)
          bg.style.left = (minLeft - margin) + "px";
          bg.style.top = (minTop - margin) + "px";
          bg.style.width = newHeight + "px";
          bg.style.height = newWidth + "px";
+      } else {
+         // Σε full: κανονικές διαστάσεις
+         bg.style.left = (minLeft - margin) + "px";
+         bg.style.top = (minTop - margin) + "px";
+         bg.style.width = newWidth + "px";
+         bg.style.height = newHeight + "px";
       }
     }
     
-    // Ορισμός συναρτήσεων calculatePosition και computeCellPositions ώστε να είναι διαθέσιμες
+    // Ορισμός συναρτήσεων calculatePosition και computeCellPositions
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { 
@@ -835,12 +838,13 @@
     window.updateInfo = updateInfo;
     window.initPeriodsCanvas = initPeriodsCanvas;
     
-    // Σημαντική: Η συνάρτηση updateBalloonPosition και drawSubshells πρέπει να υπάρχουν
-    // Εδώ, για παράδειγμα, ορίζουμε μια απλή υλοποίηση, την οποία μπορείς να τροποποιήσεις:
+    // Διορθωμένη υλοποίηση για το Balloon:
+    // Ενημερώνει τη θέση, θέτει z-index υψηλό και καλεί redraw του p5 canvas του subshells.
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
       cs.style.transition = "all 0.2s ease";
+      cs.style.zIndex = "300";
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
       let rect = blockCanvas.getBoundingClientRect();
@@ -860,6 +864,7 @@
       cs.style.left = leftPos + "px";
       cs.style.top = topPos + "px";
       cs.style.display = "block";
+      if(subshellsP) { subshellsP.redraw(); }
     }
     
     function drawSubshells(data) {
