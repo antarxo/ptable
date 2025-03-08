@@ -29,11 +29,12 @@
       position: absolute;
       background: white;
       border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 5px 9px rgba(0,0,0,0.2);
+      /* Σκιά 3px */
+      box-shadow: 0 3px 3px rgba(0,0,0,0.2);
       z-index: -10;
       display: none;
-      /* Όλες οι ιδιότητες μεταβάλλονται σε 1.2s */
-      transition: all 1.2s ease;
+      /* Transition για όλες τις ιδιότητες σε 0.8s */
+      transition: all 0.8s ease;
     }
     /* ==================== Καμβάδες ==================== */
     #canvasPeriods {
@@ -60,7 +61,8 @@
       background: #fff;  /* Πλήρης αδιαφάνεια */
       border: 2px solid #333;
       border-radius: 8px;
-      box-shadow: 0 5px 9px rgba(0,0,0,0.3);  /* Μεγαλύτερη σκιά */
+      /* Σκιά 3px */
+      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
       padding: 20px;
       position: absolute;
       z-index: 40;
@@ -97,7 +99,7 @@
       background: #fff;
       border: 1px solid #333;
       border-radius: 10px;
-      box-shadow: 0 5px 9px rgba(0,0,0,0.3);
+      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
       padding: 10px;
       z-index: 150;
       display: none;
@@ -138,7 +140,16 @@
     /* ==================== Κλάση για Έμφαση (Groups σε Fill All) ==================== */
     .emphasized {
       border: 2px solid #333;
-      box-shadow: 0 5px 9px rgba(0,0,0,0.3);
+      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
+    }
+    /* ==================== Υπογραφή ==================== */
+    #signature {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      font-size: 0.8em;
+      color: #666;
+      z-index: 500;
     }
   </style>
 </head>
@@ -180,6 +191,9 @@
     <button id="toggleFBlock">Σύμπτυξη</button>
     <button id="reset">Reset</button>
   </div>
+  
+  <!-- ==================== Υπογραφή ==================== -->
+  <div id="signature">2025, Created by A. Archontoulis</div>
   
   <script>
     /* ================================================================
@@ -593,7 +607,7 @@
        Function: updateTableBackground
        Ενημερώνει το background canvas.
        Αν currentZ === 123 (λειτουργία "Συμπλήρωσε") ορίζει σταθερές διαστάσεις:
-         - Full mode: 1412px x 363px, θέση (18px, 57px)
+         - Full mode: 1412px x 364px, θέση (18px, 57px)
          - Collapsed mode: 827px x 459px, θέση (18px, 57px)
        Διαφορετικά, υπολογίζει δυναμικά το bounding box όλων των ορατών στοιχείων.
        ============================================================== */
@@ -609,7 +623,8 @@
             bg.style.left = "18px";
             bg.style.top = "57px";
             bg.style.width = "1412px";
-            bg.style.height = "363px";
+            /* Full mode: height 364px (αντί για 363px) */
+            bg.style.height = "364px";
          }
          return;
       }
@@ -989,6 +1004,7 @@
           }, 50);
           setTimeout(() => {
             document.body.classList.remove('collapsed');
+            // Κατά το πρώτο κλικ στο "Συμπλήρωσε" οι ομάδες εμφανίζονται όπως στο full (χωρίς έμφαση)
             document.getElementById('canvasD_groups').classList.remove('emphasized');
             document.getElementById('canvasP_groups').classList.remove('emphasized');
             toggleBtn.textContent = "Σύμπτυξη";
@@ -1026,9 +1042,10 @@
       csg.style.display = "block";
       cdg.style.display = "block";
       cpg.style.display = "block";
-      // Εφαρμογή έμφασης στις ομάδες στο Fill All
-      cdg.classList.add('emphasized');
-      cpg.classList.add('emphasized');
+      // Στο πρώτο κλικ στο "Συμπλήρωσε" οι ομάδες εμφανίζονται όπως στο full (χωρίς έμφαση)
+      // (Αφαιρούμε τυχόν προσθήκη της κλάσης "emphasized")
+      cdg.classList.remove('emphasized');
+      cpg.classList.remove('emphasized');
       initGroupsCanvases();
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
