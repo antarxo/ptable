@@ -29,7 +29,7 @@
       position: absolute;
       background: white;
       border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 5px 9px rgba(0,0,0,0.2);
       z-index: -10;
       display: none;
       transition: width 0.5s ease, height 0.5s ease, left 0.5s ease, top 0.5s ease;
@@ -54,59 +54,49 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* ==================== Panels ==================== */
-    #infoPanelFull {
-      display: flex;
-      flex-direction: row;
-      background: rgba(255,255,255,0.95);
+    /* ==================== Panels (Info Tables) ==================== */
+    #infoPanelFull, #infoPanelCollapsed {
+      background: #fff;  /* Πλήρης αδιαφάνεια */
       border: 2px solid #333;
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 5px 9px rgba(0,0,0,0.3);  /* Μεγαλύτερη σκιά */
       padding: 20px;
       position: absolute;
-      left: 20px;
-      top: 443px;
-      width: calc(100vw - var(--rightPanelWidth) - 105px);
       z-index: 40;
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
       text-align: left;
       opacity: 1;
+    }
+    #infoPanelFull {
+      left: 20px;
+      top: 443px;
+      width: calc(100vw - var(--rightPanelWidth) - 105px);
+    }
+    /* ==================== Panels (Collapsed) ==================== */
+    #infoPanelCollapsed {
+      display: none;
+      flex-direction: column;
+      left: 858px;
+      top: 112px;
+      width: calc(100vw - 920px);
+      z-index: 100;
+      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.3s ease;
     }
     #leftPanelFull { width: 200px; }
     #remarksFull { width: calc(100% - 200px); }
     #remarksFull .upper-right { display: flex; flex-direction: row; }
     #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
     #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    /* -------------------- Collapsed Panel -------------------- */
-    #infoPanelCollapsed {
-      display: none;
-      flex-direction: column;
-      background: rgba(255,255,255,0.95);
-      border: 2px solid #333;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      padding: 20px;
-      position: absolute;
-      left: 858px;
-      top: 112px;
-      width: calc(100vw - 920px);
-      z-index: 100;
-      text-align: left;
-      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.3s ease;
-      opacity: 1;
-    }
     #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
     #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
     /* ==================== Balloon (Subshells) ==================== */
     #canvasSubshells {
       position: absolute;
-      background: rgba(255,255,255,0.95);
+      background: #fff;
       border: 1px solid #333;
       border-radius: 10px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 5px 9px rgba(0,0,0,0.3);
       padding: 10px;
-      width: auto;
-      height: auto;
       z-index: 150;
       display: none;
       transition: all 0.2s ease;
@@ -143,6 +133,12 @@
     .full #canvasD { top: 120px; left: 159px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 159px; width: 252px; z-index: 4; }
     body.collapsed #canvasF { top: 220px; }
+
+    /* ==================== Κλάση για Έμφαση (Groups σε Fill All) ==================== */
+    .emphasized {
+      border: 2px solid #333;
+      box-shadow: 0 5px 9px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body class="full">
@@ -349,6 +345,9 @@
         document.getElementById('canvasS_groups').style.top = "78px";
         document.getElementById('canvasD_groups').style.top = "78px";
         document.getElementById('canvasP_groups').style.top = "78px";
+        // Αφαίρεση τυχόν έμφασης αν υπάρχει
+        document.getElementById('canvasD_groups').classList.remove('emphasized');
+        document.getElementById('canvasP_groups').classList.remove('emphasized');
       } else if(state === "collapsed") {
         document.getElementById('canvasS_groups').style.left = "75px";
         document.getElementById('canvasS_groups').style.top = "78px";
@@ -421,8 +420,6 @@
     /* ================================================================
        Utility Functions & Data Loading
        ============================================================== */
-
-    // Συνάρτηση formatShells: Επιστρέφει τη μορφοποιημένη συμβολοσειρά των στιβαδών τιμών.
     function formatShells(shellsStr) {
       if(!shellsStr) return "";
       let shellNumbers = shellsStr.split(",").map(s => s.trim());
@@ -436,7 +433,6 @@
       return result.join(", ");
     }
 
-    // Ενημέρωση του πλάτους του right panel βάσει του buttonPanel.
     function updateRightPanelWidth() {
       let rp = document.getElementById('buttonPanel');
       if(rp) {
@@ -445,7 +441,6 @@
       }
     }
 
-    // Συνάρτηση messageForElement: Επιστρέφει μήνυμα για το στοιχείο βάσει του group.
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -496,13 +491,12 @@
       });
       window.periodsInitialized = true;
     }
-    // Καταχωρούμε τη συνάρτηση στο global scope
     window.initPeriodsCanvas = initPeriodsCanvas;
 
-    // ================================================================
-    // Function: initSubshellsCanvas
-    // Αρχικοποιεί τον p5 καμβά για το balloon (subshells).
-    // ================================================================
+    /* ================================================================
+       Function: initSubshellsCanvas
+       Αρχικοποιεί τον p5 καμβά για το balloon (subshells).
+       ============================================================== */
     function initSubshellsCanvas() {
       if(window.subshellsInitialized) return;
       new p5(function(p) {
@@ -516,10 +510,10 @@
       window.subshellsInitialized = true;
     }
 
-    // ================================================================
-    // Function: initGroupsCanvases
-    // Αρχικοποιεί τους p5 καμβάδες για τις ομάδες (groups).
-    // ================================================================
+    /* ================================================================
+       Function: initGroupsCanvases
+       Αρχικοποιεί τους p5 καμβάδες για τις ομάδες (groups).
+       ============================================================== */
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       new p5(function(p) {
@@ -595,8 +589,8 @@
 
     /* ================================================================
        Function: updateTableBackground
-       Ενημερώνει το background canvas. Αν currentZ === 123 (λειτουργία "Συμπλήρωσε")
-       ορίζει σταθερές διαστάσεις:
+       Ενημερώνει το background canvas.
+       Αν currentZ === 123 (λειτουργία "Συμπλήρωσε") ορίζει σταθερές διαστάσεις:
          - Full mode: 1412px x 363px, θέση (18px, 57px)
          - Collapsed mode: 827px x 459px, θέση (18px, 57px)
        Διαφορετικά, υπολογίζει δυναμικά το bounding box όλων των ορατών στοιχείων.
@@ -794,7 +788,7 @@
 
     /* ================================================================
        Function: calculatePosition
-       Υπολογίζει τη θέση (x,y) ενός στοιχείου με βάση τη σειρά και στήλη.
+       Υπολογίζει τη θέση (x,y) ενός στοιχείου με βάση τη σειρά και τη στήλη.
        ============================================================== */
     function calculatePosition(e, block) {
       let x = 0, y = (e.row - 1) * 42;
@@ -991,6 +985,9 @@
           }, 50);
           setTimeout(() => {
             document.body.classList.remove('collapsed');
+            // Κατά την επέκταση, αφαιρούμε τυχόν έμφαση από τις ομάδες
+            document.getElementById('canvasD_groups').classList.remove('emphasized');
+            document.getElementById('canvasP_groups').classList.remove('emphasized');
             toggleBtn.textContent = "Σύμπτυξη";
             updateInfo(currentZ);
             window.redrawAll();
@@ -1026,6 +1023,9 @@
       csg.style.display = "block";
       cdg.style.display = "block";
       cpg.style.display = "block";
+      // Εφαρμόζουμε την έμφαση στις ομάδες στο Fill All
+      cdg.classList.add('emphasized');
+      cpg.classList.add('emphasized');
       initGroupsCanvases();
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
@@ -1066,7 +1066,6 @@
     let subshellsP;
     let lastClickedElement = null;
     let selectedElement = null;
-    // Global variable to store cell positions
     window.cellPositions = {};
   </script>
 </body>
