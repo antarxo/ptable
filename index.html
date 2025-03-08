@@ -24,9 +24,9 @@
       font-weight: bold;
       z-index: 50;
     }
-    /* Ενημερωμένη ετικέτα υπογραφής: λίγο μεγαλύτερη, με αχνό γκρι φόντο και διακριτικό styling */
+    /* Ενημερωμένη ετικέτα υπογραφής: font-size 1.5em, αχνό γκρι φόντο, padding και border-radius */
     #signature {
-      font-size: 1.4em;
+      font-size: 1.5em;
       font-style: italic;
       color: #555;
       background-color: #f0f0f0;
@@ -199,6 +199,7 @@
     ============================================================== */
     let elements = [];
     let currentZ = 0;
+    let fillAllPressed = false;  // Flag για το αν έχει πατηθεί το "Συμπλήρωσε" τουλάχιστον μία φορά
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -255,11 +256,11 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // -------------------- Σκίαση κελιού (offset: 2px δεξιά, 3px κάτω) --------------------
+        // Σκίαση κελιού (offset: 2px δεξιά, 3px κάτω)
         p.noStroke();
         p.fill("rgba(0,0,0,0.15)");
         p.rect(pos.x + 2, pos.y + 3, cellSize, cellSize, 5);
-        // -------------------- Σχεδίαση κυρίως κελιού --------------------
+        // Σχεδίαση κυρίως κελιού
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(window.getBlockColor(e.block));
           p.textSize(16);
@@ -346,8 +347,11 @@
 
     /* ================================================================
        Function: setFixedGroupsPositions
+       Αν το "Συμπλήρωσε" δεν έχει πατηθεί ακόμα, εξαναγκάζουμε τις ομάδες να κληθούν με expanded mode.
     ============================================================== */
     window.setFixedGroupsPositions = function(state) {
+      // Αν το κουμπί "Συμπλήρωσε" δεν έχει πατηθεί, ανεξάρτητα από την state, θέτουμε expanded mode.
+      if(!fillAllPressed) state = "expanded";
       if(state === "expanded") {
         document.getElementById('canvasS_groups').style.left = "75px";
         document.getElementById('canvasS_groups').style.top = "78px";
@@ -926,8 +930,7 @@
     /* ================================================================
        Event Handlers: Buttons (Toggle, Next, Fill All, Reset)
     ============================================================== */
-    // Τροποποιημένος χειριστής για το "Επόμενο": προστίθεται το τελικό βήμα ώστε currentZ να γίνει 123,
-    // εξασφαλίζοντας ότι η τελική εικόνα θα είναι ίδια με αυτήν του "Συμπλήρωσε" (κατάσταση "Ανάπτυξε").
+    // "Επόμενο": όταν φτάνει στο 122 το επόμενο πάτημα θέτει currentZ σε 123 (κατάσταση "Ανάπτυξε")
     document.getElementById('nextElement').addEventListener('click', function() {
       ignoreCanvasClick = true;
       if(currentZ < 3) { currentZ = 3; }
@@ -945,6 +948,7 @@
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
+      fillAllPressed = true;  // Ορίστε το flag ως true αφού πατηθεί το "Συμπλήρωσε"
       document.getElementById('canvasPeriods').style.display = 'block';
       let csg = document.getElementById('canvasS_groups');
       let cdg = document.getElementById('canvasD_groups');
@@ -963,6 +967,7 @@
 
     document.getElementById('reset').addEventListener('click', function() {
       currentZ = 2;
+      fillAllPressed = false; // Επαναφορά του flag στο reset
       window.groupsInitialized = false;
       window.periodsInitialized = false;
       window.subshellsInitialized = false;
