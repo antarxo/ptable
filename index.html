@@ -51,7 +51,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* Info Panels: επαναφέρουμε την αρχική δομή και animation */
+    /* Info Panels */
     #infoPanelFull, #infoPanelCollapsed {
       position: absolute;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
@@ -62,14 +62,12 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       transition: left 0.8s ease, top 0.8s ease, opacity 0.8s ease;
     }
-    /* Full panel εμφανίζεται αρχικά */
     #infoPanelFull {
       left: 20px;
       top: 443px;
       opacity: 1;
       z-index: 40;
     }
-    /* Collapsed panel: σταθερή θέση πάνω, με υψηλό z-index */
     #infoPanelCollapsed {
       left: 858px;
       top: 112px;
@@ -77,7 +75,6 @@
       z-index: 100;
       pointer-events: none;
     }
-    /* Όταν γίνεται το toggle, ο full panel μετακινείται και fade-out, ενώ ο collapsed fade-in */
     body.collapsed #infoPanelFull {
       left: 858px;
       top: 112px;
@@ -132,6 +129,19 @@
     .full #canvasD { top: 120px; left: 159px; width: 420px; z-index: 3; }
     .full #canvasP { top: 120px; left: 159px; width: 252px; z-index: 4; }
     body.collapsed #canvasF { top: 220px; }
+
+    /* Debug Panel Styles */
+    #debugPanel {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      z-index: 200;
+    }
   </style>
 </head>
 <body class="full">
@@ -142,7 +152,6 @@
   <div id="canvasF" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
-  <!-- Info panels με αρχική δομή -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -152,13 +161,15 @@
     <div id="remarksCollapsed"></div>
   </div>
   <div id="canvasSubshells" class="canvas"></div>
-  <!-- Οι καμβάδες για τις 18 ομάδες εμφανίζονται εξωτερικά (εκτός του κώδικα) -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="toggleFBlock">Σύμπτυξη</button>
     <button id="reset">Reset</button>
   </div>
+  <!-- Debug panel για εμφάνιση του currentZ -->
+  <div id="debugPanel">currentZ: 0</div>
+  
   <script>
     /* Βοηθητικές συναρτήσεις και Config */
     function formatShells(shellsStr) {
@@ -222,6 +233,15 @@
     };
     function updateToggleButton() {
       document.getElementById('toggleFBlock').disabled = false;
+    }
+    // Debug Panel update functions
+    function updateDebugPanel() {
+      var dbg = document.getElementById("debugPanel");
+      if(dbg) { dbg.textContent = "currentZ: " + currentZ; }
+    }
+    function logCurrentZ(context) {
+      console.log(context, "currentZ:", currentZ);
+      updateDebugPanel();
     }
     window.drawElements = function(p, block) {
       p.stroke(150);
@@ -508,11 +528,14 @@
                   globalY >= pos.top && globalY <= pos.bottom
               );
               if(candidate) {
+                console.log("Canvas mouseClicked:", "Block:", block, "Coords:", globalX, globalY, "Element number:", candidate.element.number);
                 selectedElement = candidate.element;
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { updateInfo(candidate.element.number); }, 300);
                 flashActive = true;
                 setTimeout(() => { flashActive = false; window.redrawAll(); }, 200);
+              } else {
+                console.log("Canvas mouseClicked: No element found for coords", globalX, globalY);
               }
             };
           };
@@ -540,6 +563,7 @@
         document.body.classList.remove('collapsed');
         toggleBtn.textContent = "Σύμπτυξη";
       }
+      logCurrentZ("Toggle Button Click:");
       updateInfo(currentZ);
       window.redrawAll();
       setTimeout(function() {
@@ -555,6 +579,7 @@
       else if(currentZ === 119) { currentZ = 120; }
       else if(currentZ === 120) { currentZ = 121; }
       else if(currentZ === 121) { currentZ = 122; }
+      logCurrentZ("Next Button Click:");
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       setTimeout(() => { ignoreCanvasClick = false; }, 300);
@@ -563,6 +588,7 @@
       if(currentZ === 123) return;
       currentZ = 123;
       document.getElementById('canvasPeriods').style.display = 'block';
+      logCurrentZ("FillAll Button Click:");
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
       document.getElementById('toggleFBlock').disabled = false;
@@ -578,6 +604,7 @@
       initSubshellsCanvas();
       setTimeout(() => { updateInfo(currentZ); drawPlaceholderBackground(); }, 300);
       document.getElementById('canvasTableBackground').style.display = "none";
+      logCurrentZ("Reset Button Click:");
     });
     window.redrawAll = function redrawAll() {
       Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
@@ -610,6 +637,7 @@
                   globalY >= pos.top && globalY <= pos.bottom
               );
               if(candidate) {
+                console.log("Canvas mouseClicked (redraw):", "Block:", block, "Coords:", globalX, globalY, "Element number:", candidate.element.number);
                 selectedElement = candidate.element;
                 updateBalloonPosition(candidate.element);
                 setTimeout(() => { updateInfo(candidate.element.number); }, 300);
