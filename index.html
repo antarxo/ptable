@@ -2,19 +2,17 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Νέα Τοποθέτηση</title>
+  <title>Περιοδικός Πίνακας - Τροποποιημένη Τοποθέτηση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body { font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
     .canvas { position: absolute; background: transparent; transition: all 0.5s ease-in-out; }
-    /* Χρησιμοποιούμε opacity για εμφάνιση/απόκρυψη, χωρίς πρόσθετα offsets */
     #canvasTableBackground {
       position: absolute; background: white; border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 3px 3px rgba(0,0,0,0.2); z-index: -10;
       opacity: 1;
     }
-    /* Αρχικά οι περίοδοι και οι ομάδες εμφανίζονται κανονικά */
     #canvasPeriods, #canvasGroups {
       opacity: 1;
     }
@@ -47,7 +45,7 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let isTableFilled = false; // Έλεγχος για αποφυγή πολλαπλής δημιουργίας
+    let isTableFilled = false; // Έλεγχος για αποφυγή πολλαπλών δημιουργιών
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
@@ -85,27 +83,20 @@
       if (isTableFilled) return;
       isTableFilled = true;
 
-      // Οριζόντια μετατόπιση: 
-      // Το δεξί όριο των περιόδων = (positions.expanded["1"].x - 55 + 40)
-      // Έτσι, ο νέος ορισμός για το left του s είναι:
-      let periodsLeft = positions.expanded["1"].x - 55;
-      let periodsRight = periodsLeft + 40;
-      let deltaS = periodsRight - blockOffsets["s"].minX;
-
-      // Κατακόρυφη μετατόπιση:
-      // Ορίζουμε ότι το κάτω όριο των ομάδων (top 5px κάτω από το background top + 40px ύψος ομάδων) είναι 95px.
-      // Υπολογίζουμε το global min y μεταξύ όλων των τομέων.
-      let globalMin = Math.min(blockOffsets["s"].minY, blockOffsets["p"].minY, blockOffsets["d"].minY, blockOffsets["f"].minY);
-      let targetTop = 95; // (background top 50 + 5 + 40)
-      let deltaY = targetTop - globalMin;
+      // Λήψη της θέσης του background canvas.
+      let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left); // 20px
+      // Στόχος για τα κελιά: (background left + 40)
+      let targetLeft = bgLeft + 40; // 20+40 = 60px
+      // Υπολογισμός μετατόπισης για τον τομέα s ώστε το αριστερό του να φτάσει στο targetLeft
+      let deltaS = targetLeft - blockOffsets["s"].minX;
 
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Εφαρμόζουμε οριζόντια μετατόπιση ως προς το s και κατακόρυφη ως προς το global min
+        // Εφαρμόζουμε σταθερή οριζόντια μετατόπιση ώστε το αριστερό σημείο να είναι στο (background left + 40)
         container.style.left = (offset.minX + deltaS) + "px";
-        container.style.top = (offset.minY + deltaY) + "px";
+        container.style.top = offset.minY + "px";
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
 
@@ -127,8 +118,8 @@
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(13);      // Γραμματοσειρά 13
-        p.textStyle(p.BOLD);  // Έντονη γραμματοσειρά
+        p.textSize(13);
+        p.textStyle(p.BOLD);
         p.textAlign(p.CENTER, p.CENTER);
         p.text(e.number, pos.x + 20, pos.y + 20);
       });
@@ -141,8 +132,10 @@
           canvas.parent("canvasPeriods");
 
           let container = document.getElementById("canvasPeriods");
-          // Θέτουμε τις αρχικές θέσεις όπως στο αρχείο
-          container.style.left = positions.expanded["1"].x - 55 + "px";
+          // Ορίζουμε τη θέση left ως (left του background + 10)
+          let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
+          container.style.left = (bgLeft + 10) + "px"; // 20 + 10 = 30px
+          // Διατηρούμε το top όπως στα δεδομένα
           container.style.top = positions.expanded["1"].y + "px";
 
           p.noStroke();
@@ -153,7 +146,7 @@
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            // Σχεδιάζουμε τα ορθάγωνα με 5px από το αριστερό όριο
+            // Σχεδιάζουμε τα ορθάγωνα με 5px από το αριστερό όριο του καμβά
             p.rect(5, i * 42, 35, 40);
             p.fill(0);
             p.text(periodLabels[i], 5 + 35/2, i * 42 + 20);
@@ -169,9 +162,7 @@
           canvas.parent("canvasGroups");
 
           let container = document.getElementById("canvasGroups");
-          // Ορίζουμε το top 5px κάτω από το πάνω όριο του background (50px + 5 = 55px)
           container.style.top = "55px";
-          // Για το left, διατηρούμε την αρχική τιμή
           container.style.left = positions.expanded["3"].x + "px";
 
           p.noStroke();
@@ -192,8 +183,8 @@
 
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      // Επαναφέρουμε τις αρχικές τιμές
-      bg.style.left = "10px";
+      // Μετακίνηση του background 10px δεξιά: αρχικά ήταν 10px, τώρα 10+10 = 20px
+      bg.style.left = "20px";
       bg.style.top = "50px";
       bg.style.width = "1412px";
       bg.style.height = "368px";
