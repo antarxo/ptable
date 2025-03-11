@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Περιοδικός Πίνακας - FillTogginfo</title>
-  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       overflow: hidden;
       background: #f7f7f7;
@@ -24,20 +23,15 @@
       z-index: -10;
       opacity: 1;
     }
-    #infoPanelFull, #infoPanelCollapsed {
+    #infoPanelFull {
       position: fixed;
       bottom: 20px;
       left: 20px;
-      background: #fff;
+      background: white;
       border: 2px solid #333;
       border-radius: 8px;
       padding: 10px;
-      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
       z-index: 50;
-      transition: all 0.5s ease;
-    }
-    #infoPanelCollapsed {
-      display: none;
     }
     #buttonPanel {
       position: fixed;
@@ -45,45 +39,27 @@
       right: 20px;
       display: flex;
       gap: 5px;
-      z-index: 150;
     }
   </style>
 </head>
 <body>
 
   <div id="canvasTableBackground"></div>
-  <div id="canvasS_groups" class="canvas"></div>
-  <div id="canvasD_groups" class="canvas"></div>
-  <div id="canvasP_groups" class="canvas"></div>
-  <div id="canvasPeriods" class="canvas"></div>
-  <div id="canvasS" class="canvas"></div>
-  <div id="canvasD" class="canvas"></div>
-  <div id="canvasP" class="canvas"></div>
-  <div id="canvasF" class="canvas"></div>
-  <div id="canvasSubshells" class="canvas"></div>
-
-  <!-- Info Panels -->
   <div id="infoPanelFull"></div>
-  <div id="infoPanelCollapsed"></div>
 
-  <!-- Button Panel -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock" disabled>Σύμπτυξε</button>
+    <button id="toggleFBlock">Σύμπτυξε</button>
     <button id="reset">Reset</button>
   </div>
 
   <script>
   let elements = [];
   let positions = {};
-  let blockOffsets = {};
   let isTableFilled = false;
   let isCollapsed = false;
   let currentMode = "start";
-
-  const expandedBackground = { width: "1412px", height: "368px" };
-  const collapsedBackground  = { width: "837px",  height: "460px" };
 
   let spatialHashMaps = {};
 
@@ -153,10 +129,20 @@
                       <em>${element.name}</em>`;
   }
 
+  function initializeBackgroundCanvas() {
+    let bg = document.getElementById("canvasTableBackground");
+    bg.style.left = "17px";
+    bg.style.top = "55px";
+    bg.style.width = "1000px";
+    bg.style.height = "500px";
+    bg.style.opacity = "1";
+  }
+
   async function loadData() {
     elements = await (await fetch('elements.json')).json();
     positions = await (await fetch('positions.json')).json();
     buildAllSpatialHashes();
+    initializeBackgroundCanvas();
     if (!isTableFilled) document.getElementById('fillAll').click();
   }
 
