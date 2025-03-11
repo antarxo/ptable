@@ -83,20 +83,24 @@
       if (isTableFilled) return;
       isTableFilled = true;
 
-      // Λήψη της θέσης του background canvas.
-      let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left); // 20px
-      // Στόχος για τα κελιά: (background left + 40)
-      let targetLeft = bgLeft + 40; // 20+40 = 60px
-      // Υπολογισμός μετατόπισης για τον τομέα s ώστε το αριστερό του να φτάσει στο targetLeft
+      // Ανάγνωση του left του background (έχουμε ορίσει "20px")
+      let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left); // 20
+      // Στόχος για τα κελιά: (background left + 50) = 20 + 50 = 70px
+      let targetLeft = bgLeft + 50;
+      // Υπολογισμός μετατόπισης για τον τομέα s
       let deltaS = targetLeft - blockOffsets["s"].minX;
+
+      // Το top των καμβάδων των τομέων τίθεται στο bottom των ομάδων (groups top = 60, groups height = 40 → bottom = 100)
+      let sectorsTop = 100;
 
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Εφαρμόζουμε σταθερή οριζόντια μετατόπιση ώστε το αριστερό σημείο να είναι στο (background left + 40)
+        // Εφαρμόζουμε σταθερή οριζόντια μετατόπιση ώστε το left να είναι background left + 50 (70px)
         container.style.left = (offset.minX + deltaS) + "px";
-        container.style.top = offset.minY + "px";
+        // Θέτουμε το top ίσο με το bottom των ομάδων
+        container.style.top = sectorsTop + "px";
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
 
@@ -135,7 +139,7 @@
           // Ορίζουμε τη θέση left ως (left του background + 10)
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
           container.style.left = (bgLeft + 10) + "px"; // 20 + 10 = 30px
-          // Διατηρούμε το top όπως στα δεδομένα
+          // Το top παραμένει όπως στις αρχικές τιμές
           container.style.top = positions.expanded["1"].y + "px";
 
           p.noStroke();
@@ -162,7 +166,9 @@
           canvas.parent("canvasGroups");
 
           let container = document.getElementById("canvasGroups");
-          container.style.top = "55px";
+          // Το top των ομάδων ορίζεται στο (top του background + 10) = 50+10 = 60px
+          container.style.top = "60px";
+          // Διατηρούμε το left όπως ορίζεται από τα δεδομένα
           container.style.left = positions.expanded["3"].x + "px";
 
           p.noStroke();
@@ -183,7 +189,7 @@
 
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      // Μετακίνηση του background 10px δεξιά: αρχικά ήταν 10px, τώρα 10+10 = 20px
+      // Background μετακινείται 10px δεξιά (από 10px σε 20px)
       bg.style.left = "20px";
       bg.style.top = "50px";
       bg.style.width = "1412px";
