@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Σωστή Ευθυγράμμιση</title>
+  <title>Περιοδικός Πίνακας - Συμπλήρωσε (Σωστή Ευθυγράμμιση)</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -17,6 +17,7 @@
       background: transparent; 
       transition: all 0.5s ease-in-out; 
     }
+    /* Background canvas για πλαίσιο */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -25,6 +26,11 @@
       z-index: -10; 
       display: none;
     }
+    /* Ο καμβάς περιόδων δεν εμφανίζεται αρχικά */
+    #canvasPeriods { display: none; }
+    /* Ο καμβάς για τις ομάδες */
+    #canvasGroups { }
+    /* Button Panel */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -61,9 +67,9 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let isTableFilled = false; // Ελέγχουμε αν έχει ήδη συμπληρωθεί
+    let isTableFilled = false; // Ελέγχουμε αν έχει ήδη δημιουργηθεί η πλήρης εμφάνιση
 
-    // Φορτώνουμε τα JSON αρχεία και μετά υπολογίζουμε τα offsets
+    // Φορτώνουμε τα δεδομένα από elements.json και positions.json
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
@@ -73,7 +79,7 @@
       initializeGroupsCanvas();
     }
 
-    // Υπολογισμός ελάχιστων τιμών και διαστάσεων για κάθε block
+    // Υπολογισμός των offsets για κάθε block (s, p, d, f)
     function computeBlockOffsets() {
       ["s", "p", "d", "f"].forEach(block => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -91,7 +97,7 @@
       });
     }
 
-    // Επιστροφή σχετικής θέσης για κάθε στοιχείο στο block
+    // Υπολογισμός σχετικής θέσης του στοιχείου μέσα στο block
     function calculateRelativePosition(element, block) {
       let pos = positions.expanded[element.number];
       let offset = blockOffsets[block];
@@ -100,14 +106,14 @@
 
     // Δημιουργία καμβάδων για κάθε block και σχεδίαση των κελιών μέσω p5.js
     function initializeCanvases() {
-      if (isTableFilled) return; // Αποτρέπουμε πολλαπλές εκτελέσεις
+      if (isTableFilled) return; // Μόνο μία φορά!
       isTableFilled = true;
       
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Ορίζουμε τις διαστάσεις και την θέση του container
+        // Ορίζουμε τη θέση και τις διαστάσεις του container με βάση το block offset
         container.style.left = offset.minX + "px";
         container.style.top = offset.minY + "px";
         container.style.width = offset.width + "px";
@@ -123,24 +129,24 @@
       });
     }
 
-    // Σχεδίαση των κελιών για κάθε block
+    // Σχεδίαση των κελιών για κάθε block με χρήση p5.js
     function drawElements(p, block) {
-      // Ορίστε τα χρώματα για κάθε block
       const blockColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
         let pos = calculateRelativePosition(e, block);
         p.fill(blockColors[block]);
         p.noStroke();
+        // Σχεδιάζουμε ένα κελί 40x40 με στρογγυλεμένες γωνίες
         p.rect(pos.x, pos.y, 40, 40, 5);
+        // Εμφανίζουμε το νούμερο στο κέντρο του κελιού (με μικρή μετατόπιση στο y για οπτική ισορροπία)
         p.fill(0);
         p.textSize(20);
         p.textAlign(p.CENTER, p.CENTER);
-        // Τοποθετούμε το νούμερο στο κέντρο του κελιού (με μικρή μετατόπιση στο y για οπτική ισορροπία)
         p.text(e.number, pos.x + 20, pos.y + 25);
       });
     }
 
-    // Αρχικοποίηση του background καμβά (π.χ. για οπτικό πλαίσιο)
+    // Αρχικοποίηση του background καμβά (π.χ. πλαίσιο πίνακα)
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "10px";
@@ -150,14 +156,13 @@
       bg.style.display = "block";
     }
 
-    // Δημιουργία του καμβά για τις περιόδους (μπορείς να τον χρησιμοποιήσεις ή όχι)
+    // Δημιουργία του καμβά για τις περιόδους (δεν εμφανίζεται αρχικά)
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function () {
           let canvas = p.createCanvas(40, 294);
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
-          // Τοποθέτηση του καμβά σύμφωνα με τις θέσεις (προσαρμόστε ανάλογα)
           container.style.left = (positions.expanded["1"].x - 55) + "px";
           container.style.top = positions.expanded["1"].y + "px";
           p.noStroke();
@@ -175,7 +180,7 @@
       });
     }
 
-    // Δημιουργία του καμβά για τις ομάδες (προσαρμογή θέσεων)
+    // Δημιουργία του καμβά για τις ομάδες
     function initializeGroupsCanvas() {
       new p5(function(p) {
         p.setup = function () {
@@ -199,13 +204,12 @@
       });
     }
 
-    // Εκτέλεση φόρτωσης δεδομένων μετά το DOM load
-    window.addEventListener('load', loadData);
-
-    // Ενεργοποίηση του "Συμπλήρωσε" με το πάτημα του κουμπιού
+    // Ενεργοποίηση του "Συμπλήρωσε" με το πάτημα του κουμπιού, η οποία δημιουργεί τους καμβάδες και σχεδιάζει τα κελιά
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeCanvases();
     });
+
+    window.addEventListener('load', loadData);
   </script>
 
 </body>
