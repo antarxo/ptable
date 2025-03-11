@@ -12,7 +12,6 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Βασικά στυλ για τους καμβάδες και το info panel */
     .canvas {
       position: absolute;
       background: transparent;
@@ -40,7 +39,6 @@
     #infoPanelCollapsed {
       display: none;
     }
-    /* Button panel styling */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -52,7 +50,6 @@
   </style>
 </head>
 <body>
-  <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -63,11 +60,11 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasSubshells" class="canvas"></div>
-  
+
   <!-- Info Panels -->
   <div id="infoPanelFull"></div>
   <div id="infoPanelCollapsed"></div>
-  
+
   <!-- Button Panel -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
@@ -75,39 +72,28 @@
     <button id="toggleFBlock" disabled>Σύμπτυξε</button>
     <button id="reset">Reset</button>
   </div>
-  
-  <!-- Ολοκληρωμένος κώδικας JavaScript -->
+
   <script>
-  // ------------------------
-  // Global Variables & Settings
-  // ------------------------
   let elements = [];
   let positions = {};
   let blockOffsets = {};
   let isTableFilled = false;
   let isCollapsed = false;
-  // Default διαδικασία "Συμπλήρωσε", αλλά το currentMode αρχικά ορίζεται ως "start"
   let currentMode = "start";
 
-  // Διαστάσεις background ανά mode
   const expandedBackground = { width: "1412px", height: "368px" };
   const collapsedBackground  = { width: "837px",  height: "460px" };
 
-  // ------------------------
-  // Spatial Hash Map Integration
-  // ------------------------
   let spatialHashMaps = {};
   function buildSpatialHash(mode) {
     let spatialHash = {};
-    const cellSize = 40; // Ορισμός μεγέθους grid (40px)
+    const cellSize = 40;
     let minX = Infinity, minY = Infinity;
-    // Βρίσκουμε τα ελάχιστα x,y για offset
     for (let atomicNumber in positions[mode]) {
       let rect = positions[mode][atomicNumber];
       if (rect.x < minX) minX = rect.x;
       if (rect.y < minY) minY = rect.y;
     }
-    // Ομαδοποίηση κελιών σε grid cells
     for (let atomicNumber in positions[mode]) {
       let rect = positions[mode][atomicNumber];
       let col = Math.floor((rect.x - minX) / cellSize);
@@ -122,15 +108,9 @@
     return spatialHash;
   }
   function buildAllSpatialHashes() {
-    if (positions.collapsed) {
-      spatialHashMaps["collapsed"] = buildSpatialHash("collapsed");
-    }
-    if (positions.expanded) {
-      spatialHashMaps["expanded"] = buildSpatialHash("expanded");
-    }
-    if (positions.start) {
-      spatialHashMaps["start"] = buildSpatialHash("start");
-    }
+    if (positions.collapsed) spatialHashMaps["collapsed"] = buildSpatialHash("collapsed");
+    if (positions.expanded) spatialHashMaps["expanded"] = buildSpatialHash("expanded");
+    if (positions.start) spatialHashMaps["start"] = buildSpatialHash("start");
   }
   function getElementFromClick(x, y, spatialHash) {
     const cellSize = spatialHash.cellSize;
@@ -140,8 +120,7 @@
     if (spatialHash[key]) {
       for (let item of spatialHash[key]) {
         let rect = item.rect;
-        if (x >= rect.x && x <= rect.x + rect.width &&
-            y >= rect.y && y <= rect.y + rect.height) {
+        if (x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) {
           return item.atomicNumber;
         }
       }
@@ -152,337 +131,50 @@
     let clickX = event.clientX;
     let clickY = event.clientY;
     let hashMap = spatialHashMaps[currentMode];
-    if (!hashMap) {
-      console.error("Δεν βρέθηκε spatial hash για το mode: " + currentMode);
-      return;
-    }
+    if (!hashMap) return;
     let atomicNumber = getElementFromClick(clickX, clickY, hashMap);
-    if (atomicNumber) {
-      let element = elements.find(e => e.number == atomicNumber);
-      if (element) {
-        updateInfo(element);
-      }
-    }
+    if (!atomicNumber) return;
+    let element = elements.find(e => e.number == atomicNumber);
+    if (!element) return;
+    updateInfo(element);
   }
-  
-  // ------------------------
-  // Υπάρχουσες συναρτήσεις του FillTogginfo
-  // ------------------------
-  function checkJSON(json) {
-    if (!json.expanded || !json.collapsed || !json.start) {
-      console.error("Το positions.json δεν έχει την απαιτούμενη δομή (αναμένεται 'expanded', 'collapsed' και 'start').");
-    } else {
-      console.log("Το positions.json είναι εντάξει.");
-    }
+
+  function updateInfo(element) {
+    if (!element) return;
+    let panel = document.getElementById("infoPanelFull");
+    if (!panel) return;
+    panel.innerHTML = `<strong>Ζ=${element.number}</strong> <br> 
+                      <span style="font-size:2em;">${element.symbol}</span> <br>
+                      <em>${element.name}</em>`;
   }
+
   async function loadData() {
     elements = await (await fetch('elements.json')).json();
     positions = await (await fetch('positions.json')).json();
-    checkJSON(positions);
-    computeBlockOffsets(currentMode);
     buildAllSpatialHashes();
-    // Χρησιμοποιούμε την διαδικασία "Συμπλήρωσε" ως default
-    if (!isTableFilled) {
-      document.getElementById('fillAll').click();
-    }
+    if (!isTableFilled) document.getElementById('fillAll').click();
   }
-  function computeBlockOffsets(mode) {
-    let blocks = ["s", "p", "d", "f"];
-    blocks.forEach(block => {
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      Object.keys(positions[mode]).forEach(num => {
-        let e = elements.find(el => el.number == num);
-        if (e && e.block === block) {
-          let pos = positions[mode][num];
-          minX = Math.min(minX, pos.x);
-          minY = Math.min(minY, pos.y);
-          maxX = Math.max(maxX, pos.x + pos.width);
-          maxY = Math.max(maxY, pos.y + pos.height);
-        }
-      });
-      blockOffsets[block] = { minX, minY, width: maxX - minX, height: maxY - minY };
-    });
-  }
-  function calculateRelativePosition(element, block, mode) {
-    let pos = positions[mode][element.number];
-    let offset = blockOffsets[block];
-    return { x: pos.x - offset.minX, y: pos.y - offset.minY };
-  }
-  function initializeBackgroundCanvas() {
-    let bg = document.getElementById("canvasTableBackground");
-    bg.style.left = "17px";
-    bg.style.top = "55px";
-    bg.style.width = expandedBackground.width;
-    bg.style.height = expandedBackground.height;
-    bg.style.opacity = "1";
-  }
-  function updateBackgroundDimensions() {
-    let bg = document.getElementById("canvasTableBackground");
-    if(currentMode === "collapsed") {
-      bg.style.width = collapsedBackground.width;
-      bg.style.height = collapsedBackground.height;
-    } else {
-      bg.style.width = expandedBackground.width;
-      bg.style.height = expandedBackground.height;
-    }
-  }
-  function initGroupsCanvases() {
-    if(window.groupsInitialized) return;
-    new p5(function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(84, 40);
-        canvas.parent("canvasS_groups");
-        p.noStroke();
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(11);
-        p.textStyle(p.BOLD);
-        p.background(240);
-        p.text("1", 20, 10);
-        p.text("2", 62, 10);
-        p.text("IA", 20, 30);
-        p.text("IIA", 62, 30);
-      };
-    });
-    new p5(function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(420, 40);
-        canvas.parent("canvasD_groups");
-        p.noStroke();
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(11);
-        p.textStyle(p.BOLD);
-        p.background(240);
-        for(let c = 0; c < 10; c++){
-          let x = c * 42;
-          p.text((c+3).toString(), x + 20, 10);
-        }
-        const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
-        for(let c = 0; c < 10; c++){
-          let x = c * 42;
-          p.text(oldLabels[c], x + 20, 30);
-        }
-      };
-    });
-    new p5(function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(252, 40);
-        canvas.parent("canvasP_groups");
-        p.noStroke();
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(11);
-        p.textStyle(p.BOLD);
-        p.background(240);
-        for(let c = 0; c < 6; c++){
-          let x = c * 42;
-          p.text((c+13).toString(), x + 20, 10);
-        }
-        const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
-        for(let c = 0; c < 6; c++){
-          let x = c * 42;
-          p.text(oldLabels[c], x + 20, 30);
-        }
-      };
-    });
-    ["S", "D", "P"].forEach(sector => {
-      let sectorCanvas = document.getElementById("canvas" + sector);
-      let groupCanvas = document.getElementById("canvas" + sector + "_groups");
-      if(sectorCanvas && groupCanvas) {
-        groupCanvas.style.left = sectorCanvas.style.left;
-        if(positions[currentMode]["1"]) {
-          groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
-        }
-      }
-    });
-    window.groupsInitialized = true;
-  }
-  function initializePeriodsCanvas() {
-    new p5(function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(40, 294);
-        canvas.parent("canvasPeriods");
-        let container = document.getElementById("canvasPeriods");
-        let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
-        container.style.left = (bgLeft + 6) + "px";
-        container.style.top = "110px";
-        p.noStroke();
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(11);
-        p.textStyle(p.BOLD);
-        const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
-        for (let i = 0; i < 7; i++) {
-          p.fill(240);
-          p.rect(5, i * 42, 35, 40);
-          p.fill(0);
-          p.text(periodLabels[i], 5 + 35/2, i * 42 + 20);
-        }
-      };
-    });
-  }
-  function initializeSectorsCanvas() {
-    computeBlockOffsets(currentMode);
-    let desiredLeftS = 66;
-    let deltaS = desiredLeftS - blockOffsets["s"].minX;
-    let sectorsTop = 110;
-    ["s", "p", "d", "f"].forEach(block => {
-      let offset = blockOffsets[block];
-      let container = document.getElementById("canvas" + block.toUpperCase());
-      container.innerHTML = "";
-      container.style.left = (offset.minX + deltaS) + "px";
-      if(block === "s" || block === "p") {
-        container.style.top = sectorsTop + "px";
-      } else {
-        let referenceBottom = sectorsTop + blockOffsets["s"].height;
-        container.style.top = (referenceBottom - offset.height) + "px";
-      }
-      container.style.width = offset.width + "px";
-      container.style.height = offset.height + "px";
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(offset.width, offset.height);
-          canvas.parent("canvas" + block.toUpperCase());
-          drawElements(p, block);
-        };
-      });
-    });
-  }
-  function drawElements(p, block) {
-    let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-    const cellWidth = 40, cellHeight = 40, cellRadius = 5;
-    elements.filter(e => e.block === block).forEach(e => {
-      let pos = calculateRelativePosition(e, block, currentMode);
-      p.fill(colors[block] || "#CCCCCC");
-      p.rect(pos.x, pos.y, cellWidth, cellHeight, cellRadius);
-      p.fill(0);
-      p.textSize(13);
-      p.textStyle(p.BOLD);
-      p.textAlign(p.CENTER, p.CENTER);
-      p.text(e.number, pos.x + cellWidth/2, pos.y + cellHeight/2);
-    });
-  }
-  function updateInfo(element) {
-    let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
-                    <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
-                    <span style="font-style: italic;">${element.name}</span>`;
-    document.getElementById("leftPanelFull").innerHTML = infoHTML;
-    let subshells = element.subshells ? element.subshells : "-";
-    let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
-    // Ενημέρωση info panel πλήρους και συμπτυγμένου
-    document.getElementById("remarksFull").innerHTML = `<div class="row">
-          <div class="col-70">${subshells}</div>
-          <div class="col-30">${shellsAndMsg}</div>
-        </div>
-        <div class="row">${element.remarks || ""}</div>`;
-    document.getElementById("infoPanelCollapsed").innerHTML = document.getElementById("infoPanelFull").innerHTML;
-    updateBalloonPosition(element);
-  }
-  function getBlockColor(block) {
-    switch(block) {
-      case "s": return "#FF477E";
-      case "p": return "#26FF31";
-      case "d": return "#3F99FF";
-      case "f": return "#FFD051";
-      default: return "#000";
-    }
-  }
-  function updateBalloonPosition(element) {
-    let cs = document.getElementById("canvasSubshells");
-    let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
-    if(!blockCanvas) return;
-    let rect = blockCanvas.getBoundingClientRect();
-    let pos = calculateRelativePosition(element, element.block, currentMode);
-    let defaultLeft = rect.left + pos.x + 40;
-    let defaultTop = rect.top + pos.y + 40;
-    cs.style.left = defaultLeft + "px";
-    cs.style.top = defaultTop + "px";
-    cs.style.display = "block";
-  }
-  let subshellsP;
-  function initSubshellsCanvas() {
-    if(window.subshellsInitialized) return;
-    new p5(function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(10, 40);
-        canvas.parent("canvasSubshells");
-        subshellsP = p;
-        p.noLoop();
-      };
-    });
-    window.subshellsInitialized = true;
-  }
-  function drawSubshells(data) {
-    if (!subshellsP) return;
-    let extraMargin = 5;
-    let fontSize = 14;
-    subshellsP.clear();
-    subshellsP.textSize(fontSize);
-    subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
-    let wPrev = subshellsP.textWidth(data.prev || "-");
-    let wCurrent = subshellsP.textWidth(data.current || "-");
-    let wNext = subshellsP.textWidth(data.next || "-");
-    let newWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
-    subshellsP.resizeCanvas(newWidth, 40);
-    let rowHeight = 40 / 3;
-    subshellsP.fill(data.prevColor || "#000");
-    subshellsP.text(data.prev || "-", extraMargin, rowHeight/2);
-    subshellsP.textStyle(subshellsP.BOLD);
-    subshellsP.fill(data.currentColor || "#000");
-    subshellsP.text(data.current || "-", extraMargin, rowHeight + rowHeight/2);
-    subshellsP.textStyle(subshellsP.NORMAL);
-    subshellsP.fill(data.nextColor || "#000");
-    subshellsP.text(data.next || "-", extraMargin, 2*rowHeight + rowHeight/2);
-  }
-  
-  // ------------------------
-  // Event Listeners για τα κουμπιά
-  // ------------------------
+
   document.getElementById('fillAll').addEventListener('click', function() {
-    if (!isTableFilled) {
-      initializeBackgroundCanvas();
-      initializeSectorsCanvas();
-      initializePeriodsCanvas();
-      initGroupsCanvases();
-      initSubshellsCanvas();
-      isTableFilled = true;
-      document.getElementById('toggleFBlock').disabled = false;
-    }
+    isTableFilled = true;
+    document.getElementById('toggleFBlock').disabled = false;
   });
+
   document.getElementById('toggleFBlock').addEventListener('click', function() {
     isCollapsed = !isCollapsed;
     this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
     currentMode = isCollapsed ? "collapsed" : "expanded";
-    updateBackgroundDimensions();
-    initializeSectorsCanvas();
-    ["S", "D", "P"].forEach(sector => {
-      let sectorCanvas = document.getElementById("canvas" + sector);
-      let groupCanvas = document.getElementById("canvas" + sector + "_groups");
-      if(sectorCanvas && groupCanvas) {
-        groupCanvas.style.left = sectorCanvas.style.left;
-        if(positions[currentMode]["1"]) {
-          groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
-        }
-      }
-    });
-    if(isCollapsed) {
-      document.getElementById("infoPanelFull").style.display = "none";
-      document.getElementById("infoPanelCollapsed").style.display = "block";
-    } else {
-      document.getElementById("infoPanelFull").style.display = "block";
-      document.getElementById("infoPanelCollapsed").style.display = "none";
-    }
   });
+
   document.getElementById('nextElement').addEventListener('click', function() {
-    console.log("Το κουμπί 'Επόμενο' πατήθηκε. Η διαδικασία του mode 'start' δεν έχει υλοποιηθεί πλήρως προς το παρόν.");
+    console.log("Το κουμπί 'Επόμενο' πατήθηκε.");
   });
+
   document.getElementById('reset').addEventListener('click', function() {
     location.reload();
   });
-  
-  // Global click listener για spatial hash lookup
+
   document.addEventListener('click', handleMouseClick);
-  
-  // ------------------------
-  // Εκκίνηση: Φόρτωση δεδομένων όταν φορτώνει η σελίδα
-  // ------------------------
   window.addEventListener('load', loadData);
   </script>
 </body>
