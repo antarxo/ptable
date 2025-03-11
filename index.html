@@ -7,58 +7,32 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body { font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
-    .canvas { 
-      position: absolute; 
-      background: transparent; 
-      transition: opacity 0.5s ease-in-out; 
-      opacity: 0; /* Αρχικά αόρατο */
-    }
+    .canvas { position: absolute; background: transparent; transition: all 0.5s ease-in-out; }
     #canvasTableBackground {
-      position: absolute; 
-      background: white; 
-      border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 3px 3px rgba(0,0,0,0.2); 
-      z-index: -10; 
-      opacity: 1;
-    }
-    #canvasPeriods { 
-      position: absolute; 
-      background: #f0f0f0; 
-      z-index: 5; 
+      position: absolute; background: white; border: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 3px 3px rgba(0,0,0,0.2); z-index: -10; display: none;
     }
     #buttonPanel {
-      position: fixed; 
-      bottom: 20px; 
-      right: 20px; 
-      z-index: 100;
+      position: fixed; bottom: 20px; right: 20px; z-index: 100;
     }
     #buttonPanel button {
-      background-color: #008CBA; 
-      color: white; 
-      padding: 10px 15px;
-      border: none; 
-      border-radius: 5px; 
-      cursor: pointer;
+      background-color: #008CBA; color: white; padding: 10px 15px;
+      border: none; border-radius: 5px; cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <!-- Background Canvas -->
+  <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
-  <!-- Καμβάς Περιόδων -->
   <div id="canvasPeriods" class="canvas"></div>
-  <!-- Καμβάδες Groups -->
-  <div id="canvasS_groups" class="canvas"></div>
-  <div id="canvasD_groups" class="canvas"></div>
-  <div id="canvasP_groups" class="canvas"></div>
-  <!-- Καμβάδες για τα στοιχεία (Blocks) -->
+  <div id="canvasGroups" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Κουμπί "Συμπλήρωσε" -->
+  <!-- Κουμπί για συμπλήρωση -->
   <div id="buttonPanel">
     <button id="fillAll">Συμπλήρωσε</button>
   </div>
@@ -66,80 +40,144 @@
   <script>
     let elements = [];
     let positions = {};
-    let tableShiftX = 0;
-    let isTableFilled = false;
-    let groupOffsetY = -15; // ✅ Οι ομάδες πάντα 15px πιο ψηλά
+    let blockOffsets = {}; 
+    let isTableFilled = false; // ✅ Ελέγχουμε αν έχει ήδη συμπληρωθεί
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
-      computeGlobalShift();
+      computeBlockOffsets();
+      initializeBackgroundCanvas();
+      initializePeriodsCanvas();
+      initializeGroupsCanvas();
     }
 
-    function computeGlobalShift() {
-      tableShiftX = positions.expanded["1"].x - 55; // ✅ Μόνιμη μετατόπιση δεξιά
+    function computeBlockOffsets() {
+      ["s", "p", "d", "f"].forEach(block => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        Object.keys(positions.expanded).forEach(num => {
+          let e = elements.find(el => el.number == num);
+          if (e && e.block === block) {
+            let pos = positions.expanded[num];
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, pos.y);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, pos.y + pos.height);
+          }
+        });
+        blockOffsets[block] = { minX, minY, width: maxX - minX, height: maxY - minY };
+      });
+    }
+
+    function calculateRelativePosition(element, block) {
+      let pos = positions.expanded[element.number];
+      let offset = blockOffsets[block];
+      return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
     function initializeCanvases() {
-      if (isTableFilled) return;
+      if (isTableFilled) return; // ✅ Αποτρέπουμε την αυτόματη συμπλήρωση
       isTableFilled = true;
-      
+
       ["s", "p", "d", "f"].forEach(block => {
+        let offset = blockOffsets[block];
+
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        container.style.left = (positions.expanded["1"].x + tableShiftX) + "px";
-        container.style.opacity = "1"; // ✅ Εμφάνιση με opacity
-  
-        new p5(function(p) {
+
+        new p5(function (p) {
           p.setup = function () {
-            let canvas = p.createCanvas(400, 280);
+            let canvas = p.createCanvas(offset.width, offset.height);
             canvas.parent("canvas" + block.toUpperCase());
+
+            container.style.left = offset.minX + "px";
+            container.style.top = offset.minY + "px";
+            container.style.width = offset.width + "px";
+            container.style.height = offset.height + "px";
+
+            drawElements(p, block);
           };
         });
       });
+    }
 
-      setTimeout(() => {
-        initializePeriodsCanvas();
-        document.getElementById("canvasPeriods").style.opacity = "1";
-      }, 500);
+    function drawElements(p, block) {
+      elements.filter(e => e.block === block).forEach(e => {
+        let pos = calculateRelativePosition(e, block);
+        let color = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" }[block];
+
+        p.fill(color);
+        p.rect(pos.x, pos.y, 40, 40, 5);
+        p.fill(0);
+        p.textSize(20); // ✅ Ρύθμιση μεγέθους γραμματοσειράς όπως στο newptablejson
+        p.textAlign(p.CENTER, p.CENTER);
+        p.text(e.number, pos.x + 20, pos.y + 25);
+      });
     }
 
     function initializePeriodsCanvas() {
-      new p5(function(p) {
+      new p5(function (p) {
         p.setup = function () {
-          let canvas = p.createCanvas(42, 292);
+          let canvas = p.createCanvas(40, 294);
           canvas.parent("canvasPeriods");
+
           let container = document.getElementById("canvasPeriods");
-          container.style.left = (positions.expanded["1"].x - 55) + "px";
-          container.style.opacity = "1"; // ✅ Οι περίοδοι εμφανίζονται
+          container.style.left = positions.expanded["1"].x - 55 + "px";
+          container.style.top = positions.expanded["1"].y + "px";
+
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
+          p.textSize(16);
           p.textStyle(p.BOLD);
-          const periodLabels = ["1η Κ", "2η L", "3η M", "4η N", "5η O", "6η P", "7η Q"];
+
+          const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(0, i * 42, 42, 42);
+            p.rect(0, i * 42, 40, 40);
             p.fill(0);
-            p.text(periodLabels[i], 21, i * 42 + 21);
+            p.text(periodLabels[i], 20, i * 42 + 20);
           }
         };
       });
     }
 
-    function initializeGroups() {
-      ["S", "D", "P"].forEach(group => {
-        let groupId = "canvas" + group + "_groups";
-        let container = document.getElementById(groupId);
-        container.style.left = (positions.expanded["1"].x + tableShiftX) + "px"; // ✅ Χρήση global shift
-        container.style.top = (78 + groupOffsetY) + "px";
-        container.style.opacity = "1";
+    function initializeGroupsCanvas() {
+      new p5(function (p) {
+        p.setup = function () {
+          let canvas = p.createCanvas(1040, 40);
+          canvas.parent("canvasGroups");
+
+          let container = document.getElementById("canvasGroups");
+          container.style.left = positions.expanded["3"].x + "px";
+          container.style.top = positions.expanded["3"].y - 55 + "px"; 
+
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(16);
+          p.textStyle(p.BOLD);
+
+          for (let i = 0; i < 18; i++) {
+            let x = i * 58;
+            p.fill(240);
+            p.rect(x, 0, 40, 40);
+            p.fill(0);
+            p.text(i + 1, x + 20, 20);
+          }
+        };
       });
+    }
+
+    function initializeBackgroundCanvas() {
+      let bg = document.getElementById("canvasTableBackground");
+      bg.style.left = "10px";
+      bg.style.top = "50px";
+      bg.style.width = "1412px";
+      bg.style.height = "368px";
+      bg.style.display = "block";
     }
 
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeCanvases();
-      initializeGroups();
     });
 
     window.addEventListener('load', loadData);
