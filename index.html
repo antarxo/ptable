@@ -15,23 +15,22 @@
     .canvas { 
       position: absolute; 
       background: transparent; 
-      transition: all 0.5s ease-in-out; 
+      transition: opacity 0.5s ease-in-out; /* ✅ Χρησιμοποιούμε διαφάνεια αντί για display */
+      opacity: 0; /* Αρχικά αόρατο */
     }
-    /* Background canvas */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 3px 3px rgba(0,0,0,0.2); 
       z-index: -10; 
-      display: block;
+      opacity: 1;
     }
     /* Καμβάς περιόδων */
     #canvasPeriods { 
       position: absolute; 
       background: #f0f0f0; 
       z-index: 5; 
-      display: none; /* Θα εμφανιστεί μετά το "Συμπλήρωσε" */
     }
     /* Button Panel */
     #buttonPanel {
@@ -84,10 +83,7 @@
       positions = await (await fetch('positions.json')).json();
       computeBlockOffsets();
       computeGlobalShift();
-      initializeBackgroundCanvas();
-      initializeSGroupsCanvas();
-      initializeDGroupsCanvas();
-      initializePGroupsCanvas();
+      initializeGroups();
     }
 
     function computeBlockOffsets() {
@@ -128,6 +124,7 @@
         container.style.top = offset.minY + "px";
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
+        container.style.opacity = "1"; // ✅ Εμφανίζεται σταδιακά με opacity
   
         new p5(function(p) {
           p.setup = function () {
@@ -139,7 +136,7 @@
 
       setTimeout(() => {
         initializePeriodsCanvas();
-        document.getElementById("canvasPeriods").style.display = "block";
+        document.getElementById("canvasPeriods").style.opacity = "1"; // ✅ Εμφάνιση με opacity
       }, 500);
     }
 
@@ -165,6 +162,17 @@
             p.text(periodLabels[i], 21, i * 42 + 21);
           }
         };
+      });
+    }
+
+    function initializeGroups() {
+      ["S", "D", "P"].forEach(group => {
+        let groupId = "canvas" + group + "_groups";
+        let block = group.toLowerCase();
+        let container = document.getElementById(groupId);
+        container.style.left = (blockOffsets[block].minX + globalShift) + "px";
+        container.style.top = (78 + groupOffsetY) + "px";
+        container.style.opacity = "1"; // ✅ Εμφανίζονται σταδιακά
       });
     }
 
