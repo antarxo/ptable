@@ -94,7 +94,7 @@
           canvas.parent("canvasGroups");
           let container = document.getElementById("canvasGroups");
           container.style.top = "70px"; // top = background top (50) + 20 = 70px
-          container.style.left = positions.expanded["3"].x + "px"; // όπως στο αρχικό αρχείο
+          container.style.left = positions.expanded["3"].x + "px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(13);
@@ -118,7 +118,7 @@
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left); // 20
-          container.style.left = (bgLeft + 10) + "px"; // background left + 10 = 30px
+          container.style.left = (bgLeft + 10) + "px"; // 20+10 = 30px
           container.style.top = "110px"; // top = bottom των ομάδων (70 + 40)
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -127,7 +127,7 @@
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(5, i * 42, 35, 40); // 5px margin left
+            p.rect(5, i * 42, 35, 40);
             p.fill(0);
             p.text(periodLabels[i], 5 + 35/2, i * 42 + 20);
           }
@@ -135,20 +135,24 @@
       });
     }
 
-    // Δημιουργία των καμβάδων των τομέων s, p, d, f
+    // Δημιουργία των καμβάδων των τομέων (s, p, d, f) με οριζόντια μετατόπιση ώστε το left του s να εφάπτεται στο right των περιόδων (70px)
     function initializeSectorsCanvas() {
-      // Ορίζουμε το top των τομέων = bottom των ομάδων = 110px για s και p.
-      // Για d και f ευθυγραμμίζουμε το κάτω μέρος τους με αυτό των s και p.
+      // Το right των περιόδων = left των περιόδων + 40. Επειδή left των περιόδων ορίζεται ως (bg left + 10) = 20+10 = 30,
+      // τότε right των περιόδων = 30 + 40 = 70px.
+      let desiredLeftS = 70;
+      let deltaS = desiredLeftS - blockOffsets["s"].minX;
+      // Το top για τους τομείς s και p ορίζεται στα 110px.
       let sectorsTop = 110;
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Επαναφέρουμε το left όπως στο αρχικό αρχείο:
-        container.style.left = offset.minX + "px";
+        // Εφαρμόζουμε οριζόντια μετατόπιση στα πάντα: left = original left + deltaS
+        container.style.left = (offset.minX + deltaS) + "px";
         if (block === "s" || block === "p") {
           container.style.top = sectorsTop + "px";
         } else {
+          // Για τους τομείς d και f ευθυγραμμίζουμε το κάτω τους μέρος με αυτό των s και p.
           let referenceBottom = sectorsTop + blockOffsets["s"].height;
           container.style.top = (referenceBottom - offset.height) + "px";
         }
