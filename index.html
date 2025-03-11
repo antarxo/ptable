@@ -133,20 +133,20 @@
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       
-      // s-block: δύο σειρές – πρώτη σειρά: νέοι αριθμοί (1,2), δεύτερη: παλιά (ΙΑ, ΙΙΑ)
+      // s-block: δύο σειρές – πρώτη σειρά: νέοι αριθμοί (1,2), δεύτερη: παλιά (IA, IIA)
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
           canvas.parent("canvasS_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
+          p.textSize(11); // Γραμματοσειρά 11
           p.textStyle(p.BOLD);
           p.background(240);
           p.text("1", 20, 10);
           p.text("2", 62, 10);
-          p.text("ΙΑ", 20, 30);
-          p.text("ΙΙΑ", 62, 30);
+          p.text("IA", 20, 30);
+          p.text("IIA", 62, 30);
         };
       });
       
@@ -157,7 +157,7 @@
           canvas.parent("canvasD_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
+          p.textSize(11); // Γραμματοσειρά 11
           p.textStyle(p.BOLD);
           p.background(240);
           for(let c = 0; c < 10; c++){
@@ -179,7 +179,7 @@
           canvas.parent("canvasP_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(12);
+          p.textSize(11); // Γραμματοσειρά 11
           p.textStyle(p.BOLD);
           p.background(240);
           for(let c = 0; c < 6; c++){
@@ -222,11 +222,13 @@
           container.style.top = "110px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(13);
+          p.textSize(11); // Γραμματοσειρά 11
           p.textStyle(p.BOLD);
-          const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
+          // Νέες ετικέτες περιόδων με λατικούς χαρακτήρες: "1K", "2L", "3M", "4N", "5X", "6O", "7P"
+          const periodLabels = ["1K", "2L", "3M", "4N", "5X", "6O", "7P"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
+            // Κάθε κελί έχει διαστάσεις 40x40 (με offset 5 και ύψος 40)
             p.rect(5, i * 42, 35, 40);
             p.fill(0);
             p.text(periodLabels[i], 5 + 35/2, i * 42 + 20);
@@ -236,50 +238,47 @@
     }
 
     // Δημιουργία των καμβάδων τομέων (s, p, d, f)
- function initializeSectorsCanvas() {
-  // Έλεγχος αν υπάρχουν τα blockOffsets για το s
-  if (!blockOffsets["s"]) {
-    computeBlockOffsets();
-    if (!blockOffsets["s"]) {
-      console.error("Δεν βρέθηκαν δεδομένα για το block 's'");
-      return;
+    function initializeSectorsCanvas() {
+      // Έλεγχος αν υπάρχουν τα blockOffsets για το s
+      if (!blockOffsets["s"]) {
+        computeBlockOffsets();
+        if (!blockOffsets["s"]) {
+          console.error("Δεν βρέθηκαν δεδομένα για το block 's'");
+          return;
+        }
+      }
+      let desiredLeftS = 70;
+      let deltaS = desiredLeftS - blockOffsets["s"].minX;
+      let sectorsTop = 110;
+      ["s", "p", "d", "f"].forEach(block => {
+        let offset = blockOffsets[block];
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+        container.style.left = (offset.minX + deltaS) + "px";
+        if (block === "s" || block === "p") {
+          container.style.top = sectorsTop + "px";
+        } else {
+          let referenceBottom = sectorsTop + blockOffsets["s"].height;
+          container.style.top = (referenceBottom - offset.height) + "px";
+        }
+        container.style.width = offset.width + "px";
+        container.style.height = offset.height + "px";
+        new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(offset.width, offset.height);
+            // Διαστάσεις του canvas διατηρούνται ώστε τα κελιά να παραμένουν 40x40
+            canvas.parent("canvas" + block.toUpperCase());
+            drawElements(p, block);
+          };
+        });
+      });
     }
-  }
-  let desiredLeftS = 70;
-  let deltaS = desiredLeftS - blockOffsets["s"].minX;
-  let sectorsTop = 110;
-  ["s", "p", "d", "f"].forEach(block => {
-    let offset = blockOffsets[block];
-    let container = document.getElementById("canvas" + block.toUpperCase());
-    container.innerHTML = "";
-    container.style.left = (offset.minX + deltaS) + "px";
-    if (block === "s" || block === "p") {
-      container.style.top = sectorsTop + "px";
-    } else {
-      let referenceBottom = sectorsTop + blockOffsets["s"].height;
-      container.style.top = (referenceBottom - offset.height) + "px";
-    }
-    container.style.width = offset.width + "px";
-    container.style.height = offset.height + "px";
-    new p5(function(p) {
-      p.setup = function() {
-        let canvas = p.createCanvas(offset.width, offset.height);
-        // Μην αλλάζουμε τις διαστάσεις του canvas ώστε να παραμείνουν τα κελιά 40x40
-        canvas.parent("canvas" + block.toUpperCase());
-        drawElements(p, block);
-      };
-    });
-  });
-}
-
-
 
     function drawElements(p, block) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       const cellWidth = 40, cellHeight = 40, cellRadius = 5;
       elements.filter(e => e.block === block).forEach(e => {
         let pos = calculateRelativePosition(e, block);
-        // Αφαιρούμε το "manual" εφέ σκιάς γιατί τώρα εφαρμόζεται μέσω CSS στο canvas
         p.fill(colors[block] || "#CCCCCC");
         p.rect(pos.x, pos.y, cellWidth, cellHeight, cellRadius);
         p.fill(0);
@@ -304,13 +303,8 @@
     // Κουμπί "Σύμπτυξε"/"Ανάπτυξε" με βασική λογική εναλλαγής
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
-      // Εδώ μπορείτε να προσθέσετε την πλήρη λογική μετατόπισης/αναδιάταξης όπως στο ALLtoDOM1.
-      // Για παράδειγμα, αν collapsed, μετατοπίζουμε ορισμένους καμβάδες.
-      // Σε αυτό το παράδειγμα απλά αλλάζουμε το κείμενο του κουμπιού.
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
-      // Επαναπροσδιορισμός θέσεων (μπορεί να καλεστεί π.χ. initializeSectorsCanvas ξανά)
       initializeSectorsCanvas();
-      // Και οι καμβάδες ομάδων να επαναπροσαρμοστούν:
       let bgTop = parseInt(document.getElementById("canvasTableBackground").style.top) || 50;
       let sectors = ["S", "D", "P"];
       sectors.forEach(sector => {
