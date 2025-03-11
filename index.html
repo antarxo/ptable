@@ -45,12 +45,22 @@
       display: none;
       transition: all 0.8s ease;
     }
-    /* Στυλ για τα canvases, panels και κουμπιά */
+    /* Τα canvases που σχεδιάζουν τα στοιχεία */
     .canvas { 
       position: absolute; 
       background: transparent; 
       transition: all 0.5s ease-in-out; 
     }
+    /* Καμβάς περιόδων στις "παλιές" θέσεις */
+    #canvasPeriods {
+      left: 31px; top: 120px; width: 42px; height: 292px; 
+      background: #f0f0f0; display: block; z-index: 5;
+    }
+    /* Καμβάδες ομάδων στις "παλιές" θέσεις */
+    #canvasS_groups { left: 75px; top: 78px; display: block; }
+    #canvasD_groups { left: 164px; top: 78px; display: block; }
+    #canvasP_groups { left: 584px; top: 78px; display: block; }
+    /* Panels πληροφοριών */
     #infoPanelFull, #infoPanelCollapsed {
       background: #fff;
       border: 2px solid #333;
@@ -64,31 +74,12 @@
       opacity: 1;
     }
     #infoPanelFull {
-      left: 20px;
-      top: 443px;
+      left: 20px; top: 443px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
     }
-    #infoPanelCollapsed {
-      display: none;
-      flex-direction: column;
-      left: 858px;
-      top: 112px;
-      width: calc(100vw - 920px);
-      z-index: 40;
-      opacity: 1;
-    }
-    /* Στυλ για το canvas του balloon (subshells) */
-    #canvasSubshells {
-      position: absolute;
-      background: #fff;
-      border: 1px solid #333;
-      border-radius: 10px;
-      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
-      padding: 10px;
-      z-index: 150;
-      display: none;
-      transition: all 0.2s ease;
-    }
+    #infoPanelCollapsed { display: none; }
+    /* Canvas του balloon (subshells) */
+    #canvasSubshells { left: 0; top: 0; display: none; }
     /* Κουμπιά */
     #buttonPanel {
       position: fixed;
@@ -109,7 +100,6 @@
       transition: background-color 0.3s;
     }
     button:hover { background-color: #005f75; }
-    #toggleFBlock.active { background-color: #e68a00; }
   </style>
 </head>
 <body class="full">
@@ -118,7 +108,7 @@
     Διαδραστική κατασκευή του Περιοδικού Πίνακα
     <span id="signature">2025, Created by A. Archontoulis</span>
   </div>
-  <!-- Canvas για το background και για κάθε block, περιόδους και ομάδες -->
+  <!-- Canvases για τα στοιχεία, περιόδους και ομάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
@@ -137,11 +127,10 @@
     <div id="leftPanelCollapsed"></div>
     <div id="remarksCollapsed"></div>
   </div>
-  <!-- Balloon (Subshells) -->
+  <!-- Canvas για το balloon (subshells) -->
   <div id="canvasSubshells" class="canvas"></div>
-  <!-- Κουμπιά -->
+  <!-- Κουμπιά (μόνο για δοκιμή των βασικών λειτουργιών) -->
   <div id="buttonPanel">
-    <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="toggleFBlock">Σύμπτυξε</button>
     <button id="reset">Reset</button>
@@ -150,8 +139,8 @@
   <script>
     /* ---------------- Global Variables & Config ---------------- */
     let elements = [];
-    let currentZ = 0;
-    let fillAllPressed = false;
+    // Για την τελική εμφάνιση θέτουμε currentZ = 123 ώστε να εμφανίζονται όλα τα στοιχεία
+    let currentZ = 123;
     
     // Ορισμός χρωμάτων για τα blocks
     window.BLOCK_COLORS = {
@@ -163,7 +152,7 @@
     
     /* ---------------- Positions & Offsets ---------------- */
     let positionsData = {};
-    // Φόρτωση του positions.json (πρέπει να βρίσκεται στο ίδιο directory)
+    // Φόρτωση του positions.json – πρέπει να βρίσκεται στο ίδιο directory
     fetch('positions.json')
       .then(response => response.json())
       .then(data => {
@@ -172,7 +161,7 @@
       })
       .catch(err => console.error('Σφάλμα φόρτωσης positions.json:', err));
     
-    // Correction offsets ώστε το πάνω αριστερό στοιχείο κάθε block να εμφανίζεται στην "παλιά" του θέση.
+    // Correction offsets για τα blocks ώστε το πάνω αριστερό στοιχείο να εμφανίζεται στην "παλιά" του θέση
     const canvasOffsets = {
       collapsed: { s: 75, f: 179, d: 164, p: 584 },
       expanded:  { s: 75, f: 159, d: 159, p: 159 }
@@ -202,10 +191,10 @@
       });
     }
     
-    // Η calculatePosition επιστρέφει τη θέση ενός στοιχείου στο canvas του block, αφαιρώντας το offset
+    // calculatePosition: παίρνει τη θέση ενός στοιχείου από το positions.json και αφαιρεί το offset του block
     function calculatePosition(e, block) {
       let mode = document.body.classList.contains('collapsed') ? 'collapsed' : 'expanded';
-      if (positionsData[mode] && positionsData[mode][e.number]) {
+      if(positionsData[mode] && positionsData[mode][e.number]) {
          let pos = positionsData[mode][e.number];
          let offset = blockOffsets[block] || { minX: 0, minY: 0 };
          return { x: pos.x - offset.minX, y: pos.y - offset.minY };
@@ -218,22 +207,19 @@
       p.stroke(150);
       p.strokeWeight(1);
       const cellSize = 40;
-      // Επιλογή στοιχείων για σχεδίαση (χρησιμοποιώντας την ίδια λογική με το αρχικό)
-      let filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= currentZ;
-      if(currentZ === 118) filter = e => e.block === block && Number(e.number) >= 3 && Number(e.number) <= 118;
-      else if(currentZ === 119) filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1);
-      else if(currentZ === 120) filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
-      
+      // Στην τελική κατάσταση εμφανίζονται όλα τα στοιχεία (1-118) και τα 1,2 αντιστοιχούν στις ειδικές τιμές 119, 120
+      let filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) ||
+                                              Number(e.number) === 1 || Number(e.number) === 2);
       elements.filter(filter).forEach(e => {
         const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Σκίαση
+        // Σκίαση κελιού
         p.noStroke();
         p.fill("rgba(0,0,0,0.15)");
         p.rect(pos.x + 2, pos.y + 3, cellSize, cellSize, 5);
-        // Κύριο κελί
+        // Κύριο κελί με σωστό χρώμα
         p.fill(window.getBlockColor(e.block));
         p.textSize(16);
         p.textAlign(p.CENTER, p.CENTER);
@@ -246,35 +232,30 @@
       });
     };
     
-    /* ---------------- Αρχικοποίηση Καμβάδων για τα blocks ---------------- */
+    /* ---------------- Αρχικοποίηση καμβάδων στοιχείων ---------------- */
     function initializeCanvases() {
       updateBlockOffsets();
       let mode = document.body.classList.contains('collapsed') ? 'collapsed' : 'expanded';
-      // Για κάθε block (s, f, d, p) δημιουργούμε canvas με διαστάσεις ίδιες με το bounding box
+      // Δημιουργούμε καμβά για κάθε block (s, f, d, p) με διαστάσεις ίδιες με το bounding box
       ['s','f','d','p'].forEach(block => {
         let offsets = blockOffsets[block] || { width: 0, height: 0, minX: 0, minY: 0 };
         new p5(function(p) {
           p.setup = function() {
             const canvas = p.createCanvas(offsets.width, offsets.height);
             canvas.parent("canvas" + block.toUpperCase());
-            // Εφαρμόζουμε correction offset ώστε το πάνω αριστερό στοιχείο να εμφανίζεται στην "παλιά" θέση
+            // Εφαρμογή correction offset (παλιές θέσεις)
             const leftOffset = (canvasOffsets[mode] && canvasOffsets[mode][block]) || 0;
             canvas.elt.style.position = "absolute";
             canvas.elt.style.left = (offsets.minX + leftOffset) + "px";
             canvas.elt.style.top = offsets.minY + "px";
             window.drawElements(p, block);
-            p.skipNextClick = true;
-            setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = function(event) {
-              console.log("Κλικ σε block", block);
-            };
           };
         });
       });
     }
     window.initializeCanvases = initializeCanvases;
     
-    /* ---------------- Εμφάνιση των καμβάδων περιόδων και ομάδων ---------------- */
+    /* ---------------- Καμβάδες Περιόδων και Ομάδων ---------------- */
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
@@ -301,6 +282,7 @@
     
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
+      // Canvas για S_groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -316,6 +298,7 @@
           p.text("ΙΙΑ", 62, 30);
         };
       });
+      // Canvas για D_groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -342,6 +325,7 @@
           }
         };
       });
+      // Canvas για P_groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
@@ -375,43 +359,22 @@
     /* ---------------- Ανασχεδίαση όλων των καμβάδων ---------------- */
     window.redrawAll = function() {
       initializeCanvases();
-      // Εμφάνιση του canvasPeriods όταν currentZ >= 121
-      if(currentZ >= 121) {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "block"; }
-        initPeriodsCanvas();
-      } else {
-        let cp = document.getElementById('canvasPeriods');
-        if(cp) { cp.style.display = "none"; }
-      }
-      // Εμφάνιση των group canvases όταν currentZ >= 122
-      if(currentZ >= 122) {
-        let csg = document.getElementById('canvasS_groups');
-        let cdg = document.getElementById('canvasD_groups');
-        let cpg = document.getElementById('canvasP_groups');
-        if(csg) { csg.style.display = "block"; }
-        if(cdg) { cdg.style.display = "block"; }
-        if(cpg) { cpg.style.display = "block"; }
-        initGroupsCanvases();
-      } else {
-        let csg = document.getElementById('canvasS_groups');
-        let cdg = document.getElementById('canvasD_groups');
-        let cpg = document.getElementById('canvasP_groups');
-        if(csg) { csg.style.display = "none"; }
-        if(cdg) { cdg.style.display = "none"; }
-        if(cpg) { cpg.style.display = "none"; }
-      }
+      initPeriodsCanvas();
+      initGroupsCanvases();
     };
     
     /* ---------------- Global updateInfo ---------------- */
-    // Ορίζουμε μία βασική updateInfo ώστε να μην πετάει σφάλμα
     function updateInfo(clickedZ) {
       console.log("updateInfo called with:", clickedZ);
-      // Εδώ μπορείτε να ενημερώσετε τα info panels με δεδομένα στοιχείων, κλπ.
     }
     window.updateInfo = updateInfo;
     
-    /* ---------------- Χειριστές Κουμπιών ---------------- */
+    /* ---------------- Χειριστές κουμπιών ---------------- */
+    document.getElementById('fillAll').addEventListener('click', function() {
+      currentZ = 123;
+      window.redrawAll();
+      setTimeout(() => { updateInfo(currentZ); }, 300);
+    });
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       let toggleBtn = document.getElementById('toggleFBlock');
       if(document.body.classList.contains('collapsed')){
@@ -421,39 +384,12 @@
          document.body.classList.add('collapsed');
          toggleBtn.textContent = "Ανάπτυξε";
       }
-      initializeCanvases();
       window.redrawAll();
-      window.updateInfo(currentZ);
+      updateInfo(currentZ);
     });
-    
-    document.getElementById('fillAll').addEventListener('click', function() {
-      if(currentZ === 123) return;
-      currentZ = 123;
-      fillAllPressed = true;
-      document.body.classList.remove('collapsed');
-      initializeCanvases();
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-      document.getElementById('toggleFBlock').disabled = false;
-    });
-    
-    document.getElementById('nextElement').addEventListener('click', function() {
-      if(currentZ < 3) currentZ = 3;
-      else if(currentZ < 118) currentZ++;
-      else if(currentZ === 118) currentZ = 119;
-      else if(currentZ === 119) currentZ = 120;
-      else if(currentZ === 120) currentZ = 121;
-      else if(currentZ === 121) currentZ = 122;
-      else if(currentZ === 122) currentZ = 123;
-      window.redrawAll();
-      setTimeout(() => { updateInfo(currentZ); }, 300);
-    });
-    
     document.getElementById('reset').addEventListener('click', function() {
-      currentZ = 2;
-      fillAllPressed = false;
-      selectedElement = null;
-      initializeCanvases();
+      currentZ = 123;
+      window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
     });
     
@@ -466,7 +402,7 @@
         .then(response => response.json())
         .then(data => {
           elements = sortElements(data);
-          initializeCanvases();
+          window.redrawAll();
           updateInfo(currentZ);
         })
         .catch(err => console.error('Σφάλμα φόρτωσης elements.json:', err));
