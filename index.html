@@ -2,24 +2,21 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τελική Τοποθέτηση</title>
+  <title>Περιοδικός Πίνακας - Τελική Τοποθέτηση με Σύμπτυξη</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Βασικές ρυθμίσεις σε όλο το έγγραφο */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
       overflow: hidden; 
       background: #f7f7f7; 
     }
-    /* Ορισμοί για τους καμβάδες ώστε να μην περικόπτεται η σκιά */
     .canvas { 
       position: absolute; 
       background: transparent; 
       transition: all 0.5s ease-in-out; 
     }
-    /* Σε κάθε canvas προσθέτουμε padding και CSS drop-shadow */
     canvas {
       padding: 8px;
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
@@ -33,21 +30,17 @@
       z-index: -10;
       opacity: 1;
     }
-    /* Καμβάδες ομάδων (S, D, P) */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute; 
       height: 40px; 
     }
-    /* Οι υπόλοιποι καμβάδες */
     #canvasPeriods, #canvasS, #canvasD, #canvasP, #canvasF {
       position: absolute;
     }
-    /* Z-index για τους καμβάδες τομέων: S < F < D < P */
     #canvasS { z-index: 10; }
     #canvasF { z-index: 20; }
     #canvasD { z-index: 30; }
     #canvasP { z-index: 40; }
-    /* Κουμπιά */
     #buttonPanel {
       position: fixed; bottom: 20px; right: 20px; z-index: 100;
       display: flex; gap: 5px;
@@ -88,22 +81,25 @@
     let blockOffsets = {}; 
     let isTableFilled = false;
     let isCollapsed = false;
+    // Ορίζουμε το τρέχον mode: "expanded" ή "collapsed"
+    let currentMode = "expanded";
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
-      computeBlockOffsets();
+      // Αρχικός υπολογισμός με το τρέχον mode
+      computeBlockOffsets(currentMode);
     }
 
-    // Υπολογισμός ορίων για κάθε block (s, p, d, f)
-    function computeBlockOffsets() {
+    // Υπολογισμός ορίων για κάθε block με βάση το mode (expanded ή collapsed)
+    function computeBlockOffsets(mode) {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        Object.keys(positions.expanded).forEach(num => {
+        Object.keys(positions[mode]).forEach(num => {
           let e = elements.find(el => el.number == num);
           if (e && e.block === block) {
-            let pos = positions.expanded[num];
+            let pos = positions[mode][num];
             minX = Math.min(minX, pos.x);
             minY = Math.min(minY, pos.y);
             maxX = Math.max(maxX, pos.x + pos.width);
@@ -114,8 +110,9 @@
       });
     }
 
-    function calculateRelativePosition(element, block) {
-      let pos = positions.expanded[element.number];
+    // Υπολογισμός σχετικής θέσης, λαμβάνοντας υπόψη το mode
+    function calculateRelativePosition(element, block, mode) {
+      let pos = positions[mode][element.number];
       let offset = blockOffsets[block];
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
@@ -132,7 +129,7 @@
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       
-      // S-block groups
+      // Καμβάς για τις ομάδες του S-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -149,7 +146,7 @@
         };
       });
       
-      // D-block groups: 10 κελιά x 42px = 420px
+      // Καμβάς για τις ομάδες του D-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(420, 40);
@@ -171,7 +168,7 @@
         };
       });
       
-      // P-block groups: 6 κελιά x 42px = 252px
+      // Καμβάς για τις ομάδες του P-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(252, 40);
@@ -193,17 +190,14 @@
         };
       });
       
-      // Ενημέρωση θέσεων ομάδων:
-      // Το left του καμβά κάθε ομάδας είναι το left του αντίστοιχου καμβά τομέα
-      // Το top του καμβά κάθε ομάδας είναι το top του στοιχείου "1" + 40px.
+      // Ενημέρωση θέσεων ομάδων βάσει του τρέχοντος mode:
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         if(sectorCanvas && groupCanvas) {
           groupCanvas.style.left = sectorCanvas.style.left;
-          // Χρησιμοποιούμε το top του στοιχείου "1" από το positions.expanded (αν υπάρχει) και προσθέτουμε 40px.
-          if(positions.expanded["1"]) {
-            groupCanvas.style.top = (positions.expanded["1"].y + 2) + "px";
+          if(positions[currentMode]["1"]) {
+            groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
           }
         }
       });
@@ -235,14 +229,10 @@
       });
     }
 
+    // Αρχικοποίηση του καμβά τομέων για κάθε block με χρήση του τρέχοντος mode
     function initializeSectorsCanvas() {
-      if (!blockOffsets["s"]) {
-        computeBlockOffsets();
-        if (!blockOffsets["s"]) {
-          console.error("Δεν βρέθηκαν δεδομένα για το block 's'");
-          return;
-        }
-      }
+      // Επαναϋπολογισμός ορίων βάσει του currentMode
+      computeBlockOffsets(currentMode);
       let desiredLeftS = 66;
       let deltaS = desiredLeftS - blockOffsets["s"].minX;
       let sectorsTop = 110;
@@ -272,8 +262,9 @@
     function drawElements(p, block) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       const cellWidth = 40, cellHeight = 40, cellRadius = 5;
+      // Χρησιμοποιούμε τις θέσεις του τρέχοντος mode
       elements.filter(e => e.block === block).forEach(e => {
-        let pos = calculateRelativePosition(e, block);
+        let pos = calculateRelativePosition(e, block, currentMode);
         p.fill(colors[block] || "#CCCCCC");
         p.rect(pos.x, pos.y, cellWidth, cellHeight, cellRadius);
         p.fill(0);
@@ -288,7 +279,7 @@
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
-         initializeSectorsCanvas();       
+        initializeSectorsCanvas();       
         initializePeriodsCanvas();       
         initGroupsCanvases();
         isTableFilled = true;
@@ -298,16 +289,20 @@
     // Κουμπί "Σύμπτυξε"/"Ανάπτυξε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
+      // Ενημέρωση κειμένου κουμπιού
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
+      // Ενημέρωση του τρέχοντος mode
+      currentMode = isCollapsed ? "collapsed" : "expanded";
+      // Επαναϋπολογισμός και σχεδίαση με βάση το νέο mode
       initializeSectorsCanvas();
-      // Ενημέρωση θέσεων ομάδων βάσει των νέων κανόνων:
+      // Ενημέρωση θέσεων ομάδων βάσει του νέου mode:
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         if(sectorCanvas && groupCanvas) {
           groupCanvas.style.left = sectorCanvas.style.left;
-          if(positions.expanded["1"]) {
-            groupCanvas.style.top = (positions.expanded["1"].y + 2) + "px";
+          if(positions[currentMode]["1"]) {
+            groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
           }
         }
       });
