@@ -175,11 +175,20 @@
        calculatePosition: Επιστρέφει τις απόλυτες τιμές από το JSON
        Δεν γίνεται κανένας υπολογισμός
     ============================================================== */
-    function calculatePosition(e, block) {
-      let mode = document.body.classList.contains('collapsed') ? "collapsed" : "expanded";
-      // Εμπιστευόμαστε ότι το JSON έχει όλες τις καταχωρήσεις
-      return window.jsonPositions[mode][e.number];
+function calculatePosition(e, block) {
+    if (!window.jsonPositions) {
+        console.error("JSON data not loaded yet!");
+        return { x: 0, y: 0 }; // Fallback ασφαλείας
     }
+    let mode = document.body.classList.contains('collapsed') ? "collapsed" : "expanded";
+    
+    if (window.jsonPositions[mode] && window.jsonPositions[mode][e.number]) {
+        return window.jsonPositions[mode][e.number]; // Επιστροφή απόλυτης τιμής από JSON
+    } 
+
+    console.warn(`Missing position for element ${e.number} in ${mode} mode`);
+    return { x: 0, y: 0 }; // Fallback
+}
     
     /* ================================================================
        drawElements: Σχεδιάζει τα στοιχεία με τις απόλυτες θέσεις
