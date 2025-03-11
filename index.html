@@ -476,8 +476,8 @@ p.draw = function() {
   for (let atomicNumber in posObj) {
     let rect = posObj[atomicNumber];
     // Εφαρμόζουμε την ομοιόμορφη διόρθωση για όλα τα κελιά:
-    let correctedX = rect.x - 24;
-    let correctedY = rect.y + 7;
+    let correctedX = rect.x + 24;
+    let correctedY = rect.y - 7;
     p.rect(correctedX, correctedY, rect.width, rect.height);
   }
 };
