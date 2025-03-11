@@ -29,16 +29,13 @@
     /* Καμβάς περιόδων όπως στο ALLtoDOM1 */
     #canvasPeriods { 
       position: absolute; 
-      left: 31px; 
-      top: 120px; 
-      width: 42px; 
-      height: 292px; 
+      display: block; 
+      /* left και top ορίζονται δυναμικά */
       background: #f0f0f0; 
       z-index: 5; 
-      display: block; 
     }
-    /* Ομαδικοί καμβάδες – θα τοποθετηθούν με left ίσο με το left του τομέα (block) */
-    /* Δεν απαιτείται επιπλέον styling εδώ */
+    /* Οι ομάδες θα τοποθετηθούν με left ίσο με το left του αντίστοιχου τομέα και top μετατοπισμένο 15px ψηλότερα */
+    /* Button Panel */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -80,15 +77,18 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let isTableFilled = false; // Flag ώστε να δημιουργείται μόνο μία φορά η εμφάνιση
+    let globalShift = 0; // Μετακίνηση για το σύνολο του πίνακα ώστε να εφάπτεται με τις περίοδους
+    let isTableFilled = false; // Flag ώστε η εμφάνιση να δημιουργείται μία φορά
 
-    // Φόρτωση δεδομένων από τα JSON
+    // Φόρτωση δεδομένων από τα JSON αρχεία
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
       computeBlockOffsets();
+      computeGlobalShift();
       initializeBackgroundCanvas();
       initializePeriodsCanvas();
+      // Τα groups θα ενημερωθούν μετά το "Συμπλήρωσε"
       initializeSGroupsCanvas();
       initializeDGroupsCanvas();
       initializePGroupsCanvas();
@@ -112,14 +112,26 @@
       });
     }
 
-    // Υπολογισμός σχετικής θέσης ενός στοιχείου μέσα στο block
+    // Υπολογισμός του global min (ελάχιστη τιμή x όλων των στοιχείων)
+    function computeGlobalShift() {
+      let globalMin = Infinity;
+      Object.keys(positions.expanded).forEach(num => {
+        let pos = positions.expanded[num];
+        globalMin = Math.min(globalMin, pos.x);
+      });
+      // Ο καμβάς περιόδων τοποθετείται στο left = (positions.expanded["1"].x - 55) με width 42,
+      // οπότε η δεξιά του πλευρά είναι (positions.expanded["1"].x - 55 + 42) = positions.expanded["1"].x - 13.
+      globalShift = (positions.expanded["1"].x - 13) - globalMin;
+    }
+
+    // Υπολογισμός σχετικής θέσης ενός στοιχείου μέσα σε ένα block
     function calculateRelativePosition(element, block) {
       let pos = positions.expanded[element.number];
       let offset = blockOffsets[block];
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
-    // Δημιουργία καμβάδων για τα στοιχεία (Blocks) με σχεδίαση μέσω p5.js
+    // Δημιουργία καμβάδων για τα στοιχεία (Blocks) – μετακινούμε ολόκληρο τον πίνακα προς τα δεξιά με globalShift
     function initializeCanvases() {
       if (isTableFilled) return;
       isTableFilled = true;
@@ -128,8 +140,8 @@
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Ορισμός θέσης και διαστάσεων του container σύμφωνα με το block offset
-        container.style.left = offset.minX + "px";
+        // Προσθέτουμε το globalShift στη θέση του κάθε block
+        container.style.left = (offset.minX + globalShift) + "px";
         container.style.top = offset.minY + "px";
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
@@ -144,7 +156,7 @@
       });
     }
 
-    // Σχεδίαση των κελιών για κάθε block – χρησιμοποιούμε textSize 14 και έντονο στυλ
+    // Σχεδίαση των κελιών για κάθε block με textSize 14 έντονο
     function drawElements(p, block) {
       const blockColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -170,15 +182,19 @@
       bg.style.display = "block";
     }
 
-    // Δημιουργία του καμβά για τις περιόδους όπως στο ALLtoDOM1, με textSize 14 και έντονο στυλ
+    // Δημιουργία του καμβά για τις περιόδους όπως στο ALLtoDOM1 με textSize 14 έντονο
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function () {
-          let canvas = p.createCanvas(40, 294);
+          let canvas = p.createCanvas(42, 292);
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
+          // Τοποθετούμε τον καμβά περιόδων στο left = (positions.expanded["1"].x - 55)
+          // και στο top = positions.expanded["1"].y
           container.style.left = (positions.expanded["1"].x - 55) + "px";
           container.style.top = positions.expanded["1"].y + "px";
+          container.style.width = "42px";
+          container.style.height = "292px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(14);
@@ -186,24 +202,26 @@
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(0, i * 42, 40, 40);
+            p.rect(0, i * 42, 42, 42);
             p.fill(0);
-            p.text(periodLabels[i], 20, i * 42 + 20);
+            p.text(periodLabels[i], 21, i * 42 + 21);
           }
         };
       });
     }
 
-    // Δημιουργία του καμβά για τα S-groups – το left του container ορίζεται ως το left του τομέα (block S)
+    // Δημιουργία του καμβά για τα S-groups – το left του ορίζεται από το blockOffsets["s"].minX + globalShift,
+    // και το top μετατοπίζεται κατά -15 (δηλαδή 15px ψηλότερα) από την αρχική τιμή (78px → 63px)
     function initializeSGroupsCanvas() {
       new p5(function(p){
         p.setup = function(){
           let canvas = p.createCanvas(84, 40);
           canvas.parent("canvasS_groups");
           let container = document.getElementById("canvasS_groups");
-          // Ορισμός left ίσο με το left του τομέα s
-          container.style.left = blockOffsets["s"].minX + "px";
-          container.style.top = "78px"; // τιμή όπως στο ALLtoDOM1
+          container.style.left = (blockOffsets["s"].minX + globalShift) + "px";
+          container.style.top = "63px";
+          container.style.width = "84px";
+          container.style.height = "40px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(14);
@@ -217,15 +235,17 @@
       });
     }
 
-    // Δημιουργία του καμβά για τα D-groups – left ίσο με το left του τομέα d
+    // Δημιουργία του καμβά για τα D-groups – left από το blockOffsets["d"].minX + globalShift, top = 63px
     function initializeDGroupsCanvas() {
       new p5(function(p) {
         p.setup = function(){
           let canvas = p.createCanvas(418, 40);
           canvas.parent("canvasD_groups");
           let container = document.getElementById("canvasD_groups");
-          container.style.left = blockOffsets["d"].minX + "px";
-          container.style.top = "78px";
+          container.style.left = (blockOffsets["d"].minX + globalShift) + "px";
+          container.style.top = "63px";
+          container.style.width = "418px";
+          container.style.height = "40px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(14);
@@ -250,15 +270,17 @@
       });
     }
 
-    // Δημιουργία του καμβά για τα P-groups – left ίσο με το left του τομέα p
+    // Δημιουργία του καμβά για τα P-groups – left από το blockOffsets["p"].minX + globalShift, top = 63px
     function initializePGroupsCanvas() {
       new p5(function(p) {
         p.setup = function(){
           let canvas = p.createCanvas(250, 40);
           canvas.parent("canvasP_groups");
           let container = document.getElementById("canvasP_groups");
-          container.style.left = blockOffsets["p"].minX + "px";
-          container.style.top = "78px";
+          container.style.left = (blockOffsets["p"].minX + globalShift) + "px";
+          container.style.top = "63px";
+          container.style.width = "250px";
+          container.style.height = "40px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(14);
@@ -283,7 +305,8 @@
       });
     }
 
-    // Ενεργοποίηση του "Συμπλήρωσε" με το πάτημα του κουμπιού, δημιουργώντας τους καμβάδες για τα στοιχεία
+    // Το πάτημα του κουμπιού "Συμπλήρωσε" δημιουργεί πρώτα τον πίνακα των στοιχείων
+    // (μετακινώντας τον προς τα δεξιά ώστε να εφάπτεται στο δεξιό μέρος του καμβά των περιόδων)
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeCanvases();
     });
