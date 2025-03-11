@@ -154,14 +154,12 @@
       .catch(err => console.error("Σφάλμα φόρτωσης JSON:", err));
 
     /* ================================================================
-       drawPlaceholderBackground: Σχεδιάζει ένα placeholder background
+       drawPlaceholderBackground: Χρησιμοποιεί τις απόλυτες τιμές του JSON
     ============================================================== */
     function drawPlaceholderBackground() {
       if(elements.length === 0) return;
       let element = elements.find(e => Number(e.number) === 3);
       if(!element) return;
-      let canvasEl = document.getElementById("canvas" + element.block.toUpperCase());
-      if(!canvasEl) return;
       let pos = calculatePosition(element, element.block);
       let bg = document.getElementById("canvasTableBackground");
       if(bg) {
@@ -174,23 +172,17 @@
     }
 
     /* ================================================================
-       calculatePosition: Επιστρέφει τη θέση του στοιχείου με απόλυτες τιμές από το JSON
-       (δεν προσθέτει offsets)
+       calculatePosition: Επιστρέφει τις απόλυτες τιμές από το JSON
+       Δεν γίνεται κανένας υπολογισμός
     ============================================================== */
     function calculatePosition(e, block) {
       let mode = document.body.classList.contains('collapsed') ? "collapsed" : "expanded";
-      if(window.jsonPositions && window.jsonPositions[mode] && window.jsonPositions[mode][e.number]) {
-         return { x: window.jsonPositions[mode][e.number].x, y: window.jsonPositions[mode][e.number].y };
-      }
-      if(window.jsonPositions && window.jsonPositions["start"] && window.jsonPositions["start"][e.number]) {
-         return { x: window.jsonPositions["start"][e.number].x, y: window.jsonPositions["start"][e.number].y };
-      }
-      // Fallback: Επιστροφή (0,0) αν δεν βρεθεί τίποτα στο JSON
-      return { x: 0, y: 0 };
+      // Εμπιστευόμαστε ότι το JSON έχει όλες τις καταχωρήσεις
+      return window.jsonPositions[mode][e.number];
     }
     
     /* ================================================================
-       drawElements: Σχεδιάζει τα στοιχεία (κελιά) σε κάθε καμβά
+       drawElements: Σχεδιάζει τα στοιχεία με τις απόλυτες θέσεις
     ============================================================== */
     window.drawElements = function(p, block) {
       p.stroke(150);
@@ -213,7 +205,7 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Σχεδιάζουμε το κελί χωρίς offset, αφού οι θέσεις είναι απόλυτες
+        // Σχεδιάζουμε το κελί ακριβώς στις απόλυτες συντεταγμένες
         p.noStroke();
         p.fill("rgba(0,0,0,0.15)");
         p.rect(pos.x, pos.y, cellSize, cellSize, 5);
@@ -266,7 +258,6 @@
             const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            // Δεν εφαρμόζουμε offset, οι θέσεις καθορίζονται από το JSON
             window.drawElements(p, block);
           };
         });
@@ -344,7 +335,7 @@
        Εκκίνηση
     ============================================================== */
     window.addEventListener('load', function() {
-      // Προαιρετικά επιπλέον initialization
+       // Επιπλέον αρχικοποίηση αν χρειάζεται
     });
     loadElements();
     let ignoreCanvasClick = false;
