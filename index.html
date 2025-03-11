@@ -25,6 +25,11 @@
       z-index: -10;
       opacity: 1;
     }
+    /* Debug overlay (χωρίς γέμισμα, μόνο περιγράμματα) */
+    #canvasDebug {
+      z-index: 100;
+      pointer-events: none;
+    }
     #infoPanelFull, #infoPanelCollapsed {
       position: fixed;
       bottom: 20px;
@@ -63,6 +68,8 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasSubshells" class="canvas"></div>
+  <!-- Debug canvas για έλεγχο θέσεων -->
+  <div id="canvasDebug" class="canvas"></div>
   
   <!-- Info Panels -->
   <div id="infoPanelFull"></div>
@@ -185,6 +192,8 @@
     if (!isTableFilled) {
       document.getElementById('fillAll').click();
     }
+    // Εκκίνηση του debug καμβά για έλεγχο θέσεων
+    initializeDebugCanvas(currentMode);
   }
   function computeBlockOffsets(mode) {
     let blocks = ["s", "p", "d", "f"];
@@ -360,30 +369,20 @@
     });
   }
   function updateInfo(element) {
-  let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
-                  <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
-                  <span style="font-style: italic;">${element.name}</span>`;
-  // Χρήση του στοιχείου infoPanelFull που υπάρχει στο HTML
-  document.getElementById("infoPanelFull").innerHTML = infoHTML;
-  
-  let subshells = element.subshells ? element.subshells : "-";
-  let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
-  
-  // Ενημέρωση ενός τμήματος του infoPanelFull ή δημιουργία νέου στοιχείου
-  // Αν δεν έχεις στοιχείο για τα remarks, μπορείς να το ενσωματώσεις μέσα στο infoPanelFull
-  // π.χ.:
-  document.getElementById("infoPanelFull").innerHTML += `<div class="row">
+    let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
+                    <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
+                    <span style="font-style: italic;">${element.name}</span>`;
+    document.getElementById("infoPanelFull").innerHTML = infoHTML;
+    let subshells = element.subshells ? element.subshells : "-";
+    let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
+    document.getElementById("infoPanelFull").innerHTML += `<div class="row">
           <div class="col-70">${subshells}</div>
           <div class="col-30">${shellsAndMsg}</div>
         </div>
         <div class="row">${element.remarks || ""}</div>`;
-  
-  // Αντίστοιχα, ενημέρωση του infoPanelCollapsed
-  document.getElementById("infoPanelCollapsed").innerHTML = document.getElementById("infoPanelFull").innerHTML;
-  
-  updateBalloonPosition(element);
-}
-
+    document.getElementById("infoPanelCollapsed").innerHTML = document.getElementById("infoPanelFull").innerHTML;
+    updateBalloonPosition(element);
+  }
   function getBlockColor(block) {
     switch(block) {
       case "s": return "#FF477E";
@@ -441,6 +440,43 @@
     subshellsP.text(data.next || "-", extraMargin, 2*rowHeight + rowHeight/2);
   }
   
+  // Debug canvas: Σχεδιάζει περιγράμματα σύμφωνα με τις θέσεις και τα μεγέθη από το positions.json
+  function initializeDebugCanvas(mode) {
+    let debugDiv = document.getElementById("canvasDebug");
+    if (!debugDiv) return;
+    
+    // Τοποθετούμε τον debug καμβά στο ίδιο σημείο με το background του πίνακα
+    debugDiv.style.left = "17px";
+    debugDiv.style.top = "55px";
+    if(mode === "collapsed") {
+      debugDiv.style.width = collapsedBackground.width;
+      debugDiv.style.height = collapsedBackground.height;
+    } else { // expanded
+      debugDiv.style.width = expandedBackground.width;
+      debugDiv.style.height = expandedBackground.height;
+    }
+    
+    new p5(function(p) {
+      p.setup = function() {
+        let canvasWidth = parseInt(debugDiv.style.width);
+        let canvasHeight = parseInt(debugDiv.style.height);
+        let canvas = p.createCanvas(canvasWidth, canvasHeight);
+        canvas.parent("canvasDebug");
+        p.noLoop();
+      };
+      p.draw = function() {
+        p.clear();
+        p.stroke(0); // Μαύρα περιγράμματα
+        p.noFill();
+        let posObj = positions[mode];
+        for (let atomicNumber in posObj) {
+          let rect = posObj[atomicNumber];
+          p.rect(rect.x, rect.y, rect.width, rect.height);
+        }
+      };
+    });
+  }
+  
   // ------------------------
   // Event Listeners για τα κουμπιά
   // ------------------------
@@ -478,6 +514,8 @@
       document.getElementById("infoPanelFull").style.display = "block";
       document.getElementById("infoPanelCollapsed").style.display = "none";
     }
+    // Ενημέρωση debug καμβά για το νέο mode
+    initializeDebugCanvas(currentMode);
   });
   document.getElementById('nextElement').addEventListener('click', function() {
     console.log("Το κουμπί 'Επόμενο' πατήθηκε. Η διαδικασία του mode 'start' δεν έχει υλοποιηθεί πλήρως προς το παρόν.");
