@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας με Ατομικούς Αριθμούς</title>
+  <title>Περιοδικός Πίνακας με Σωστή Ευθυγράμμιση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -23,7 +23,7 @@
 </head>
 <body>
 
-  <!-- Background & Structural Canvases -->
+  <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasGroups" class="canvas"></div>
@@ -32,7 +32,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Control Panel -->
+  <!-- Κουμπί για συμπλήρωση -->
   <div id="buttonPanel">
     <button id="fillAll">Συμπλήρωσε</button>
   </div>
@@ -120,8 +120,8 @@
           canvas.parent("canvasPeriods");
 
           let container = document.getElementById("canvasPeriods");
-          container.style.left = "10px";
-          container.style.top = "63px";
+          container.style.left = positions.expanded["H"].x - 50 + "px"; // Ευθυγράμμιση με πρώτο στοιχείο
+          container.style.top = positions.expanded["H"].y + "px";
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -146,8 +146,8 @@
           canvas.parent("canvasGroups");
 
           let container = document.getElementById("canvasGroups");
-          container.style.left = "70px";
-          container.style.top = "15px";
+          container.style.left = positions.expanded["Li"].x + "px"; // Ευθυγράμμιση με πρώτο στοιχείο ομάδας
+          container.style.top = positions.expanded["Li"].y - 50 + "px"; 
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
