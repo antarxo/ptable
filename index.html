@@ -1,287 +1,152 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
-  <link rel="icon" href="data:,">
-  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-  <style>
-    :root { --rightPanelWidth: 150px; }
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      overflow: hidden;
-      background: #f7f7f7;
-    }
-    /* Τίτλος και υπογραφή */
-    #title {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 50;
-    }
-    #signature {
-      font-size: 0.5em;
-      font-weight: normal;
-      color: #666;
-      background-color: #f0f0f0;
-      padding: 2px 4px;
-      border-radius: 4px;
-      margin-left: 10px;
-      vertical-align: middle;
-    }
-    /* Background canvas */
-    #canvasTableBackground {
-      position: absolute;
-      background: white;
-      border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 3px 3px rgba(0,0,0,0.2);
-      z-index: -10;
-      display: none;
-      transition: all 0.8s ease;
-    }
-    /* Καμβάδες */
-    #canvasPeriods {
-      position: absolute;
-      left: 31px;
-      top: 120px;
-      width: 42px;
-      height: 292px;
-      background: #f0f0f0;
-      display: none;
-      z-index: 5;
-    }
-    #canvasD_groups { height: 40px; }
-    #canvasP_groups { width: 84px; height: 40px; }
-    .canvas {
-      position: absolute;
-      background: transparent;
-      transition: all 0.5s ease-in-out;
-      transform: translateY(-10px);
-    }
-    /* Panels */
-    #infoPanelFull, #infoPanelCollapsed {
-      background: #fff;
-      border: 2px solid #333;
-      border-radius: 8px;
-      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
-      padding: 20px;
-      position: absolute;
-      z-index: 40;
-      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
-      text-align: left;
-      opacity: 1;
-    }
-    #infoPanelFull {
-      left: 20px;
-      top: 443px;
-      width: calc(100vw - var(--rightPanelWidth) - 105px);
-    }
-    #infoPanelCollapsed {
-      display: none;
-      flex-direction: column;
-      left: 858px;
-      top: 112px;
-      width: calc(100vw - 920px);
-      z-index: 40;
-      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.3s ease;
-      opacity: 1;
-    }
-    /* Κουμπιά */
-    #buttonPanel {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    button {
-      background-color: #008CBA;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1em;
-      transition: background-color 0.3s;
-    }
-    button:hover { background-color: #005f75; }
-    #toggleFBlock.active { background-color: #e68a00; }
-  </style>
-</head>
-<body class="full">
-  <!-- Τίτλος με υπογραφή -->
-  <div id="title">
-    Διαδραστική κατασκευή του Περιοδικού Πίνακα
-    <span id="signature">2025, Created by A. Archontoulis</span>
-  </div>
-  
-  <!-- Background Canvas -->
-  <div id="canvasTableBackground"></div>
-  
-  <!-- Canvases -->
-  <div id="canvasPeriods" class="canvas"></div>
-  <div id="canvasS_groups" class="canvas"></div>
-  <div id="canvasD_groups" class="canvas"></div>
-  <div id="canvasP_groups" class="canvas"></div>
-  
-  <div id="canvasS" class="canvas"></div>
-  <div id="canvasF" class="canvas"></div>
-  <div id="canvasD" class="canvas"></div>
-  <div id="canvasP" class="canvas"></div>
-  
-  <!-- Panels -->
-  <div id="infoPanelFull">
-    <div id="leftPanelFull"></div>
-    <div id="remarksFull"></div>
-  </div>
-  <div id="infoPanelCollapsed">
-    <div id="leftPanelCollapsed"></div>
-    <div id="remarksCollapsed"></div>
-  </div>
-  
-  <!-- Balloon (Subshells) -->
-  <div id="canvasSubshells" class="canvas"></div>
-  
-  <!-- Buttons -->
-  <div id="buttonPanel">
-    <button id="nextElement">Επόμενο</button>
-    <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξε</button>
-    <button id="reset">Reset</button>
-  </div>
-  
-  <script>
-    // --- Παράδειγμα ορισμών συναρτήσεων και global μεταβλητών ---
-    let elements = [];
-    let currentZ = 0;
-    let fillAllPressed = false;
-    window.BLOCKS_CONFIG = {
-      s: { cols: 2, rows: 7 },
-      p: { cols: 6, rows: 7 },
-      d: { cols: 10, rows: 7 },
-      f: { cols: 14, rows: 7 }
-    };
-    window.BLOCK_COLORS = {
-      s: "#FF477E",
-      p: "#26FF31",
-      d: "#3F99FF",
-      f: "#FFD051"
-    };
-    window.getBlockColor = function(b) {
-      if(b === "dummy") return "gray";
-      switch(b) {
-        case "s": return "#FF477E";
-        case "p": return "#26FF31";
-        case "d": return "#3F99FF";
-        case "f": return "#FFD051";
-        default: return "black";
-      }
-    };
-
-    // --- Εδώ θα έπρεπε να υπάρχουν και οι υπόλοιπες συναρτήσεις (loadElements, initPeriodsCanvas, κλπ.)
-    function loadElements() {
-      fetch('elements.json')
-        .then(response => response.json())
-        .then(data => {
-          elements = data.sort((a, b) => Number(a.number) - Number(b.number));
-          console.log("Elements loaded.");
-          // Κλήσεις αρχικοποίησης καμβάδων (αν υπάρχουν)
-        })
-        .catch(err => console.error('Σφάλμα φόρτωσης elements:', err));
-    }
-    function initPeriodsCanvas() {
-      // Αρχικοποίηση του canvas για τα Periods
-      console.log("initPeriodsCanvas called");
-    }
-    function initGroupsCanvases() {
-      // Αρχικοποίηση των καμβάδων των groups
-      console.log("initGroupsCanvases called");
-    }
-    function initSubshellsCanvas() {
-      // Αρχικοποίηση του canvas για τα Subshells
-      console.log("initSubshellsCanvas called");
-    }
-    
-    // --- ΝΕΑ ΛΟΓΙΚΗ: Φόρτωση του positions.json και ενημέρωση των καμβάδων ---
-    let positionsData = null;
-    function loadPositions() {
-      fetch('positions.json')
-        .then(response => response.json())
-        .then(data => {
-          positionsData = data;
-          console.log("Positions data loaded:", positionsData);
-          // Θέτουμε ως προεπιλογή το expanded mode
-          updateSectors('expanded');
-        })
-        .catch(error => console.error('Σφάλμα φόρτωσης positions:', error));
-    }
-    function updateSectors(mode) {
-      if (!positionsData) {
-        console.warn('Positions data not loaded yet.');
-        return;
-      }
-      console.log("Updating sectors for mode:", mode);
-      // Mapping: το κάθε ID καμβά αντιστοιχεί σε ένα κλειδί στο positions.json
-      const canvasMapping = {
-        'canvasS': '1',
-        'canvasF': '2',
-        'canvasD': '3',
-        'canvasP': '4',
-        'canvasD_groups': '5',
-        'canvasP_groups': '6'
-      };
-      const modePositions = positionsData[mode];
-      if (!modePositions) {
-        console.error('Δεν βρέθηκαν θέσεις για το mode:', mode);
-        return;
-      }
-      Object.entries(canvasMapping).forEach(([canvasId, posKey]) => {
-        const pos = modePositions[posKey];
-        const canvasEl = document.getElementById(canvasId);
-        if (canvasEl && pos) {
-          console.log(`Setting ${canvasId}: x=${pos.x}, y=${pos.y}, width=${pos.width}, height=${pos.height}`);
-          canvasEl.style.transition = "left 1.2s ease, top 1.2s ease";
-          canvasEl.style.left = pos.x + "px";
-          canvasEl.style.top = pos.y + "px";
-          if (pos.width)  canvasEl.style.width = pos.width + "px";
-          if (pos.height) canvasEl.style.height = pos.height + "px";
+    <meta charset="UTF-8">
+    <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα</title>
+    <link rel="icon" href="data:,">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background: #f7f7f7;
         }
-      });
-    }
-    
-    // --- Αρχικοποίηση στο DOMContentLoaded ---
-    document.addEventListener("DOMContentLoaded", function() {
-      loadPositions();
-      loadElements();
-      initPeriodsCanvas();
-      initGroupsCanvases();
-      initSubshellsCanvas();
-      
-      // Event listeners για τα κουμπιά
-      document.getElementById("nextElement").addEventListener("click", function() {
-        console.log("nextElement clicked");
-        updateSectors('expanded');
-      });
-      document.getElementById("fillAll").addEventListener("click", function() {
-        console.log("fillAll clicked");
-        updateSectors('expanded');
-      });
-      document.getElementById("toggleFBlock").addEventListener("click", function() {
-        console.log("toggleFBlock clicked");
-        updateSectors('collapsed');
-      });
-      // Αν υπάρχει κουμπί reset, μπορείτε να προσθέσετε και αυτό
-      document.getElementById("reset").addEventListener("click", function() {
-        console.log("reset clicked");
-        // Ενέργειες reset, εάν υπάρχουν
-      });
-    });
-  </script>
+
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        .canvas-container {
+            position: absolute;
+            border: 1px solid black;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        #buttonPanel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        button {
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover { background-color: #005f75; }
+    </style>
+</head>
+<body>
+    <div id="title">Διαδραστική κατασκευή του Περιοδικού Πίνακα</div>
+
+    <!-- Καμβάδες -->
+    <div id="canvasS" class="canvas-container"></div>
+    <div id="canvasF" class="canvas-container"></div>
+    <div id="canvasD" class="canvas-container"></div>
+    <div id="canvasP" class="canvas-container"></div>
+
+    <!-- Κουμπιά -->
+    <div id="buttonPanel">
+        <button id="nextElement">Επόμενο</button>
+        <button id="fillAll">Συμπλήρωσε</button>
+        <button id="toggleFBlock">Σύμπτυξε</button>
+    </div>
+
+    <script>
+        let positionsData = null;
+
+        function loadPositions() {
+            fetch('positions.json')
+                .then(response => response.json())
+                .then(data => {
+                    positionsData = data;
+                    console.log("Positions loaded:", positionsData);
+                    updateSectors('expanded'); // Προεπιλεγμένη εμφάνιση
+                })
+                .catch(error => console.error('Σφάλμα φόρτωσης positions:', error));
+        }
+
+        function updateSectors(mode) {
+            if (!positionsData) return;
+            console.log("Updating sectors for mode:", mode);
+
+            const canvasMapping = {
+                'canvasS': '1',
+                'canvasF': '2',
+                'canvasD': '3',
+                'canvasP': '4'
+            };
+
+            const modePositions = positionsData[mode];
+            if (!modePositions) {
+                console.error('Δεν βρέθηκαν θέσεις για το mode:', mode);
+                return;
+            }
+
+            Object.entries(canvasMapping).forEach(([canvasId, posKey]) => {
+                const pos = modePositions[posKey];
+                const canvasEl = document.getElementById(canvasId);
+                if (canvasEl && pos) {
+                    console.log(`Setting ${canvasId}: x=${pos.x}, y=${pos.y}, width=${pos.width}, height=${pos.height}`);
+                    canvasEl.style.left = pos.x + "px";
+                    canvasEl.style.top = pos.y + "px";
+                    canvasEl.style.width = pos.width + "px";
+                    canvasEl.style.height = pos.height + "px";
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadPositions();
+
+            document.getElementById("nextElement").addEventListener("click", function () {
+                updateSectors('expanded');
+            });
+
+            document.getElementById("fillAll").addEventListener("click", function () {
+                updateSectors('expanded');
+            });
+
+            document.getElementById("toggleFBlock").addEventListener("click", function () {
+                updateSectors('collapsed');
+            });
+        });
+
+        function setup() {
+            createCanvasInContainer("canvasS", "red");
+            createCanvasInContainer("canvasF", "blue");
+            createCanvasInContainer("canvasD", "green");
+            createCanvasInContainer("canvasP", "purple");
+        }
+
+        function createCanvasInContainer(containerId, color) {
+            let container = document.getElementById(containerId);
+            if (!container) return;
+
+            let canvas = createCanvas(container.offsetWidth, container.offsetHeight);
+            canvas.parent(container);
+            background(color);
+            textSize(20);
+            fill(255);
+            text(containerId, 10, 30);
+        }
+    </script>
 </body>
 </html>
