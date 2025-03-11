@@ -71,6 +71,7 @@
 
     <script>
         let positionsData = null;
+        let elementsData = null;
 
         function loadPositions() {
             fetch('positions.json')
@@ -78,9 +79,20 @@
                 .then(data => {
                     positionsData = data;
                     console.log("Positions loaded:", positionsData);
-                    updateSectors('expanded'); // Προεπιλεγμένη εμφάνιση
+                    updateSectors('expanded');
                 })
                 .catch(error => console.error('Σφάλμα φόρτωσης positions:', error));
+        }
+
+        function loadElements() {
+            fetch('elements.json')
+                .then(response => response.json())
+                .then(data => {
+                    elementsData = data;
+                    console.log("Elements loaded:", elementsData);
+                    redrawAll();
+                })
+                .catch(error => console.error('Σφάλμα φόρτωσης elements:', error));
         }
 
         function updateSectors(mode) {
@@ -104,30 +116,15 @@
                 const pos = modePositions[posKey];
                 const canvasEl = document.getElementById(canvasId);
                 if (canvasEl && pos) {
-                    console.log(`Setting ${canvasId}: x=${pos.x}, y=${pos.y}, width=${pos.width}, height=${pos.height}`);
                     canvasEl.style.left = pos.x + "px";
                     canvasEl.style.top = pos.y + "px";
                     canvasEl.style.width = pos.width + "px";
                     canvasEl.style.height = pos.height + "px";
                 }
             });
+
+            redrawAll();
         }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            loadPositions();
-
-            document.getElementById("nextElement").addEventListener("click", function () {
-                updateSectors('expanded');
-            });
-
-            document.getElementById("fillAll").addEventListener("click", function () {
-                updateSectors('expanded');
-            });
-
-            document.getElementById("toggleFBlock").addEventListener("click", function () {
-                updateSectors('collapsed');
-            });
-        });
 
         function setup() {
             createCanvasInContainer("canvasS", "red");
@@ -142,11 +139,73 @@
 
             let canvas = createCanvas(container.offsetWidth, container.offsetHeight);
             canvas.parent(container);
-            background(color);
-            textSize(20);
-            fill(255);
-            text(containerId, 10, 30);
+            background(255);
+
+            fill(color);
+            textSize(16);
+            textAlign(CENTER, CENTER);
+            text(containerId, width / 2, height / 2);
         }
+
+        function redrawAll() {
+            if (!elementsData) return;
+            console.log("Redrawing periodic table...");
+
+            redrawCanvas("canvasS", "red");
+            redrawCanvas("canvasF", "blue");
+            redrawCanvas("canvasD", "green");
+            redrawCanvas("canvasP", "purple");
+        }
+
+        function redrawCanvas(containerId, color) {
+            let container = document.getElementById(containerId);
+            if (!container) return;
+
+            let canvas = select(`#${containerId} canvas`);
+            if (!canvas) return;
+
+            canvas.resizeCanvas(container.offsetWidth, container.offsetHeight);
+            background(255);
+
+            fill(color);
+            textSize(20);
+            textAlign(CENTER, CENTER);
+            text(containerId, width / 2, height / 2);
+
+            fill(0);
+            textSize(14);
+            let x = 20, y = 20;
+            let count = 0;
+
+            for (let el of elementsData) {
+                rect(x, y, 40, 40);
+                fill(255);
+                text(el.symbol, x + 20, y + 20);
+                x += 45;
+                count++;
+                if (count % 10 === 0) {
+                    x = 20;
+                    y += 50;
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadPositions();
+            loadElements();
+
+            document.getElementById("nextElement").addEventListener("click", function () {
+                updateSectors('expanded');
+            });
+
+            document.getElementById("fillAll").addEventListener("click", function () {
+                updateSectors('expanded');
+            });
+
+            document.getElementById("toggleFBlock").addEventListener("click", function () {
+                updateSectors('collapsed');
+            });
+        });
     </script>
 </body>
 </html>
