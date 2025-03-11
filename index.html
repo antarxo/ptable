@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Απεικόνιση JSON - Expanded/Collapsed</title>
+  <title>Απεικόνιση JSON - Expanded/Collapsed/Start</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
     body { font-family: sans-serif; margin: 0; text-align: center; }
@@ -31,16 +31,17 @@
 
   <script>
     let positions;
-    let showExpanded = true;
+    let stateIndex = 0;
+    let states = ["collapsed", "expanded", "start"];
     let leftSlider, topSlider;
 
     function preload() {
-      positions = loadJSON('positions.json');
+      positions = loadJSON('updated_positions_with_start.json');
     }
 
     function setup() {
       let cnv = createCanvas(1400, 600);
-      cnv.parent('canvas-container'); // Τοποθετεί τον καμβά στο container
+      cnv.parent('canvas-container');
       leftSlider = select('#leftSlider');
       topSlider = select('#topSlider');
       leftSlider.input(updateSliderValues);
@@ -55,13 +56,8 @@
       
       push();
       translate(offsetX, offsetY);
-      if (showExpanded) {
-        drawPositions(positions.expanded, color(255, 0, 0));
-        text("Expanded", 10, 20);
-      } else {
-        drawPositions(positions.collapsed, color(0, 0, 255));
-        text("Collapsed", 10, 20);
-      }
+      drawPositions(positions[states[stateIndex]], color(255, 0, 0));
+      text(states[stateIndex], 10, 20);
       pop();
     }
 
@@ -71,8 +67,8 @@
     }
 
     function toggleState() {
-      showExpanded = !showExpanded;
-      select('#toggleButton').html(showExpanded ? "Εμφάνιση Expanded" : "Εμφάνιση Collapsed");
+      stateIndex = (stateIndex + 1) % states.length;
+      select('#toggleButton').html("Εμφάνιση " + states[(stateIndex + 1) % states.length]);
     }
 
     function drawPositions(data, fillColor) {
