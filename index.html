@@ -3,17 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <title>Περιοδικός Πίνακας με Ατομικούς Αριθμούς</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
+    body { font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
     .canvas { position: absolute; background: transparent; transition: all 0.5s ease-in-out; }
-    #buttonPanel { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
-    #buttonPanel button { background-color: #008CBA; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+    #canvasTableBackground {
+      position: absolute; background: white; border: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 3px 3px rgba(0,0,0,0.2); z-index: -10; display: none;
+    }
+    #buttonPanel {
+      position: fixed; bottom: 20px; right: 20px; z-index: 100;
+    }
+    #buttonPanel button {
+      background-color: #008CBA; color: white; padding: 10px 15px;
+      border: none; border-radius: 5px; cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Καμβάδες -->
+  <!-- Background & Structural Canvases -->
+  <div id="canvasTableBackground"></div>
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasGroups" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
@@ -21,7 +32,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Κουμπί για συμπλήρωση -->
+  <!-- Control Panel -->
   <div id="buttonPanel">
     <button id="fillAll">Συμπλήρωσε</button>
   </div>
@@ -39,6 +50,7 @@
       initializeCanvases();
       initializePeriodsCanvas();
       initializeGroupsCanvas();
+      initializeBackgroundCanvas();
     }
 
     function computeBlockOffsets() {
@@ -95,7 +107,7 @@
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(14);
+        p.textSize(18);
         p.textAlign(p.CENTER, p.CENTER);
         p.text(e.number, pos.x + 20, pos.y + 20); // ΜΟΝΟ ο ατομικός αριθμός
       });
@@ -113,7 +125,7 @@
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(14);
+          p.textSize(16);
           p.textStyle(p.BOLD);
 
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
@@ -139,7 +151,7 @@
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(14);
+          p.textSize(16);
           p.textStyle(p.BOLD);
 
           for (let i = 0; i < 18; i++) {
@@ -151,6 +163,15 @@
           }
         };
       });
+    }
+
+    function initializeBackgroundCanvas() {
+      let bg = document.getElementById("canvasTableBackground");
+      bg.style.left = "10px";
+      bg.style.top = "50px";
+      bg.style.width = "1412px";
+      bg.style.height = "368px";
+      bg.style.display = "block";
     }
 
     document.getElementById('fillAll').addEventListener('click', function() {
