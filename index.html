@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τροποποιημένη Τοποθέτηση</title>
+  <title>Περιοδικός Πίνακας - Τελική Τοποθέτηση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -33,8 +33,8 @@
   <div id="canvasGroups" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
-  <div id="canvasD" class="canvas"></div>
-  <div id="canvasF" class="canvas"></div>
+  <!-- Αντί για d και f, ορισμός του MONO μπορεί να υλοποιηθεί ως επιπλέον καμβάς -->
+  <div id="canvasMONO" class="canvas"></div>
 
   <!-- Κουμπί για συμπλήρωση -->
   <div id="buttonPanel">
@@ -52,12 +52,13 @@
       positions = await (await fetch('positions.json')).json();
       computeBlockOffsets();
       initializeBackgroundCanvas();
-      initializePeriodsCanvas();
       initializeGroupsCanvas();
+      initializePeriodsCanvas();
     }
 
     function computeBlockOffsets() {
-      ["s", "p", "d", "f"].forEach(block => {
+      // Υποθέτουμε ότι τα δεδομένα για τα blocks "s", "p" και "MONO" υπάρχουν
+      ["s", "p", "MONO"].forEach(block => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         Object.keys(positions.expanded).forEach(num => {
           let e = elements.find(el => el.number == num);
@@ -87,19 +88,17 @@
       let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left); // 20
       // Στόχος για τα κελιά: (background left + 50) = 20 + 50 = 70px
       let targetLeft = bgLeft + 50;
-      // Υπολογισμός μετατόπισης για τον τομέα s
-      let deltaS = targetLeft - blockOffsets["s"].minX;
+      // Υπολογισμός μετατόπισης για το πρώτο block (π.χ. s)
+      let delta = targetLeft - blockOffsets["s"].minX;
 
-      // Το top των καμβάδων των τομέων τίθεται στο bottom των ομάδων (groups top = 60, groups height = 40 → bottom = 100)
+      // Το top των καμβάδων τοποθετείται στο bottom των ομάδων (groups: top = 60, height = 40 → bottom = 100)
       let sectorsTop = 100;
 
-      ["s", "p", "d", "f"].forEach(block => {
+      ["s", "p", "MONO"].forEach(block => {
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Εφαρμόζουμε σταθερή οριζόντια μετατόπιση ώστε το left να είναι background left + 50 (70px)
-        container.style.left = (offset.minX + deltaS) + "px";
-        // Θέτουμε το top ίσο με το bottom των ομάδων
+        container.style.left = (offset.minX + delta) + "px";
         container.style.top = sectorsTop + "px";
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
@@ -117,7 +116,8 @@
     function drawElements(p, block) {
       elements.filter(e => e.block === block).forEach(e => {
         let pos = calculateRelativePosition(e, block);
-        let color = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" }[block];
+        // Ορίστε κατάλληλο χρώμα για κάθε block, π.χ.:
+        let color = { s: "#FF477E", p: "#26FF31", MONO: "#3F99FF" }[block];
 
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
@@ -139,8 +139,8 @@
           // Ορίζουμε τη θέση left ως (left του background + 10)
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
           container.style.left = (bgLeft + 10) + "px"; // 20 + 10 = 30px
-          // Το top παραμένει όπως στις αρχικές τιμές
-          container.style.top = positions.expanded["1"].y + "px";
+          // Τώρα, σύμφωνα με την απαίτηση, το top τίθεται στο bottom των ομάδων (100px)
+          container.style.top = "100px";
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -168,7 +168,6 @@
           let container = document.getElementById("canvasGroups");
           // Το top των ομάδων ορίζεται στο (top του background + 10) = 50+10 = 60px
           container.style.top = "60px";
-          // Διατηρούμε το left όπως ορίζεται από τα δεδομένα
           container.style.left = positions.expanded["3"].x + "px";
 
           p.noStroke();
