@@ -203,7 +203,7 @@
           groupCanvas.style.left = sectorCanvas.style.left;
           // Χρησιμοποιούμε το top του στοιχείου "1" από το positions.expanded (αν υπάρχει) και προσθέτουμε 40px.
           if(positions.expanded["1"]) {
-            groupCanvas.style.top = (positions.expanded["1"].y + 40) + "px";
+            groupCanvas.style.top = (positions.expanded["1"].y + 70) + "px";
           }
         }
       });
@@ -224,7 +224,7 @@
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          const periodLabels = ["1K", "2L", "3M", "4N", "5X", "6O", "7P"];
+          const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
             p.rect(5, i * 42, 35, 40);
