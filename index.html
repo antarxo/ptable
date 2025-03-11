@@ -194,8 +194,10 @@
   
   <script>
     /* ================================================================
-       Υπάρχοντες global μεταβλητές και συναρτήσεις (π.χ. drawElements, initPeriodsCanvas, κ.ά.)
-       έχουν παραλειφθεί για συντομία. Ο βασικός κώδικας της εφαρμογής παραμένει ως έχει.
+       Υπάρχοντες global μεταβλητές και συναρτήσεις της εφαρμογής
+       (π.χ. drawElements, loadElements, initPeriodsCanvas, initGroupsCanvases, initSubshellsCanvas, κ.ά.)
+       πρέπει να παραμείνουν όπως στον αρχικό σας κώδικα.
+       Εδώ υποθέτουμε ότι οι ορισμοί τους υπάρχουν στο ίδιο αρχείο.
     ============================================================== */
     let elements = [];
     let currentZ = 0;
@@ -223,13 +225,33 @@
       }
     };
 
-    // ... άλλες συναρτήσεις της αρχικής εφαρμογής (drawElements, initGroupsCanvases, κ.ά.) ...
-
+    // Οι συναρτήσεις loadElements(), initPeriodsCanvas(), initGroupsCanvases(), initSubshellsCanvas(), κλπ.
+    // παραμένουν όπως ήταν στον αρχικό κώδικα σας.
+    // Για παράδειγμα:
+    function loadElements() {
+      fetch('elements.json')
+        .then(response => response.json())
+        .then(data => {
+          elements = data.sort((a, b) => Number(a.number) - Number(b.number));
+          // Εδώ καλείται και η αρχικοποίηση των καμβάδων
+          // (π.χ. initializeCanvases(), initSubshellsCanvas(), κ.ά.)
+        })
+        .catch(err => console.error('Σφάλμα φόρτωσης elements:', err));
+    }
+    function initPeriodsCanvas() {
+      // Υλοποίηση για αρχικοποίηση του καμβά του Periods (όπως στον αρχικό κώδικα)
+    }
+    function initGroupsCanvases() {
+      // Υλοποίηση για αρχικοποίηση των καμβάδων groups (όπως στον αρχικό κώδικα)
+    }
+    function initSubshellsCanvas() {
+      // Υλοποίηση για αρχικοποίηση του καμβά των subshells (όπως στον αρχικό κώδικα)
+    }
+    
     /* ================================================================
        ΝΕΑ ΛΟΓΙΚΗ: Φόρτωση του positions.json και ενημέρωση των καμβάδων
     ============================================================== */
     let positionsData = null;
-
     function loadPositions() {
       fetch('positions.json')
         .then(response => response.json())
@@ -240,14 +262,12 @@
         })
         .catch(error => console.error('Σφάλμα φόρτωσης positions:', error));
     }
-
-    // Η συνάρτηση αυτή ενημερώνει τις θέσεις των καμβάδων βάσει των τιμών στο positions.json
     function updateSectors(mode) {
       if (!positionsData) {
         console.warn('Δεν έχουν φορτωθεί οι θέσεις.');
         return;
       }
-      // Mapping: συνδέουμε το ID κάθε καμβά με το αντίστοιχο κλειδί στο positions.json
+      // Mapping: κάθε καμβάς αντιστοιχεί σε κλειδί στο positions.json
       const canvasMapping = {
         'canvasS': '1',
         'canvasF': '2',
@@ -273,26 +293,29 @@
         }
       });
     }
-
+    
     /* ================================================================
-       Event Listeners για τα κουμπιά
+       Αρχικοποίηση κατά το DOMContentLoaded
     ============================================================== */
     document.addEventListener("DOMContentLoaded", function() {
       loadPositions();
-      // Εδώ καλούνται και οι υπόλοιπες συναρτήσεις αρχικοποίησης της εφαρμογής
-      // π.χ. loadElements(), initPeriodsCanvas(), initGroupsCanvases(), κ.ά.
+      // Κλήση των συναρτήσεων αρχικοποίησης της εφαρμογής (αν ορίζονται)
+      if (typeof loadElements === 'function') loadElements();
+      if (typeof initPeriodsCanvas === 'function') initPeriodsCanvas();
+      if (typeof initGroupsCanvases === 'function') initGroupsCanvases();
+      if (typeof initSubshellsCanvas === 'function') initSubshellsCanvas();
       
+      // Καταχώρηση event listeners στα κουμπιά
       document.getElementById("nextElement").addEventListener("click", function() {
         updateSectors('expanded');
       });
-
       document.getElementById("fillAll").addEventListener("click", function() {
         updateSectors('expanded');
       });
-
       document.getElementById("toggleFBlock").addEventListener("click", function() {
         updateSectors('collapsed');
       });
+      // Μπορείτε να προσθέσετε και άλλες ενέργειες (π.χ. reset) αν χρειάζεται.
     });
   </script>
 </body>
