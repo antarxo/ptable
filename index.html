@@ -105,25 +105,35 @@
     }
 
     // Συνάρτηση για την απεικόνιση των στοιχείων για κάθε block (s, f, d, p)
-    function drawGroupedPositions(groupedData) {
-      // Διαφορετικά χρώματα για κάθε τομέα για οπτική διάκριση
-      const colors = { s: color(255, 100, 100), f: color(100, 255, 100), d: color(100, 100, 255), p: color(255, 255, 100) };
-      for (let group in groupedData) {
-        let groupItems = groupedData[group];
-        for (let key in groupItems) {
-          let pos = groupItems[group][key] || groupItems[key]; // Απρόβλεπτη περίπτωση, αλλά προσοχή στα δεδομένα
-          // Σε αυτήν την περίπτωση, απλά σχεδιάζουμε το ορθογώνιο στη θέση του pos.
-          fill(colors[group]);
-          stroke(0);
-          rect(pos.x, pos.y, pos.width, pos.height);
-          // Εμφάνιση του key στο ορθογώνιο
-          fill(0);
-          noStroke();
-          textSize(10);
-          text(key, pos.x + 2, pos.y + 12);
-        }
-      }
+// Συνάρτηση για την απεικόνιση των στοιχείων για κάθε block (s, f, d, p)
+function drawGroupedPositions(groupedData) {
+  console.log("Grouped Data:", groupedData);  // Debugging: δες αν λείπει κάποιο group
+
+  // Διαφορετικά χρώματα για κάθε τομέα για οπτική διάκριση
+  const colors = { s: color(255, 100, 100), f: color(100, 255, 100), d: color(100, 100, 255), p: color(255, 255, 100) };
+  
+  for (let group in groupedData) {
+    let groupItems = groupedData[group];
+    
+    if (!groupItems) continue;  // Αν δεν υπάρχουν στοιχεία, παράβλεψέ το group
+    
+    for (let key in groupItems) {
+      let pos = groupItems[key];  // Διόρθωση στην πρόσβαση
+      if (!pos) continue;  // Αν για κάποιο λόγο δεν υπάρχει το pos, αγνόησέ το
+      
+      fill(colors[group]);
+      stroke(0);
+      rect(pos.x, pos.y, pos.width, pos.height);
+      
+      // Εμφάνιση του key στο ορθογώνιο
+      fill(0);
+      noStroke();
+      textSize(10);
+      text(key, pos.x + 2, pos.y + 12);
     }
+  }
+}
+
   </script>
 </body>
 </html>
