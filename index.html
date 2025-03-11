@@ -168,19 +168,30 @@
       });
     }
 
-    function drawElements(p, block) {
-      let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-      elements.filter(e => e.block === block).forEach(e => {
-        let pos = calculateRelativePosition(e, block);
-        p.fill(colors[block] || "#CCCCCC");
-        p.rect(pos.x, pos.y, 40, 40, 5);
-        p.fill(0);
-        p.textSize(13);
-        p.textStyle(p.BOLD);
-        p.textAlign(p.CENTER, p.CENTER);
-        p.text(e.number, pos.x + 20, pos.y + 20);
-      });
-    }
+function drawElements(p, block) {
+  let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
+  const cellWidth = 40, cellHeight = 40, cellRadius = 5;
+  elements.filter(e => e.block === block).forEach(e => {
+    let pos = calculateRelativePosition(e, block);
+    
+    // Ζωγραφίζουμε τη σκιά (με ημιδιαφανές μαύρο)
+    p.noStroke();
+    p.fill(0, 50);
+    p.rect(pos.x + 3, pos.y + 3, cellWidth, cellHeight, cellRadius);
+    
+    // Ζωγραφίζουμε το κυρίως κελί
+    p.fill(colors[block] || "#CCCCCC");
+    p.rect(pos.x, pos.y, cellWidth, cellHeight, cellRadius);
+    
+    // Ζωγραφίζουμε το κείμενο
+    p.fill(0);
+    p.textSize(13);
+    p.textStyle(p.BOLD);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.text(e.number, pos.x + cellWidth / 2, pos.y + cellHeight / 2);
+  });
+}
+
 
     // Το κουμπί "Συμπλήρωσε" δημιουργεί όλα τα canvases
     document.getElementById('fillAll').addEventListener('click', function() {
