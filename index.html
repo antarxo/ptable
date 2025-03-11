@@ -84,6 +84,10 @@
     // Ορίζουμε το τρέχον mode: "expanded" ή "collapsed"
     let currentMode = "expanded";
 
+    // Ορισμός διαστάσεων background για κάθε mode
+    const expandedBackground = { width: "1412px", height: "368px" };
+    const collapsedBackground  = { width: "827px",  height: "460px" };
+
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
@@ -117,14 +121,27 @@
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
-    // Τροποποιημένη λειτουργία για τον background καμβά
+    // Αρχική διαμόρφωση background canvas ανάλογα με το mode
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "17px";
       bg.style.top = "55px";
-      bg.style.width = "827px";  // Νέο πλάτος
-      bg.style.height = "458px"; // Νέο ύψος
+      // Χρησιμοποιούμε τις διαστάσεις του expanded mode ως default
+      bg.style.width = expandedBackground.width;
+      bg.style.height = expandedBackground.height;
       bg.style.opacity = "1";
+    }
+
+    // Συνάρτηση για ενημέρωση διαστάσεων background ανάλογα με το mode
+    function updateBackgroundDimensions() {
+      let bg = document.getElementById("canvasTableBackground");
+      if(currentMode === "collapsed") {
+        bg.style.width = collapsedBackground.width;
+        bg.style.height = collapsedBackground.height;
+      } else {
+        bg.style.width = expandedBackground.width;
+        bg.style.height = expandedBackground.height;
+      }
     }
 
     function initGroupsCanvases() {
@@ -241,20 +258,13 @@
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Για το block f προσθέτουμε μετατόπιση 15 δεξιά
-        if(block === "f") {
-          container.style.left = (offset.minX + deltaS + 15) + "px";
-          // Η θέση του f τομέα χαμηλώνεται κατά 60 (top αυξάνεται κατά 60)
-          let referenceBottom = sectorsTop + blockOffsets["s"].height;
-          container.style.top = (referenceBottom - offset.height + 60) + "px";
+        // Κανονική τοποθέτηση χωρίς πρόσθετες μετατοπίσεις για το f
+        container.style.left = (offset.minX + deltaS) + "px";
+        if(block === "s" || block === "p") {
+          container.style.top = sectorsTop + "px";
         } else {
-          container.style.left = (offset.minX + deltaS) + "px";
-          if (block === "s" || block === "p") {
-            container.style.top = sectorsTop + "px";
-          } else {
-            let referenceBottom = sectorsTop + blockOffsets["s"].height;
-            container.style.top = (referenceBottom - offset.height) + "px";
-          }
+          let referenceBottom = sectorsTop + blockOffsets["s"].height;
+          container.style.top = (referenceBottom - offset.height) + "px";
         }
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
@@ -302,6 +312,8 @@
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
       // Ενημέρωση του τρέχοντος mode
       currentMode = isCollapsed ? "collapsed" : "expanded";
+      // Ενημέρωση διαστάσεων background ανάλογα με το mode
+      updateBackgroundDimensions();
       // Επαναϋπολογισμός και σχεδίαση με βάση το νέο mode
       initializeSectorsCanvas();
       // Ενημέρωση θέσεων ομάδων βάσει του νέου mode:
