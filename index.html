@@ -2,21 +2,21 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Σωστή Ευθυγράμμιση</title>
+  <title>Περιοδικός Πίνακας - Νέα Τοποθέτηση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body { font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
     .canvas { position: absolute; background: transparent; transition: all 0.5s ease-in-out; }
-    /* Αντί για display none, αρχικά κρύβουμε με opacity */
+    /* Χρησιμοποιούμε opacity για εμφάνιση/απόκρυψη, χωρίς πρόσθετα offsets */
     #canvasTableBackground {
       position: absolute; background: white; border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 3px 3px rgba(0,0,0,0.2); z-index: -10;
-      opacity: 0;
+      opacity: 1;
     }
-    /* Αρχικά κρυφά τα canvas για Ομάδες και Περιόδους */
+    /* Αρχικά οι περίοδοι και οι ομάδες εμφανίζονται κανονικά */
     #canvasPeriods, #canvasGroups {
-      opacity: 0;
+      opacity: 1;
     }
     #buttonPanel {
       position: fixed; bottom: 20px; right: 20px; z-index: 100;
@@ -47,15 +47,15 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let isTableFilled = false; // Ελέγχουμε αν έχει ήδη συμπληρωθεί
+    let isTableFilled = false; // Έλεγχος για αποφυγή πολλαπλής δημιουργίας
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
       computeBlockOffsets();
-      // Εμφάνιση background αμέσως, αλλά μέσω opacity
       initializeBackgroundCanvas();
-      // Αρχικά δεν δημιουργούνται τα canvas για Περιόδους και Ομάδες
+      initializePeriodsCanvas();
+      initializeGroupsCanvas();
     }
 
     function computeBlockOffsets() {
@@ -85,15 +85,27 @@
       if (isTableFilled) return;
       isTableFilled = true;
 
+      // Οριζόντια μετατόπιση: 
+      // Το δεξί όριο των περιόδων = (positions.expanded["1"].x - 55 + 40)
+      // Έτσι, ο νέος ορισμός για το left του s είναι:
+      let periodsLeft = positions.expanded["1"].x - 55;
+      let periodsRight = periodsLeft + 40;
+      let deltaS = periodsRight - blockOffsets["s"].minX;
+
+      // Κατακόρυφη μετατόπιση:
+      // Ορίζουμε ότι το κάτω όριο των ομάδων (top 5px κάτω από το background top + 40px ύψος ομάδων) είναι 95px.
+      // Υπολογίζουμε το global min y μεταξύ όλων των τομέων.
+      let globalMin = Math.min(blockOffsets["s"].minY, blockOffsets["p"].minY, blockOffsets["d"].minY, blockOffsets["f"].minY);
+      let targetTop = 95; // (background top 50 + 5 + 40)
+      let deltaY = targetTop - globalMin;
+
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
-
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-
-        // Προσθέτουμε 42px στο left και 47px στο top
-        container.style.left = (offset.minX + 42) + "px";
-        container.style.top = (offset.minY + 47) + "px";
+        // Εφαρμόζουμε οριζόντια μετατόπιση ως προς το s και κατακόρυφη ως προς το global min
+        container.style.left = (offset.minX + deltaS) + "px";
+        container.style.top = (offset.minY + deltaY) + "px";
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
 
@@ -115,9 +127,10 @@
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(11); // Ορισμός μεγέθους γραμματοσειράς στα 11
+        p.textSize(13);      // Γραμματοσειρά 13
+        p.textStyle(p.BOLD);  // Έντονη γραμματοσειρά
         p.textAlign(p.CENTER, p.CENTER);
-        p.text(e.number, pos.x + 20, pos.y + 25);
+        p.text(e.number, pos.x + 20, pos.y + 20);
       });
     }
 
@@ -128,26 +141,25 @@
           canvas.parent("canvasPeriods");
 
           let container = document.getElementById("canvasPeriods");
-          // Προσθέτουμε 42px στο left και 47px στο top
-          container.style.left = (positions.expanded["1"].x - 55 + 42) + "px";
-          container.style.top = (positions.expanded["1"].y + 47) + "px";
+          // Θέτουμε τις αρχικές θέσεις όπως στο αρχείο
+          container.style.left = positions.expanded["1"].x - 55 + "px";
+          container.style.top = positions.expanded["1"].y + "px";
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(11); // Ορισμός γραμματοσειράς στα 11
+          p.textSize(13);
           p.textStyle(p.BOLD);
 
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(0, i * 42, 40, 40);
+            // Σχεδιάζουμε τα ορθάγωνα με 5px από το αριστερό όριο
+            p.rect(5, i * 42, 35, 40);
             p.fill(0);
-            p.text(periodLabels[i], 20, i * 42 + 20);
+            p.text(periodLabels[i], 5 + 35/2, i * 42 + 20);
           }
         };
       });
-      // Εμφάνιση με χρήση opacity
-      document.getElementById("canvasPeriods").style.opacity = "1";
     }
 
     function initializeGroupsCanvas() {
@@ -157,13 +169,14 @@
           canvas.parent("canvasGroups");
 
           let container = document.getElementById("canvasGroups");
-          // Προσθέτουμε 42px στο left και 47px στο top
-          container.style.left = (positions.expanded["3"].x + 42) + "px";
-          container.style.top = (positions.expanded["3"].y - 55 + 47) + "px";
+          // Ορίζουμε το top 5px κάτω από το πάνω όριο του background (50px + 5 = 55px)
+          container.style.top = "55px";
+          // Για το left, διατηρούμε την αρχική τιμή
+          container.style.left = positions.expanded["3"].x + "px";
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(11); // Ορισμός γραμματοσειράς στα 11
+          p.textSize(13);
           p.textStyle(p.BOLD);
 
           for (let i = 0; i < 18; i++) {
@@ -175,26 +188,20 @@
           }
         };
       });
-      // Εμφάνιση με χρήση opacity
-      document.getElementById("canvasGroups").style.opacity = "1";
     }
 
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      // Προσθέτουμε 42px στο left και 47px στο top
-      bg.style.left = "52px"; // 10 + 42
-      bg.style.top = "97px";  // 50 + 47
+      // Επαναφέρουμε τις αρχικές τιμές
+      bg.style.left = "10px";
+      bg.style.top = "50px";
       bg.style.width = "1412px";
       bg.style.height = "368px";
-      // Αντί για display, ορίζουμε το opacity σε 1
       bg.style.opacity = "1";
     }
 
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeCanvases();
-      // Τώρα, μετά τη συμπλήρωση, δημιουργούνται και εμφανίζονται τα canvas για Ομάδες και Περιόδους
-      initializePeriodsCanvas();
-      initializeGroupsCanvas();
     });
 
     window.addEventListener('load', loadData);
