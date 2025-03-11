@@ -2,15 +2,13 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας με Σχετικές Θέσεις Στοιχείων</title>
-  <link rel="icon" href="data:,">
+  <title>Περιοδικός Πίνακας με Σταθερές Σχετικές Θέσεις</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
     .canvas { position: absolute; background: transparent; transition: all 0.5s ease-in-out; }
     #buttonPanel { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
     #buttonPanel button { background-color: #008CBA; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
-    #buttonPanel button:hover { background-color: #005f75; }
   </style>
 </head>
 <body>
@@ -29,55 +27,57 @@
   <script>
     let elements = [];
     let positions = {};
-    let blockOffsets = {}; // Αποθήκευση minX, minY για κάθε block
+    let blockOffsets = {}; // minX, minY για κάθε block (σταθερό μετά την αρχική φόρτωση)
 
-    // Φόρτωση δεδομένων
+    // 🔹 1. Φόρτωση δεδομένων
     async function loadData() {
-      const elementsResponse = await fetch('elements.json');
-      elements = await elementsResponse.json();
-
-      const positionsResponse = await fetch('positions.json');
-      positions = await positionsResponse.json();
-
+      elements = await (await fetch('elements.json')).json();
+      positions = await (await fetch('positions.json')).json();
+      
+      computeBlockOffsets(); // Σταθεροποιούμε τα offsets
       initializeCanvases();
     }
 
-    // Υπολογισμός offset για κάθε block (βρίσκουμε το minX, minY)
-    function computeBlockOffset(block) {
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      Object.keys(positions.expanded).forEach(num => {
-        let e = elements.find(el => el.number == num);
-        if (e && e.block === block) {
-          let pos = positions.expanded[num];
-          minX = Math.min(minX, pos.x);
-          minY = Math.min(minY, pos.y);
-          maxX = Math.max(maxX, pos.x + pos.width);
-          maxY = Math.max(maxY, pos.y + pos.height);
-        }
+    // 🔹 2. Υπολογισμός των minX, minY σταθερά κατά την πρώτη φόρτωση
+    function computeBlockOffsets() {
+      ["s", "p", "d", "f"].forEach(block => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        Object.keys(positions.expanded).forEach(num => {
+          let e = elements.find(el => el.number == num);
+          if (e && e.block === block) {
+            let pos = positions.expanded[num];
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, pos.y);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, pos.y + pos.height);
+          }
+        });
+        blockOffsets[block] = { minX, minY, width: maxX - minX, height: maxY - minY };
+        console.log(`📌 Block ${block} offsets:`, blockOffsets[block]);
       });
-      blockOffsets[block] = { minX, minY, width: maxX - minX, height: maxY - minY };
     }
 
-    // Υπολογισμός σχετικών θέσεων εντός του καμβά
+    // 🔹 3. Υπολογισμός σχετικών θέσεων εντός του καμβά
     function calculateRelativePosition(element, block) {
       let pos = positions.expanded[element.number];
       let offset = blockOffsets[block];
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
-    // Αρχικοποίηση των καμβάδων
+    // 🔹 4. Αρχικοποίηση καμβάδων
     function initializeCanvases() {
       ["s", "p", "d", "f"].forEach(block => {
-        computeBlockOffset(block);
         let offset = blockOffsets[block];
 
-        // Δημιουργία καμβά
+        // Διαγραφή υπάρχοντος περιεχομένου
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+
         new p5(function (p) {
           p.setup = function () {
             let canvas = p.createCanvas(offset.width, offset.height);
             canvas.parent("canvas" + block.toUpperCase());
 
-            let container = document.getElementById("canvas" + block.toUpperCase());
             container.style.left = offset.minX + "px";
             container.style.top = offset.minY + "px";
             container.style.width = offset.width + "px";
@@ -89,11 +89,13 @@
       });
     }
 
-    // Σχεδίαση των στοιχείων εντός των καμβάδων
+    // 🔹 5. Σχεδίαση των στοιχείων εντός των καμβάδων
     function drawElements(p, block) {
       elements.filter(e => e.block === block).forEach(e => {
         let pos = calculateRelativePosition(e, block);
         let color = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" }[block];
+
+        console.log(`🎨 Στοιχείο ${e.number} (${e.symbol}): Σχετική θέση x=${pos.x}, y=${pos.y}`);
 
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
@@ -104,14 +106,14 @@
       });
     }
 
-    // Φόρτωση δεδομένων κατά την εκκίνηση
-    window.addEventListener('load', loadData);
-
-    // Συμπλήρωση όλων των στοιχείων
+    // 🔹 6. Συμπλήρωση όλων των στοιχείων
     document.getElementById('fillAll').addEventListener('click', function() {
+      console.log("🔄 Επανασχεδίαση όλων των στοιχείων...");
       initializeCanvases();
     });
 
+    // 🔹 7. Φόρτωση δεδομένων κατά την εκκίνηση
+    window.addEventListener('load', loadData);
   </script>
 
 </body>
