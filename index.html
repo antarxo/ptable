@@ -74,7 +74,7 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let globalShift = 0; 
+    let tableShiftX = 0; // ✅ Global μετατόπιση δεξιά
     let isTableFilled = false;
     let groupOffsetY = -15; // ✅ Οι ομάδες πάντα 15px πιο ψηλά
 
@@ -104,12 +104,7 @@
     }
 
     function computeGlobalShift() {
-      let globalMin = Infinity;
-      Object.keys(positions.expanded).forEach(num => {
-        let pos = positions.expanded[num];
-        globalMin = Math.min(globalMin, pos.x);
-      });
-      globalShift = (positions.expanded["1"].x - 13) - globalMin;
+      tableShiftX = positions.expanded["1"].x - 13; // ✅ Σταθερή μετατόπιση
     }
 
     function initializeCanvases() {
@@ -120,11 +115,11 @@
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        container.style.left = (offset.minX + globalShift) + "px";
+        container.style.left = (offset.minX + tableShiftX) + "px"; // ✅ Χρήση global μετατόπισης
         container.style.top = offset.minY + "px";
         container.style.width = offset.width + "px";
         container.style.height = offset.height + "px";
-        container.style.opacity = "1"; // ✅ Εμφανίζεται σταδιακά με opacity
+        container.style.opacity = "1"; // ✅ Εμφάνιση με opacity
   
         new p5(function(p) {
           p.setup = function () {
@@ -150,6 +145,7 @@
           container.style.top = positions.expanded["1"].y + "px";
           container.style.width = "42px";
           container.style.height = "292px";
+          container.style.opacity = "1"; // ✅ Οι περίοδοι είναι πλήρως ορατές
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
@@ -170,7 +166,7 @@
         let groupId = "canvas" + group + "_groups";
         let block = group.toLowerCase();
         let container = document.getElementById(groupId);
-        container.style.left = (blockOffsets[block].minX + globalShift) + "px";
+        container.style.left = (blockOffsets[block].minX + tableShiftX) + "px"; // ✅ Χρήση global shift
         container.style.top = (78 + groupOffsetY) + "px";
         container.style.opacity = "1"; // ✅ Εμφανίζονται σταδιακά
       });
