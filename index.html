@@ -14,7 +14,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* ==================== Τίτλος και Υπογραφή ==================== */
+    /* Τίτλος και υπογραφή */
     #title {
       position: absolute;
       top: 20px;
@@ -34,7 +34,7 @@
       margin-left: 10px;
       vertical-align: middle;
     }
-    /* ==================== Background Canvas ==================== */
+    /* Background canvas */
     #canvasTableBackground {
       position: absolute;
       background: white;
@@ -44,7 +44,7 @@
       display: none;
       transition: all 0.8s ease;
     }
-    /* ==================== Καμβάδες ==================== */
+    /* Καμβάδες */
     #canvasPeriods {
       position: absolute;
       left: 31px;
@@ -63,7 +63,7 @@
       transition: all 0.5s ease-in-out;
       transform: translateY(-10px);
     }
-    /* ==================== Panels (Info Tables) ==================== */
+    /* Panels */
     #infoPanelFull, #infoPanelCollapsed {
       background: #fff;
       border: 2px solid #333;
@@ -81,7 +81,6 @@
       top: 443px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
     }
-    /* ==================== Panels (Collapsed) ==================== */
     #infoPanelCollapsed {
       display: none;
       flex-direction: column;
@@ -92,26 +91,7 @@
       transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.3s ease;
       opacity: 1;
     }
-    #leftPanelFull { width: 200px; }
-    #remarksFull { width: calc(100% - 200px); }
-    #remarksFull .upper-right { display: flex; flex-direction: row; }
-    #remarksFull .upper-right > .subshells-col { width: 70%; text-align: left; }
-    #remarksFull .upper-right > .shells-msg-col { width: 30%; text-align: left; }
-    #leftPanelCollapsed, #remarksCollapsed { width: 100%; }
-    #remarksCollapsed .right-wrapper { display: flex; flex-direction: column; }
-    /* ==================== Balloon (Subshells) ==================== */
-    #canvasSubshells {
-      position: absolute;
-      background: #fff;
-      border: 1px solid #333;
-      border-radius: 10px;
-      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
-      padding: 10px;
-      z-index: 150;
-      display: none;
-      transition: all 0.2s ease;
-    }
-    /* ==================== Buttons ==================== */
+    /* Κουμπιά */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -132,35 +112,19 @@
     }
     button:hover { background-color: #005f75; }
     #toggleFBlock.active { background-color: #e68a00; }
-    /* ==================== Χρώματα Blocks ==================== */
-    .s-block { background: #FF477E !important; }
-    .p-block { background: #26FF31 !important; }
-    .d-block { background: #3F99FF !important; }
-    .f-block { background: #FFD051 !important; }
-    /* ==================== Θέσεις Καμβάδων στο Full Mode ==================== */
-    .full #canvasS { top: 120px; left: 75px; z-index: 1; }
-    .full #canvasF { top: 120px; left: 159px; width: 588px; z-index: 2; }
-    .full #canvasD { top: 120px; left: 159px; width: 420px; z-index: 3; }
-    .full #canvasP { top: 120px; left: 159px; width: 252px; z-index: 4; }
-    body.collapsed #canvasF { top: 220px; }
-    /* ==================== Κλάση για Έμφαση (Groups σε Fill All) ==================== */
-    .emphasized {
-      border: 2px solid #333;
-      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
-    }
   </style>
 </head>
 <body class="full">
-  <!-- ==================== Τίτλος με Υπογραφή ==================== -->
+  <!-- Τίτλος με υπογραφή -->
   <div id="title">
     Διαδραστική κατασκευή του Περιοδικού Πίνακα
     <span id="signature">2025, Created by A. Archontoulis</span>
   </div>
   
-  <!-- ==================== Background Canvas ==================== -->
+  <!-- Background Canvas -->
   <div id="canvasTableBackground"></div>
   
-  <!-- ==================== Canvases ==================== -->
+  <!-- Canvases -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -171,7 +135,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- ==================== Panels ==================== -->
+  <!-- Panels -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -181,10 +145,10 @@
     <div id="remarksCollapsed"></div>
   </div>
   
-  <!-- ==================== Balloon (Subshells) ==================== -->
+  <!-- Balloon (Subshells) -->
   <div id="canvasSubshells" class="canvas"></div>
   
-  <!-- ==================== Buttons ==================== -->
+  <!-- Buttons -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -193,12 +157,7 @@
   </div>
   
   <script>
-    /* ================================================================
-       Υπάρχοντες global μεταβλητές και συναρτήσεις της εφαρμογής
-       (π.χ. drawElements, loadElements, initPeriodsCanvas, initGroupsCanvases, initSubshellsCanvas, κ.ά.)
-       πρέπει να παραμείνουν όπως στον αρχικό σας κώδικα.
-       Εδώ υποθέτουμε ότι οι ορισμοί τους υπάρχουν στο ίδιο αρχείο.
-    ============================================================== */
+    // --- Παράδειγμα ορισμών συναρτήσεων και global μεταβλητών ---
     let elements = [];
     let currentZ = 0;
     let fillAllPressed = false;
@@ -225,49 +184,50 @@
       }
     };
 
-    // Οι συναρτήσεις loadElements(), initPeriodsCanvas(), initGroupsCanvases(), initSubshellsCanvas(), κλπ.
-    // παραμένουν όπως ήταν στον αρχικό κώδικα σας.
-    // Για παράδειγμα:
+    // --- Εδώ θα έπρεπε να υπάρχουν και οι υπόλοιπες συναρτήσεις (loadElements, initPeriodsCanvas, κλπ.)
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
         .then(data => {
           elements = data.sort((a, b) => Number(a.number) - Number(b.number));
-          // Εδώ καλείται και η αρχικοποίηση των καμβάδων
-          // (π.χ. initializeCanvases(), initSubshellsCanvas(), κ.ά.)
+          console.log("Elements loaded.");
+          // Κλήσεις αρχικοποίησης καμβάδων (αν υπάρχουν)
         })
         .catch(err => console.error('Σφάλμα φόρτωσης elements:', err));
     }
     function initPeriodsCanvas() {
-      // Υλοποίηση για αρχικοποίηση του καμβά του Periods (όπως στον αρχικό κώδικα)
+      // Αρχικοποίηση του canvas για τα Periods
+      console.log("initPeriodsCanvas called");
     }
     function initGroupsCanvases() {
-      // Υλοποίηση για αρχικοποίηση των καμβάδων groups (όπως στον αρχικό κώδικα)
+      // Αρχικοποίηση των καμβάδων των groups
+      console.log("initGroupsCanvases called");
     }
     function initSubshellsCanvas() {
-      // Υλοποίηση για αρχικοποίηση του καμβά των subshells (όπως στον αρχικό κώδικα)
+      // Αρχικοποίηση του canvas για τα Subshells
+      console.log("initSubshellsCanvas called");
     }
     
-    /* ================================================================
-       ΝΕΑ ΛΟΓΙΚΗ: Φόρτωση του positions.json και ενημέρωση των καμβάδων
-    ============================================================== */
+    // --- ΝΕΑ ΛΟΓΙΚΗ: Φόρτωση του positions.json και ενημέρωση των καμβάδων ---
     let positionsData = null;
     function loadPositions() {
       fetch('positions.json')
         .then(response => response.json())
         .then(data => {
           positionsData = data;
-          // Ορίζουμε ως προεπιλογή το expanded mode
+          console.log("Positions data loaded:", positionsData);
+          // Θέτουμε ως προεπιλογή το expanded mode
           updateSectors('expanded');
         })
         .catch(error => console.error('Σφάλμα φόρτωσης positions:', error));
     }
     function updateSectors(mode) {
       if (!positionsData) {
-        console.warn('Δεν έχουν φορτωθεί οι θέσεις.');
+        console.warn('Positions data not loaded yet.');
         return;
       }
-      // Mapping: κάθε καμβάς αντιστοιχεί σε κλειδί στο positions.json
+      console.log("Updating sectors for mode:", mode);
+      // Mapping: το κάθε ID καμβά αντιστοιχεί σε ένα κλειδί στο positions.json
       const canvasMapping = {
         'canvasS': '1',
         'canvasF': '2',
@@ -285,6 +245,7 @@
         const pos = modePositions[posKey];
         const canvasEl = document.getElementById(canvasId);
         if (canvasEl && pos) {
+          console.log(`Setting ${canvasId}: x=${pos.x}, y=${pos.y}, width=${pos.width}, height=${pos.height}`);
           canvasEl.style.transition = "left 1.2s ease, top 1.2s ease";
           canvasEl.style.left = pos.x + "px";
           canvasEl.style.top = pos.y + "px";
@@ -294,28 +255,32 @@
       });
     }
     
-    /* ================================================================
-       Αρχικοποίηση κατά το DOMContentLoaded
-    ============================================================== */
+    // --- Αρχικοποίηση στο DOMContentLoaded ---
     document.addEventListener("DOMContentLoaded", function() {
       loadPositions();
-      // Κλήση των συναρτήσεων αρχικοποίησης της εφαρμογής (αν ορίζονται)
-      if (typeof loadElements === 'function') loadElements();
-      if (typeof initPeriodsCanvas === 'function') initPeriodsCanvas();
-      if (typeof initGroupsCanvases === 'function') initGroupsCanvases();
-      if (typeof initSubshellsCanvas === 'function') initSubshellsCanvas();
+      loadElements();
+      initPeriodsCanvas();
+      initGroupsCanvases();
+      initSubshellsCanvas();
       
-      // Καταχώρηση event listeners στα κουμπιά
+      // Event listeners για τα κουμπιά
       document.getElementById("nextElement").addEventListener("click", function() {
+        console.log("nextElement clicked");
         updateSectors('expanded');
       });
       document.getElementById("fillAll").addEventListener("click", function() {
+        console.log("fillAll clicked");
         updateSectors('expanded');
       });
       document.getElementById("toggleFBlock").addEventListener("click", function() {
+        console.log("toggleFBlock clicked");
         updateSectors('collapsed');
       });
-      // Μπορείτε να προσθέσετε και άλλες ενέργειες (π.χ. reset) αν χρειάζεται.
+      // Αν υπάρχει κουμπί reset, μπορείτε να προσθέσετε και αυτό
+      document.getElementById("reset").addEventListener("click", function() {
+        console.log("reset clicked");
+        // Ενέργειες reset, εάν υπάρχουν
+      });
     });
   </script>
 </body>
