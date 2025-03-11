@@ -19,12 +19,10 @@
       background: transparent; 
       transition: all 0.5s ease-in-out; 
     }
-    /* Σε κάθε canvas προσθέτουμε padding και CSS drop-shadow για να εμφανίζεται το εφέ */
+    /* Σε κάθε canvas προσθέτουμε padding και CSS drop-shadow */
     canvas {
       padding: 8px;
-      /* Το drop-shadow εφαρμόζεται στο συνολικό canvas, δίνοντας την αίσθηση ότι κάθε κελί έχει σκιά */
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
-      /* Αποτρέπουμε το clipping */
       overflow: visible;
     }
     #canvasTableBackground {
@@ -35,7 +33,7 @@
       z-index: -10;
       opacity: 1;
     }
-    /* Οι καμβάδες για τις ομάδες – όπως στο ALLtoDOM1, διαχωρισμένοι σε 3: S, D, P */
+    /* Καμβάδες ομάδων (S, D, P) */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute; 
       height: 40px; 
@@ -44,7 +42,7 @@
     #canvasPeriods, #canvasS, #canvasD, #canvasP, #canvasF {
       position: absolute;
     }
-    /* Ορισμός z-index για τους καμβάδες τομέων ώστε να ισχύει η σειρά s < f < d < p */
+    /* Z-index για τους καμβάδες τομέων: S < F < D < P */
     #canvasS { z-index: 10; }
     #canvasF { z-index: 20; }
     #canvasD { z-index: 30; }
@@ -68,7 +66,6 @@
 
   <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
-  <!-- Καμβάδες ομάδων (S, D, P) -->
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
@@ -89,8 +86,8 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let isTableFilled = false; // Για να δημιουργηθούν οι καμβάδες μία φορά
-    let isCollapsed = false; // Flag για collapsed/expanded mode
+    let isTableFilled = false;
+    let isCollapsed = false;
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
@@ -123,7 +120,6 @@
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
-    // Δημιουργία background canvas
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "16px";
@@ -133,11 +129,10 @@
       bg.style.opacity = "1";
     }
 
-    // Δημιουργία των καμβάδων ομάδων σύμφωνα με την υλοποίηση του ALLtoDOM1
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       
-      // S-block: δύο σειρές – πρώτη σειρά: νέοι αριθμοί (1,2), δεύτερη: παλιά (IA, IIA)
+      // S-block groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -154,10 +149,9 @@
         };
       });
       
-      // D-block: δύο σειρές – πρώτη: νέοι αριθμοί (3–12), δεύτερη: παλιά labels
+      // D-block groups: 10 κελιά x 42px = 420px
       new p5(function(p) {
         p.setup = function() {
-          // 10 κελιά x 42px = 420px
           let canvas = p.createCanvas(420, 40);
           canvas.parent("canvasD_groups");
           p.noStroke();
@@ -166,7 +160,7 @@
           p.textStyle(p.BOLD);
           p.background(240);
           for(let c = 0; c < 10; c++){
-            let x = c * 42; // Κάθε κελί ξεκινά κάθε 42px
+            let x = c * 42;
             p.text((c+3).toString(), x + 20, 10);
           }
           const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
@@ -177,10 +171,9 @@
         };
       });
       
-      // P-block: δύο σειρές – πρώτη: νέοι αριθμοί (13–18), δεύτερη: παλιά labels
+      // P-block groups: 6 κελιά x 42px = 252px
       new p5(function(p) {
         p.setup = function() {
-          // 6 κελιά x 42px = 252px
           let canvas = p.createCanvas(252, 40);
           canvas.parent("canvasP_groups");
           p.noStroke();
@@ -200,23 +193,24 @@
         };
       });
       
-      // Ενημέρωση θέσεων: ο κάθε καμβάς ομάδας παίρνει left ίσο με το left του αντίστοιχου τομέα 
-      // και top ίσο με το (top του background + 20px)
-      let bgTop = parseInt(document.getElementById("canvasTableBackground").style.top) || 50;
-      let sectors = ["S", "D", "P"];
-      sectors.forEach(sector => {
+      // Ενημέρωση θέσεων ομάδων:
+      // Το left του καμβά κάθε ομάδας είναι το left του αντίστοιχου καμβά τομέα
+      // Το top του καμβά κάθε ομάδας είναι το top του στοιχείου "1" + 40px.
+      ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         if(sectorCanvas && groupCanvas) {
           groupCanvas.style.left = sectorCanvas.style.left;
-          groupCanvas.style.top = (bgTop + 20) + "px";
+          // Χρησιμοποιούμε το top του στοιχείου "1" από το positions.expanded (αν υπάρχει) και προσθέτουμε 40px.
+          if(positions.expanded["1"]) {
+            groupCanvas.style.top = (positions.expanded["1"].y + 40) + "px";
+          }
         }
       });
       
       window.groupsInitialized = true;
     }
 
-    // Δημιουργία του canvas των περιόδων
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
@@ -230,7 +224,6 @@
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          // Ετικέτες περιόδων με λατικούς χαρακτήρες: "1K", "2L", "3M", "4N", "5X", "6O", "7P"
           const periodLabels = ["1K", "2L", "3M", "4N", "5X", "6O", "7P"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
@@ -242,7 +235,6 @@
       });
     }
 
-    // Δημιουργία των καμβάδων τομέων (s, p, d, f)
     function initializeSectorsCanvas() {
       if (!blockOffsets["s"]) {
         computeBlockOffsets();
@@ -292,6 +284,7 @@
       });
     }
 
+    // Κουμπί "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
@@ -302,18 +295,20 @@
       }
     });
 
+    // Κουμπί "Σύμπτυξε"/"Ανάπτυξε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
       initializeSectorsCanvas();
-      let bgTop = parseInt(document.getElementById("canvasTableBackground").style.top) || 50;
-      let sectors = ["S", "D", "P"];
-      sectors.forEach(sector => {
+      // Ενημέρωση θέσεων ομάδων βάσει των νέων κανόνων:
+      ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         if(sectorCanvas && groupCanvas) {
           groupCanvas.style.left = sectorCanvas.style.left;
-          groupCanvas.style.top = (bgTop + 20) + "px";
+          if(positions.expanded["1"]) {
+            groupCanvas.style.top = (positions.expanded["1"].y + 40) + "px";
+          }
         }
       });
     });
