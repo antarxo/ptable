@@ -236,7 +236,7 @@
     }
 
     // Δημιουργία των καμβάδων τομέων (s, p, d, f)
-   function initializeSectorsCanvas() {
+ function initializeSectorsCanvas() {
   // Έλεγχος αν υπάρχουν τα blockOffsets για το s
   if (!blockOffsets["s"]) {
     computeBlockOffsets();
@@ -264,15 +264,14 @@
     new p5(function(p) {
       p.setup = function() {
         let canvas = p.createCanvas(offset.width, offset.height);
-        // Αυξάνουμε τα όρια του καμβά ώστε να φαίνεται η σκιά
-        canvas.elt.width = offset.width + 8;
-        canvas.elt.height = offset.height + 8;
+        // Μην αλλάζουμε τις διαστάσεις του canvas ώστε να παραμείνουν τα κελιά 40x40
         canvas.parent("canvas" + block.toUpperCase());
         drawElements(p, block);
       };
     });
   });
 }
+
 
 
     function drawElements(p, block) {
