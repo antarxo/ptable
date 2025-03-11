@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας με Σωστή Ευθυγράμμιση</title>
+  <title>Περιοδικός Πίνακας - Σωστή Ευθυγράμμιση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -40,23 +40,16 @@
   <script>
     let elements = [];
     let positions = {};
-    let blockOffsets = {}; // minX, minY για κάθε block
+    let blockOffsets = {}; 
+    let isTableFilled = false; // ✅ Ελέγχουμε αν έχει ήδη συμπληρωθεί
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
-      
       computeBlockOffsets();
-      initializeCanvases();
       initializeBackgroundCanvas();
-
-      // Κλήση των περιόδων και ομάδων **μόνο όταν τα δεδομένα έχουν φορτωθεί**
-      if (positions.expanded["1"]) {
-        initializePeriodsCanvas();
-        initializeGroupsCanvas();
-      } else {
-        console.error("❌ Σφάλμα: Δεν φορτώθηκαν σωστά οι θέσεις των περιόδων και ομάδων!");
-      }
+      initializePeriodsCanvas();
+      initializeGroupsCanvas();
     }
 
     function computeBlockOffsets() {
@@ -83,6 +76,9 @@
     }
 
     function initializeCanvases() {
+      if (isTableFilled) return; // ✅ Αποτρέπουμε την αυτόματη συμπλήρωση
+      isTableFilled = true;
+
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
 
@@ -113,9 +109,9 @@
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(22); // 🔹 Μέγεθος γραμματοσειράς από newptablejson
+        p.textSize(20); // ✅ Ρύθμιση μεγέθους γραμματοσειράς όπως στο newptablejson
         p.textAlign(p.CENTER, p.CENTER);
-        p.text(e.number, pos.x + 20, pos.y + 20);
+        p.text(e.number, pos.x + 20, pos.y + 25);
       });
     }
 
@@ -126,7 +122,7 @@
           canvas.parent("canvasPeriods");
 
           let container = document.getElementById("canvasPeriods");
-          container.style.left = positions.expanded["1"].x - 50 + "px"; // Ευθυγράμμιση με πρώτο στοιχείο
+          container.style.left = positions.expanded["1"].x - 55 + "px";
           container.style.top = positions.expanded["1"].y + "px";
 
           p.noStroke();
@@ -152,8 +148,8 @@
           canvas.parent("canvasGroups");
 
           let container = document.getElementById("canvasGroups");
-          container.style.left = positions.expanded["3"].x + "px"; // Ευθυγράμμιση με πρώτο στοιχείο ομάδας
-          container.style.top = positions.expanded["3"].y - 50 + "px"; 
+          container.style.left = positions.expanded["3"].x + "px";
+          container.style.top = positions.expanded["3"].y - 55 + "px"; 
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
