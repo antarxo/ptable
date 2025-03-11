@@ -15,47 +15,51 @@
   <button id="toggleButton">Εμφάνιση Expanded</button>
   <script>
     let positions; // το αρχικό JSON από το αρχείο
-    let groupedExpanded, groupedCollapsed; // νέα αντικείμενα με ομαδοποιημένα στοιχεία
+    let groupedExpanded, groupedCollapsed; // αντικείμενα μετά το grouping
     let showExpanded = true;  // αρχικά δείχνει expanded
 
-    // Ορίζουμε τα όρια για κάθε τομέα βάσει x:
-    // s: x = 0 ή 42
-    // f: x από 84 έως 630
-    // d: x από 672 έως 1050
-    // p: x από 1092 έως 1302
-    function getGroup(x) {
-      if (x === 0 || x === 42) return "s";
-      else if (x >= 84 && x <= 630) return "f";
-      else if (x >= 672 && x <= 1050) return "d";
-      else if (x >= 1092 && x <= 1302) return "p";
-      return null;
-    }
-
-    // Ομαδοποιεί ένα σύνολο (expanded ή collapsed) σε s, f, d, p
-    function groupPositions(data) {
+    // Συνάρτηση ομαδοποίησης ανά κατάσταση με βάση τις γραμμές και τον αριθμό της στήλης
+    function groupState(state) {
+      // Αρχικοποιούμε τα blocks
       let grouped = { s: {}, f: {}, d: {}, p: {} };
-      // Για κάθε στοιχείο (key) στο data
-      for (let key in data) {
-        let pos = data[key];
-        let grp = getGroup(pos.x);
-        if (grp) {
-          // Κρατάμε το πρωτότυπο key για αναφορά
-          grouped[grp][key] = pos;
+      // Ομαδοποίηση κατά γραμμή (χρησιμοποιούμε την τιμή y ως κλειδί)
+      let rows = {};
+      for (let key in state) {
+        let pos = state[key];
+        let yKey = pos.y;  // υποθέτουμε ακριβείς τιμές για κάθε γραμμή
+        if (!rows[yKey]) rows[yKey] = [];
+        rows[yKey].push({ key: key, pos: pos });
+      }
+      // Για κάθε γραμμή, ταξινομούμε κατά x και αντιστοιχούμε την στήλη (column index)
+      for (let y in rows) {
+        let items = rows[y];
+        items.sort((a, b) => a.pos.x - b.pos.x);
+        for (let i = 0; i < items.length; i++) {
+          let colIndex = i + 1; // column index ξεκινάει από 1
+          let group;
+          if (colIndex <= 2) group = "s";
+          else if (colIndex <= 16) group = "f";
+          else if (colIndex <= 26) group = "d";
+          else if (colIndex <= 32) group = "p";
+          // Εάν υπάρχουν περισσότερες στήλες, αγνοούμε τις επιπλέον
+          if (group) {
+            grouped[group][items[i].key] = items[i].pos;
+          }
         }
       }
       return grouped;
     }
 
-    // Προφόρτωση του αρχείου JSON
+    // Φόρτωση του αρχείου JSON πριν από το setup
     function preload() {
       positions = loadJSON('positions.json');
     }
 
     function setup() {
-      createCanvas(1400, 320);
-      // Ομαδοποιούμε τα δεδομένα από expanded και collapsed
-      groupedExpanded = groupPositions(positions.expanded);
-      groupedCollapsed = groupPositions(positions.collapsed);
+      createCanvas(1400, 400);
+      // Ομαδοποίηση για κάθε κατάσταση
+      groupedExpanded = groupState(positions.expanded);
+      groupedCollapsed = groupState(positions.collapsed);
       
       console.log("Grouped Expanded:", groupedExpanded);
       console.log("Grouped Collapsed:", groupedCollapsed);
@@ -67,28 +71,27 @@
 
     function draw() {
       background(240);
-      // Εμφάνιση ανάλογα με την τιμή της showExpanded
+      // Εμφάνιση κατάστασης και ένδειξη πάνω στο canvas
+      fill(0);
+      textSize(16);
       if (showExpanded) {
-        drawGroupedPositions(groupedExpanded, color(255, 0, 0));
-        fill(0);
-        textSize(16);
         text("Expanded", 10, 20);
+        drawGroupedPositions(groupedExpanded);
       } else {
-        drawGroupedPositions(groupedCollapsed, color(0, 0, 255));
-        fill(0);
-        textSize(16);
         text("Collapsed", 10, 20);
+        drawGroupedPositions(groupedCollapsed);
       }
     }
 
-    // Συνάρτηση που σχεδιάζει ορθογώνια για κάθε ομάδα (s, f, d, p)
-    function drawGroupedPositions(groupedData, fillColor) {
-      // Για κάθε ομάδα (π.χ. s, f, d, p)
+    // Συνάρτηση που σχεδιάζει τα ορθογώνια για κάθε block (s, f, d, p)
+    function drawGroupedPositions(groupedData) {
+      // Ορισμός διαφορετικών χρωμάτων για κάθε block για οπτική διάκριση
+      const colors = { s: color(255, 100, 100), f: color(100, 255, 100), d: color(100, 100, 255), p: color(255, 255, 100) };
       for (let group in groupedData) {
         let groupItems = groupedData[group];
         for (let key in groupItems) {
           let pos = groupItems[key];
-          fill(fillColor);
+          fill(colors[group]);
           stroke(0);
           rect(pos.x, pos.y, pos.width, pos.height);
           // Εμφάνιση του key μέσα στο ορθογώνιο
@@ -100,7 +103,7 @@
       }
     }
 
-    // Εναλλαγή κατάστασης
+    // Εναλλαγή μεταξύ των καταστάσεων
     function toggleState() {
       showExpanded = !showExpanded;
       const btn = document.getElementById('toggleButton');
