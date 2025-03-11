@@ -288,9 +288,9 @@
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
+         initializeSectorsCanvas();       
+        initializePeriodsCanvas();       
         initGroupsCanvases();
-        initializePeriodsCanvas();
-        initializeSectorsCanvas();
         isTableFilled = true;
       }
     });
