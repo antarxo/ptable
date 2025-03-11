@@ -14,7 +14,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Εδώ περιλαμβάνονται τα υπόλοιπα στυλ για τον πίνακα, τους καμβάδες, τα panels και τα κουμπιά */
+    /* Εδώ συμπεριλαμβάνονται τα βασικά στυλ για το layout, τους καμβάδες, τα panels και τα κουμπιά */
     #title {
       position: absolute;
       top: 20px;
@@ -34,7 +34,7 @@
       margin-left: 10px;
       vertical-align: middle;
     }
-    /* Επιπλέον CSS για καμβάδες, panels, κουμπιά κ.λπ. */
+    /* Μπορείτε να προσθέσετε επιπλέον CSS για τους καμβάδες και τα panels */
   </style>
 </head>
 <body class="full">
@@ -119,7 +119,6 @@
 
     /* ================================================================
        Ορισμός της συνάρτησης drawPlaceholderBackground
-       Αυτή η συνάρτηση σχεδιάζει ένα placeholder background βασιζόμενο σε ένα στοιχείο (π.χ. το στοιχείο με αριθμό 3)
     ============================================================== */
     function drawPlaceholderBackground() {
       if(elements.length === 0) return;
@@ -142,19 +141,17 @@
     }
 
     /* ================================================================
-       calculatePosition: Επιστρέφει τη θέση ενός στοιχείου με βάση το JSON
+       calculatePosition: Επιστρέφει τη θέση ενός στοιχείου βάσει του JSON
     ============================================================== */
     function calculatePosition(e, block) {
-      // Επιλογή mode ανάλογα με την κλάση στο body: collapsed ή expanded
       let mode = document.body.classList.contains('collapsed') ? "collapsed" : "expanded";
       if(window.jsonPositions && window.jsonPositions[mode] && window.jsonPositions[mode][e.number]) {
          return { x: window.jsonPositions[mode][e.number].x, y: window.jsonPositions[mode][e.number].y };
       }
-      // Αν δεν υπάρχει καταχώρηση στο JSON, προσπαθούμε να χρησιμοποιήσουμε το "start"
       if(window.jsonPositions && window.jsonPositions["start"] && window.jsonPositions["start"][e.number]) {
          return { x: window.jsonPositions["start"][e.number].x, y: window.jsonPositions["start"][e.number].y };
       }
-      // Fallback: δυναμικός υπολογισμός θέσης
+      // Fallback: Δυναμικός υπολογισμός θέσης
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
       else if(block === 'f') { x = (e.col - 3) * 42; }
@@ -167,7 +164,7 @@
     }
     
     /* ================================================================
-       Συνάρτηση drawElements: Σχεδιάζει τα στοιχεία (κελιά) στο καμβά ανά block
+       drawElements: Σχεδιάζει τα στοιχεία (κελιά) σε κάθε καμβά
     ============================================================== */
     window.drawElements = function(p, block) {
       p.stroke(150);
@@ -194,7 +191,7 @@
         p.noStroke();
         p.fill("rgba(0,0,0,0.15)");
         p.rect(pos.x + 2, pos.y + 3, cellSize, cellSize, 5);
-        // Σχεδίαση κυρίως κελιού
+        // Κύριο σχέδιο κελιού
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(window.getBlockColor(e.block));
           p.textSize(16);
@@ -235,7 +232,54 @@
     };
 
     /* ================================================================
-       Συνάρτηση loadElements: Φορτώνει τα στοιχεία (elements.json)
+       initializeCanvases: Δημιουργεί καμβάδες για κάθε block χρησιμοποιώντας p5.js
+    ============================================================== */
+    function initializeCanvases() {
+      Object.keys(window.BLOCKS_CONFIG).forEach(function(block) {
+        new p5(function(p) {
+          p.setup = function() {
+            const config = window.BLOCKS_CONFIG[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+            canvas.parent("canvas" + block.toUpperCase());
+            // Ρυθμίσεις για το left του καμβά ανάλογα με την κατάσταση (collapsed/expanded)
+            if(document.body.classList.contains('collapsed')){
+              if(block === 's') { canvas.elt.style.left = "75px"; }
+              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
+              else if(block === 'p') { canvas.elt.style.left = "584px"; }
+            } else {
+              if(block === 's') { canvas.elt.style.left = "75px"; }
+              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "159px"; }
+            }
+            canvas.elt.style.height = config.rows * 42 + "px";
+            window.drawElements(p, block);
+          };
+        });
+      });
+    }
+
+    /* ================================================================
+       initSubshellsCanvas: Δημιουργεί ένα απλό καμβά για τα subshells (μπορείτε να το επεκτείνετε)
+    ============================================================== */
+    function initSubshellsCanvas() {
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(10, 40);
+          canvas.parent("canvasSubshells");
+          p.noLoop();
+        };
+      });
+    }
+
+    /* ================================================================
+       updateToggleButton: Απλή λειτουργία για ενεργοποίηση του κουμπιού
+    ============================================================== */
+    function updateToggleButton() {
+      let btn = document.getElementById('toggleFBlock');
+      if(btn) { btn.disabled = false; }
+    }
+
+    /* ================================================================
+       loadElements: Φορτώνει τα στοιχεία από elements.json
     ============================================================== */
     function loadElements() {
       fetch('elements.json')
@@ -251,14 +295,11 @@
     }
     window.loadElements = loadElements;
 
-    // Οι υπόλοιπες συναρτήσεις όπως initializeCanvases, initSubshellsCanvas, updateToggleButton,
-    // updateInfo, redrawAll κλπ., μπορούν να παραμείνουν όπως στο αρχικό αρχείο ή να προστεθούν εδώ.
-
     /* ================================================================
        Εκκίνηση & Global assignments
     ============================================================== */
     window.addEventListener('load', function() {
-       // Μπορείτε να προσθέσετε κώδικα για ενημέρωση panels, table background κλπ.
+       // Εδώ μπορείτε να προσθέσετε επιπλέον κώδικα για ενημέρωση panels κλπ.
     });
     loadElements();
     let ignoreCanvasClick = false;
