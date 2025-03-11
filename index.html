@@ -44,6 +44,11 @@
     #canvasPeriods, #canvasS, #canvasD, #canvasP, #canvasF {
       position: absolute;
     }
+    /* Ορισμός z-index για τους καμβάδες τομέων ώστε να ισχύει η σειρά s < f < d < p */
+    #canvasS { z-index: 10; }
+    #canvasF { z-index: 20; }
+    #canvasD { z-index: 30; }
+    #canvasP { z-index: 40; }
     /* Κουμπιά */
     #buttonPanel {
       position: fixed; bottom: 20px; right: 20px; z-index: 100;
@@ -225,7 +230,7 @@
           p.textSize(11); // Γραμματοσειρά 11
           p.textStyle(p.BOLD);
           // Νέες ετικέτες περιόδων με λατικούς χαρακτήρες: "1K", "2L", "3M", "4N", "5X", "6O", "7P"
-          const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η P", "7h Q"];
+          const periodLabels = ["1K", "2L", "3M", "4N", "5X", "6O", "7P"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
             // Κάθε κελί έχει διαστάσεις 40x40 (με offset 5 και ύψος 40)
