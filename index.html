@@ -218,7 +218,7 @@
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
-          container.style.left = (bgLeft + 10) + "px";
+          container.style.left = (bgLeft + 6) + "px";
           container.style.top = "110px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -243,7 +243,7 @@
           return;
         }
       }
-      let desiredLeftS = 70;
+      let desiredLeftS = 66;
       let deltaS = desiredLeftS - blockOffsets["s"].minX;
       let sectorsTop = 110;
       ["s", "p", "d", "f"].forEach(block => {
