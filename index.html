@@ -14,7 +14,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* ... (εδώ περιέχονται τα υπόλοιπα στυλ όπως στο αρχικό αρχείο) ... */
+    /* Εδώ περιλαμβάνονται τα υπόλοιπα στυλ για τον πίνακα, τους καμβάδες, τα panels και τα κουμπιά */
     #title {
       position: absolute;
       top: 20px;
@@ -34,7 +34,7 @@
       margin-left: 10px;
       vertical-align: middle;
     }
-    /* ... πρόσθετα CSS για καμβάδες, panels, κουμπιά κλπ ... */
+    /* Επιπλέον CSS για καμβάδες, panels, κουμπιά κ.λπ. */
   </style>
 </head>
 <body class="full">
@@ -118,15 +118,39 @@
       .catch(err => console.error("Σφάλμα φόρτωσης JSON:", err));
 
     /* ================================================================
+       Ορισμός της συνάρτησης drawPlaceholderBackground
+       Αυτή η συνάρτηση σχεδιάζει ένα placeholder background βασιζόμενο σε ένα στοιχείο (π.χ. το στοιχείο με αριθμό 3)
+    ============================================================== */
+    function drawPlaceholderBackground() {
+      if(elements.length === 0) return;
+      let element = elements.find(e => Number(e.number) === 3);
+      if(!element) return;
+      let canvasEl = document.getElementById("canvas" + element.block.toUpperCase());
+      if(!canvasEl) return;
+      let rect = canvasEl.getBoundingClientRect();
+      let pos = calculatePosition(element, element.block);
+      let left = rect.left + pos.x;
+      let top = rect.top + pos.y;
+      let bg = document.getElementById("canvasTableBackground");
+      if(bg) {
+         bg.style.left = left + "px";
+         bg.style.top = top + "px";
+         bg.style.width = "62px";
+         bg.style.height = "62px";
+         bg.style.display = "block";
+      }
+    }
+
+    /* ================================================================
        calculatePosition: Επιστρέφει τη θέση ενός στοιχείου με βάση το JSON
     ============================================================== */
     function calculatePosition(e, block) {
-      // Ελέγχουμε αν υπάρχει το JSON και έχει φορτωθεί
+      // Επιλογή mode ανάλογα με την κλάση στο body: collapsed ή expanded
       let mode = document.body.classList.contains('collapsed') ? "collapsed" : "expanded";
       if(window.jsonPositions && window.jsonPositions[mode] && window.jsonPositions[mode][e.number]) {
          return { x: window.jsonPositions[mode][e.number].x, y: window.jsonPositions[mode][e.number].y };
       }
-      // Αν δεν έχει φορτωθεί το JSON, προσπαθούμε να χρησιμοποιήσουμε το "start"
+      // Αν δεν υπάρχει καταχώρηση στο JSON, προσπαθούμε να χρησιμοποιήσουμε το "start"
       if(window.jsonPositions && window.jsonPositions["start"] && window.jsonPositions["start"][e.number]) {
          return { x: window.jsonPositions["start"][e.number].x, y: window.jsonPositions["start"][e.number].y };
       }
@@ -143,8 +167,7 @@
     }
     
     /* ================================================================
-       Υπόλοιπες συναρτήσεις (π.χ. drawElements, updateSectors, κλπ)
-       Οι αλλαγές είναι ανεπαίσθητες καθώς η νέα calculatePosition ενσωματώνει το JSON.
+       Συνάρτηση drawElements: Σχεδιάζει τα στοιχεία (κελιά) στο καμβά ανά block
     ============================================================== */
     window.drawElements = function(p, block) {
       p.stroke(150);
@@ -212,11 +235,8 @@
     };
 
     /* ================================================================
-       Ακολουθούν οι υπόλοιπες συναρτήσεις για ενημέρωση panels, redraw, κλπ.
-       (Οι υπόλοιπες λειτουργίες παραμένουν ως στο αρχικό αρχείο.)
+       Συνάρτηση loadElements: Φορτώνει τα στοιχεία (elements.json)
     ============================================================== */
-    // ... (συναρτήσεις updateSectors, setFixedGroupsPositions, updateBalloonPosition, drawSubshells, κ.λπ.)
-
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -231,14 +251,14 @@
     }
     window.loadElements = loadElements;
 
-    // Υπόλοιπες συναρτήσεις, όπως initPeriodsCanvas, initGroupsCanvases, updateInfo, redrawAll, κ.λπ.
-    // Παραλείπονται εδώ για συντομία αλλά μπορούν να παραμείνουν ως στο αρχικό σας αρχείο.
+    // Οι υπόλοιπες συναρτήσεις όπως initializeCanvases, initSubshellsCanvas, updateToggleButton,
+    // updateInfo, redrawAll κλπ., μπορούν να παραμείνουν όπως στο αρχικό αρχείο ή να προστεθούν εδώ.
 
     /* ================================================================
        Εκκίνηση & Global assignments
     ============================================================== */
     window.addEventListener('load', function() {
-       // Ενημέρωση panel, table background κλπ.
+       // Μπορείτε να προσθέσετε κώδικα για ενημέρωση panels, table background κλπ.
     });
     loadElements();
     let ignoreCanvasClick = false;
