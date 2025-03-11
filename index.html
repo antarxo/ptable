@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Λειτουργία "Συμπλήρωσε" (Expanded + Offsets)</title>
+  <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα - Απόλυτες Θέσεις JSON</title>
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -14,21 +14,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Debug: εμφάνιση dashed border στους καμβάδες */
-    .canvas {
-      position: absolute;
-      background: transparent;
-      border: 1px dashed red;
-      transition: all 0.5s ease-in-out;
-    }
-    #canvasTableBackground {
-      position: absolute;
-      background: rgba(255,255,255,0.8);
-      border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 3px 3px rgba(0,0,0,0.2);
-      z-index: -10;
-      display: none;
-    }
+    /* Τίτλος & Υπογραφή */
     #title {
       position: absolute;
       top: 20px;
@@ -48,18 +34,39 @@
       margin-left: 10px;
       vertical-align: middle;
     }
-    #infoPanelFull {
+    /* Canvases & Panels */
+    .canvas {
+      position: absolute;
+      background: transparent;
+      transition: all 0.5s ease-in-out;
+    }
+    #canvasTableBackground {
+      position: absolute;
+      background: white;
+      border: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 3px 3px rgba(0,0,0,0.2);
+      z-index: -10;
+      display: none;
+    }
+    /* Panels */
+    #infoPanelFull, #infoPanelCollapsed {
       background: #fff;
       border: 2px solid #333;
       border-radius: 8px;
       box-shadow: 0 3px 3px rgba(0,0,0,0.3);
       padding: 20px;
       position: absolute;
+      z-index: 40;
+      transition: left 0.8s ease 0.5s, top 0.8s ease 0.5s, width 0.8s ease 0.5s, opacity 0.8s ease 0.5s;
+      text-align: left;
+      opacity: 1;
+    }
+    #infoPanelFull {
       left: 20px;
       top: 443px;
       width: calc(100vw - var(--rightPanelWidth) - 105px);
-      z-index: 40;
     }
+    /* Button Panel */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -86,14 +93,14 @@
 </head>
 <body class="full">
   <div id="title">
-    Περιοδικός Πίνακας - Λειτουργία "Συμπλήρωσε" (Expanded + Offsets)
+    Διαδραστική κατασκευή του Περιοδικού Πίνακα
     <span id="signature">2025, Created by A. Archontoulis</span>
   </div>
   
   <!-- Background Canvas -->
   <div id="canvasTableBackground"></div>
   
-  <!-- Containers για τα blocks: Periods, Groups και τα κυρίως blocks (S, P, D, F) -->
+  <!-- Canvases για τις περιόδους, τις ομάδες και τα blocks -->
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -103,7 +110,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   
-  <!-- Panel για πληροφορίες -->
+  <!-- Panels -->
   <div id="infoPanelFull">
     <div id="leftPanelFull"></div>
     <div id="remarksFull"></div>
@@ -118,23 +125,16 @@
   </div>
   
   <script>
-    // Global constants για το πρόσθετο offset
-    const globalLeftOffset = 50;
-    const globalTopOffset = 52;
-    const cellSize = 40;
-    
+    // Global Variables
     let elements = [];
     let currentZ = 0;
     let fillAllPressed = false;
     let selectedElement = null;
     let flashActive = false;
     let lastClickedElement = null;
-    let subshellsP;
+    const cellSize = 40;
     
-    // Θα αποθηκεύουμε για κάθε block τα offsets που υπολογίζονται από το JSON
-    let blockOffsets = {}; // π.χ. { s: {minX, minY, maxX, maxY}, ... }
-    
-    // Configurations για τα blocks
+    // BLOCKS_CONFIG, BLOCK_COLORS και getBlockColor
     window.BLOCKS_CONFIG = {
       s: { cols: 2, rows: 7 },
       p: { cols: 6, rows: 7 },
@@ -158,7 +158,7 @@
       }
     };
     
-    // Dummy updateSectors (δεν εφαρμόζουμε shifting στο Expanded mode)
+    // Dummy updateSectors (δεν εφαρμόζεται επιπλέον shifting)
     window.updateSectors = function(state) {};
     
     // Φόρτωση του positions.json
@@ -167,31 +167,11 @@
       .then(response => response.json())
       .then(data => {
          window.jsonPositions = data;
-         console.log("JSON positions loaded:", data);
+         console.log("JSON positions loaded", data);
       })
       .catch(err => console.error("Σφάλμα φόρτωσης JSON:", err));
     
-    // Υπολογισμός του offset για κάθε block βάσει των τιμών στο JSON
-    function computeBlockOffset(block) {
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      elements.forEach(e => {
-        if(e.block === block && window.jsonPositions && window.jsonPositions.expanded) {
-          let pos = window.jsonPositions.expanded[e.number];
-          if(pos) {
-            if(pos.x < minX) minX = pos.x;
-            if(pos.y < minY) minY = pos.y;
-            if(pos.x + cellSize > maxX) maxX = pos.x + cellSize;
-            if(pos.y + cellSize > maxY) maxY = pos.y + cellSize;
-          }
-        }
-      });
-      if(minX === Infinity || minY === Infinity) {
-        return { minX: 0, minY: 0, maxX: cellSize, maxY: cellSize };
-      }
-      return { minX, minY, maxX, maxY };
-    }
-    
-    // Συνάρτηση calculatePosition: Διαβάζει τις απόλυτες τιμές από το JSON και αφαιρεί το offset του block, προσθέτοντας τα global offsets
+    // calculatePosition: Επιστρέφει τις απόλυτες τιμές απευθείας από το positions.json
     function calculatePosition(e, block) {
       if (!window.jsonPositions) {
           console.error("JSON data not loaded yet!");
@@ -200,22 +180,14 @@
       let mode = "expanded";
       if (window.jsonPositions[mode] && window.jsonPositions[mode][e.number]) {
           let pos = window.jsonPositions[mode][e.number];
-          // Εάν δεν έχει υπολογιστεί το offset για το block, το υπολογίζουμε
-          if(!blockOffsets[block]) {
-            blockOffsets[block] = computeBlockOffset(block);
-            console.log(`Computed offset for block ${block}:`, blockOffsets[block]);
-          }
-          // Οι σχετικές τιμές υπολογίζονται αφαιρώντας το minX/minY και προσθέτοντας τα global offsets
-          return { 
-            x: pos.x - blockOffsets[block].minX + globalLeftOffset, 
-            y: pos.y - blockOffsets[block].minY + globalTopOffset 
-          };
+          console.log(`Element ${e.number} (${e.symbol}) position:`, pos);
+          return pos;
       }
       console.warn(`Missing position for element ${e.number} in ${mode} mode`);
       return { x: 0, y: 0 };
     }
     
-    // Συνάρτηση drawElements: Σχεδιάζει τα στοιχεία σε σχέση με τις σχετικές τιμές
+    // drawElements: Σχεδιάζει τα στοιχεία στις θέσεις που δίνονται από το JSON
     window.drawElements = function(p, block) {
       p.stroke(150);
       p.strokeWeight(1);
@@ -232,42 +204,30 @@
         filter = e => e.block === block && ((Number(e.number) >= 3 && Number(e.number) <= 118) || Number(e.number) === 1 || Number(e.number) === 2);
       }
       elements.filter(filter).forEach(e => {
-        let posRel = calculatePosition(e, block);
+        const pos = calculatePosition(e, e.block);
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
         p.noStroke();
         p.fill(window.BLOCK_COLORS[e.block]);
-        p.rect(posRel.x, posRel.y, cellSize, cellSize, 5);
+        p.rect(pos.x, pos.y, cellSize, cellSize, 5);
         p.fill(0);
         p.textSize(Number(e.number) > 99 ? 10 : 12);
         p.textStyle(p.BOLD);
         p.textAlign(p.CENTER, p.CENTER);
-        p.text(displayNumber.toString(), posRel.x + cellSize/2, posRel.y + cellSize/2);
+        p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
       });
     };
     
-    // initializeCanvases: Δημιουργεί τους καμβάδες για κάθε block και τοποθετεί τους containers με το global offset
+    // initializeCanvases: Δημιουργεί καμβά για κάθε block και τοποθετεί τον καμβά στο container (χωρίς πρόσθετα offsets)
     function initializeCanvases() {
-      ["s", "p", "d", "f"].forEach(block => {
-        blockOffsets[block] = computeBlockOffset(block);
-        console.log(`Block ${block} offset:`, blockOffsets[block]);
+      Object.keys(window.BLOCKS_CONFIG).forEach(block => {
         new p5(function(p) {
           p.setup = function() {
-            let off = blockOffsets[block];
-            let width = off.maxX - off.minX;
-            let height = off.maxY - off.minY;
-            const canvas = p.createCanvas(width, height);
-            const containerId = "canvas" + block.toUpperCase();
-            const container = document.getElementById(containerId);
-            if(container) {
-              // Προσθέτουμε τα global offsets στις αρχικές τιμές του container
-              container.style.left = (off.minX + globalLeftOffset) + "px";
-              container.style.top = (off.minY + globalTopOffset) + "px";
-              container.style.width = width + "px";
-              container.style.height = height + "px";
-            }
-            canvas.elt.style.height = height + "px";
+            const config = window.BLOCKS_CONFIG[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
+            canvas.parent("canvas" + block.toUpperCase());
+            canvas.elt.style.height = config.rows * 42 + "px";
             window.drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
@@ -292,19 +252,17 @@
       });
     }
     
-    // redrawAll: Επανασχεδιάζει όλους τους καμβάδες και ενημερώνει το background και τις ομάδες
+    // redrawAll: Επανασχεδιάζει όλους τους καμβάδες και ενημερώνει το background
     window.redrawAll = function() {
-      ["s", "p", "d", "f"].forEach(block => {
-        let container = document.getElementById("canvas" + block.toUpperCase());
-        if(container) { container.innerHTML = ""; }
+      Object.keys(window.BLOCKS_CONFIG).forEach(block => {
+        let canvasDiv = document.getElementById("canvas" + block.toUpperCase());
+        if(canvasDiv) { canvasDiv.innerHTML = ""; }
         new p5(function(p) {
           p.setup = function() {
-            let off = blockOffsets[block] || { minX:0, minY:0, maxX: cellSize, maxY: cellSize };
-            let width = off.maxX - off.minX;
-            let height = off.maxY - off.minY;
-            const canvas = p.createCanvas(width, height);
+            const config = window.BLOCKS_CONFIG[block];
+            const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            canvas.elt.style.height = height + "px";
+            canvas.elt.style.height = config.rows * 42 + "px";
             window.drawElements(p, block);
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
@@ -328,26 +286,24 @@
         });
       });
       updateTableBackground();
-      updateGroupCanvasesPositions();
     };
     
     // computeCellPositions: Υπολογίζει τις απόλυτες θέσεις των κελιών βάσει των containers
     function computeCellPositions() {
       let positions = { s: [], p: [], d: [], f: [] };
-      Object.keys(blockOffsets).forEach(block => {
+      Object.keys(window.BLOCKS_CONFIG).forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         if(!container) return;
         let rect = container.getBoundingClientRect();
-        // Για κάθε στοιχείο του block
         elements.forEach(e => {
           if(e.block === block) {
-            let posRel = calculatePosition(e, block);
+            let pos = calculatePosition(e, block);
             positions[block].push({
               number: e.number,
-              left: rect.left + posRel.x,
-              top: rect.top + posRel.y,
-              right: rect.left + posRel.x + cellSize,
-              bottom: rect.top + posRel.y + cellSize,
+              left: rect.left + pos.x,
+              top: rect.top + pos.y,
+              right: rect.left + pos.x + cellSize,
+              bottom: rect.top + pos.y + cellSize,
               element: e
             });
           }
@@ -367,7 +323,6 @@
          bg.style.display = "block";
          return;
       }
-      // Εναλλακτικός δυναμικός υπολογισμός αν χρειαστεί
       const margin = 10;
       let positions = computeCellPositions();
       let all = [];
@@ -383,28 +338,7 @@
       bg.style.height = (maxBottom - minTop + margin*2) + "px";
     }
     
-    // updateGroupCanvasesPositions: Τοποθετεί τους καμβάδες των ομάδων έτσι ώστε να αγγίζουν το αριστερό και πάνω κελί του block
-    function updateGroupCanvasesPositions() {
-      // Για blocks s, d, p
-      ["s", "d", "p"].forEach(block => {
-        let blockElements = elements.filter(e => e.block === block);
-        if(blockElements.length > 0) {
-          let firstElement = blockElements[0];
-          let posAbs = window.jsonPositions.expanded[firstElement.number];
-          if(posAbs) {
-            let canvasId = "canvas" + block.toUpperCase() + "_groups";
-            let groupCanvas = document.getElementById(canvasId);
-            if(groupCanvas) {
-              // Προσθέτουμε τα global offsets
-              groupCanvas.style.left = (posAbs.x + globalLeftOffset) + "px";
-              groupCanvas.style.top = (posAbs.y + globalTopOffset) + "px";
-            }
-          }
-        }
-      });
-    }
-    
-    // Απλή ενημέρωση του info panel
+    // updateInfo: Ενημερώνει το panel με τα στοιχεία του επιλεγμένου στοιχείου
     function updateInfo(clickedZ) {
       let currentNum = (clickedZ === 119) ? 1 : (clickedZ === 120) ? 2 : clickedZ;
       const element = elements.find(e => Number(e.number) === currentNum);
@@ -420,7 +354,7 @@
       document.getElementById('leftPanelFull').innerHTML = infoHTML;
     }
     
-    // updateBalloonPosition: Τοποθετεί το balloon σύμφωνα με τις σχετικές τιμές
+    // updateBalloonPosition: Τοποθετεί το balloon σύμφωνα με τις θέσεις του στοιχείου από το JSON
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -428,9 +362,9 @@
       let container = document.getElementById("canvas" + element.block.toUpperCase());
       if(!container) return;
       let rect = container.getBoundingClientRect();
-      let posRel = calculatePosition(element, element.block);
-      let absX = rect.left + posRel.x;
-      let absY = rect.top + posRel.y;
+      let pos = calculatePosition(element, element.block);
+      let absX = rect.left + pos.x;
+      let absY = rect.top + pos.y;
       cs.style.display = "block";
       cs.style.left = absX + "px";
       cs.style.top = absY + "px";
@@ -461,18 +395,17 @@
       subshellsP.text(data.next || "-", leftMargin, 2 * rowHeight + rowHeight/2);
     };
     
-    // initPeriodsCanvas: Δημιουργεί τον καμβά για τις περιόδους και το τοποθετεί σταθερά ώστε να αγγίζει το πρώτο κελί (offset 50, 52)
+    // initPeriodsCanvas: Δημιουργεί τον καμβά για τις περιόδους και τοποθετεί τον container σταθερά (left=18, top=57)
     function initPeriodsCanvas() {
       if(window.periodsInitialized) return;
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(40, 292);
           canvas.parent("canvasPeriods");
-          // Τοποθετούμε το container με offset 50,52
           let container = document.getElementById("canvasPeriods");
           if(container) {
-            container.style.left = globalLeftOffset + "px";
-            container.style.top = globalTopOffset + "px";
+            container.style.left = "18px";
+            container.style.top = "57px";
           }
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -506,18 +439,17 @@
       window.subshellsInitialized = true;
     }
     
-    // initGroupsCanvases: Δημιουργεί τους καμβάδες για τις ομάδες και τοποθετεί τα containers ώστε να αγγίζουν τα αντίστοιχα αριστερά και πάνω κελιά
+    // initGroupsCanvases: Δημιουργεί τους καμβάδες για τις ομάδες και τοποθετεί τους containers σταθερά (left=18, top=57)
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      // Block S Groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
           canvas.parent("canvasS_groups");
           let container = document.getElementById("canvasS_groups");
           if(container) {
-            container.style.left = globalLeftOffset + "px";
-            container.style.top = globalTopOffset + "px";
+            container.style.left = "18px";
+            container.style.top = "57px";
           }
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -530,15 +462,14 @@
           p.text("ΙΙΑ", 62, 30);
         };
       });
-      // Block D Groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
           canvas.parent("canvasD_groups");
           let container = document.getElementById("canvasD_groups");
           if(container) {
-            container.style.left = globalLeftOffset + "px";
-            container.style.top = globalTopOffset + "px";
+            container.style.left = "18px";
+            container.style.top = "57px";
           }
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -562,15 +493,14 @@
           }
         };
       });
-      // Block P Groups
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
           canvas.parent("canvasP_groups");
           let container = document.getElementById("canvasP_groups");
           if(container) {
-            container.style.left = globalLeftOffset + "px";
-            container.style.top = globalTopOffset + "px";
+            container.style.left = "18px";
+            container.style.top = "57px";
           }
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -598,7 +528,7 @@
     }
     window.initGroupsCanvases = initGroupsCanvases;
     
-    // loadElements: Φορτώνει το elements.json
+    // loadElements: Φορτώνει τα στοιχεία από το elements.json
     function loadElements() {
       fetch('elements.json')
         .then(response => response.json())
@@ -631,19 +561,17 @@
       }
     }
     
-    // Event handler για το κουμπί "Συμπλήρωσε"
+    // Event Handler για το κουμπί "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
       if(currentZ === 123) return;
       currentZ = 123;
       fillAllPressed = true;
-      // Εμφάνιση των containers για περιόδους και ομάδες
       document.getElementById('canvasPeriods').style.display = 'block';
       document.getElementById('canvasS_groups').style.display = "block";
       document.getElementById('canvasD_groups').style.display = "block";
       document.getElementById('canvasP_groups').style.display = "block";
       window.redrawAll();
       setTimeout(() => { updateInfo(currentZ); }, 300);
-      // Ο background ορίζεται σταθερά
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "18px";
       bg.style.top = "57px";
