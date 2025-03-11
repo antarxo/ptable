@@ -2,20 +2,15 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Συμπλήρωσε με Groups & Periods</title>
+  <title>Περιοδικός Πίνακας - Σωστή Ευθυγράμμιση</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    body { 
-      font-family: 'Roboto', sans-serif; 
-      margin: 0; 
-      overflow: hidden; 
-      background: #f7f7f7; 
-    }
+    body { font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
     .canvas { 
       position: absolute; 
       background: transparent; 
-      transition: opacity 0.5s ease-in-out; /* ✅ Χρησιμοποιούμε διαφάνεια αντί για display */
+      transition: opacity 0.5s ease-in-out; 
       opacity: 0; /* Αρχικά αόρατο */
     }
     #canvasTableBackground {
@@ -26,13 +21,11 @@
       z-index: -10; 
       opacity: 1;
     }
-    /* Καμβάς περιόδων */
     #canvasPeriods { 
       position: absolute; 
       background: #f0f0f0; 
       z-index: 5; 
     }
-    /* Button Panel */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -73,38 +66,18 @@
   <script>
     let elements = [];
     let positions = {};
-    let blockOffsets = {}; 
-    let tableShiftX = 0; // ✅ Global μετατόπιση δεξιά
+    let tableShiftX = 0;
     let isTableFilled = false;
     let groupOffsetY = -15; // ✅ Οι ομάδες πάντα 15px πιο ψηλά
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
-      computeBlockOffsets();
       computeGlobalShift();
-      initializeGroups();
-    }
-
-    function computeBlockOffsets() {
-      ["s", "p", "d", "f"].forEach(block => {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        Object.keys(positions.expanded).forEach(num => {
-          let el = elements.find(e => e.number == num);
-          if (el && el.block === block) {
-            let pos = positions.expanded[num];
-            minX = Math.min(minX, pos.x);
-            minY = Math.min(minY, pos.y);
-            maxX = Math.max(maxX, pos.x + pos.width);
-            maxY = Math.max(maxY, pos.y + pos.height);
-          }
-        });
-        blockOffsets[block] = { minX, minY, width: maxX - minX, height: maxY - minY };
-      });
     }
 
     function computeGlobalShift() {
-      tableShiftX = positions.expanded["1"].x - 13; // ✅ Σταθερή μετατόπιση
+      tableShiftX = positions.expanded["1"].x - 55; // ✅ Μόνιμη μετατόπιση δεξιά
     }
 
     function initializeCanvases() {
@@ -112,18 +85,14 @@
       isTableFilled = true;
       
       ["s", "p", "d", "f"].forEach(block => {
-        let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        container.style.left = (offset.minX + tableShiftX) + "px"; // ✅ Χρήση global μετατόπισης
-        container.style.top = offset.minY + "px";
-        container.style.width = offset.width + "px";
-        container.style.height = offset.height + "px";
+        container.style.left = (positions.expanded["1"].x + tableShiftX) + "px";
         container.style.opacity = "1"; // ✅ Εμφάνιση με opacity
   
         new p5(function(p) {
           p.setup = function () {
-            let canvas = p.createCanvas(offset.width, offset.height);
+            let canvas = p.createCanvas(400, 280);
             canvas.parent("canvas" + block.toUpperCase());
           };
         });
@@ -131,7 +100,7 @@
 
       setTimeout(() => {
         initializePeriodsCanvas();
-        document.getElementById("canvasPeriods").style.opacity = "1"; // ✅ Εμφάνιση με opacity
+        document.getElementById("canvasPeriods").style.opacity = "1";
       }, 500);
     }
 
@@ -142,10 +111,7 @@
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
           container.style.left = (positions.expanded["1"].x - 55) + "px";
-          container.style.top = positions.expanded["1"].y + "px";
-          container.style.width = "42px";
-          container.style.height = "292px";
-          container.style.opacity = "1"; // ✅ Οι περίοδοι είναι πλήρως ορατές
+          container.style.opacity = "1"; // ✅ Οι περίοδοι εμφανίζονται
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(12);
@@ -164,16 +130,16 @@
     function initializeGroups() {
       ["S", "D", "P"].forEach(group => {
         let groupId = "canvas" + group + "_groups";
-        let block = group.toLowerCase();
         let container = document.getElementById(groupId);
-        container.style.left = (blockOffsets[block].minX + tableShiftX) + "px"; // ✅ Χρήση global shift
+        container.style.left = (positions.expanded["1"].x + tableShiftX) + "px"; // ✅ Χρήση global shift
         container.style.top = (78 + groupOffsetY) + "px";
-        container.style.opacity = "1"; // ✅ Εμφανίζονται σταδιακά
+        container.style.opacity = "1";
       });
     }
 
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeCanvases();
+      initializeGroups();
     });
 
     window.addEventListener('load', loadData);
