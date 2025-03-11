@@ -50,13 +50,14 @@
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξε</button>
+    <button id="toggleFBlock" disabled>Σύμπτυξε</button>
     <button id="reset">Reset</button>
   </div>
 
   <script>
   let elements = [];
   let positions = {};
+  let blockOffsets = {};
   let isTableFilled = false;
   let isCollapsed = false;
   let currentMode = "start";
@@ -138,11 +139,23 @@
     bg.style.opacity = "1";
   }
 
+  function initializeSectorsCanvas() {
+    let canvas = document.createElement("canvas");
+    canvas.width = 1000;
+    canvas.height = 500;
+    canvas.style.position = "absolute";
+    canvas.style.left = "20px";
+    canvas.style.top = "100px";
+    canvas.style.border = "1px solid black";
+    document.body.appendChild(canvas);
+  }
+
   async function loadData() {
     elements = await (await fetch('elements.json')).json();
     positions = await (await fetch('positions.json')).json();
     buildAllSpatialHashes();
     initializeBackgroundCanvas();
+    initializeSectorsCanvas();
     if (!isTableFilled) document.getElementById('fillAll').click();
   }
 
