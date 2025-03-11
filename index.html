@@ -8,9 +8,15 @@
   <style>
     body { font-family: 'Roboto', sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
     .canvas { position: absolute; background: transparent; transition: all 0.5s ease-in-out; }
+    /* Αντί για display none, αρχικά κρύβουμε με opacity */
     #canvasTableBackground {
       position: absolute; background: white; border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 3px 3px rgba(0,0,0,0.2); z-index: -10; display: none;
+      box-shadow: 0 3px 3px rgba(0,0,0,0.2); z-index: -10;
+      opacity: 0;
+    }
+    /* Αρχικά κρυφά τα canvas για Ομάδες και Περιόδους */
+    #canvasPeriods, #canvasGroups {
+      opacity: 0;
     }
     #buttonPanel {
       position: fixed; bottom: 20px; right: 20px; z-index: 100;
@@ -41,15 +47,15 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let isTableFilled = false; // ✅ Ελέγχουμε αν έχει ήδη συμπληρωθεί
+    let isTableFilled = false; // Ελέγχουμε αν έχει ήδη συμπληρωθεί
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
       computeBlockOffsets();
+      // Εμφάνιση background αμέσως, αλλά μέσω opacity
       initializeBackgroundCanvas();
-      initializePeriodsCanvas();
-      initializeGroupsCanvas();
+      // Αρχικά δεν δημιουργούνται τα canvas για Περιόδους και Ομάδες
     }
 
     function computeBlockOffsets() {
@@ -76,7 +82,7 @@
     }
 
     function initializeCanvases() {
-      if (isTableFilled) return; // ✅ Αποτρέπουμε την αυτόματη συμπλήρωση
+      if (isTableFilled) return;
       isTableFilled = true;
 
       ["s", "p", "d", "f"].forEach(block => {
@@ -85,16 +91,16 @@
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
 
+        // Προσθέτουμε 42px στο left και 47px στο top
+        container.style.left = (offset.minX + 42) + "px";
+        container.style.top = (offset.minY + 47) + "px";
+        container.style.width = offset.width + "px";
+        container.style.height = offset.height + "px";
+
         new p5(function (p) {
           p.setup = function () {
             let canvas = p.createCanvas(offset.width, offset.height);
             canvas.parent("canvas" + block.toUpperCase());
-
-            container.style.left = offset.minX + "px";
-            container.style.top = offset.minY + "px";
-            container.style.width = offset.width + "px";
-            container.style.height = offset.height + "px";
-
             drawElements(p, block);
           };
         });
@@ -109,7 +115,7 @@
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(20); // ✅ Ρύθμιση μεγέθους γραμματοσειράς όπως στο newptablejson
+        p.textSize(11); // Ορισμός μεγέθους γραμματοσειράς στα 11
         p.textAlign(p.CENTER, p.CENTER);
         p.text(e.number, pos.x + 20, pos.y + 25);
       });
@@ -122,12 +128,13 @@
           canvas.parent("canvasPeriods");
 
           let container = document.getElementById("canvasPeriods");
-          container.style.left = positions.expanded["1"].x - 55 + "px";
-          container.style.top = positions.expanded["1"].y + "px";
+          // Προσθέτουμε 42px στο left και 47px στο top
+          container.style.left = (positions.expanded["1"].x - 55 + 42) + "px";
+          container.style.top = (positions.expanded["1"].y + 47) + "px";
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(16);
+          p.textSize(11); // Ορισμός γραμματοσειράς στα 11
           p.textStyle(p.BOLD);
 
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
@@ -139,6 +146,8 @@
           }
         };
       });
+      // Εμφάνιση με χρήση opacity
+      document.getElementById("canvasPeriods").style.opacity = "1";
     }
 
     function initializeGroupsCanvas() {
@@ -148,12 +157,13 @@
           canvas.parent("canvasGroups");
 
           let container = document.getElementById("canvasGroups");
-          container.style.left = positions.expanded["3"].x + "px";
-          container.style.top = positions.expanded["3"].y - 55 + "px"; 
+          // Προσθέτουμε 42px στο left και 47px στο top
+          container.style.left = (positions.expanded["3"].x + 42) + "px";
+          container.style.top = (positions.expanded["3"].y - 55 + 47) + "px";
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(16);
+          p.textSize(11); // Ορισμός γραμματοσειράς στα 11
           p.textStyle(p.BOLD);
 
           for (let i = 0; i < 18; i++) {
@@ -165,19 +175,26 @@
           }
         };
       });
+      // Εμφάνιση με χρήση opacity
+      document.getElementById("canvasGroups").style.opacity = "1";
     }
 
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      bg.style.left = "10px";
-      bg.style.top = "50px";
+      // Προσθέτουμε 42px στο left και 47px στο top
+      bg.style.left = "52px"; // 10 + 42
+      bg.style.top = "97px";  // 50 + 47
       bg.style.width = "1412px";
       bg.style.height = "368px";
-      bg.style.display = "block";
+      // Αντί για display, ορίζουμε το opacity σε 1
+      bg.style.opacity = "1";
     }
 
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeCanvases();
+      // Τώρα, μετά τη συμπλήρωση, δημιουργούνται και εμφανίζονται τα canvas για Ομάδες και Περιόδους
+      initializePeriodsCanvas();
+      initializeGroupsCanvas();
     });
 
     window.addEventListener('load', loadData);
