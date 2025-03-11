@@ -236,35 +236,44 @@
     }
 
     // Δημιουργία των καμβάδων τομέων (s, p, d, f)
-    function initializeSectorsCanvas() {
-      let desiredLeftS = 70;
-      let deltaS = desiredLeftS - blockOffsets["s"].minX;
-      let sectorsTop = 110;
-      ["s", "p", "d", "f"].forEach(block => {
-        let offset = blockOffsets[block];
-        let container = document.getElementById("canvas" + block.toUpperCase());
-        container.innerHTML = "";
-        container.style.left = (offset.minX + deltaS) + "px";
-        if (block === "s" || block === "p") {
-          container.style.top = sectorsTop + "px";
-        } else {
-          let referenceBottom = sectorsTop + blockOffsets["s"].height;
-          container.style.top = (referenceBottom - offset.height) + "px";
-        }
-        container.style.width = offset.width + "px";
-        container.style.height = offset.height + "px";
-        new p5(function(p) {
-          p.setup = function() {
-            let canvas = p.createCanvas(offset.width, offset.height);
-            // Αυξάνουμε λίγο τα όρια ώστε η σκιά να εμφανίζεται (πχ 8px παραπάνω)
-            canvas.elt.width = offset.width + 8;
-            canvas.elt.height = offset.height + 8;
-            canvas.parent("canvas" + block.toUpperCase());
-            drawElements(p, block);
-          };
-        });
-      });
+   function initializeSectorsCanvas() {
+  // Έλεγχος αν υπάρχουν τα blockOffsets για το s
+  if (!blockOffsets["s"]) {
+    computeBlockOffsets();
+    if (!blockOffsets["s"]) {
+      console.error("Δεν βρέθηκαν δεδομένα για το block 's'");
+      return;
     }
+  }
+  let desiredLeftS = 70;
+  let deltaS = desiredLeftS - blockOffsets["s"].minX;
+  let sectorsTop = 110;
+  ["s", "p", "d", "f"].forEach(block => {
+    let offset = blockOffsets[block];
+    let container = document.getElementById("canvas" + block.toUpperCase());
+    container.innerHTML = "";
+    container.style.left = (offset.minX + deltaS) + "px";
+    if (block === "s" || block === "p") {
+      container.style.top = sectorsTop + "px";
+    } else {
+      let referenceBottom = sectorsTop + blockOffsets["s"].height;
+      container.style.top = (referenceBottom - offset.height) + "px";
+    }
+    container.style.width = offset.width + "px";
+    container.style.height = offset.height + "px";
+    new p5(function(p) {
+      p.setup = function() {
+        let canvas = p.createCanvas(offset.width, offset.height);
+        // Αυξάνουμε τα όρια του καμβά ώστε να φαίνεται η σκιά
+        canvas.elt.width = offset.width + 8;
+        canvas.elt.height = offset.height + 8;
+        canvas.parent("canvas" + block.toUpperCase());
+        drawElements(p, block);
+      };
+    });
+  });
+}
+
 
     function drawElements(p, block) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
