@@ -2,8 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Toggle Grouped Expanded/Collapsed με Offsets</title>
-  <!-- Φόρτωση της βιβλιοθήκης p5.js -->
+  <title>Απεικόνιση Updated JSON</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <style>
     body { font-family: sans-serif; }
@@ -19,121 +18,63 @@
     <label>Top Offset: <span id="topValue">57</span></label>
     <input type="range" id="topSlider" min="-100" max="100" value="57">
   </div>
+
   <script>
-    let originalData;              // Τα αρχικά δεδομένα από το positions.json
-    let transformedExpanded, transformedCollapsed;  // Τα νέα JSON μετά το grouping
-    let showExpanded = true;       // Αρχικά εμφάνιση expanded
+    let positions;
+    let showExpanded = true;
     let leftSlider, topSlider;
 
-    // Φόρτωση του αρχείου JSON (το positions.json πρέπει να είναι στον ίδιο φάκελο)
     function preload() {
-      originalData = loadJSON('positions.json');
+      positions = loadJSON('updated_positions.json');
     }
 
     function setup() {
-      createCanvas(1400, 400);
-      
-      // Μετατροπή των καταστάσεων σύμφωνα με τη νέα δομή:
-      // Χρησιμοποιούμε τη στήλη = Math.round(x/42)+1 (όπου 42 = 40 (πλάτος) + 2 (διάκενο))
-      // και ομαδοποιούμε:
-      // s: στήλες 1–2, f: στήλες 3–16, d: στήλες 17–26, p: στήλες 27–32.
-      transformedExpanded = transformState(originalData.expanded);
-      transformedCollapsed = transformState(originalData.collapsed);
-      
-      // Δημιουργία των sliders (βάση DOM, ήδη υπάρχουν στο HTML)
+      createCanvas(1400, 600); // Αυξημένο ύψος
       leftSlider = select('#leftSlider');
       topSlider = select('#topSlider');
       leftSlider.input(updateSliderValues);
       topSlider.input(updateSliderValues);
-      
-      // Listener για το κουμπί εναλλαγής
       select('#toggleButton').mousePressed(toggleState);
     }
 
     function draw() {
       background(240);
-      // Λήψη τιμών από τους sliders
       let offsetX = leftSlider.value();
       let offsetY = topSlider.value();
       
       push();
       translate(offsetX, offsetY);
       if (showExpanded) {
-        drawGroupedPositions(transformedExpanded);
-        fill(0);
-        textSize(16);
+        drawPositions(positions.expanded, color(255, 0, 0));
         text("Expanded", 10, 20);
       } else {
-        drawGroupedPositions(transformedCollapsed);
-        fill(0);
-        textSize(16);
+        drawPositions(positions.collapsed, color(0, 0, 255));
         text("Collapsed", 10, 20);
       }
       pop();
     }
 
-    // Ενημέρωση των labels για τους sliders
     function updateSliderValues() {
       select('#leftValue').html(leftSlider.value());
       select('#topValue').html(topSlider.value());
     }
 
-    // Εναλλαγή μεταξύ Expanded και Collapsed
     function toggleState() {
       showExpanded = !showExpanded;
       select('#toggleButton').html(showExpanded ? "Εμφάνιση Expanded" : "Εμφάνιση Collapsed");
     }
 
-    // Μετατροπή μιας κατάστασης (expanded ή collapsed) στη νέα δομή
-    function transformState(stateData) {
-      let grouped = { s: {}, f: {}, d: {}, p: {} };
-      for (let key in stateData) {
-        let pos = stateData[key];
-        // Υπολογισμός στήλης: col = Math.round(x/42)+1
-        let col = Math.round(pos.x / 42) + 1;
-        let group;
-        if (col <= 2) group = "s";
-        else if (col <= 16) group = "f";
-        else if (col <= 26) group = "d";
-        else if (col <= 32) group = "p";
-        // Το στοιχείο με key "2" στο expanded, για παράδειγμα, έχει x=1302 που δίνει col=32 και επομένως ανήκει στο p.
-        if (group) {
-          grouped[group][key] = pos;
-        }
+    function drawPositions(data, fillColor) {
+      for (let key in data) {
+        let pos = data[key];
+        fill(fillColor);
+        stroke(0);
+        rect(pos.x, pos.y, pos.width, pos.height);
+        fill(0);
+        textSize(10);
+        text(key, pos.x + 2, pos.y + 12);
       }
-      return grouped;
     }
-
-    // Συνάρτηση για την απεικόνιση των στοιχείων για κάθε block (s, f, d, p)
-// Συνάρτηση για την απεικόνιση των στοιχείων για κάθε block (s, f, d, p)
-function drawGroupedPositions(groupedData) {
-  console.log("Grouped Data:", groupedData);  // Debugging: δες αν λείπει κάποιο group
-
-  // Διαφορετικά χρώματα για κάθε τομέα για οπτική διάκριση
-  const colors = { s: color(255, 100, 100), f: color(100, 255, 100), d: color(100, 100, 255), p: color(255, 255, 100) };
-  
-  for (let group in groupedData) {
-    let groupItems = groupedData[group];
-    
-    if (!groupItems) continue;  // Αν δεν υπάρχουν στοιχεία, παράβλεψέ το group
-    
-    for (let key in groupItems) {
-      let pos = groupItems[key];  // Διόρθωση στην πρόσβαση
-      if (!pos) continue;  // Αν για κάποιο λόγο δεν υπάρχει το pos, αγνόησέ το
-      
-      fill(colors[group]);
-      stroke(0);
-      rect(pos.x, pos.y, pos.width, pos.height);
-      
-      // Εμφάνιση του key στο ορθογώνιο
-      fill(0);
-      noStroke();
-      textSize(10);
-      text(key, pos.x + 2, pos.y + 12);
-    }
-  }
-}
-
   </script>
 </body>
 </html>
