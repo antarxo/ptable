@@ -96,12 +96,11 @@
       bg.style.opacity = "1";
     }
 
-    // Δημιουργία των καμβάδων για τις ομάδες, σύμφωνα με την υλοποίηση του ALLtoDOM1
+    // Δημιουργία των καμβάδων για τις ομάδες σύμφωνα με την υλοποίηση του ALLtoDOM1
     function initGroupsCanvases() {
-      // Αν έχουν ήδη αρχικοποιηθεί, μην ξανατρέξουν
       if(window.groupsInitialized) return;
       
-      // s-block: δύο σειρές - πρώτη σειρά: νέοι αριθμοί (1,2), δεύτερη: παλιά ονόματα (ΙΑ, ΙΙΑ)
+      // s-block: δύο σειρές – πρώτη: νέοι αριθμοί (1,2), δεύτερη: παλιά (ΙΑ, ΙΙΑ)
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -120,7 +119,7 @@
         };
       });
       
-      // d-block: δύο σειρές - νέα ονομασία: 3 έως 12, παλιά: αντίστοιχα labels
+      // d-block: δύο σειρές – πρώτη: νέοι αριθμοί (3–12), δεύτερη: παλιά labels
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -130,12 +129,12 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πρώτη σειρά: νέα ονομασία (απλά οι αριθμοί)
+          // Πρώτη σειρά:
           for(let c = 0; c < 10; c++){
             let x = c * 42 + c * 2;
             p.text((c+3).toString(), x + 20, 10);
           }
-          // Δεύτερη σειρά: παλιά ονόματα
+          // Δεύτερη σειρά:
           const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
           for(let c = 0; c < 10; c++){
             let x = c * 42 + c * 2;
@@ -144,7 +143,7 @@
         };
       });
       
-      // p-block: δύο σειρές - νέα ονομασία: 13 έως 18, παλιά: αντίστοιχα labels
+      // p-block: δύο σειρές – πρώτη: νέοι αριθμοί (13–18), δεύτερη: παλιά labels
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
@@ -154,18 +153,31 @@
           p.textSize(12);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πρώτη σειρά: νέοι αριθμοί
+          // Πρώτη σειρά:
           for(let c = 0; c < 6; c++){
             let x = c * 42 + c * 2;
             p.text((c+13).toString(), x + 20, 10);
           }
-          // Δεύτερη σειρά: παλιά ονόματα
+          // Δεύτερη σειρά:
           const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
           for(let c = 0; c < 6; c++){
             let x = c * 42 + c * 2;
             p.text(oldLabels[c], x + 20, 30);
           }
         };
+      });
+      
+      // Τροποποίηση: ορισμός του left για κάθε καμβά ομάδας ίσο με το left του αντίστοιχου τομέα,
+      // και top ίσο με το (top του background + 20px)
+      let bgTop = parseInt(document.getElementById("canvasTableBackground").style.top) || 50;
+      let sectors = ["S", "D", "P"]; // Αντιστοιχία: canvasS, canvasD, canvasP
+      sectors.forEach(sector => {
+        let sectorCanvas = document.getElementById("canvas" + sector);
+        let groupCanvas = document.getElementById("canvas" + sector + "_groups");
+        if(sectorCanvas && groupCanvas) {
+          groupCanvas.style.left = sectorCanvas.style.left;
+          groupCanvas.style.top = (bgTop + 20) + "px";
+        }
       });
       
       window.groupsInitialized = true;
@@ -229,11 +241,14 @@
       const cellWidth = 40, cellHeight = 40, cellRadius = 5;
       elements.filter(e => e.block === block).forEach(e => {
         let pos = calculateRelativePosition(e, block);
+        // Εφέ σκιάς: τώρα 4px δεξιά και 4px κάτω
         p.noStroke();
         p.fill(0, 50);
-        p.rect(pos.x + 3, pos.y + 3, cellWidth, cellHeight, cellRadius);
+        p.rect(pos.x + 4, pos.y + 4, cellWidth, cellHeight, cellRadius);
+        // Κύριο κελί
         p.fill(colors[block] || "#CCCCCC");
         p.rect(pos.x, pos.y, cellWidth, cellHeight, cellRadius);
+        // Κείμενο
         p.fill(0);
         p.textSize(13);
         p.textStyle(p.BOLD);
@@ -246,7 +261,6 @@
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
-        // Ενσωματώνουμε τη λογική των ομάδων όπως στο ALLtoDOM1:
         initGroupsCanvases();
         initializePeriodsCanvas();
         initializeSectorsCanvas();
