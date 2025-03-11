@@ -360,21 +360,30 @@
     });
   }
   function updateInfo(element) {
-    let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
-                    <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
-                    <span style="font-style: italic;">${element.name}</span>`;
-    document.getElementById("leftPanelFull").innerHTML = infoHTML;
-    let subshells = element.subshells ? element.subshells : "-";
-    let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
-    // Ενημέρωση info panel πλήρους και συμπτυγμένου
-    document.getElementById("remarksFull").innerHTML = `<div class="row">
+  let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
+                  <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
+                  <span style="font-style: italic;">${element.name}</span>`;
+  // Χρήση του στοιχείου infoPanelFull που υπάρχει στο HTML
+  document.getElementById("infoPanelFull").innerHTML = infoHTML;
+  
+  let subshells = element.subshells ? element.subshells : "-";
+  let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
+  
+  // Ενημέρωση ενός τμήματος του infoPanelFull ή δημιουργία νέου στοιχείου
+  // Αν δεν έχεις στοιχείο για τα remarks, μπορείς να το ενσωματώσεις μέσα στο infoPanelFull
+  // π.χ.:
+  document.getElementById("infoPanelFull").innerHTML += `<div class="row">
           <div class="col-70">${subshells}</div>
           <div class="col-30">${shellsAndMsg}</div>
         </div>
         <div class="row">${element.remarks || ""}</div>`;
-    document.getElementById("infoPanelCollapsed").innerHTML = document.getElementById("infoPanelFull").innerHTML;
-    updateBalloonPosition(element);
-  }
+  
+  // Αντίστοιχα, ενημέρωση του infoPanelCollapsed
+  document.getElementById("infoPanelCollapsed").innerHTML = document.getElementById("infoPanelFull").innerHTML;
+  
+  updateBalloonPosition(element);
+}
+
   function getBlockColor(block) {
     switch(block) {
       case "s": return "#FF477E";
