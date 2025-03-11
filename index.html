@@ -28,12 +28,10 @@
   <div id="canvasTableBackground"></div>
   <div id="canvasGroups" class="canvas"></div>
   <div id="canvasPeriods" class="canvas"></div>
-  <!-- Τομείς: Εμφανίζονται όλοι: s, p, d, f, MONO -->
   <div id="canvasS" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
-  <div id="canvasMONO" class="canvas"></div>
 
   <!-- Κουμπί για συμπλήρωση -->
   <div id="buttonPanel">
@@ -50,12 +48,12 @@
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
       computeBlockOffsets();
-      // Δεν δημιουργούμε καμία διεπαφή εδώ – όλα εμφανίζονται μετά το "Συμπλήρωσε"
+      // Δεν δημιουργούμε τίποτα μέχρι να πατηθεί το κουμπί "Συμπλήρωσε"
     }
 
-    // Υπολογισμός των ορίων για κάθε block (s, p, d, f, MONO)
+    // Υπολογισμός ορίων για κάθε block (s, p, d, f)
     function computeBlockOffsets() {
-      let blocks = ["s", "p", "d", "f", "MONO"];
+      let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         Object.keys(positions.expanded).forEach(num => {
@@ -81,8 +79,8 @@
     // Δημιουργία του background canvas
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      bg.style.left = "20px"; // background left = 20px
-      bg.style.top = "50px";  // background top = 50px
+      bg.style.left = "20px"; // background left
+      bg.style.top = "50px";  // background top
       bg.style.width = "1412px";
       bg.style.height = "368px";
       bg.style.opacity = "1";
@@ -96,7 +94,7 @@
           canvas.parent("canvasGroups");
           let container = document.getElementById("canvasGroups");
           container.style.top = "70px"; // top = background top (50) + 20 = 70px
-          container.style.left = positions.expanded["3"].x + "px";
+          container.style.left = positions.expanded["3"].x + "px"; // όπως στο αρχικό αρχείο
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(13);
@@ -120,8 +118,8 @@
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left); // 20
-          container.style.left = (bgLeft + 10) + "px"; // 20+10 = 30px
-          container.style.top = "110px"; // top = bottom των ομάδων (70+40 = 110px)
+          container.style.left = (bgLeft + 10) + "px"; // background left + 10 = 30px
+          container.style.top = "110px"; // top = bottom των ομάδων (70 + 40)
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(13);
@@ -129,8 +127,7 @@
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            // Σχεδιάζουμε τα ορθάγωνα με 5px από το αριστερό όριο του καμβά
-            p.rect(5, i * 42, 35, 40);
+            p.rect(5, i * 42, 35, 40); // 5px margin left
             p.fill(0);
             p.text(periodLabels[i], 5 + 35/2, i * 42 + 20);
           }
@@ -138,45 +135,28 @@
       });
     }
 
-    // Δημιουργία των καμβάδων των τομέων
+    // Δημιουργία των καμβάδων των τομέων s, p, d, f
     function initializeSectorsCanvas() {
-      let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left); // 20
-      let targetLeft = bgLeft + 50; // 20+50 = 70px
-      // Ορίζουμε δύο ομάδες:
-      // Ομάδα Α: s, p, MONO -> top = bottom των ομάδων = 110px
-      let blocksGroupA = ["s", "p", "MONO"];
-      blocksGroupA.forEach(block => {
-        let delta = (targetLeft - blockOffsets[block].minX);
+      // Ορίζουμε το top των τομέων = bottom των ομάδων = 110px για s και p.
+      // Για d και f ευθυγραμμίζουμε το κάτω μέρος τους με αυτό των s και p.
+      let sectorsTop = 110;
+      ["s", "p", "d", "f"].forEach(block => {
+        let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        container.style.left = (blockOffsets[block].minX + delta) + "px"; // θα είναι 70px
-        container.style.top = "110px"; // top = 110px
-        container.style.width = blockOffsets[block].width + "px";
-        container.style.height = blockOffsets[block].height + "px";
+        // Επαναφέρουμε το left όπως στο αρχικό αρχείο:
+        container.style.left = offset.minX + "px";
+        if (block === "s" || block === "p") {
+          container.style.top = sectorsTop + "px";
+        } else {
+          let referenceBottom = sectorsTop + blockOffsets["s"].height;
+          container.style.top = (referenceBottom - offset.height) + "px";
+        }
+        container.style.width = offset.width + "px";
+        container.style.height = offset.height + "px";
         new p5(function(p) {
           p.setup = function() {
-            let canvas = p.createCanvas(blockOffsets[block].width, blockOffsets[block].height);
-            canvas.parent("canvas" + block.toUpperCase());
-            drawElements(p, block);
-          };
-        });
-      });
-      // Ομάδα Β: d, f -> ευθυγράμμιση του bottom με το bottom των τομέων s και p.
-      let blocksGroupB = ["d", "f"];
-      // Ορίζουμε το referenceBottom από το block s: bottom = 110 + height(s)
-      let referenceBottom = 110 + blockOffsets["s"].height;
-      blocksGroupB.forEach(block => {
-        let delta = (targetLeft - blockOffsets[block].minX);
-        let container = document.getElementById("canvas" + block.toUpperCase());
-        container.innerHTML = "";
-        container.style.left = (blockOffsets[block].minX + delta) + "px"; // 70px
-        // Το top ορίζεται έτσι ώστε το κάτω μέρος (top + height) να ισούται με το referenceBottom
-        container.style.top = (referenceBottom - blockOffsets[block].height) + "px";
-        container.style.width = blockOffsets[block].width + "px";
-        container.style.height = blockOffsets[block].height + "px";
-        new p5(function(p) {
-          p.setup = function() {
-            let canvas = p.createCanvas(blockOffsets[block].width, blockOffsets[block].height);
+            let canvas = p.createCanvas(offset.width, offset.height);
             canvas.parent("canvas" + block.toUpperCase());
             drawElements(p, block);
           };
@@ -185,9 +165,9 @@
     }
 
     function drawElements(p, block) {
+      let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
         let pos = calculateRelativePosition(e, block);
-        let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051", MONO: "#AA66CC" };
         p.fill(colors[block] || "#CCCCCC");
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
