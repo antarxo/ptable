@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Συμπλήρωσε με Groups & Μεγάλες Αριθμογραφίες</title>
+  <title>Περιοδικός Πίνακας - Συμπλήρωσε με Groups & Periods</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -24,12 +24,21 @@
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 0 3px 3px rgba(0,0,0,0.2); 
       z-index: -10; 
-      display: none;
+      display: block;
     }
-    /* Ο καμβάς περιόδων δεν εμφανίζεται αρχικά */
-    #canvasPeriods { display: none; }
-    /* Ομάδες: θα εμφανιστούν ξεχωριστοί καμβάδες για S, D και P groups */
-    /* Button Panel */
+    /* Καμβάς περιόδων όπως στο ALLtoDOM1 */
+    #canvasPeriods { 
+      position: absolute; 
+      left: 31px; 
+      top: 120px; 
+      width: 42px; 
+      height: 292px; 
+      background: #f0f0f0; 
+      z-index: 5; 
+      display: block; 
+    }
+    /* Ομαδικοί καμβάδες – θα τοποθετηθούν με left ίσο με το left του τομέα (block) */
+    /* Δεν απαιτείται επιπλέον styling εδώ */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -50,9 +59,9 @@
 
   <!-- Background Canvas -->
   <div id="canvasTableBackground"></div>
-  <!-- Καμβάς Περιόδων (κρυμμένος αρχικά) -->
+  <!-- Καμβάς Περιόδων -->
   <div id="canvasPeriods" class="canvas"></div>
-  <!-- Καμβάδες Ομάδων όπως στο ALLtoDOM1 -->
+  <!-- Καμβάδες Groups -->
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
@@ -62,7 +71,7 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Κουμπί για "Συμπλήρωσε" -->
+  <!-- Κουμπί "Συμπλήρωσε" -->
   <div id="buttonPanel">
     <button id="fillAll">Συμπλήρωσε</button>
   </div>
@@ -71,9 +80,9 @@
     let elements = [];
     let positions = {};
     let blockOffsets = {}; 
-    let isTableFilled = false; // Flag για να δημιουργηθεί μόνο μία φορά η πλήρης εμφάνιση
+    let isTableFilled = false; // Flag ώστε να δημιουργείται μόνο μία φορά η εμφάνιση
 
-    // Φόρτωση δεδομένων
+    // Φόρτωση δεδομένων από τα JSON
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
@@ -85,7 +94,7 @@
       initializePGroupsCanvas();
     }
 
-    // Υπολογισμός των offsets για κάθε block (s, p, d, f)
+    // Υπολογισμός offsets για κάθε block (s, p, d, f)
     function computeBlockOffsets() {
       ["s", "p", "d", "f"].forEach(block => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -103,22 +112,23 @@
       });
     }
 
-    // Υπολογισμός σχετικής θέσης στοιχείου μέσα σε ένα block
+    // Υπολογισμός σχετικής θέσης ενός στοιχείου μέσα στο block
     function calculateRelativePosition(element, block) {
       let pos = positions.expanded[element.number];
       let offset = blockOffsets[block];
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
-    // Δημιουργία καμβάδων για τα στοιχεία (Blocks)
+    // Δημιουργία καμβάδων για τα στοιχεία (Blocks) με σχεδίαση μέσω p5.js
     function initializeCanvases() {
-      if (isTableFilled) return; // Μόνο μία φορά!
+      if (isTableFilled) return;
       isTableFilled = true;
       
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
+        // Ορισμός θέσης και διαστάσεων του container σύμφωνα με το block offset
         container.style.left = offset.minX + "px";
         container.style.top = offset.minY + "px";
         container.style.width = offset.width + "px";
@@ -134,7 +144,7 @@
       });
     }
 
-    // Σχεδίαση των κελιών για κάθε block (με μεγαλύτερη γραμματοσειρά για τους ατομικούς αριθμούς)
+    // Σχεδίαση των κελιών για κάθε block – χρησιμοποιούμε textSize 14 και έντονο στυλ
     function drawElements(p, block) {
       const blockColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -143,14 +153,14 @@
         p.noStroke();
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(24);  // Μεγαλύτερο μέγεθος για τους ατομικούς αριθμούς
+        p.textSize(14);
+        p.textStyle(p.BOLD);
         p.textAlign(p.CENTER, p.CENTER);
-        // Τοποθέτηση του αριθμού στο κέντρο (με μικρή μετατόπιση στο y για καλύτερη εμφάνιση)
         p.text(e.number, pos.x + 20, pos.y + 25);
       });
     }
 
-    // Αρχικοποίηση του background καμβά (πλαίσιο)
+    // Αρχικοποίηση του background καμβά (πλαίσιο πίνακα)
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "10px";
@@ -160,7 +170,7 @@
       bg.style.display = "block";
     }
 
-    // Δημιουργία του καμβά για τις περιόδους (δεν εμφανίζεται αρχικά)
+    // Δημιουργία του καμβά για τις περιόδους όπως στο ALLtoDOM1, με textSize 14 και έντονο στυλ
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function () {
@@ -171,7 +181,7 @@
           container.style.top = positions.expanded["1"].y + "px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(16);
+          p.textSize(14);
           p.textStyle(p.BOLD);
           const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
           for (let i = 0; i < 7; i++) {
@@ -184,18 +194,19 @@
       });
     }
 
-    // Δημιουργία του καμβά για τα S-groups (όπως στο ALLtoDOM1)
+    // Δημιουργία του καμβά για τα S-groups – το left του container ορίζεται ως το left του τομέα (block S)
     function initializeSGroupsCanvas() {
       new p5(function(p){
         p.setup = function(){
           let canvas = p.createCanvas(84, 40);
           canvas.parent("canvasS_groups");
           let container = document.getElementById("canvasS_groups");
-          container.style.left = "75px";  // τιμές παραδείγματος – προσαρμόστε τις αν χρειάζεται
-          container.style.top = "78px";
+          // Ορισμός left ίσο με το left του τομέα s
+          container.style.left = blockOffsets["s"].minX + "px";
+          container.style.top = "78px"; // τιμή όπως στο ALLtoDOM1
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(16);
+          p.textSize(14);
           p.textStyle(p.BOLD);
           p.background(240);
           p.text("1", 20, 10);
@@ -206,18 +217,18 @@
       });
     }
 
-    // Δημιουργία του καμβά για τα D-groups
+    // Δημιουργία του καμβά για τα D-groups – left ίσο με το left του τομέα d
     function initializeDGroupsCanvas() {
       new p5(function(p) {
         p.setup = function(){
           let canvas = p.createCanvas(418, 40);
           canvas.parent("canvasD_groups");
           let container = document.getElementById("canvasD_groups");
-          container.style.left = "164px";  // τιμές παραδείγματος
+          container.style.left = blockOffsets["d"].minX + "px";
           container.style.top = "78px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(16);
+          p.textSize(14);
           p.textStyle(p.BOLD);
           p.background(240);
           for(let c = 0; c < 10; c++){
@@ -239,18 +250,18 @@
       });
     }
 
-    // Δημιουργία του καμβά για τα P-groups
+    // Δημιουργία του καμβά για τα P-groups – left ίσο με το left του τομέα p
     function initializePGroupsCanvas() {
       new p5(function(p) {
         p.setup = function(){
           let canvas = p.createCanvas(250, 40);
           canvas.parent("canvasP_groups");
           let container = document.getElementById("canvasP_groups");
-          container.style.left = "584px";  // τιμές παραδείγματος
+          container.style.left = blockOffsets["p"].minX + "px";
           container.style.top = "78px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(16);
+          p.textSize(14);
           p.textStyle(p.BOLD);
           p.background(240);
           for(let c = 0; c < 6; c++){
@@ -272,7 +283,7 @@
       });
     }
 
-    // Ενεργοποίηση του "Συμπλήρωσε" με το πάτημα του κουμπιού
+    // Ενεργοποίηση του "Συμπλήρωσε" με το πάτημα του κουμπιού, δημιουργώντας τους καμβάδες για τα στοιχεία
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeCanvases();
     });
