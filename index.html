@@ -138,6 +138,8 @@
     let elements = [];
     let currentZ = 0;
     let fillAllPressed = false;
+    // Δηλώνουμε selectedElement ως global μεταβλητή για να μην προκύπτει το error.
+    let selectedElement = null;
     // Ορισμός offset για μετατόπιση θέσεων (π.χ. 10px δεξιά και 10px κάτω)
     const offsetX = 10;
     const offsetY = 10;
@@ -237,7 +239,7 @@
         p.noStroke();
         p.fill("rgba(0,0,0,0.15)");
         p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-        // Επισήμανση για επιλεγμένο στοιχείο ή όταν το e.number ισούται με currentZ
+        // Έλεγχος για επιλεγμένο στοιχείο (αν υπάρχει)
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(window.getBlockColor(e.block));
           p.textSize(16);
@@ -335,12 +337,10 @@
       fillAllPressed = true;
       currentZ = 120; // Παράδειγμα για "Συμπλήρωσε" όλα
       console.log("Συμπλήρωσε πατήθηκε, currentZ: " + currentZ);
-      // Επανεκκίνηση καμβάδων με όλες τις θέσεις
       initializeCanvases();
     });
     
     document.getElementById('toggleFBlock').addEventListener('click', function() {
-      // Εναλλαγή εμφάνισης του block f
       let canvasF = document.getElementById('canvasF');
       if(canvasF.style.display === "none" || canvasF.style.display === "") {
         canvasF.style.display = "block";
