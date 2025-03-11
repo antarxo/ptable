@@ -2,35 +2,51 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Απεικόνιση expanded/collapsed</title>
+  <title>Toggle Expanded/Collapsed</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 </head>
 <body>
+  <!-- Κουμπί για την εναλλαγή μεταξύ expanded και collapsed -->
+  <button id="toggleButton">Εμφάνιση expanded</button>
+
   <script>
     let positions;
+    let showExpanded = true;  // αρχικά δείχνει expanded
 
     function preload() {
-      // Φόρτωση του αρχείου JSON (βεβαιώσου ότι το αρχείο positions.json βρίσκεται στον ίδιο φάκελο)
+      // Φόρτωση του αρχείου JSON. Βεβαιώσου ότι το positions.json είναι στον ίδιο φάκελο.
       positions = loadJSON('positions.json');
     }
 
     function setup() {
       createCanvas(1400, 300);
+      // Επιστροφή μηνύματος στο console για έλεγχο
       console.log("Expanded:", positions.expanded);
       console.log("Collapsed:", positions.collapsed);
+      
+      // Ορισμός listener στο κουμπί για εναλλαγή κατάστασης
+      const btn = document.getElementById('toggleButton');
+      btn.addEventListener('click', toggleState);
     }
 
     function draw() {
       background(240);
-      // Σχεδιάζουμε τα στοιχεία του "expanded" με κόκκινο χρώμα
-      drawPositions(positions.expanded, color(255, 0, 0));
-      
-      // Σχεδιάζουμε τα στοιχεία του "collapsed" με μπλε χρώμα (με μετατόπιση ώστε να φαίνονται ξεχωριστά)
-      push();
-      translate(0, 150);
-      drawPositions(positions.collapsed, color(0, 0, 255));
-      pop();
+      // Εμφάνιση της κατάστασης ανάλογα με το showExpanded
+      if (showExpanded) {
+        drawPositions(positions.expanded, color(255, 0, 0));
+      } else {
+        // Σχεδιάζουμε collapsed χωρίς μετατόπιση ώστε να φαίνεται ξεχωριστά
+        drawPositions(positions.collapsed, color(0, 0, 255));
+      }
+    }
+
+    // Συνάρτηση για εναλλαγή κατάστασης
+    function toggleState() {
+      showExpanded = !showExpanded;
+      // Ενημέρωση του κειμένου στο κουμπί
+      const btn = document.getElementById('toggleButton');
+      btn.textContent = showExpanded ? "Εμφάνιση expanded" : "Εμφάνιση collapsed";
     }
 
     // Συνάρτηση για την απεικόνιση των θέσεων κάθε ομάδας
