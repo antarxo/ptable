@@ -14,7 +14,7 @@
       overflow: hidden;
       background: #f7f7f7;
     }
-    /* Εδώ συμπεριλαμβάνονται τα βασικά στυλ για το layout, τους καμβάδες, τα panels και τα κουμπιά */
+    /* Τίτλος */
     #title {
       position: absolute;
       top: 20px;
@@ -34,7 +34,44 @@
       margin-left: 10px;
       vertical-align: middle;
     }
-    /* Μπορείτε να προσθέσετε επιπλέον CSS για τους καμβάδες και τα panels */
+    /* Button Panel - ορισμός θέσης και εμφάνισης */
+    #buttonPanel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 100;
+    }
+    #buttonPanel button {
+      background-color: #008CBA;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s;
+    }
+    #buttonPanel button:hover {
+      background-color: #005f75;
+    }
+    /* Επιπλέον CSS για καμβάδες και panels */
+    .canvas {
+      position: absolute;
+      background: transparent;
+      transition: all 0.5s ease-in-out;
+    }
+    #canvasTableBackground {
+      position: absolute;
+      background: white;
+      border: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 3px 3px rgba(0,0,0,0.2);
+      z-index: -10;
+      display: none;
+    }
+    /* Τα υπόλοιπα στυλ για τα panels και τους καμβάδες μπορούν να προστεθούν εδώ */
   </style>
 </head>
 <body class="full">
@@ -67,7 +104,7 @@
   <!-- Balloon -->
   <div id="canvasSubshells" class="canvas"></div>
   
-  <!-- Buttons -->
+  <!-- Button Panel -->
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -118,7 +155,7 @@
       .catch(err => console.error("Σφάλμα φόρτωσης JSON:", err));
 
     /* ================================================================
-       Ορισμός της συνάρτησης drawPlaceholderBackground
+       drawPlaceholderBackground: Σχεδιάζει ένα placeholder background
     ============================================================== */
     function drawPlaceholderBackground() {
       if(elements.length === 0) return;
@@ -151,7 +188,6 @@
       if(window.jsonPositions && window.jsonPositions["start"] && window.jsonPositions["start"][e.number]) {
          return { x: window.jsonPositions["start"][e.number].x, y: window.jsonPositions["start"][e.number].y };
       }
-      // Fallback: Δυναμικός υπολογισμός θέσης
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
       else if(block === 'f') { x = (e.col - 3) * 42; }
@@ -187,11 +223,9 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Σκίαση κελιού
         p.noStroke();
         p.fill("rgba(0,0,0,0.15)");
         p.rect(pos.x + 2, pos.y + 3, cellSize, cellSize, 5);
-        // Κύριο σχέδιο κελιού
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(window.getBlockColor(e.block));
           p.textSize(16);
@@ -241,7 +275,6 @@
             const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            // Ρυθμίσεις για το left του καμβά ανάλογα με την κατάσταση (collapsed/expanded)
             if(document.body.classList.contains('collapsed')){
               if(block === 's') { canvas.elt.style.left = "75px"; }
               else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
@@ -258,7 +291,7 @@
     }
 
     /* ================================================================
-       initSubshellsCanvas: Δημιουργεί ένα απλό καμβά για τα subshells (μπορείτε να το επεκτείνετε)
+       initSubshellsCanvas: Δημιουργεί έναν απλό καμβά για τα subshells
     ============================================================== */
     function initSubshellsCanvas() {
       new p5(function(p) {
@@ -271,7 +304,7 @@
     }
 
     /* ================================================================
-       updateToggleButton: Απλή λειτουργία για ενεργοποίηση του κουμπιού
+       updateToggleButton: Ενεργοποιεί το κουμπί toggle
     ============================================================== */
     function updateToggleButton() {
       let btn = document.getElementById('toggleFBlock');
@@ -296,10 +329,10 @@
     window.loadElements = loadElements;
 
     /* ================================================================
-       Εκκίνηση & Global assignments
+       Εκκίνηση
     ============================================================== */
     window.addEventListener('load', function() {
-       // Εδώ μπορείτε να προσθέσετε επιπλέον κώδικα για ενημέρωση panels κλπ.
+      // Μπορείτε να προσθέσετε επιπλέον κώδικα για ενημέρωση panels ή table background
     });
     loadElements();
     let ignoreCanvasClick = false;
