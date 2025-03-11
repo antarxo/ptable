@@ -34,7 +34,7 @@
       margin-left: 10px;
       vertical-align: middle;
     }
-    /* Button Panel - ορισμός θέσης και εμφάνισης */
+    /* Button Panel */
     #buttonPanel {
       position: fixed;
       bottom: 20px;
@@ -57,7 +57,7 @@
     #buttonPanel button:hover {
       background-color: #005f75;
     }
-    /* Επιπλέον CSS για καμβάδες και panels */
+    /* Βασικά στυλ για καμβάδες και panels */
     .canvas {
       position: absolute;
       background: transparent;
@@ -71,7 +71,7 @@
       z-index: -10;
       display: none;
     }
-    /* Τα υπόλοιπα στυλ για τα panels και τους καμβάδες μπορούν να προστεθούν εδώ */
+    /* Μπορείτε να προσθέσετε επιπλέον CSS για τα panels κλπ. */
   </style>
 </head>
 <body class="full">
@@ -108,7 +108,7 @@
   <div id="buttonPanel">
     <button id="nextElement">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
-    <button id="toggleFBlock">Σύμπτυξε</button>
+    <button id="toggleFBlock">Σύμπτυξε/Ανάπτυξε</button>
     <button id="reset">Reset</button>
   </div>
   
@@ -188,6 +188,7 @@
       if(window.jsonPositions && window.jsonPositions["start"] && window.jsonPositions["start"][e.number]) {
          return { x: window.jsonPositions["start"][e.number].x, y: window.jsonPositions["start"][e.number].y };
       }
+      // Fallback: Δυναμικός υπολογισμός θέσης
       let x = 0, y = (e.row - 1) * 42;
       if(block === 's') { x = (e.col - 1) * 42; }
       else if(block === 'f') { x = (e.col - 3) * 42; }
@@ -329,10 +330,41 @@
     window.loadElements = loadElements;
 
     /* ================================================================
-       Εκκίνηση
+       Event Listeners για τα κουμπιά
+    ============================================================== */
+    document.getElementById('nextElement').addEventListener('click', function() {
+      currentZ++;
+      console.log("Next Element clicked, currentZ: " + currentZ);
+      // Επανασχεδιάζουμε τους καμβάδες για να αντικατοπτρίσουμε το νέο currentZ
+      initializeCanvases();
+    });
+
+    document.getElementById('fillAll').addEventListener('click', function() {
+      currentZ = 123; // Παράδειγμα τιμής που υποδηλώνει συμπλήρωση
+      console.log("Fill All clicked, currentZ set to: " + currentZ);
+      initializeCanvases();
+    });
+
+    document.getElementById('toggleFBlock').addEventListener('click', function() {
+      // Εναλλάσσουμε την κλάση collapsed/expanded στο body
+      document.body.classList.toggle('collapsed');
+      console.log("Toggle clicked. Body classList:", document.body.classList);
+      initializeCanvases();
+    });
+
+    document.getElementById('reset').addEventListener('click', function() {
+      currentZ = 0;
+      fillAllPressed = false;
+      console.log("Reset clicked. currentZ reset to 0.");
+      initializeCanvases();
+      drawPlaceholderBackground();
+    });
+
+    /* ================================================================
+       Εκκίνηση: Φόρτωση στοιχείων και αρχικοί ορισμοί
     ============================================================== */
     window.addEventListener('load', function() {
-      // Μπορείτε να προσθέσετε επιπλέον κώδικα για ενημέρωση panels ή table background
+       // Μπορείτε να προσθέσετε επιπλέον κώδικα εδώ
     });
     loadElements();
     let ignoreCanvasClick = false;
