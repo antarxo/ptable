@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας με Σταθερές Σχετικές Θέσεις</title>
+  <title>Περιοδικός Πίνακας με Ατομικούς Αριθμούς</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; overflow: hidden; background: #f7f7f7; }
@@ -14,6 +14,8 @@
 <body>
 
   <!-- Καμβάδες -->
+  <div id="canvasPeriods" class="canvas"></div>
+  <div id="canvasGroups" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   <div id="canvasD" class="canvas"></div>
@@ -27,18 +29,18 @@
   <script>
     let elements = [];
     let positions = {};
-    let blockOffsets = {}; // minX, minY για κάθε block (σταθερό μετά την αρχική φόρτωση)
+    let blockOffsets = {}; // minX, minY για κάθε block
 
-    // 🔹 1. Φόρτωση δεδομένων
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
       
-      computeBlockOffsets(); // Σταθεροποιούμε τα offsets
+      computeBlockOffsets();
       initializeCanvases();
+      initializePeriodsCanvas();
+      initializeGroupsCanvas();
     }
 
-    // 🔹 2. Υπολογισμός των minX, minY σταθερά κατά την πρώτη φόρτωση
     function computeBlockOffsets() {
       ["s", "p", "d", "f"].forEach(block => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -53,23 +55,19 @@
           }
         });
         blockOffsets[block] = { minX, minY, width: maxX - minX, height: maxY - minY };
-        console.log(`📌 Block ${block} offsets:`, blockOffsets[block]);
       });
     }
 
-    // 🔹 3. Υπολογισμός σχετικών θέσεων εντός του καμβά
     function calculateRelativePosition(element, block) {
       let pos = positions.expanded[element.number];
       let offset = blockOffsets[block];
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
-    // 🔹 4. Αρχικοποίηση καμβάδων
     function initializeCanvases() {
       ["s", "p", "d", "f"].forEach(block => {
         let offset = blockOffsets[block];
 
-        // Διαγραφή υπάρχοντος περιεχομένου
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
 
@@ -89,30 +87,76 @@
       });
     }
 
-    // 🔹 5. Σχεδίαση των στοιχείων εντός των καμβάδων
     function drawElements(p, block) {
       elements.filter(e => e.block === block).forEach(e => {
         let pos = calculateRelativePosition(e, block);
         let color = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" }[block];
 
-        console.log(`🎨 Στοιχείο ${e.number} (${e.symbol}): Σχετική θέση x=${pos.x}, y=${pos.y}`);
-
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(12);
+        p.textSize(14);
         p.textAlign(p.CENTER, p.CENTER);
-        p.text(e.symbol, pos.x + 20, pos.y + 20);
+        p.text(e.number, pos.x + 20, pos.y + 20); // ΜΟΝΟ ο ατομικός αριθμός
       });
     }
 
-    // 🔹 6. Συμπλήρωση όλων των στοιχείων
+    function initializePeriodsCanvas() {
+      new p5(function (p) {
+        p.setup = function () {
+          let canvas = p.createCanvas(40, 294);
+          canvas.parent("canvasPeriods");
+
+          let container = document.getElementById("canvasPeriods");
+          container.style.left = "10px";
+          container.style.top = "63px";
+
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(14);
+          p.textStyle(p.BOLD);
+
+          const periodLabels = ["1", "2", "3", "4", "5", "6", "7"];
+          for (let i = 0; i < 7; i++) {
+            p.fill(240);
+            p.rect(0, i * 42, 40, 40);
+            p.fill(0);
+            p.text(periodLabels[i], 20, i * 42 + 20);
+          }
+        };
+      });
+    }
+
+    function initializeGroupsCanvas() {
+      new p5(function (p) {
+        p.setup = function () {
+          let canvas = p.createCanvas(1040, 40);
+          canvas.parent("canvasGroups");
+
+          let container = document.getElementById("canvasGroups");
+          container.style.left = "70px";
+          container.style.top = "15px";
+
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(14);
+          p.textStyle(p.BOLD);
+
+          for (let i = 0; i < 18; i++) {
+            let x = i * 58;
+            p.fill(240);
+            p.rect(x, 0, 40, 40);
+            p.fill(0);
+            p.text(i + 1, x + 20, 20);
+          }
+        };
+      });
+    }
+
     document.getElementById('fillAll').addEventListener('click', function() {
-      console.log("🔄 Επανασχεδίαση όλων των στοιχείων...");
       initializeCanvases();
     });
 
-    // 🔹 7. Φόρτωση δεδομένων κατά την εκκίνηση
     window.addEventListener('load', loadData);
   </script>
 
