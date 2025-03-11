@@ -2,70 +2,109 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Toggle Expanded/Collapsed</title>
+  <title>Toggle Grouped Expanded/Collapsed</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <style>
+    body { font-family: sans-serif; }
+    #toggleButton { margin-bottom: 10px; }
+  </style>
 </head>
 <body>
-  <!-- Κουμπί για την εναλλαγή μεταξύ expanded και collapsed -->
-  <button id="toggleButton">Εμφάνιση expanded</button>
-
+  <!-- Κουμπί εναλλαγής -->
+  <button id="toggleButton">Εμφάνιση Expanded</button>
   <script>
-    let positions;
+    let positions; // το αρχικό JSON από το αρχείο
+    let groupedExpanded, groupedCollapsed; // νέα αντικείμενα με ομαδοποιημένα στοιχεία
     let showExpanded = true;  // αρχικά δείχνει expanded
 
+    // Ορίζουμε τα όρια για κάθε τομέα βάσει x:
+    // s: x = 0 ή 42
+    // f: x από 84 έως 630
+    // d: x από 672 έως 1050
+    // p: x από 1092 έως 1302
+    function getGroup(x) {
+      if (x === 0 || x === 42) return "s";
+      else if (x >= 84 && x <= 630) return "f";
+      else if (x >= 672 && x <= 1050) return "d";
+      else if (x >= 1092 && x <= 1302) return "p";
+      return null;
+    }
+
+    // Ομαδοποιεί ένα σύνολο (expanded ή collapsed) σε s, f, d, p
+    function groupPositions(data) {
+      let grouped = { s: {}, f: {}, d: {}, p: {} };
+      // Για κάθε στοιχείο (key) στο data
+      for (let key in data) {
+        let pos = data[key];
+        let grp = getGroup(pos.x);
+        if (grp) {
+          // Κρατάμε το πρωτότυπο key για αναφορά
+          grouped[grp][key] = pos;
+        }
+      }
+      return grouped;
+    }
+
+    // Προφόρτωση του αρχείου JSON
     function preload() {
-      // Φόρτωση του αρχείου JSON. Βεβαιώσου ότι το positions.json είναι στον ίδιο φάκελο.
       positions = loadJSON('positions.json');
     }
 
     function setup() {
-      createCanvas(1400, 300);
-      // Επιστροφή μηνύματος στο console για έλεγχο
-      console.log("Expanded:", positions.expanded);
-      console.log("Collapsed:", positions.collapsed);
+      createCanvas(1400, 320);
+      // Ομαδοποιούμε τα δεδομένα από expanded και collapsed
+      groupedExpanded = groupPositions(positions.expanded);
+      groupedCollapsed = groupPositions(positions.collapsed);
       
-      // Ορισμός listener στο κουμπί για εναλλαγή κατάστασης
+      console.log("Grouped Expanded:", groupedExpanded);
+      console.log("Grouped Collapsed:", groupedCollapsed);
+      
+      // Listener για το κουμπί εναλλαγής
       const btn = document.getElementById('toggleButton');
       btn.addEventListener('click', toggleState);
     }
 
     function draw() {
       background(240);
-      // Εμφάνιση της κατάστασης ανάλογα με το showExpanded
+      // Εμφάνιση ανάλογα με την τιμή της showExpanded
       if (showExpanded) {
-        drawPositions(positions.expanded, color(255, 0, 0));
+        drawGroupedPositions(groupedExpanded, color(255, 0, 0));
+        fill(0);
+        textSize(16);
+        text("Expanded", 10, 20);
       } else {
-        // Σχεδιάζουμε collapsed χωρίς μετατόπιση ώστε να φαίνεται ξεχωριστά
-        drawPositions(positions.collapsed, color(0, 0, 255));
+        drawGroupedPositions(groupedCollapsed, color(0, 0, 255));
+        fill(0);
+        textSize(16);
+        text("Collapsed", 10, 20);
       }
     }
 
-    // Συνάρτηση για εναλλαγή κατάστασης
-    function toggleState() {
-      showExpanded = !showExpanded;
-      // Ενημέρωση του κειμένου στο κουμπί
-      const btn = document.getElementById('toggleButton');
-      btn.textContent = showExpanded ? "Εμφάνιση expanded" : "Εμφάνιση collapsed";
-    }
-
-    // Συνάρτηση για την απεικόνιση των θέσεων κάθε ομάδας
-    function drawPositions(data, fillColor) {
-      for (let group in data) {
-        let groupItems = data[group];
+    // Συνάρτηση που σχεδιάζει ορθογώνια για κάθε ομάδα (s, f, d, p)
+    function drawGroupedPositions(groupedData, fillColor) {
+      // Για κάθε ομάδα (π.χ. s, f, d, p)
+      for (let group in groupedData) {
+        let groupItems = groupedData[group];
         for (let key in groupItems) {
           let pos = groupItems[key];
           fill(fillColor);
           stroke(0);
           rect(pos.x, pos.y, pos.width, pos.height);
-          
-          // Προαιρετικά: εμφάνιση του key πάνω στο ορθογώνιο
+          // Εμφάνιση του key μέσα στο ορθογώνιο
           fill(0);
           noStroke();
           textSize(10);
           text(key, pos.x + 2, pos.y + 12);
         }
       }
+    }
+
+    // Εναλλαγή κατάστασης
+    function toggleState() {
+      showExpanded = !showExpanded;
+      const btn = document.getElementById('toggleButton');
+      btn.textContent = showExpanded ? "Εμφάνιση Expanded" : "Εμφάνιση Collapsed";
     }
   </script>
 </body>
