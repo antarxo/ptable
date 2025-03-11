@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα - JSON Positions</title>
+  <title>Διαδραστική κατασκευή του Περιοδικού Πίνακα - Απόλυτες Θέσεις JSON</title>
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
@@ -71,7 +71,6 @@
       z-index: -10;
       display: none;
     }
-    /* Μπορείτε να προσθέσετε επιπλέον CSS για τα panels κλπ. */
   </style>
 </head>
 <body class="full">
@@ -143,7 +142,7 @@
     };
 
     /* ================================================================
-       Φόρτωση του αρχείου JSON με τις θέσεις
+       Φόρτωση του αρχείου JSON με τις απόλυτες θέσεις
     ============================================================== */
     window.jsonPositions = null;
     fetch('positions.json')
@@ -163,14 +162,11 @@
       if(!element) return;
       let canvasEl = document.getElementById("canvas" + element.block.toUpperCase());
       if(!canvasEl) return;
-      let rect = canvasEl.getBoundingClientRect();
       let pos = calculatePosition(element, element.block);
-      let left = rect.left + pos.x;
-      let top = rect.top + pos.y;
       let bg = document.getElementById("canvasTableBackground");
       if(bg) {
-         bg.style.left = left + "px";
-         bg.style.top = top + "px";
+         bg.style.left = pos.x + "px";
+         bg.style.top = pos.y + "px";
          bg.style.width = "62px";
          bg.style.height = "62px";
          bg.style.display = "block";
@@ -178,7 +174,8 @@
     }
 
     /* ================================================================
-       calculatePosition: Επιστρέφει τη θέση ενός στοιχείου βάσει του JSON
+       calculatePosition: Επιστρέφει τη θέση του στοιχείου με απόλυτες τιμές από το JSON
+       (δεν προσθέτει offsets)
     ============================================================== */
     function calculatePosition(e, block) {
       let mode = document.body.classList.contains('collapsed') ? "collapsed" : "expanded";
@@ -188,16 +185,8 @@
       if(window.jsonPositions && window.jsonPositions["start"] && window.jsonPositions["start"][e.number]) {
          return { x: window.jsonPositions["start"][e.number].x, y: window.jsonPositions["start"][e.number].y };
       }
-      // Fallback: Δυναμικός υπολογισμός θέσης
-      let x = 0, y = (e.row - 1) * 42;
-      if(block === 's') { x = (e.col - 1) * 42; }
-      else if(block === 'f') { x = (e.col - 3) * 42; }
-      else if(block === 'd') { x = (e.col - 3) * 42; }
-      else if(block === 'p') {
-          if(currentZ < 20 && e.row === 1) { x = (e.col - 18) * 42; }
-          else { x = (e.col - 13) * 42; }
-      }
-      return { x: x, y: y };
+      // Fallback: Επιστροφή (0,0) αν δεν βρεθεί τίποτα στο JSON
+      return { x: 0, y: 0 };
     }
     
     /* ================================================================
@@ -224,14 +213,15 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
+        // Σχεδιάζουμε το κελί χωρίς offset, αφού οι θέσεις είναι απόλυτες
         p.noStroke();
         p.fill("rgba(0,0,0,0.15)");
-        p.rect(pos.x + 2, pos.y + 3, cellSize, cellSize, 5);
+        p.rect(pos.x, pos.y, cellSize, cellSize, 5);
         if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
           p.fill(window.getBlockColor(e.block));
           p.textSize(16);
           p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+          p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
           p.noFill();
           p.stroke(window.getBlockColor(e.block));
           p.strokeWeight(3);
@@ -246,7 +236,7 @@
             else { p.fill(window.getBlockColor(e.block)); }
             p.textSize(16);
             p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+            p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
             p.noFill();
             p.stroke(window.getBlockColor(e.block));
             p.strokeWeight(4);
@@ -260,7 +250,7 @@
             p.fill(0);
             p.textSize(Number(e.number) > 99 ? 10 : 12);
             p.textStyle(p.BOLD);
-            p.text(displayNumber.toString(), pos.x + 20, pos.y + 20);
+            p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
           }
         }
       });
@@ -276,15 +266,7 @@
             const config = window.BLOCKS_CONFIG[block];
             const canvas = p.createCanvas(config.cols * 42, config.rows * 42);
             canvas.parent("canvas" + block.toUpperCase());
-            if(document.body.classList.contains('collapsed')){
-              if(block === 's') { canvas.elt.style.left = "75px"; }
-              else if(block === 'f' || block === 'd') { canvas.elt.style.left = (block === 'f' ? "179px" : "164px"); }
-              else if(block === 'p') { canvas.elt.style.left = "584px"; }
-            } else {
-              if(block === 's') { canvas.elt.style.left = "75px"; }
-              else if(block === 'f' || block === 'd' || block === 'p') { canvas.elt.style.left = "159px"; }
-            }
-            canvas.elt.style.height = config.rows * 42 + "px";
+            // Δεν εφαρμόζουμε offset, οι θέσεις καθορίζονται από το JSON
             window.drawElements(p, block);
           };
         });
@@ -335,18 +317,16 @@
     document.getElementById('nextElement').addEventListener('click', function() {
       currentZ++;
       console.log("Next Element clicked, currentZ: " + currentZ);
-      // Επανασχεδιάζουμε τους καμβάδες για να αντικατοπτρίσουμε το νέο currentZ
       initializeCanvases();
     });
 
     document.getElementById('fillAll').addEventListener('click', function() {
-      currentZ = 123; // Παράδειγμα τιμής που υποδηλώνει συμπλήρωση
+      currentZ = 123;
       console.log("Fill All clicked, currentZ set to: " + currentZ);
       initializeCanvases();
     });
 
     document.getElementById('toggleFBlock').addEventListener('click', function() {
-      // Εναλλάσσουμε την κλάση collapsed/expanded στο body
       document.body.classList.toggle('collapsed');
       console.log("Toggle clicked. Body classList:", document.body.classList);
       initializeCanvases();
@@ -361,10 +341,10 @@
     });
 
     /* ================================================================
-       Εκκίνηση: Φόρτωση στοιχείων και αρχικοί ορισμοί
+       Εκκίνηση
     ============================================================== */
     window.addEventListener('load', function() {
-       // Μπορείτε να προσθέσετε επιπλέον κώδικα εδώ
+      // Προαιρετικά επιπλέον initialization
     });
     loadElements();
     let ignoreCanvasClick = false;
