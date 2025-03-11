@@ -48,9 +48,15 @@
       
       computeBlockOffsets();
       initializeCanvases();
-      initializePeriodsCanvas();
-      initializeGroupsCanvas();
       initializeBackgroundCanvas();
+
+      // Κλήση των περιόδων και ομάδων **μόνο όταν τα δεδομένα έχουν φορτωθεί**
+      if (positions.expanded["1"]) {
+        initializePeriodsCanvas();
+        initializeGroupsCanvas();
+      } else {
+        console.error("❌ Σφάλμα: Δεν φορτώθηκαν σωστά οι θέσεις των περιόδων και ομάδων!");
+      }
     }
 
     function computeBlockOffsets() {
@@ -107,9 +113,9 @@
         p.fill(color);
         p.rect(pos.x, pos.y, 40, 40, 5);
         p.fill(0);
-        p.textSize(18);
+        p.textSize(22); // 🔹 Μέγεθος γραμματοσειράς από newptablejson
         p.textAlign(p.CENTER, p.CENTER);
-        p.text(e.number, pos.x + 20, pos.y + 20); // ΜΟΝΟ ο ατομικός αριθμός
+        p.text(e.number, pos.x + 20, pos.y + 20);
       });
     }
 
@@ -120,8 +126,8 @@
           canvas.parent("canvasPeriods");
 
           let container = document.getElementById("canvasPeriods");
-          container.style.left = positions.expanded["H"].x - 50 + "px"; // Ευθυγράμμιση με πρώτο στοιχείο
-          container.style.top = positions.expanded["H"].y + "px";
+          container.style.left = positions.expanded["1"].x - 50 + "px"; // Ευθυγράμμιση με πρώτο στοιχείο
+          container.style.top = positions.expanded["1"].y + "px";
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
@@ -146,8 +152,8 @@
           canvas.parent("canvasGroups");
 
           let container = document.getElementById("canvasGroups");
-          container.style.left = positions.expanded["Li"].x + "px"; // Ευθυγράμμιση με πρώτο στοιχείο ομάδας
-          container.style.top = positions.expanded["Li"].y - 50 + "px"; 
+          container.style.left = positions.expanded["3"].x + "px"; // Ευθυγράμμιση με πρώτο στοιχείο ομάδας
+          container.style.top = positions.expanded["3"].y - 50 + "px"; 
 
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
