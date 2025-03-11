@@ -175,9 +175,8 @@
       }
     };
     
-    // Global μεταβλητή για το positions.json
+    // Φόρτωση positions.json – αποκλειστικά για τις θέσεις
     window.jsonPositions = null;
-    // Φόρτωση του positions.json (αποκλειστικά για τις θέσεις)
     fetch('positions.json')
       .then(response => response.json())
       .then(data => {
@@ -203,7 +202,7 @@
     }
     
     /* ===============================================================
-       drawElements: Σχεδιάζει τα στοιχεία χρησιμοποιώντας τις απόλυτες θέσεις
+       drawElements: Σχεδιάζει τα στοιχεία με χρήση των απόλυτων θέσεων (χωρίς επιπλέον offsets)
     =============================================================== */
     window.drawElements = function(p, block) {
       p.stroke(150);
@@ -226,48 +225,15 @@
         let displayNumber = Number(e.number);
         if(Number(e.number) === 119) displayNumber = 1;
         if(Number(e.number) === 120) displayNumber = 2;
-        // Σχεδίαση κελιού (με ελαφριά σκίαση αν υπάρχει flash)
+        // Σχεδιάζουμε το κελί στις απόλυτες συντεταγμένες (χωρίς πρόσθετα offsets)
         p.noStroke();
-        if(flashActive) {
-           p.fill("rgba(0,0,0,0.15)");
-           p.rect(pos.x + 2, pos.y + 3, cellSize, cellSize, 5);
-        }
-        if(selectedElement && Number(e.number) === Number(selectedElement.number)) {
-          p.fill(window.getBlockColor(e.block));
-          p.textSize(16);
-          p.textAlign(p.CENTER, p.CENTER);
-          p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
-          p.noFill();
-          p.stroke(window.getBlockColor(e.block));
-          p.strokeWeight(3);
-          p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-          p.strokeWeight(1);
-        } else {
-          if(Number(e.number) === currentZ ||
-             ((currentZ === 119) && Number(e.number) === 1) ||
-             ((currentZ === 120) && Number(e.number) === 2)) {
-            if(Number(e.number) === 119) { p.fill("yellow"); }
-            else if(Number(e.number) === 120) { p.fill(window.BLOCK_COLORS["s"]); }
-            else { p.fill(window.getBlockColor(e.block)); }
-            p.textSize(16);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
-            p.noFill();
-            p.stroke(window.getBlockColor(e.block));
-            p.strokeWeight(4);
-            p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-            p.strokeWeight(1);
-          } else {
-            if(Number(e.number) === 119) { p.fill("yellow"); }
-            else if(Number(e.number) === 120) { p.fill(window.BLOCK_COLORS["s"]); }
-            else { p.fill(window.BLOCK_COLORS[e.block]); }
-            p.rect(pos.x, pos.y, cellSize, cellSize, 5);
-            p.fill(0);
-            p.textSize(Number(e.number) > 99 ? 10 : 12);
-            p.textStyle(p.BOLD);
-            p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
-          }
-        }
+        p.fill(window.BLOCK_COLORS[e.block]);
+        p.rect(pos.x, pos.y, cellSize, cellSize, 5);
+        p.fill(0);
+        p.textSize(Number(e.number) > 99 ? 10 : 12);
+        p.textStyle(p.BOLD);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.text(displayNumber.toString(), pos.x + cellSize/2, pos.y + cellSize/2);
       });
     };
     
@@ -347,7 +313,7 @@
     };
     
     /* ===============================================================
-       computeCellPositions: Υπολογίζει τις απόλυτες θέσεις των κελιών
+       computeCellPositions: Υπολογίζει τις απόλυτες θέσεις των κελιών με βάση τις τιμές από το JSON
     =============================================================== */
     function computeCellPositions() {
       const cellSize = 40;
@@ -373,7 +339,7 @@
     }
     
     /* ===============================================================
-       isRevealed: Ελέγχει αν το στοιχείο έχει αποκαλυφθεί
+       isRevealed: Ελέγχει αν το στοιχείο έχει αποκαλυφθεί σύμφωνα με το currentZ
     =============================================================== */
     function isRevealed(e) {
       if(currentZ < 118) return Number(e.number) >= 3 && Number(e.number) <= currentZ;
@@ -385,7 +351,7 @@
     }
     
     /* ===============================================================
-       updateTableBackground: Ενημερώνει το background canvas
+       updateTableBackground: Ενημερώνει το background canvas χρησιμοποιώντας τις προϋπολογισμένες θέσεις
     =============================================================== */
     function updateTableBackground() {
       if(currentZ === 123) {
@@ -422,7 +388,7 @@
     }
     
     /* ===============================================================
-       updateInfo: Ενημερώνει το information panel με τα στοιχεία του στοιχείου
+       updateInfo: Ενημερώνει το information panel με τα δεδομένα του στοιχείου
     =============================================================== */
     function updateInfo(clickedZ) {
       let currentNum;
@@ -477,7 +443,7 @@
     }
     
     /* ===============================================================
-       updateBalloonPosition: Ενημερώνει τη θέση του balloon για τα subshells
+       updateBalloonPosition: Τοποθετεί το balloon ακριβώς σύμφωνα με τις προκαθορισμένες θέσεις
     =============================================================== */
     function updateBalloonPosition(element) {
       let cs = document.getElementById('canvasSubshells');
@@ -486,12 +452,13 @@
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
       let rect = blockCanvas.getBoundingClientRect();
-      let pos = calculatePosition(element, element.block);
-      let defaultLeft = rect.left + pos.x + 40;
-      let defaultTop = rect.top + pos.y + 40;
-      let leftPos = defaultLeft - 5;
+      // Χρησιμοποιούμε τις προκαθορισμένες τιμές χωρίς πρόσθετα offsets
+      let defaultLeft = rect.left + calculatePosition(element, element.block).x;
+      let defaultTop = rect.top + calculatePosition(element, element.block).y;
+      let leftPos = defaultLeft;
       let topPos = defaultTop;
       let balloonWidth = cs.offsetWidth;
+      // Αν το balloon ξεπερνά το μέσο της οθόνης, μετακινούμε το ώστε να μην αποκοπεί
       if(defaultLeft > window.innerWidth / 2) { leftPos = defaultLeft - (33 + balloonWidth); }
       if(leftPos + balloonWidth > window.innerWidth) { leftPos = window.innerWidth - balloonWidth - 5; }
       cs.style.display = "block";
@@ -500,7 +467,7 @@
     }
     
     /* ===============================================================
-       drawSubshells: Σχεδιάζει το περιεχόμενο του balloon
+       drawSubshells: Σχεδιάζει το περιεχόμενο του balloon για τα subshells
     =============================================================== */
     window.drawSubshells = function(data) {
       if (!subshellsP) return;
@@ -647,7 +614,7 @@
     window.initGroupsCanvases = initGroupsCanvases;
     
     /* ===============================================================
-       setFixedGroupsPositions: Θέτει τις θέσεις για τις ομάδες ανάλογα με το state
+       setFixedGroupsPositions: Θέτει τις θέσεις για τις ομάδες βάσει του state
     =============================================================== */
     window.setFixedGroupsPositions = function(state) {
       if(!fillAllPressed) state = "expanded";
@@ -669,7 +636,7 @@
     };
     
     /* ===============================================================
-       updateSectors: Ενημερώνει τις θέσεις των διάφορων καμβάδων ανάλογα με το currentZ και το state
+       updateSectors: Ενημερώνει τις θέσεις των καμβάδων ανάλογα με το currentZ και το state
     =============================================================== */
     window.updateSectors = function(state) {
       let base = 159, shiftP = 0, shiftD = 0;
