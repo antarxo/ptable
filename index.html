@@ -188,6 +188,10 @@
     checkJSON(positions);
     computeBlockOffsets(currentMode);
     buildAllSpatialHashes();
+    // Καταγράφουμε τις τιμές του στοιχείου 1 από το positions.json για το expanded mode
+    if (positions.expanded && positions.expanded["1"]) {
+      console.log("positions.json - Element 1:", positions.expanded["1"]);
+    }
     // Χρησιμοποιούμε την διαδικασία "Συμπλήρωσε" ως default
     if (!isTableFilled) {
       document.getElementById('fillAll').click();
@@ -452,6 +456,10 @@
     // Εμφάνιση debug canvas μόνο όταν το mode είναι expanded
     debugDiv.style.display = (currentMode === "expanded") ? "block" : "none";
     
+    // Λήψη DOM θέσης του debug canvas
+    let debugRect = debugDiv.getBoundingClientRect();
+    console.log("Debug canvas DOM position: left =", debugRect.left, "top =", debugRect.top);
+    
     new p5(function(p) {
       p.setup = function() {
         let canvasWidth = parseInt(expandedBackground.width);
@@ -469,6 +477,14 @@
         for (let atomicNumber in posObj) {
           let rect = posObj[atomicNumber];
           p.rect(rect.x, rect.y, rect.width, rect.height);
+          // Αν το στοιχείο είναι το 1, καταγράφουμε τις τιμές του
+          if (atomicNumber === "1") {
+            console.log("Debug cell for Element 1: x =", rect.x, "y =", rect.y);
+            // Υπολογισμός οθονικής θέσης για το κελί (προσθέτοντας το debug canvas DOM offset)
+            let screenX = debugRect.left + rect.x;
+            let screenY = debugRect.top + rect.y;
+            console.log("Screen coordinates for Debug cell 1: left =", screenX, "top =", screenY);
+          }
         }
       };
     });
