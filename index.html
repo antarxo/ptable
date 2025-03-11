@@ -77,14 +77,14 @@
     }
 
     // Δημιουργία του background canvas
-    function initializeBackgroundCanvas() {
-      let bg = document.getElementById("canvasTableBackground");
-      bg.style.left = "20px"; // background left
-      bg.style.top = "50px";  // background top
-      bg.style.width = "1412px";
-      bg.style.height = "368px";
-      bg.style.opacity = "1";
-    }
+function initializeBackgroundCanvas() {
+  let bg = document.getElementById("canvasTableBackground");
+  bg.style.left = "16px"; // Μετακίνηση 4px αριστερά (20px - 4px)
+  bg.style.top = "50px";
+  bg.style.width = "1412px";
+  bg.style.height = "368px";
+  bg.style.opacity = "1";
+}
 
     // Δημιουργία του canvas των ομάδων
     function initializeGroupsCanvas() {
