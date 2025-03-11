@@ -1,46 +1,56 @@
-let positions;
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Απεικόνιση expanded/collapsed</title>
+  <!-- Φόρτωση της βιβλιοθήκης p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+</head>
+<body>
+  <script>
+    let positions;
 
-function preload() {
-  // Φορτώνουμε το JSON αρχείο (βεβαιώσου ότι το αρχείο positions.json είναι διαθέσιμο στο ίδιο φάκελο)
-  positions = loadJSON('positions.json');
-}
-
-function setup() {
-  createCanvas(1400, 300);
-  // Μπορούμε να δούμε τα δεδομένα στο console για έλεγχο
-  console.log("Expanded:", positions.expanded);
-  console.log("Collapsed:", positions.collapsed);
-}
-
-function draw() {
-  background(240);
-
-  // Σχεδιάζουμε τα στοιχεία του "expanded" με κόκκινο χρώμα
-  drawPositions(positions.expanded, color(255, 0, 0));
-  
-  // Σχεδιάζουμε τα στοιχεία του "collapsed" με μπλε χρώμα (με μετατόπιση ώστε να φαίνονται ξεχωριστά)
-  push();
-  translate(0, 150);
-  drawPositions(positions.collapsed, color(0, 0, 255));
-  pop();
-}
-
-// Συνάρτηση που διατρέχει τα στοιχεία ενός block (π.χ. expanded ή collapsed)
-// και σχεδιάζει ένα ορθογώνιο για κάθε θέση.
-function drawPositions(data, fillColor) {
-  for (let group in data) {
-    let groupItems = data[group];
-    for (let key in groupItems) {
-      let pos = groupItems[key];
-      fill(fillColor);
-      stroke(0);
-      rect(pos.x, pos.y, pos.width, pos.height);
-      
-      // Προαιρετικά: εμφάνιση του key πάνω στο ορθογώνιο
-      fill(0);
-      noStroke();
-      textSize(10);
-      text(key, pos.x + 2, pos.y + 12);
+    function preload() {
+      // Φόρτωση του αρχείου JSON (βεβαιώσου ότι το αρχείο positions.json βρίσκεται στον ίδιο φάκελο)
+      positions = loadJSON('positions.json');
     }
-  }
-}
+
+    function setup() {
+      createCanvas(1400, 300);
+      console.log("Expanded:", positions.expanded);
+      console.log("Collapsed:", positions.collapsed);
+    }
+
+    function draw() {
+      background(240);
+      // Σχεδιάζουμε τα στοιχεία του "expanded" με κόκκινο χρώμα
+      drawPositions(positions.expanded, color(255, 0, 0));
+      
+      // Σχεδιάζουμε τα στοιχεία του "collapsed" με μπλε χρώμα (με μετατόπιση ώστε να φαίνονται ξεχωριστά)
+      push();
+      translate(0, 150);
+      drawPositions(positions.collapsed, color(0, 0, 255));
+      pop();
+    }
+
+    // Συνάρτηση για την απεικόνιση των θέσεων κάθε ομάδας
+    function drawPositions(data, fillColor) {
+      for (let group in data) {
+        let groupItems = data[group];
+        for (let key in groupItems) {
+          let pos = groupItems[key];
+          fill(fillColor);
+          stroke(0);
+          rect(pos.x, pos.y, pos.width, pos.height);
+          
+          // Προαιρετικά: εμφάνιση του key πάνω στο ορθογώνιο
+          fill(0);
+          noStroke();
+          textSize(10);
+          text(key, pos.x + 2, pos.y + 12);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
