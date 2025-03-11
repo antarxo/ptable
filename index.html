@@ -468,25 +468,20 @@
         canvas.parent("canvasDebug");
         p.noLoop();
       };
-      p.draw = function() {
-        p.clear();
-        p.stroke(0); // Μαύρα περιγράμματα
-        p.noFill();
-        // Διαβάζουμε τις θέσεις από το positions.json για το expanded mode
-        let posObj = positions["expanded"];
-        for (let atomicNumber in posObj) {
-          let rect = posObj[atomicNumber];
-          p.rect(rect.x, rect.y, rect.width, rect.height);
-          // Αν το στοιχείο είναι το 1, καταγράφουμε τις τιμές του
-          if (atomicNumber === "1") {
-            console.log("Debug cell for Element 1: x =", rect.x, "y =", rect.y);
-            // Υπολογισμός οθονικής θέσης για το κελί (προσθέτοντας το debug canvas DOM offset)
-            let screenX = debugRect.left + rect.x;
-            let screenY = debugRect.top + rect.y;
-            console.log("Screen coordinates for Debug cell 1: left =", screenX, "top =", screenY);
-          }
-        }
-      };
+p.draw = function() {
+  p.clear();
+  p.stroke(0); // Μαύρα περιγράμματα
+  p.noFill();
+  let posObj = positions["expanded"];
+  for (let atomicNumber in posObj) {
+    let rect = posObj[atomicNumber];
+    // Εφαρμόζουμε την ομοιόμορφη διόρθωση για όλα τα κελιά:
+    let correctedX = rect.x - 24;
+    let correctedY = rect.y + 7;
+    p.rect(correctedX, correctedY, rect.width, rect.height);
+  }
+};
+
     });
   }
   
