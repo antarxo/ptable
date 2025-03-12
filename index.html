@@ -78,7 +78,6 @@
   <script>
     let elements = [];
     let positions = {};
-    let blockOffsets = {}; 
     let isTableFilled = false;
     let isCollapsed = false;
     // Ορίζουμε το τρέχον mode: "expanded" ή "collapsed"
@@ -101,33 +100,6 @@
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
       checkJSON(positions);
-      computeBlockOffsets(currentMode);
-    }
-
-    // Υπολογισμός ορίων για κάθε block με βάση το mode
-    function computeBlockOffsets(mode) {
-      let blocks = ["s", "p", "d", "f"];
-      blocks.forEach(block => {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        Object.keys(positions[mode]).forEach(num => {
-          let e = elements.find(el => el.number == num);
-          if (e && e.block === block) {
-            let pos = positions[mode][num];
-            minX = Math.min(minX, pos.x);
-            minY = Math.min(minY, pos.y);
-            maxX = Math.max(maxX, pos.x + pos.width);
-            maxY = Math.max(maxY, pos.y + pos.height);
-          }
-        });
-        blockOffsets[block] = { minX, minY, width: maxX - minX, height: maxY - minY };
-      });
-    }
-
-    // Υπολογισμός σχετικής θέσης, με χρήση του mode
-    function calculateRelativePosition(element, block, mode) {
-      let pos = positions[mode][element.number];
-      let offset = blockOffsets[block];
-      return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
     // Αρχική διαμόρφωση του background canvas σύμφωνα με το expanded mode
@@ -216,7 +188,7 @@
         };
       });
       
-      // Ενημέρωση θέσεων ομάδων βάσει του τρέχοντος mode:
+      // Τοποθέτηση ομάδων βάσει του πρώτου στοιχείου (ανάγνωση τιμών απευθείας από το JSON)
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -255,54 +227,58 @@
       });
     }
 
-    // Αρχικοποίηση του καμβά τομέων για κάθε block με χρήση του τρέχοντος mode
+    // Αρχικοποίηση του καμβά τομέων για κάθε block, χρησιμοποιώντας τις τιμές του JSON απευθείας
     function initializeSectorsCanvas() {
-      computeBlockOffsets(currentMode);
-      let desiredLeftS = 66;
-      let deltaS = desiredLeftS - blockOffsets["s"].minX;
-      let sectorsTop = 110;
-      ["s", "p", "d", "f"].forEach(block => {
-        let offset = blockOffsets[block];
+      let blocks = ["s", "p", "d", "f"];
+      blocks.forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        container.style.left = (offset.minX + deltaS) + "px";
-        if(block === "s" || block === "p") {
-          container.style.top = sectorsTop + "px";
-        } else if (block === "d") {
-          let referenceBottom = sectorsTop + blockOffsets["s"].height;
-          container.style.top = (referenceBottom - offset.height) + "px";
-        } else if (block === "f") {
-          let firstF = elements.find(e => e.block === "f");
-          if(firstF) {
-            container.style.top = positions[currentMode][firstF.number].y + "px";
-          } else {
-            container.style.top = sectorsTop + "px"; // εφεδρική τοποθέτηση σε περίπτωση που δεν βρεθεί στοιχείο
-          }
+        // Επιλέγουμε το πρώτο στοιχείο του block για να ορίσουμε την αρχική θέση του container
+        let firstEl = elements.find(e => e.block === block);
+        if(firstEl && positions[currentMode][firstEl.number]) {
+          let containerLeft = positions[currentMode][firstEl.number].x;
+          let containerTop = positions[currentMode][firstEl.number].y;
+          container.style.left = containerLeft + "px";
+          container.style.top = containerTop + "px";
+          // Υπολογισμός διαστάσεων: βρίσκουμε το μέγιστο x και y μεταξύ όλων των στοιχείων του block
+          let maxX = containerLeft;
+          let maxY = containerTop;
+          elements.filter(e => e.block === block).forEach(e => {
+            if(positions[currentMode][e.number]){
+              let pos = positions[currentMode][e.number];
+              maxX = Math.max(maxX, pos.x + pos.width);
+              maxY = Math.max(maxY, pos.y + pos.height);
+            }
+          });
+          container.style.width = (maxX - containerLeft) + "px";
+          container.style.height = (maxY - containerTop) + "px";
+          new p5(function(p) {
+            p.setup = function() {
+              let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+              canvas.parent("canvas" + block.toUpperCase());
+              drawElements(p, block, containerLeft, containerTop);
+            };
+          });
         }
-        container.style.width = offset.width + "px";
-        container.style.height = offset.height + "px";
-        new p5(function(p) {
-          p.setup = function() {
-            let canvas = p.createCanvas(offset.width, offset.height);
-            canvas.parent("canvas" + block.toUpperCase());
-            drawElements(p, block);
-          };
-        });
       });
     }
 
-    function drawElements(p, block) {
+    // Σχεδίαση στοιχείων χρησιμοποιώντας τις τιμές του JSON (αποτέλεσμα χωρίς πρόσθετους υπολογισμούς)
+    function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-      const cellWidth = 40, cellHeight = 40, cellRadius = 5;
       elements.filter(e => e.block === block).forEach(e => {
-        let pos = calculateRelativePosition(e, block, currentMode);
-        p.fill(colors[block] || "#CCCCCC");
-        p.rect(pos.x, pos.y, cellWidth, cellHeight, cellRadius);
-        p.fill(0);
-        p.textSize(13);
-        p.textStyle(p.BOLD);
-        p.textAlign(p.CENTER, p.CENTER);
-        p.text(e.number, pos.x + cellWidth/2, pos.y + cellHeight/2);
+        let pos = positions[currentMode][e.number];
+        if(pos){
+          let relativeX = pos.x - containerLeft;
+          let relativeY = pos.y - containerTop;
+          p.fill(colors[block] || "#CCCCCC");
+          p.rect(relativeX, relativeY, pos.width, pos.height, 5);
+          p.fill(0);
+          p.textSize(13);
+          p.textStyle(p.BOLD);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text(e.number, relativeX + pos.width/2, relativeY + pos.height/2);
+        }
       });
     }
 
@@ -314,7 +290,7 @@
         initializePeriodsCanvas();       
         initGroupsCanvases();
         isTableFilled = true;
-        // Μόλις πατηθεί το "Συμπλήρωσε", ενεργοποιούμε το toggle
+        // Ενεργοποίηση του toggle μόλις συμπληρωθεί ο πίνακας
         document.getElementById('toggleFBlock').disabled = false;
       }
     });
