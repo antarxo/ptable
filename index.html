@@ -487,10 +487,8 @@
         let posObj = positions[currentMode]; // Χρησιμοποιούμε το επιλεγμένο mode
         for (let atomicNumber in posObj) {
           let rect = posObj[atomicNumber];
-          // Εφαρμόζουμε την ομοιόμορφη διόρθωση για όλα τα κελιά:
-          let correctedX = rect.x ;
-          let correctedY = rect.y ;
-          p.rect(correctedX, correctedY, rect.width, rect.height);
+          // Χωρίς offset, απεικονίζουμε τις θέσεις όπως είναι στο JSON
+          p.rect(rect.x, rect.y, rect.width, rect.height);
         }
       };
     });
