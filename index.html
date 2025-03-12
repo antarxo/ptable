@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τελική Τοποθέτηση με Σύμπτυξη</title>
+  <title>Περιοδικός Πίνακας - Έλεγχος Top Offsets</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -233,7 +233,7 @@
       blocks.forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Υπολογισμός ελαχίστων και μεγίστων τιμών για το block
+        // Εύρεση ελάχιστων και μέγιστων τιμών για το block
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
           if(positions[currentMode][e.number]){
@@ -245,10 +245,24 @@
           }
         });
         if(minX === Infinity || minY === Infinity) return; // Αν δεν βρέθηκαν στοιχεία για το block
+        
+        // Ορίζουμε το container με τις τιμές του JSON χωρίς επιπλέον offsets
         container.style.left = minX + "px";
         container.style.top = minY + "px";
         container.style.width = (maxX - minX) + "px";
         container.style.height = (maxY - minY) + "px";
+        
+        // Έλεγχος για τυχόν αλλαγές στο top offset συγκρίνοντας με το JSON του πρώτου στοιχείου
+        let firstEl = elements.find(e => e.block === block);
+        if(firstEl && positions[currentMode][firstEl.number]) {
+          let expectedTop = positions[currentMode][firstEl.number].y;
+          if(container.style.top !== expectedTop + "px") {
+            console.warn(`Block ${block}: container.style.top (${container.style.top}) διαφέρει από την αναμενόμενη τιμή (${expectedTop}px)`);
+          } else {
+            console.log(`Block ${block}: container.style.top είναι όπως αναμένεται (${container.style.top})`);
+          }
+        }
+        
         new p5(function(p) {
           p.setup = function() {
             let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
