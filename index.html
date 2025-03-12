@@ -118,6 +118,9 @@
     start: { width: "400px", height: "400px" } // Προσαρμόστε ανάλογα
   };
 
+  // Μεταβλητή για τον debug καμβά
+  let debugCanvas;
+
   // ------------------------
   // Spatial Hash Map Integration
   // ------------------------
@@ -467,11 +470,12 @@
     // Εμφάνιση debug canvas
     debugDiv.style.display = "block";
 
-    // Λήψη DOM θέσης του debug canvas
-    let debugRect = debugDiv.getBoundingClientRect();
-    console.log("Debug canvas DOM position: left =", debugRect.left, "top =", debugRect.top);
+    // Δημιουργία νέου καμβά
+    if (debugCanvas) {
+      debugCanvas.remove(); // Αφαίρεση του παλιού καμβά
+    }
 
-    new p5(function(p) {
+    debugCanvas = new p5(function(p) {
       p.setup = function() {
         let canvasWidth = parseInt(modeDimensions[currentMode].width);
         let canvasHeight = parseInt(modeDimensions[currentMode].height);
