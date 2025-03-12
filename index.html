@@ -65,7 +65,10 @@
   <div id="canvasSubshells" class="canvas"></div>
   
   <!-- Info Panels -->
-  <div id="infoPanelFull"></div>
+  <div id="infoPanelFull">
+    <div id="leftPanelFull"></div>
+    <div id="remarksFull"></div>
+  </div>
   <div id="infoPanelCollapsed"></div>
   
   <!-- Button Panel -->
@@ -363,15 +366,25 @@
     let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
                     <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
                     <span style="font-style: italic;">${element.name}</span>`;
-    document.getElementById("leftPanelFull").innerHTML = infoHTML;
+    let leftPanelFull = document.getElementById("leftPanelFull");
+    if (leftPanelFull) {
+      leftPanelFull.innerHTML = infoHTML;
+    } else {
+      console.error("Το στοιχείο 'leftPanelFull' δεν βρέθηκε.");
+    }
     let subshells = element.subshells ? element.subshells : "-";
     let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
     // Ενημέρωση info panel πλήρους και συμπτυγμένου
-    document.getElementById("remarksFull").innerHTML = `<div class="row">
-          <div class="col-70">${subshells}</div>
-          <div class="col-30">${shellsAndMsg}</div>
-        </div>
-        <div class="row">${element.remarks || ""}</div>`;
+    let remarksFull = document.getElementById("remarksFull");
+    if (remarksFull) {
+      remarksFull.innerHTML = `<div class="row">
+            <div class="col-70">${subshells}</div>
+            <div class="col-30">${shellsAndMsg}</div>
+          </div>
+          <div class="row">${element.remarks || ""}</div>`;
+    } else {
+      console.error("Το στοιχείο 'remarksFull' δεν βρέθηκε.");
+    }
     document.getElementById("infoPanelCollapsed").innerHTML = document.getElementById("infoPanelFull").innerHTML;
     updateBalloonPosition(element);
   }
