@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Debug Grid με Drag</title>
+  <title>Περιοδικός Πίνακας - Debug Grid με Μετρήσεις</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -30,7 +30,7 @@
       z-index: -10;
       opacity: 1;
     }
-    /* Debug grid overlay – θα εμφανίζεται πάνω από το background */
+    /* Debug grid overlay – εμφανίζεται πάνω από το background και είναι draggable */
     #debugGrid {
       position: absolute;
       z-index: -5;
@@ -130,7 +130,7 @@
       }
     }
 
-    // Δημιουργεί το debug grid (γραμμές κάθε 20px) και το κάνει draggable
+    // Δημιουργεί το debug grid και εμφανίζει την τρέχουσα left/top τιμή (σε px) στο πάνω αριστερό μέρος.
     function initializeDebugGrid() {
       let debugDiv = document.getElementById("debugGrid");
       if(currentMode !== "expanded") {
@@ -156,7 +156,6 @@
             let w = parseInt(debugDiv.style.width);
             let h = parseInt(debugDiv.style.height);
             p.createCanvas(w, h);
-            p.noLoop();
           };
           p.draw = function() {
             p.clear();
@@ -168,14 +167,21 @@
             for(let y = 0; y <= p.height; y += spacing) {
               p.line(0, y, p.width, y);
             }
+            // Εμφάνιση του τρέχοντος offset (μετράει σε px)
+            let debugDiv = document.getElementById("debugGrid");
+            let left = parseInt(debugDiv.style.left);
+            let top = parseInt(debugDiv.style.top);
+            p.fill(0);
+            p.noStroke();
+            p.textSize(16);
+            p.text(`left: ${left}px, top: ${top}px`, 10, 20);
           };
       }, "debugGrid");
       
-      // Κλήση της συνάρτησης για να γίνει drag το debug grid
       enableDragForDebugGrid();
     }
 
-    // Συνάρτηση που επιτρέπει τη μετακίνηση (drag) του debug grid
+    // Επιτρέπει τη μετακίνηση (drag) του debug grid και ενημερώνει το position ώστε να βλέπεις τις αλλαγές σε px
     function enableDragForDebugGrid() {
       let debugDiv = document.getElementById("debugGrid");
       let isDragging = false;
@@ -365,7 +371,7 @@
         initializeSectorsCanvas();       
         initializePeriodsCanvas();       
         initGroupsCanvases();
-        initializeDebugGrid();  // Εμφάνιση debug grid στην expanded
+        initializeDebugGrid();  // Εμφάνιση debug grid στην expanded διάταξη
         isTableFilled = true;
         document.getElementById('toggleFBlock').disabled = false;
       }
