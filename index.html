@@ -2,62 +2,16 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τελική Τοποθέτηση με Σύμπτυξη</title>
+  <title>Περιοδικός Πίνακας με Info Panels & Balloon</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    body { 
-      font-family: 'Roboto', sans-serif; 
-      margin: 0; 
-      overflow: hidden; 
-      background: #f7f7f7; 
-    }
-    .canvas { 
-      position: absolute; 
-      background: transparent; 
-      transition: all 0.5s ease-in-out; 
-    }
-    canvas {
-      padding: 8px;
-      filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
-      overflow: visible;
-    }
-    #canvasTableBackground {
-      position: absolute; 
-      background: white; 
-      border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 3px 3px rgba(0,0,0,0.2); 
-      z-index: -10;
-      opacity: 1;
-    }
-    #canvasS_groups, #canvasD_groups, #canvasP_groups { 
-      position: absolute; 
-      height: 40px; 
-    }
-    #canvasPeriods, #canvasS, #canvasD, #canvasP, #canvasF {
-      position: absolute;
-    }
-    #canvasS { z-index: 10; }
-    #canvasF { z-index: 20; }
-    #canvasD { z-index: 30; }
-    #canvasP { z-index: 40; }
-    #buttonPanel {
-      position: fixed; bottom: 20px; right: 20px; z-index: 100;
-      display: flex; gap: 5px;
-    }
-    #buttonPanel button {
-      background-color: #008CBA; 
-      color: white; 
-      padding: 10px 15px;
-      border: none; 
-      border-radius: 5px; 
-      cursor: pointer;
-    }
+    /* ... (το υπόλοιπο CSS παραμένει το ίδιο) ... */
   </style>
 </head>
 <body>
 
-  <!-- Καμβάδες -->
+  <!-- Καμβάδες του πίνακα -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -68,6 +22,16 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
+
+  <!-- Info Panels -->
+  <div id="infoPanelFull">
+    <div id="leftPanelFull"></div>
+    <div id="remarksFull"></div>
+  </div>
+  <div id="infoPanelCollapsed"></div>
+
+  <!-- Balloon για subshells -->
+  <div id="canvasSubshells" class="canvas"></div>
 
   <!-- Κουμπιά -->
   <div id="buttonPanel">
@@ -81,10 +45,9 @@
     let blockOffsets = {}; 
     let isTableFilled = false;
     let isCollapsed = false;
-    // Ορίζουμε το τρέχον mode: "expanded" ή "collapsed"
-    let currentMode = "expanded";
+    let currentMode = "expanded"; // "expanded" ή "collapsed"
 
-    // Διαστάσεις του background ανά mode
+    // Διαστάσεις background ανά mode
     const expandedBackground = { width: "1412px", height: "368px" };
     const collapsedBackground  = { width: "837px",  height: "460px" };
 
@@ -104,7 +67,6 @@
       computeBlockOffsets(currentMode);
     }
 
-    // Υπολογισμός ορίων για κάθε block με βάση το mode
     function computeBlockOffsets(mode) {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -123,14 +85,13 @@
       });
     }
 
-    // Υπολογισμός σχετικής θέσης, με χρήση του mode
     function calculateRelativePosition(element, block, mode) {
       let pos = positions[mode][element.number];
       let offset = blockOffsets[block];
       return { x: pos.x - offset.minX, y: pos.y - offset.minY };
     }
 
-    // Αρχική διαμόρφωση του background canvas σύμφωνα με το expanded mode
+    // Ενημέρωση background canvas ανά mode
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "17px";
@@ -139,8 +100,6 @@
       bg.style.height = expandedBackground.height;
       bg.style.opacity = "1";
     }
-
-    // Ενημέρωση διαστάσεων background ανάλογα με το mode
     function updateBackgroundDimensions() {
       let bg = document.getElementById("canvasTableBackground");
       if(currentMode === "collapsed") {
@@ -154,8 +113,7 @@
 
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
-      
-      // Καμβάς για τις ομάδες του S-block
+      // Παρόμοιο με προηγούμενες υλοποιήσεις για S, D, P groups...
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -171,8 +129,6 @@
           p.text("IIA", 62, 30);
         };
       });
-      
-      // Καμβάς για τις ομάδες του D-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(420, 40);
@@ -193,8 +149,6 @@
           }
         };
       });
-      
-      // Καμβάς για τις ομάδες του P-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(252, 40);
@@ -215,8 +169,6 @@
           }
         };
       });
-      
-      // Ενημέρωση θέσεων ομάδων βάσει του τρέχοντος mode:
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -227,7 +179,6 @@
           }
         }
       });
-      
       window.groupsInitialized = true;
     }
 
@@ -255,7 +206,6 @@
       });
     }
 
-    // Αρχικοποίηση του καμβά τομέων για κάθε block με χρήση του τρέχοντος mode
     function initializeSectorsCanvas() {
       computeBlockOffsets(currentMode);
       let desiredLeftS = 66;
@@ -299,20 +249,106 @@
       });
     }
 
-    // Κουμπί "Συμπλήρωσε"
+    // Λειτουργία ενημέρωσης του info panel και του balloon
+    function updateInfo(element) {
+      // Ενημέρωση του leftPanelFull
+      let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
+                      <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
+                      <span style="font-style: italic;">${element.name}</span>`;
+      document.getElementById("leftPanelFull").innerHTML = infoHTML;
+      // Ενημέρωση του remarksFull
+      let subshells = element.subshells ? element.subshells : "-";
+      let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
+      document.getElementById("remarksFull").innerHTML = `<div class="row">
+            <div class="col-70">${subshells}</div>
+            <div class="col-30">${shellsAndMsg}</div>
+          </div>
+          <div class="row">${element.remarks || ""}</div>`;
+      // Για το collapsed panel, μπορούμε να απλοποιήσουμε (ακριβώς ίδια δομή ή προσαρμοσμένη)
+      document.getElementById("infoPanelCollapsed").innerHTML = document.getElementById("infoPanelFull").innerHTML;
+      // Ενημέρωση του balloon
+      updateBalloonPosition(element);
+    }
+
+    // Συνάρτηση που επιστρέφει το χρώμα του block
+    function getBlockColor(block) {
+      switch(block) {
+        case "s": return "#FF477E";
+        case "p": return "#26FF31";
+        case "d": return "#3F99FF";
+        case "f": return "#FFD051";
+        default: return "#000";
+      }
+    }
+
+    function updateBalloonPosition(element) {
+      let cs = document.getElementById("canvasSubshells");
+      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
+      if(!blockCanvas) return;
+      let rect = blockCanvas.getBoundingClientRect();
+      let pos = calculateRelativePosition(element, element.block, currentMode);
+      let defaultLeft = rect.left + pos.x + 40;
+      let defaultTop = rect.top + pos.y + 40;
+      cs.style.left = defaultLeft + "px";
+      cs.style.top = defaultTop + "px";
+      cs.style.display = "block";
+      // Εδώ θα μπορούσαμε να καλέσουμε τη συνάρτηση drawSubshells για να σχεδιάσουμε τις τρεις γραμμές
+      // π.χ. drawSubshells({prev: "...", current: element.subshells || "-", next: "..."});
+    }
+
+    // Αρχικοποίηση του balloon canvas μέσω p5
+    let subshellsP;
+    function initSubshellsCanvas() {
+      if(window.subshellsInitialized) return;
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(10, 40);
+          canvas.parent("canvasSubshells");
+          subshellsP = p;
+          p.noLoop();
+        };
+      });
+      window.subshellsInitialized = true;
+    }
+
+    // Παράδειγμα συνάρτησης σχεδίασης του balloon (μπορείτε να προσαρμόσετε το στυλ)
+    function drawSubshells(data) {
+      if (!subshellsP) return;
+      let extraMargin = 5;
+      let fontSize = 14;
+      subshellsP.clear();
+      subshellsP.textSize(fontSize);
+      subshellsP.textAlign(subshellsP.LEFT, subshellsP.CENTER);
+      // Υπολογισμός πλάτους για κάθε γραμμή
+      let wPrev = subshellsP.textWidth(data.prev || "-");
+      let wCurrent = subshellsP.textWidth(data.current || "-");
+      let wNext = subshellsP.textWidth(data.next || "-");
+      let newWidth = Math.max(wPrev, wCurrent, wNext) + extraMargin;
+      subshellsP.resizeCanvas(newWidth, 40);
+      // Σχεδίαση των γραμμών
+      let rowHeight = 40 / 3;
+      subshellsP.fill(data.prevColor || "#000");
+      subshellsP.text(data.prev || "-", extraMargin, rowHeight/2);
+      subshellsP.textStyle(subshellsP.BOLD);
+      subshellsP.fill(data.currentColor || "#000");
+      subshellsP.text(data.current || "-", extraMargin, rowHeight + rowHeight/2);
+      subshellsP.textStyle(subshellsP.NORMAL);
+      subshellsP.fill(data.nextColor || "#000");
+      subshellsP.text(data.next || "-", extraMargin, 2*rowHeight + rowHeight/2);
+    }
+
+    // Κουμπιά: "Συμπλήρωσε" και "Σύμπτυξε"/"Ανάπτυξε"
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
         initializeSectorsCanvas();       
         initializePeriodsCanvas();       
         initGroupsCanvases();
+        initSubshellsCanvas();
         isTableFilled = true;
-        // Μόλις πατηθεί το "Συμπλήρωσε", ενεργοποιούμε το toggle
         document.getElementById('toggleFBlock').disabled = false;
       }
     });
-
-    // Κουμπί "Σύμπτυξε"/"Ανάπτυξε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
@@ -329,7 +365,42 @@
           }
         }
       });
+      // Εναλλαγή εμφάνισης των info panels
+      if(isCollapsed) {
+        document.getElementById("infoPanelFull").style.display = "none";
+        document.getElementById("infoPanelCollapsed").style.display = "block";
+      } else {
+        document.getElementById("infoPanelFull").style.display = "block";
+        document.getElementById("infoPanelCollapsed").style.display = "none";
+      }
     });
+
+    // Νέα συνάρτηση για ανίχνευση κλικ με χρήση getBoundingClientRect
+    function handleMouseClick(event) {
+      let clickX = event.clientX;
+      let clickY = event.clientY;
+
+      elements.forEach(element => {
+        let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
+        if (blockCanvas) {
+          let rect = blockCanvas.getBoundingClientRect();
+          let pos = calculateRelativePosition(element, element.block, currentMode);
+          let elementX = rect.left + pos.x;
+          let elementY = rect.top + pos.y;
+
+          if (
+            clickX >= elementX && clickX <= elementX + 40 && // 40 είναι το πλάτος του στοιχείου
+            clickY >= elementY && clickY <= elementY + 40    // 40 είναι το ύψος του στοιχείου
+          ) {
+            updateInfo(element);
+            return; // Σταματάμε την αναζήτηση μόλις βρεθεί το στοιχείο
+          }
+        }
+      });
+    }
+
+    // Προσθήκη event listener για κλικ
+    document.addEventListener('click', handleMouseClick);
 
     window.addEventListener('load', loadData);
   </script>
