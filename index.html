@@ -25,11 +25,6 @@
       z-index: -10;
       opacity: 1;
     }
-    /* Debug overlay: μόνο περιγράμματα, χωρίς γέμισμα */
-    #canvasDebug {
-      z-index: 100;
-      pointer-events: none;
-    }
     #infoPanelFull, #infoPanelCollapsed {
       position: fixed;
       bottom: 20px;
@@ -54,25 +49,9 @@
       gap: 5px;
       z-index: 150;
     }
-    /* Dropdown styling */
-    #modeSelector {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 200;
-      padding: 5px;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
-  <!-- Dropdown για επιλογή mode -->
-  <select id="modeSelector">
-    <option value="expanded">Expanded</option>
-    <option value="collapsed">Collapsed</option>
-    <option value="start">Start</option>
-  </select>
-
   <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
@@ -84,8 +63,6 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   <div id="canvasSubshells" class="canvas"></div>
-  <!-- Debug canvas για έλεγχο θέσεων -->
-  <div id="canvasDebug" class="canvas"></div>
   
   <!-- Info Panels -->
   <div id="infoPanelFull"></div>
@@ -109,17 +86,12 @@
   let blockOffsets = {};
   let isTableFilled = false;
   let isCollapsed = false;
-  let currentMode = "expanded"; // Αρχικό mode
+  // Default διαδικασία "Συμπλήρωσε", αλλά το currentMode αρχικά ορίζεται ως "start"
+  let currentMode = "start";
 
   // Διαστάσεις background ανά mode
-  const modeDimensions = {
-    expanded: { width: "1412px", height: "368px" },
-    collapsed: { width: "837px", height: "460px" },
-    start: { width: "400px", height: "400px" } // Προσαρμόστε ανάλογα
-  };
-
-  // Μεταβλητή για τον debug καμβά
-  let debugCanvas;
+  const expandedBackground = { width: "1412px", height: "368px" };
+  const collapsedBackground  = { width: "837px",  height: "460px" };
 
   // ------------------------
   // Spatial Hash Map Integration
@@ -213,8 +185,6 @@
     if (!isTableFilled) {
       document.getElementById('fillAll').click();
     }
-    // Ο debug καμβάς θα δείχνει το επιλεγμένο mode
-    initializeDebugCanvas();
   }
   function computeBlockOffsets(mode) {
     let blocks = ["s", "p", "d", "f"];
@@ -242,14 +212,19 @@
     let bg = document.getElementById("canvasTableBackground");
     bg.style.left = "17px";
     bg.style.top = "55px";
-    bg.style.width = modeDimensions[currentMode].width;
-    bg.style.height = modeDimensions[currentMode].height;
+    bg.style.width = expandedBackground.width;
+    bg.style.height = expandedBackground.height;
     bg.style.opacity = "1";
   }
   function updateBackgroundDimensions() {
     let bg = document.getElementById("canvasTableBackground");
-    bg.style.width = modeDimensions[currentMode].width;
-    bg.style.height = modeDimensions[currentMode].height;
+    if(currentMode === "collapsed") {
+      bg.style.width = collapsedBackground.width;
+      bg.style.height = collapsedBackground.height;
+    } else {
+      bg.style.width = expandedBackground.width;
+      bg.style.height = expandedBackground.height;
+    }
   }
   function initGroupsCanvases() {
     if(window.groupsInitialized) return;
@@ -388,10 +363,11 @@
     let infoHTML = `<span style="font-size:1.3em; font-weight:bold;">Ζ=${element.number}</span> 
                     <span style="font-size:3em; font-weight:bold; color:${getBlockColor(element.block)};">${element.symbol}</span>
                     <span style="font-style: italic;">${element.name}</span>`;
-    document.getElementById("infoPanelFull").innerHTML = infoHTML;
+    document.getElementById("leftPanelFull").innerHTML = infoHTML;
     let subshells = element.subshells ? element.subshells : "-";
     let shellsAndMsg = `<div>Στιβάδες: ${element.shells || "-"}</div><div>Μήνυμα</div>`;
-    document.getElementById("infoPanelFull").innerHTML += `<div class="row">
+    // Ενημέρωση info panel πλήρους και συμπτυγμένου
+    document.getElementById("remarksFull").innerHTML = `<div class="row">
           <div class="col-70">${subshells}</div>
           <div class="col-30">${shellsAndMsg}</div>
         </div>
@@ -456,48 +432,6 @@
     subshellsP.text(data.next || "-", extraMargin, 2*rowHeight + rowHeight/2);
   }
   
-  // Debug canvas: Δημιουργούμε έναν καμβά για έλεγχο θέσεων
-  function initializeDebugCanvas() {
-    let debugDiv = document.getElementById("canvasDebug");
-    if (!debugDiv) return;
-
-    // Τοποθετούμε τον debug καμβά σύμφωνα με τις διαστάσεις του επιλεγμένου mode
-    debugDiv.style.left = "17px";
-    debugDiv.style.top = "55px";
-    debugDiv.style.width = modeDimensions[currentMode].width;
-    debugDiv.style.height = modeDimensions[currentMode].height;
-
-    // Εμφάνιση debug canvas
-    debugDiv.style.display = "block";
-
-    // Δημιουργία νέου καμβά
-    if (debugCanvas) {
-      debugCanvas.remove(); // Αφαίρεση του παλιού καμβά
-    }
-
-    debugCanvas = new p5(function(p) {
-      p.setup = function() {
-        let canvasWidth = parseInt(modeDimensions[currentMode].width);
-        let canvasHeight = parseInt(modeDimensions[currentMode].height);
-        let canvas = p.createCanvas(canvasWidth, canvasHeight);
-        canvas.parent("canvasDebug");
-        p.noLoop();
-      };
-
-      p.draw = function() {
-        p.clear();
-        p.stroke(0); // Μαύρα περιγράμματα
-        p.noFill();
-        let posObj = positions[currentMode]; // Χρησιμοποιούμε το επιλεγμένο mode
-        for (let atomicNumber in posObj) {
-          let rect = posObj[atomicNumber];
-          // Χωρίς offset, απεικονίζουμε τις θέσεις όπως είναι στο JSON
-          p.rect(rect.x, rect.y, rect.width, rect.height);
-        }
-      };
-    });
-  }
-  
   // ------------------------
   // Event Listeners για τα κουμπιά
   // ------------------------
@@ -510,8 +444,6 @@
       initSubshellsCanvas();
       isTableFilled = true;
       document.getElementById('toggleFBlock').disabled = false;
-      // Εμφάνιση debug canvas αφού ο πίνακας έχει συμπληρωθεί
-      initializeDebugCanvas();
     }
   });
   document.getElementById('toggleFBlock').addEventListener('click', function() {
@@ -537,22 +469,12 @@
       document.getElementById("infoPanelFull").style.display = "block";
       document.getElementById("infoPanelCollapsed").style.display = "none";
     }
-    // Ενημέρωση: Εμφάνιση debug canvas
-    initializeDebugCanvas();
   });
   document.getElementById('nextElement').addEventListener('click', function() {
     console.log("Το κουμπί 'Επόμενο' πατήθηκε. Η διαδικασία του mode 'start' δεν έχει υλοποιηθεί πλήρως προς το παρόν.");
   });
   document.getElementById('reset').addEventListener('click', function() {
     location.reload();
-  });
-
-  // Event listener για το dropdown
-  document.getElementById('modeSelector').addEventListener('change', function() {
-    currentMode = this.value; // Ενημέρωση του currentMode
-    updateBackgroundDimensions();
-    initializeSectorsCanvas();
-    initializeDebugCanvas(); // Ενημέρωση του debug canvas
   });
   
   // Global click listener για spatial hash lookup
