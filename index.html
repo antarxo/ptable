@@ -233,37 +233,33 @@
       blocks.forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Επιλέγουμε το πρώτο στοιχείο του block για να ορίσουμε την αρχική θέση του container
-        let firstEl = elements.find(e => e.block === block);
-        if(firstEl && positions[currentMode][firstEl.number]) {
-          let containerLeft = positions[currentMode][firstEl.number].x;
-          let containerTop = positions[currentMode][firstEl.number].y;
-          container.style.left = containerLeft + "px";
-          container.style.top = containerTop + "px";
-          // Υπολογισμός διαστάσεων: βρίσκουμε το μέγιστο x και y μεταξύ όλων των στοιχείων του block
-          let maxX = containerLeft;
-          let maxY = containerTop;
-          elements.filter(e => e.block === block).forEach(e => {
-            if(positions[currentMode][e.number]){
-              let pos = positions[currentMode][e.number];
-              maxX = Math.max(maxX, pos.x + pos.width);
-              maxY = Math.max(maxY, pos.y + pos.height);
-            }
-          });
-          container.style.width = (maxX - containerLeft) + "px";
-          container.style.height = (maxY - containerTop) + "px";
-          new p5(function(p) {
-            p.setup = function() {
-              let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
-              canvas.parent("canvas" + block.toUpperCase());
-              drawElements(p, block, containerLeft, containerTop);
-            };
-          });
-        }
+        // Υπολογισμός ελαχίστων και μεγίστων τιμών για το block
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.filter(e => e.block === block).forEach(e => {
+          if(positions[currentMode][e.number]){
+            let pos = positions[currentMode][e.number];
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, pos.y);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, pos.y + pos.height);
+          }
+        });
+        if(minX === Infinity || minY === Infinity) return; // Αν δεν βρέθηκαν στοιχεία για το block
+        container.style.left = minX + "px";
+        container.style.top = minY + "px";
+        container.style.width = (maxX - minX) + "px";
+        container.style.height = (maxY - minY) + "px";
+        new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+            canvas.parent("canvas" + block.toUpperCase());
+            drawElements(p, block, minX, minY);
+          };
+        });
       });
     }
 
-    // Σχεδίαση στοιχείων χρησιμοποιώντας τις τιμές του JSON (αποτέλεσμα χωρίς πρόσθετους υπολογισμούς)
+    // Σχεδίαση στοιχείων χρησιμοποιώντας τις τιμές του JSON απευθείας (χωρίς πρόσθετους υπολογισμούς)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
