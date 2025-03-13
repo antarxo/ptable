@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Ομάδες 40x20 & Μετατόπιση -42</title>
+  <title>Περιοδικός Πίνακας - Τελικός Κώδικας</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -30,7 +30,7 @@
       z-index: -10;
       opacity: 1;
     }
-    /* Οι καμβάδες των ομάδων θα εμφανίζονται χωρίς άλλες μετατοπίσεις πέραν της καθορισμένης μετατόπισης -42 στο top */
+    /* Οι καμβάδες των ομάδων δεν έχουν άλλες μετατοπίσεις πέραν της καθορισμένης */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute; 
     }
@@ -42,8 +42,12 @@
     #canvasD { z-index: 30; }
     #canvasP { z-index: 40; }
     #buttonPanel {
-      position: fixed; bottom: 20px; right: 20px; z-index: 100;
-      display: flex; gap: 5px;
+      position: fixed; 
+      bottom: 20px; 
+      right: 20px; 
+      z-index: 100;
+      display: flex; 
+      gap: 5px;
     }
     #buttonPanel button {
       background-color: #008CBA; 
@@ -82,7 +86,7 @@
     let isCollapsed = false;
     let currentMode = "expanded";
 
-    // Αρχική διαμόρφωση του background canvas
+    // Αρχική διαμόρφωση του background canvas (σταθερές τιμές, αλλά μπορούν να τροποποιηθούν για JSON)
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "17px";
@@ -98,12 +102,12 @@
     }
 
     // Δημιουργία καμβάδων περιόδων:
-    // Κάθε κελί έχει 40x40px με 2px κενό μεταξύ (δηλαδή βήμα 42px) και ο συνολικός καμβάς έχει ύψος 292px.
-    // Το top του καμβά ορίζεται από το JSON (στο στοιχείο "1").
+    // Κάθε κελί: 40x40px με 2px κενό (δηλαδή, βήμα 42px). Ο συνολικός καμβάς έχει ύψος 292px.
+    // Το top του καμβά καθορίζεται από το JSON (στο στοιχείο "1").
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(40, 292); // 7 κελία: 7*40 + 6*2 = 292px
+          let canvas = p.createCanvas(40, 292); // 7*40 + 6*2 = 292px
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
@@ -116,7 +120,7 @@
           const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(0, i * 42, 40, 40); // κάθε κελί: 40x40, βήμα 42 (δηλαδή 2px κενό)
+            p.rect(0, i * 42, 40, 40); // κάθε κελί: 40x40, με βήμα 42 (δηλαδή 2px κενό)
             p.fill(0);
             p.text(periodLabels[i], 20, i * 42 + 20);
           }
@@ -125,26 +129,34 @@
     }
 
     // Δημιουργία καμβάδων ομάδων:
-    // Κάθε καμβάς θα έχει δύο σειρές κελιών:
-    // - Κάθε κελί έχει διαστάσεις 40px πλάτος και 20px ύψος.
-    // - Οριζόντια, κάθε κελί ξεκινάει 42px μετά το προηγούμενο (δηλαδή 40px για το κελί + 2px κενό).
-    // Ο συνολικός καμβάς έχει πλάτος που υπολογίζεται ανάλογα (π.χ. για S-block: 2*40 + 1*2 = 82px, για D-block: 418px, για P-block: 250px)
-    // και ύψος 40px (20px για την πάνω σειρά και 20px για την κάτω σειρά).
-    // Το top των καμβάδων ορίζεται ώστε να είναι 42px ψηλότερα από το top του στοιχείου "1" στο JSON.
+    // Κάθε καμβάς έχει δύο σειρές κελιών (ύψος 40px συνολικά).
+    // Κάθε κελί έχει διαστάσεις 40px πλάτος και 20px ύψος, με οριζόντια απόσταση 2px (δηλαδή, κάθε νέο κελί ξεκινάει 42px μετά το προηγούμενο).
+    // Το top ορίζεται ως positions[currentMode]["1"].y - 42, δηλαδή 42px ψηλότερα από το στοιχείο "1".
     function initGroupsCanvases() {
       // S-block: 2 κελιά → συνολικό πλάτος = 2*40 + 1*2 = 82px, ύψος = 40px.
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(82, 40);
           canvas.parent("canvasS_groups");
+          p.background(240);
+          // Σχεδιάζουμε οπτικά τα κελιά:
+          for(let col = 0; col < 2; col++){
+            p.stroke(0);
+            p.noFill();
+            // Πρώτη σειρά: κάθε κελί 40x20
+            p.rect(col * 42, 0, 40, 20);
+            // Δεύτερη σειρά: κάθε κελί 40x20
+            p.rect(col * 42, 20, 40, 20);
+          }
+          // Σχεδιάζουμε τα κείμενα:
           p.noStroke();
+          p.fill(0);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          p.background(240);
           // Πρώτη σειρά (νέα αρίθμηση)
-          p.text("1", 20, 10);       // κελί 1 στο κέντρο του πρώτου κελιού (40x20)
-          p.text("2", 20 + 42, 10);    // κελί 2
+          p.text("1", 20, 10);
+          p.text("2", 20 + 42, 10);
           // Δεύτερη σειρά (παλιά αρίθμηση)
           p.text("IA", 20, 30);
           p.text("IIA", 20 + 42, 30);
@@ -156,11 +168,22 @@
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
           canvas.parent("canvasD_groups");
+          p.background(240);
+          // Σχεδιάζουμε τα 10 κελιά:
+          for(let col = 0; col < 10; col++){
+            p.stroke(0);
+            p.noFill();
+            // Πρώτη σειρά: 40x20
+            p.rect(col * 42, 0, 40, 20);
+            // Δεύτερη σειρά: 40x20
+            p.rect(col * 42, 20, 40, 20);
+          }
+          // Σχεδιάζουμε τα κείμενα:
           p.noStroke();
+          p.fill(0);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          p.background(240);
           // Πρώτη σειρά: νέα αρίθμηση από 3 έως 12
           for(let c = 0; c < 10; c++){
             let x = c * 42;
@@ -180,11 +203,20 @@
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
           canvas.parent("canvasP_groups");
+          p.background(240);
+          // Σχεδιάζουμε τα 6 κελιά:
+          for(let col = 0; col < 6; col++){
+            p.stroke(0);
+            p.noFill();
+            p.rect(col * 42, 0, 40, 20);
+            p.rect(col * 42, 20, 40, 20);
+          }
+          // Σχεδιάζουμε τα κείμενα:
           p.noStroke();
+          p.fill(0);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          p.background(240);
           // Πρώτη σειρά: νέα αρίθμηση από 13 έως 18
           for(let c = 0; c < 6; c++){
             let x = c * 42;
@@ -210,7 +242,8 @@
       });
     }
 
-    // Δημιουργία καμβάδων τομέων (S, P, D, F) αποκλειστικά βάσει τιμών από το JSON
+    // Δημιουργία καμβάδων τομέων (S, P, D, F) αποκλειστικά βάσει τιμών από το JSON.
+    // Εδώ για κάθε block (συμπεριλαμβανομένου του F block) τα στοιχεία τοποθετούνται σύμφωνα με τις τιμές του JSON χωρίς επιπρόσθετες μετατροπές.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -241,6 +274,7 @@
       });
     }
 
+    // Σχεδίαση των στοιχείων σύμφωνα με τις τιμές θέσης από το JSON
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
