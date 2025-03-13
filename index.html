@@ -100,12 +100,11 @@
       
       • Για block "p" και στοιχεία 21–30: shift = (min(currentZ,30)-20)*42.
       
-      • Για στοιχεία 57–80:
-          - Στο block d: shift = (min(currentZ,80)-56)*42.
-          - Στο block p: εφαρμόζεται επιπρόσθετα πάνω στο shift των 21–30, δηλαδή
-            shift = (30-20)*42 + (min(currentZ,80)-56)*42.
+      • Για τα στοιχεία 57–70 (και στα blocks p και d): 
+          - Εάν currentZ < 70, shift = (currentZ-56)*42.
+          - Εάν currentZ ≥ 70, το shift παραμένει σταθερό στο (70-56)*42.
       
-      Για όλες τις άλλες περιπτώσεις επιστρέφει 0.
+      Σε όλες τις άλλες περιπτώσεις επιστρέφει 0.
     */
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
@@ -113,16 +112,9 @@
         let effectiveZ = Math.min(currentZ, 30);
         return (effectiveZ - 20) * 42;
       }
-      if ((block === "p" || block === "d") && num >= 57 && num <= 80) {
-        let effective = Math.min(currentZ, 80);
-        let shiftPhase2 = (effective - 56) * 42;
-        if (block === "p") {
-          // Προσθέτουμε το shift των 21–30 που έχει ήδη εφαρμοστεί (όταν currentZ ≥ 30 αυτό γίνεται σταθερό)
-          let phase1Shift = (30 - 20) * 42;
-          return phase1Shift + shiftPhase2;
-        } else {
-          return shiftPhase2;
-        }
+      if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
+        let effective = Math.min(currentZ, 70);
+        return (effective - 56) * 42;
       }
       return 0;
     }
@@ -135,13 +127,13 @@
         - currentZ ≤ 20: 0.
         - 21 ≤ currentZ ≤ 30: shift = (currentZ-20)*42.
         - 31 ≤ currentZ ≤ 56: σταθερό shift = (30-20)*42.
-        - 57 ≤ currentZ ≤ 80: cumulative shift = (30-20)*42 + (currentZ-56)*42.
-        - currentZ > 80: max cumulative shift = (30-20)*42 + (80-56)*42.
+        - 57 ≤ currentZ ≤ 70: cumulative shift = (30-20)*42 + (currentZ-56)*42.
+        - currentZ > 70: max cumulative shift = (30-20)*42 + (70-56)*42.
       
       Για block "d":
         - currentZ < 57: 0.
-        - 57 ≤ currentZ ≤ 80: shift = (currentZ-56)*42.
-        - currentZ > 80: max shift = (80-56)*42.
+        - 57 ≤ currentZ ≤ 70: shift = (currentZ-56)*42.
+        - currentZ > 70: max shift = (70-56)*42.
     */
     function getShiftContainer(block) {
       if (currentMode !== "start") return 0;
@@ -152,27 +144,27 @@
           return (currentZ - 20) * 42;
         } else if (currentZ <= 56) {
           return (30 - 20) * 42;
-        } else if (currentZ <= 80) {
+        } else if (currentZ <= 70) {
           return (30 - 20) * 42 + (currentZ - 56) * 42;
         } else {
-          return (30 - 20) * 42 + (80 - 56) * 42;
+          return (30 - 20) * 42 + (70 - 56) * 42;
         }
       } else if (block === "d") {
         if (currentZ < 57) {
           return 0;
-        } else if (currentZ <= 80) {
+        } else if (currentZ <= 70) {
           return (currentZ - 56) * 42;
         } else {
-          return (80 - 56) * 42;
+          return (70 - 56) * 42;
         }
       }
       return 0;
     }
 
     // Υπολογισμός ορίων (min/max) για τα ορατά στοιχεία (αριθμοί 3 έως currentZ).
-    // Εφαρμόζουμε τα shift:
+    // Εφαρμόζονται τα shift:
     // • Για block "p" και στοιχεία 21–30.
-    // • Για blocks "p" και "d" και στοιχεία 57–80.
+    // • Για blocks "p" και "d" και στοιχεία 57–70.
     function computeVisibleLimits() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
@@ -185,7 +177,7 @@
             if (currentMode === "start") {
               if (e.block === "p" && num >= 21 && num <= 30) {
                 yForMax += getShift(num, e.block);
-              } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 80) {
+              } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
                 yForMax += getShift(num, e.block);
               }
             }
@@ -223,6 +215,7 @@
     }
 
     // Ενημέρωση του background ώστε να περιβάλλει τα ορατά στοιχεία με περιθώρια 20px.
+    // Υπολογίζεται από όλα τα ορατά στοιχεία (αριθμοί 3 έως currentZ) κάθε φορά.
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
@@ -369,8 +362,8 @@
 
     // Δημιουργία καμβάδων τομέων βάσει του JSON και της τρέχουσας διάταξης.
     // Στη διάταξη "start" εφαρμόζονται μετατοπίσεις:
-    // • Για block "p": στοιχεία 21–30 ή 57–80 (για τα 57–80 το shift είναι συσσωρευμένο).
-    // • Για block "d": μόνο για στοιχεία 57–80.
+    // • Για block "p": στοιχεία 21–30 ή 57–70 (για τα 57–70 το shift είναι συσσωρευμένο).
+    // • Για block "d": μόνο για στοιχεία 57–70.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -387,7 +380,7 @@
             if (currentMode === "start") {
               if (block === "p" && num >= 21 && num <= 30) {
                 yForMax += getShift(num, block);
-              } else if ((block === "p" || block === "d") && num >= 57 && num <= 80) {
+              } else if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
                 yForMax += getShift(num, block);
               }
             }
@@ -416,7 +409,7 @@
       });
     }
 
-    // Σχεδίαση στοιχείων για κάθε block, με εφαρμογή των shift στην "start" διάταξη.
+    // Σχεδίαση στοιχείων για κάθε block, με εφαρμογή των shift στη διάταξη "start".
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -429,7 +422,7 @@
           if (currentMode === "start") {
             if (block === "p" && num >= 21 && num <= 30) {
               relativeY += getShift(num, block);
-            } else if ((block === "p" || block === "d") && num >= 57 && num <= 80) {
+            } else if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
               relativeY += getShift(num, block);
             }
           }
@@ -478,8 +471,8 @@
     // • Αν δεν είμαστε ήδη στη "start", το πρώτο πάτημα θέτει currentZ = 3.
     // • Στη συνέχεια, κάθε πάτημα αυξάνει το currentZ κατά 1 μέχρι το 118.
     //    - Για στοιχεία 21–30 στο block p: εφαρμόζεται το αντίστοιχο shift.
-    //    - Για στοιχεία 57–80 στα blocks p και d: εφαρμόζεται ο συσσωρευμένος shift (για το p, επιπλέον το προηγούμενο shift).
-    // • Μετά το 81, η συμπλήρωση συνεχίζεται κανονικά.
+    //    - Για στοιχεία 57–70 στα blocks p και d: εφαρμόζεται ο συσσωρευμένος shift (για το p, προστίθεται και το shift των 21–30).
+    //    - Μετά το 81, η συμπλήρωση συνεχίζεται κανονικά χωρίς επιπλέον μετατοπίσεις.
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
