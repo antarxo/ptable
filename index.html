@@ -49,7 +49,7 @@
       position: fixed; 
       bottom: 20px; 
       right: 20px; 
-      z-index: 100;
+      z-index: 300;  /* Αύξηση z-index ώστε τα κουμπιά να είναι πάνω από το overlay */
       display: flex; 
       flex-direction: column;
       gap: 5px;
@@ -96,7 +96,7 @@
       display: none;
       transition: all 0.2s ease;
     }
-    /* Overlay για κλικ (με υψηλό z-index) */
+    /* Overlay για κλικ (με z-index 110, κάτω από τα κουμπιά) */
     #clickOverlay {
       position: absolute;
       left: 0;
@@ -369,9 +369,8 @@
       });
     }
 
-    // Χειριστής κλικ μέσω του overlay (clickOverlay)
+    // Χειριστής κλικ μέσω του overlay
     function onOverlayClick(event) {
-      // Βρίσκουμε το σημείο κλικ σε σχέση με το canvasTableBackground
       let bg = document.getElementById("canvasTableBackground");
       let rect = bg.getBoundingClientRect();
       let clickX = event.clientX - rect.left;
@@ -430,21 +429,19 @@
     /***************************************
      * Event Listeners για τα κουμπιά
     ***************************************/
-    // "Συμπλήρωσε": Θέτει currentZ = 123, ενημερώνει το state και δεν αλλάζει τη λογική συμπλήρωσης
+    // "Συμπλήρωσε": Θέτει currentZ = 123 και ενημερώνει το state χωρίς να καθαρίζει τα περιεχόμενα
     document.getElementById('fillAll').addEventListener('click', function() {
-      // Μην καθαρίζουμε πλέον όλα τα .canvas ώστε να παραμείνουν τα περιεχόμενα
       currentMode = "expanded";
       currentZ = 123;
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       updateAll();
-      // Δεν αλλάζουμε πλέον το z-index του canvasTableBackground
       document.getElementById('toggleFBlock').disabled = false;
       console.log("FillAll: currentZ set to", currentZ);
       updateInfo(currentZ);
     });
 
-    // "Επόμενο": Διαδικασία "start" όπως ήταν
+    // "Επόμενο": Διαδικασία "start" όπως ήταν αρχικά
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
@@ -472,7 +469,7 @@
       console.log("Start mode: currentZ =", currentZ, "postFillingStep =", postFillingStep);
     });
 
-    // "Σύμπτυξε/Ανάπτυξε": Εναλλαγή μεταξύ expanded και collapsed info panels (δεν επηρεάζει τη λειτουργία "Συμπλήρωσε" εδώ)
+    // "Σύμπτυξε/Ανάπτυξε": Εναλλαγή μεταξύ expanded και collapsed info panels
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       if (isCollapsed) {
