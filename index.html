@@ -77,6 +77,7 @@
   <div id="buttonPanel">
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="toggleFBlock" disabled>Σύμπτυξε</button>
+    <button id="startMode" disabled>Επόμενο</button>
   </div>
 
   <script>
@@ -84,23 +85,37 @@
     let positions = {};
     let isTableFilled = false;
     let isCollapsed = false;
+    // currentMode μπορεί να είναι "expanded", "collapsed" ή "start"
     let currentMode = "expanded";
 
     // Διαμόρφωση του background canvas βάσει του mode.
+    // Το αριστερό όριο παραμένει 17px, ενώ το δεξί όριο υπολογίζεται ως το δεξί άκρο του p τομέα +20.
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      if (currentMode === "expanded") {
-        bg.style.left = "17px";
-        bg.style.top = "55px";
-        bg.style.width = "1412px";
-        bg.style.height = "368px";
-      } else {
-        // collapsed mode: νέες τιμές 827x458, αυξημένες κατά 10px (δηλαδή 837x468)
-        bg.style.left = "17px";
-        bg.style.top = "55px";
-        bg.style.width = "837px";
+      bg.style.left = "17px";
+      bg.style.top = "55px";
+      
+      // Ορισμός ύψους βάσει mode:
+      if (currentMode === "collapsed") {
         bg.style.height = "468px";
+      } else {
+        // Για expanded και start mode:
+        bg.style.height = "368px";
       }
+      
+      // Δυναμικός υπολογισμός πλάτους:
+      let pCanvas = document.getElementById("canvasP");
+      let newWidth;
+      if (pCanvas && pCanvas.style.width) {
+        let pLeft = parseInt(pCanvas.style.left) || 0;
+        let pWidth = parseInt(pCanvas.style.width) || 0;
+        // Δεξί άκρο του p τομέα +20, αφαιρώντας το σταθερό αριστερό όριο (17px)
+        newWidth = (pLeft + pWidth + 20) - 17;
+      } else {
+        // Fallback τιμές αν δεν έχει οριστεί ακόμα το pCanvas
+        newWidth = (currentMode === "collapsed") ? 837 : 1412;
+      }
+      bg.style.width = newWidth + "px";
       bg.style.opacity = "1";
     }
 
@@ -136,6 +151,7 @@
 
     // Δημιουργία καμβάδων ομάδων χωρίς περιγράμματα:
     function initGroupsCanvases() {
+      // S-block:
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(82, 40);
@@ -159,6 +175,7 @@
         };
       });
       
+      // D-block:
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -187,6 +204,7 @@
         };
       });
       
+      // P-block:
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
@@ -215,6 +233,7 @@
         };
       });
       
+      // Τοποθέτηση καμβάδων ομάδων πάνω από τους τομείς:
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -223,7 +242,7 @@
       });
     }
 
-    // Δημιουργία καμβάδων τομέων βάσει του JSON χωρίς μετατοπίσεις.
+    // Δημιουργία καμβάδων τομέων βάσει των τιμών στο JSON χωρίς μετατοπίσεις.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -254,7 +273,7 @@
       });
     }
 
-    // Σχεδίαση των στοιχείων σύμφωνα με το JSON.
+    // Σχεδίαση στοιχείων βάσει των τιμών του JSON.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -273,15 +292,16 @@
       });
     }
 
-    // Event listeners βασισμένοι στις τιμές του JSON.
+    // Event listeners:
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
-        initializeSectorsCanvas();       
-        initializePeriodsCanvas();       
+        initializeSectorsCanvas();
+        initializePeriodsCanvas();
         initGroupsCanvases();
         isTableFilled = true;
         document.getElementById('toggleFBlock').disabled = false;
+        document.getElementById('startMode').disabled = false;
       }
     });
 
@@ -291,12 +311,25 @@
       currentMode = isCollapsed ? "collapsed" : "expanded";
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
+      // Αναπροσαρμογή των καμβάδων ομάδων:
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42) + "px";
       });
+    });
+
+    // Νέο κουμπί για ενεργοποίηση του mode "start"
+    document.getElementById('startMode').addEventListener('click', function() {
+      currentMode = "start";
+      isCollapsed = false;
+      // Επαναφορτώστε όλες τις διατάξεις βάσει του mode "start"
+      initializeBackgroundCanvas();
+      initializeSectorsCanvas();
+      initializePeriodsCanvas();
+      initGroupsCanvases();
+      console.log("Ενεργοποιήθηκε το mode 'start'");
     });
 
     window.addEventListener('load', loadData);
