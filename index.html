@@ -22,7 +22,7 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas με μεγαλύτερο αλλά πιο αχνό εφέ σκίασης */
+    /* Background canvas */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -32,7 +32,7 @@
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* Ομαδοποίηση καμβάδων ομάδων με z-index στο ανώτερο επίπεδο */
+    /* Ομαδοποίηση καμβάδων ομάδων */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute;
       z-index: 60;
@@ -44,7 +44,7 @@
     #canvasD { z-index: 30; }
     #canvasP { z-index: 40; }
     #canvasPeriods { z-index: 50; display: none; }
-    /* Κουμπιά: τοποθέτηση κατακόρυφα με σκίαση και διάταξη από πάνω προς τα κάτω */
+    /* Κουμπιά: τοποθέτηση κατακόρυφα */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -88,29 +88,28 @@
   </div>
 
   <script>
+    // Τα δεδομένα για τα στοιχεία και τις θέσεις φορτώνονται από τα JSON (δεν γίνονται τροποποιήσεις εδώ)
     let elements = [];
     let positions = {};
     let isTableFilled = false;
     let isCollapsed = false;
     let currentMode = "expanded"; // αρχική κατάσταση
 
-    // Μεταβλητή για προοδευτική εμφάνιση: αρχικά 2 ώστε με το πρώτο πάτημα να γίνει 3
+    // Η μεταβλητή currentZ ελέγχει την προοδευτική εμφάνιση. Αρχικά δεν εμφανίζεται τίποτα (currentZ = 2) και 
+    // μετά το πρώτο πάτημα του "Επόμενο" τίθεται σε 3.
     let currentZ = 2;
 
-    // Ενημέρωση των τοποθετήσεων των τομέων με βάση το currentZ
+    // Η συνάρτηση updateSectors εφαρμόζει τις μετατοπίσεις στους τομείς p και d βάσει του currentZ.
     function updateSectors() {
       let shiftP = 0, shiftD = 0;
       if (currentZ <= 20) {
-        shiftP = 0; 
+        shiftP = 0;
         shiftD = 0;
       } else if (currentZ >= 21 && currentZ <= 30) {
-        // Από το 21 έως το 30: μετατόπιση του τομέα p κατά 42px ανά βήμα
         shiftP = 42 * (currentZ - 20);
       } else if (currentZ >= 31 && currentZ <= 56) {
-        // Σταθερή μετατόπιση για το p
         shiftP = 42 * 10;
       } else if (currentZ >= 57 && currentZ <= 70) {
-        // Από το 57 έως το 70: μετατόπιση του p και d κατά 42px ανά βήμα
         shiftP = 42 * 10 + 42 * (currentZ - 56);
         shiftD = 42 * (currentZ - 56);
       } else if (currentZ > 70) {
@@ -118,25 +117,31 @@
         shiftD = 42 * 14;
       }
       let cP = document.getElementById('canvasP');
-      if(cP) { 
-        cP.style.transition = "left 1.2s ease"; 
-        cP.style.left = (159 + shiftP) + "px"; 
+      if(cP) {
+        cP.style.transition = "left 1.2s ease";
+        cP.style.left = (159 + shiftP) + "px";
       }
       let cD = document.getElementById('canvasD');
-      if(cD) { 
-        cD.style.transition = "left 1.2s ease"; 
-        cD.style.left = (159 + shiftD) + "px"; 
+      if(cD) {
+        cD.style.transition = "left 1.2s ease";
+        cD.style.left = (159 + shiftD) + "px";
       }
     }
 
-    // Ενημέρωση του currentZ και εμφάνιση στοιχείων, περιόδων και ομάδων
+    // Η συνάρτηση updateTable αυξάνει το currentZ και ανανεώνει τους καμβάδες με τα στοιχεία που πρέπει να εμφανίζονται.
+    // Σημειώνεται ότι:
+    // - Μέχρι το 2 (δηλαδή πριν το πρώτο "Επόμενο") δεν εμφανίζεται τίποτα.
+    // - Με το πρώτο πάτημα γίνεται currentZ = 3 και ξεκινά η προοδευτική εμφάνιση.
+    // - Από 21 έως 30 ο τομέας p μετατοπίζεται, από 57 έως 70 και ο τομέας d.
+    // - Μετά το 118, εμφανίζεται το στοιχείο 1 (currentZ = 119), το στοιχείο 2 (currentZ = 120),
+    //   και στη συνέχεια οι περίοδοι (currentZ = 121) και οι ομάδες (currentZ = 122).
     function updateTable() {
       if (currentZ < 3) {
         currentZ = 3;
       } else if (currentZ < 118) {
         currentZ++;
       } else if (currentZ === 118) {
-        currentZ = 119;  // Εμφάνιση στοιχείου 1 (αντί για 119)
+        currentZ = 119;  // Εμφάνιση στοιχείου 1 (αντί για το 119)
       } else if (currentZ === 119) {
         currentZ = 120;  // Εμφάνιση στοιχείου 2
       } else if (currentZ === 120) {
@@ -154,6 +159,9 @@
       console.log('CurrentZ:', currentZ);
     }
 
+    // Οι παρακάτω συναρτήσεις (computeRightLimit, computeBottomLimit, initializeBackgroundCanvas,
+    // loadData, initializePeriodsCanvas, initGroupsCanvases, initializeSectorsCanvas, drawElements)
+    // παραμένουν αναλλοίωτες όσον αφορά τις υπόλοιπες διαδικασίες (Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε).
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -345,7 +353,21 @@
 
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-      elements.filter(e => e.block === block).forEach(e => {
+      // Φιλτράρουμε τα στοιχεία που θα σχεδιαστούν βάσει του currentZ.
+      // Για τις κανονικές τιμές (από 3 έως 118), εμφανίζονται μόνο τα στοιχεία με αριθμό ≥ 3 και ≤ currentZ.
+      // Μετά το 118, εφαρμόζουμε τις ειδικές περιπτώσεις για τα στοιχεία 1 και 2.
+      elements.filter(e => {
+        let num = Number(e.number);
+        if (currentZ < 119) {
+          return num >= 3 && num <= currentZ;
+        } else if (currentZ === 119) {
+          return (num >= 3 && num <= 118) || num === 1;
+        } else if (currentZ === 120) {
+          return (num >= 3 && num <= 118) || num === 1 || num === 2;
+        } else {
+          return (num >= 3 && num <= 118) || num === 1 || num === 2;
+        }
+      }).forEach(e => {
         let pos = positions[currentMode][e.number];
         if (pos) {
           let relativeX = pos.x - containerLeft;
@@ -360,11 +382,12 @@
       });
     }
 
+    // Τα κουμπιά "Συμπλήρωσε" και "Σύμπτυξε"/"Ανάπτυξε" παραμένουν ανέπαφα.
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
-        initializeSectorsCanvas();       
-        initializePeriodsCanvas();       
+        initializeSectorsCanvas();
+        initializePeriodsCanvas();
         initGroupsCanvases();
         isTableFilled = true;
         document.getElementById('toggleFBlock').disabled = false;
@@ -372,6 +395,10 @@
       }
     });
 
+    // Η λειτουργία του κουμπιού "Επόμενο" σύμφωνα με τις οδηγίες:
+    // - Στην αρχική διάταξη "start" δεν εμφανίζεται κανένα στοιχείο.
+    // - Με το πρώτο πάτημα το currentZ τίθεται στο 3 και ξεκινά η προοδευτική εμφάνιση.
+    // - Εφαρμόζονται οι μετατοπίσεις για τομέα p (και d όταν απαιτείται) καθώς και οι ειδικές περιπτώσεις μετά το 118.
     document.getElementById('nextState').addEventListener('click', function() {
       updateTable();
     });
