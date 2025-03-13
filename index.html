@@ -64,6 +64,19 @@
     }
     /* Offscreen canvas για color picking (προσωρινό) */
     #offscreenCanvas { display: none; }
+    /* Πίνακας "Χρωμάτων" για εμφάνιση θέσεων */
+    #colorTable {
+      position: fixed; 
+      bottom: 20px; 
+      left: 20px; 
+      background: #fff; 
+      padding: 10px; 
+      border: 1px solid #ccc; 
+      max-height: 200px; 
+      overflow: auto;
+      font-size: 12px;
+      z-index: 110;
+    }
   </style>
 </head>
 <body>
@@ -91,6 +104,9 @@
   <!-- Offscreen canvas για color picking -->
   <canvas id="offscreenCanvas" width="800" height="600"></canvas>
 
+  <!-- Πίνακας Χρωμάτων για εμφάνιση θέσεων -->
+  <div id="colorTable"></div>
+
   <script>
     // Global Variables
     let elements = [];
@@ -99,8 +115,10 @@
     // Αρχική κατάσταση: mode "start" με currentZ = 3 ώστε να εμφανίζεται τουλάχιστον το στοιχείο 3
     let currentMode = "start";
     let currentZ = 3;
-    let extraElements = {};
+    // Οι μεταβλητές postFillingStep, extraElements και showPeriods χρησιμοποιούνταν στο αρχικό code για post filling,
+    // αλλά σύμφωνα με την απαίτηση το "Επόμενο" δεν θα λειτουργεί μετά το 122.
     let postFillingStep = 0;
+    let extraElements = {};
     let showPeriods = false;
     let cellSize = 40; // Μέγεθος κάθε κελιού
 
@@ -209,17 +227,20 @@
           height: pos.height
         };
       });
-      // Κάλεσμα για δυναμική ενημέρωση του πίνακα "χρωμάτων"
+      // Ενημέρωση του πίνακα "χρωμάτων" στο HTML
       updateColorTable();
     }
 
-    // Συνάρτηση ενημέρωσης πίνακα "χρωμάτων" (ή εμφάνισης των θέσεων)
+    // Συνάρτηση ενημέρωσης πίνακα "χρωμάτων"
     function updateColorTable() {
-      console.log("Ενημέρωση πίνακα χρωμάτων με τις νέες θέσεις:");
+      let tableDiv = document.getElementById("colorTable");
+      let html = "<h4>Πίνακας Χρωμάτων</h4><ul>";
       for (let key in currentCellPositions) {
-        console.log("Στοιχείο", key, ":", currentCellPositions[key]);
+        let pos = currentCellPositions[key];
+        html += "<li>Στοιχείο " + key + ": x=" + pos.x + ", y=" + pos.y + ", w=" + pos.width + ", h=" + pos.height + "</li>";
       }
-      // Αν έχετε HTML στοιχείο για εμφάνιση, μπορείτε να το ενημερώσετε εδώ.
+      html += "</ul>";
+      tableDiv.innerHTML = html;
     }
 
     // Υπολογισμός bounding box με τις ενημερωμένες θέσεις
@@ -463,6 +484,7 @@
     // Event listener για το κουμπί "Συμπλήρωσε" (προβάλλει πλήρη εμφάνιση)
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
+      // Εδώ μεταβαίνουμε στην expanded κατάσταση (π.χ. full εμφάνιση)
       currentMode = "expanded";
       currentZ = 123;
       initializeBackgroundCanvas();
@@ -495,36 +517,29 @@
     
     // Event listener για το κουμπί "Επόμενο"
     document.getElementById('nextState').addEventListener('click', function() {
-      // Εάν δεν είμαστε στο "start", επιστρέφουμε στην αρχική κατάσταση
-      if (currentMode !== "start") {
+      // Στην κατάσταση "start" το "Επόμενο" λειτουργεί μόνο μέχρι το currentZ να φτάσει το 122
+      if (currentMode === "start") {
+        if (currentZ < 122) {
+          currentZ++;
+          initializeBackgroundCanvas();
+          initializeSectorsCanvas();
+          updateCellsPositions();
+          logHitTestCenter();
+        } else {
+          console.log("Το 'Επόμενο' δεν λειτουργεί μετά το 122. Παρακαλώ κάντε Reset.");
+        }
+      } else {
+        // Αν δεν είμαστε σε "start", επαναφέρουμε την αρχική κατάσταση
         currentMode = "start";
         currentZ = 3;
         postFillingStep = 0;
         extraElements = {};
         showPeriods = false;
-      } else {
-        // Μόνο εάν δεν έχει φτάσει το όριο του 122
-        if (currentZ < 122) {
-          currentZ++;
-        } else {
-          // Αν έχουμε φτάσει το 122, εκτελούμε μόνο τα post filling βήματα
-          postFillingStep++;
-          if (postFillingStep === 1) extraElements["1"] = true;
-          else if (postFillingStep === 2) extraElements["2"] = true;
-          else if (postFillingStep === 3) showPeriods = true;
-          else if (postFillingStep === 4) {
-            currentMode = "expanded";
-            currentZ = 123;
-            console.log("NextState: Full expanded mode reached via post filling steps.");
-          }
-        }
+        initializeBackgroundCanvas();
+        initializeSectorsCanvas();
+        updateCellsPositions();
+        logHitTestCenter();
       }
-      initializeBackgroundCanvas();
-      initializeSectorsCanvas();
-      if (showPeriods) initializePeriodsCanvas();
-      console.log("NextState: currentZ =", currentZ);
-      updateCellsPositions();
-      logHitTestCenter();
     });
     
     // Event listener για το κουμπί "Reset"
