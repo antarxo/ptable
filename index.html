@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τελικός Κώδικας</title>
+  <title>Περιοδικός Πίνακας - Τελικός Κώδικας με F block εφαπτόμενο στο S block</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -30,7 +30,7 @@
       z-index: -10;
       opacity: 1;
     }
-    /* Οι καμβάδες των ομάδων δεν έχουν άλλες μετατοπίσεις πέραν της καθορισμένης */
+    /* Οι καμβάδες των ομάδων δεν έχουν επιπρόσθετες μετατοπίσεις πέραν της καθορισμένης */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute; 
     }
@@ -243,8 +243,17 @@
     }
 
     // Δημιουργία καμβάδων τομέων (S, P, D, F) αποκλειστικά βάσει τιμών από το JSON.
-    // Εδώ για κάθε block (συμπεριλαμβανομένου του F block) τα στοιχεία τοποθετούνται σύμφωνα με τις τιμές του JSON χωρίς επιπρόσθετες μετατροπές.
+    // Εδώ, για το F block, εφαρμόζουμε μετατόπιση ώστε το αριστερό του άκρο να εφάπτεται στο δεξί άκρο του S block.
     function initializeSectorsCanvas() {
+      // Υπολογισμός του δεξιού άκρου (maxX) του S block από το JSON
+      let s_maxX = -Infinity;
+      elements.filter(e => e.block === "s").forEach(e => {
+        let pos = positions[currentMode][e.number];
+        if(pos) {
+          s_maxX = Math.max(s_maxX, pos.x + pos.width);
+        }
+      });
+      
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
@@ -260,7 +269,12 @@
           }
         });
         if(minX === Infinity || minY === Infinity) return;
-        container.style.left = minX + "px";
+        // Εάν το block είναι "f", μετατοπίζουμε το left ώστε το αριστερό του να εφάπτεται στο s_maxX.
+        if(block === "f") {
+          container.style.left = s_maxX + "px";
+        } else {
+          container.style.left = minX + "px";
+        }
         container.style.top = minY + "px";
         container.style.width = (maxX - minX) + "px";
         container.style.height = (maxY - minY) + "px";
