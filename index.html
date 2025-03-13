@@ -37,7 +37,7 @@
       position: absolute;
       z-index: 60;
     }
-    /* Καμβάδες τομέων και περιοδών */
+    /* Καμβάδες τομέων και περιοχών */
     #canvasS { z-index: 10; }
     #canvasF { z-index: 20; }
     #canvasD { z-index: 30; }
@@ -103,6 +103,9 @@
     let postFillingStep = 0;
     let showPeriods = false;
     let cellSize = 40; // Μέγεθος κάθε κελιού
+
+    // Global object to store updated positions for hit-testing
+    let currentCellPositions = {};
 
     // Ορισμοί συναρτήσεων για μετατοπίσεις
     function getShift(num, block) {
@@ -179,6 +182,49 @@
         }
       });
       return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
+    }
+
+    // Νέα συνάρτηση για δυναμική ενημέρωση θέσεων κελιών για το hit-testing
+    function updateCellsPositions() {
+      currentCellPositions = {};
+      elements.forEach(e => {
+        let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
+        if (!pos) return;
+        let offsetX = 0;
+        let offsetY = 0;
+        if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
+          offsetX = getShiftContainer(e.block);
+        }
+        let num = Number(e.number);
+        if (currentMode === "start") {
+          if (e.block === "p" && num >= 21 && num <= 30) {
+            offsetY = getShift(num, e.block);
+          } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
+            offsetY = getShift(num, e.block);
+          }
+        }
+        currentCellPositions[e.number] = {
+          x: pos.x + offsetX,
+          y: pos.y + offsetY,
+          width: pos.width,
+          height: pos.height
+        };
+      });
+    }
+
+    // Νέα συνάρτηση για τον υπολογισμό του bounding box χρησιμοποιώντας τις δυναμικά ενημερωμένες θέσεις
+    function computeModeRegionUpdated() {
+      let keys = Object.keys(currentCellPositions);
+      if (keys.length === 0) return null;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (let key in currentCellPositions) {
+        let pos = currentCellPositions[key];
+        minX = Math.min(minX, pos.x);
+        minY = Math.min(minY, pos.y);
+        maxX = Math.max(maxX, pos.x + pos.width);
+        maxY = Math.max(maxY, pos.y + pos.height);
+      }
+      return { minX, minY, maxX, maxY };
     }
     
     function initializeBackgroundCanvas() {
@@ -385,7 +431,6 @@
           p.fill(0);
           p.textSize(13);
           p.textStyle(p.BOLD);
-          p.textAlign(p.CENTER, p.CENTER);
           p.text(e.number, relativeX + pos.width/2, relativeY + pos.height/2);
         }
       });
@@ -393,7 +438,7 @@
     
     // Λειτουργίες κουμπιών με επιπλέον κλήση performHitTest στο κέντρο της τρέχουσας περιοχής εμφάνισης.
     function logHitTestCenter() {
-      let region = computeModeRegion();
+      let region = computeModeRegionUpdated();
       if (region) {
         let centerX = (region.minX + region.maxX) / 2;
         let centerY = (region.minY + region.maxY) / 2;
@@ -412,6 +457,7 @@
       initGroupsCanvases();
       document.getElementById('toggleFBlock').disabled = false;
       console.log("FillAll: currentZ set to", currentZ, "- πλήρης εμφάνιση (expanded)");
+      updateCellsPositions();
       logHitTestCenter();
     });
     
@@ -428,6 +474,7 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
       console.log("ToggleFBlock: Mode changed to", currentMode);
+      updateCellsPositions();
       logHitTestCenter();
     });
     
@@ -457,6 +504,7 @@
       initializeSectorsCanvas();
       if (showPeriods) initializePeriodsCanvas();
       console.log("NextState: currentZ =", currentZ);
+      updateCellsPositions();
       logHitTestCenter();
     });
     
@@ -464,9 +512,9 @@
       location.reload();
     });
     
-    // Η συνάρτηση hit-testing όπως προηγουμένως, με προσθήκη του logging του Ζ του στοιχείου
+    // Ενημέρωση της συνάρτησης hit-testing για χρήση των δυναμικά ενημερωμένων θέσεων
     function performHitTest(x, y) {
-      let region = computeModeRegion();
+      let region = computeModeRegionUpdated();
       if (!region) {
          console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
          return;
@@ -482,41 +530,41 @@
       offCanvas.height = region.maxY - region.minY;
       let offCtx = offCanvas.getContext("2d");
       offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-      elements.forEach(e => {
-        let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
-        if (pos) {
-          let drawX = pos.x - regionLeft;
-          let drawY = pos.y - regionTop;
-          let r = (Number(e.number) * 37) % 256;
-          let g = (Number(e.number) * 67) % 256;
-          let b = (Number(e.number) * 97) % 256;
-          offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-          offCtx.fillRect(drawX, drawY, pos.width, pos.height);
-        }
-      });
+      for (let key in currentCellPositions) {
+         let pos = currentCellPositions[key];
+         let drawX = pos.x - regionLeft;
+         let drawY = pos.y - regionTop;
+         let num = Number(key);
+         let r = (num * 37) % 256;
+         let g = (num * 67) % 256;
+         let b = (num * 97) % 256;
+         offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+         offCtx.fillRect(drawX, drawY, pos.width, pos.height);
+      }
       let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
       if (pixel[3] === 0) {
          console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
       } else {
          console.log("Color Picking: Pixel at (" + x + ", " + y + ") =", pixel);
          let found = null;
-         elements.forEach(e => {
-            let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
-            if (pos) {
-               let r = (Number(e.number) * 37) % 256;
-               let g = (Number(e.number) * 67) % 256;
-               let b = (Number(e.number) * 97) % 256;
-               if (pixel[0] === r && pixel[1] === g && pixel[2] === b)
-                  found = e;
+         for (let key in currentCellPositions) {
+            let pos = currentCellPositions[key];
+            let num = Number(key);
+            let r = (num * 37) % 256;
+            let g = (num * 67) % 256;
+            let b = (num * 97) % 256;
+            if (pixel[0] === r && pixel[1] === g && pixel[2] === b) {
+                found = key;
+                break;
             }
-         });
+         }
          if (found)
-            console.log("Εντοπίστηκε στοιχείο με Ζ =", found.number);
+            console.log("Εντοπίστηκε στοιχείο με Ζ =", found);
          else
             console.log("Δεν βρέθηκε αντιστοιχία για το χρώμα", pixel);
       }
-      let col = Math.floor((x - regionLeft) / cellSize);
-      let row = Math.floor((y - regionTop) / cellSize);
+      let col = Math.floor(relX / cellSize);
+      let row = Math.floor(relY / cellSize);
       console.log("Direct Calculation: Row =", row, "Col =", col);
     }
     
@@ -556,6 +604,7 @@
       initializePeriodsCanvas();
       initGroupsCanvases();
       initializeCanvases();
+      updateCellsPositions();
       console.log("Data loaded and canvases initialized.");
     });
   </script>
