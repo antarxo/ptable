@@ -31,7 +31,7 @@
       z-index: -10;
       transition: all 0.5s ease-in-out;
     }
-    /* Ομαδοποίηση καμβάδων ομάδων - μένουν κρυφοί μέχρι να ολοκληρωθεί η διαδικασία */
+    /* Ομαδοποίηση καμβάδων ομάδων – παραμένουν κρυφοί μέχρι να ολοκληρωθεί η διαδικασία */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute;
       z-index: 60;
@@ -87,21 +87,20 @@
   </div>
 
   <script>
-    // Τα δεδομένα φορτώνονται από JSON (δεν τροποποιούνται εδώ)
+    // Τα δεδομένα φορτώνονται από JSON
     let elements = [];
     let positions = {};
     let isTableFilled = false;
-    // currentMode παραμένει "start" για τις ενέργειες του "Επόμενο"
+    // Η διάταξη για το "Επόμενο" είναι πάντα "start"
     let currentMode = "start";
-
     /* 
-      Η μεταβλητή currentZ ελέγχει την προοδευτική εμφάνιση.
+      currentZ: Χειρίζεται την προοδευτική εμφάνιση.
       Αρχικά (πριν πατηθεί "Επόμενο") δεν εμφανίζεται τίποτα (currentZ = 2).
-      Με το πρώτο πάτημα του "Επόμενο" τίθεται σε 3, και συνεχίζει η εμφάνιση.
+      Με το πρώτο πάτημα του "Επόμενο" τίθεται σε 3, και από εκεί αυξάνεται.
     */
     let currentZ = 2;
 
-    // Ενημέρωση των μετατοπίσεων στους τομείς p (και d όπου απαιτείται) βάσει του currentZ.
+    // Εφαρμόζει τις μετατοπίσεις στους τομείς p (και d όταν απαιτείται) βάσει του currentZ
     function updateSectors() {
       let shiftP = 0, shiftD = 0;
       if (currentZ <= 20) {
@@ -130,21 +129,15 @@
       }
     }
 
-    // Η συνάρτηση updateTable αυξάνει το currentZ και ανανεώνει τους καμβάδες ώστε να εμφανίζονται τα στοιχεία.
-    // Εφαρμόζεται η εξής λογική:
-    //  - Πριν το πρώτο "Επόμενο": τίποτα δεν εμφανίζεται.
-    //  - Με το πρώτο πάτημα, currentZ = 3 και αρχίζει η εμφάνιση (τα προηγούμενα παραμένουν στην οθόνη).
-    //  - Από 21 έως 30 ο τομέας p μετατοπίζεται.
-    //  - Από 57 έως 70 μετατοπίζονται οι τομείς p και d.
-    //  - Μετά το 118, εμφανίζεται διαδοχικά το στοιχείο 1 (currentZ = 119), το στοιχείο 2 (currentZ = 120),
-    //    και στη συνέχεια οι περίοδοι (currentZ = 121) και οι ομάδες (currentZ = 122).
+    // Ενημέρωση της εμφάνισης (currentZ) και ανανέωση των καμβάδων
     function updateTable() {
       if (currentZ < 3) {
+        // Το πρώτο πάτημα θέτει το currentZ στο 3 για να ξεκινήσει η εμφάνιση
         currentZ = 3;
       } else if (currentZ < 118) {
         currentZ++;
       } else if (currentZ === 118) {
-        currentZ = 119;  // Εμφάνιση στοιχείου 1 (αντί για 119)
+        currentZ = 119;  // Εμφάνιση στοιχείου 1 (δηλαδή, όταν φτάνει το 119, το στοιχείο 1 εμφανίζεται)
       } else if (currentZ === 119) {
         currentZ = 120;  // Εμφάνιση στοιχείου 2
       } else if (currentZ === 120) {
@@ -156,19 +149,19 @@
         document.getElementById('canvasD_groups').style.display = 'block';
         document.getElementById('canvasP_groups').style.display = 'block';
       }
-      // Επειδή το "Επόμενο" χρησιμοποιεί αποκλειστικά τη διάταξη start:
+      // Βεβαιώνουμε ότι η διάταξη είναι πάντα "start" για το "Επόμενο"
       currentMode = "start";
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       updateSectors();
       console.log('CurrentZ:', currentZ);
-      // Αν η διαδικασία ολοκληρωθεί (currentZ > 122), ενεργοποιούμε το κουμπί "Σύμπτυξε"
+      // Το κουμπί "Σύμπτυξε" ενεργοποιείται μόνο όταν ολοκληρωθεί η διαδικασία (currentZ > 122)
       if (currentZ > 122) {
         document.getElementById('toggleFBlock').disabled = false;
       }
     }
 
-    // Η συνάρτηση υπολογίζει το δεξί όριο για ένα block με margin 20px.
+    // Υπολογισμός δεξιού ορίου για το block με margin 20px
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -180,7 +173,7 @@
       return maxX + 20;
     }
 
-    // Η συνάρτηση υπολογίζει το κάτω όριο για ένα block με margin 20px.
+    // Υπολογισμός κάτω ορίου για το block με margin 20px
     function computeBottomLimit(block) {
       let maxY = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -192,7 +185,7 @@
       return maxY + 20;
     }
 
-    // Ενημέρωση του background ώστε να καλύπτει το συμπληρωμένο τμήμα (με περιθώριο 20px)
+    // Ενημέρωση του background ώστε να καλύπτει το συμπληρωμένο τμήμα
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let leftFixed = 17;
@@ -205,7 +198,7 @@
       bg.style.height = (bottomLimit - topFixed) + "px";
     }
 
-    // Φόρτωση των δεδομένων από τα JSON
+    // Φόρτωση δεδομένων από τα JSON
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
@@ -327,7 +320,7 @@
       });
     }
 
-    // Δημιουργία καμβάδων τομέων βάσει του JSON και της διάταξης (στην περίπτωση μας, "start")
+    // Δημιουργία καμβάδων τομέων βάσει του JSON και της διάταξης "start"
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -358,7 +351,7 @@
       });
     }
 
-    // Σχεδίαση στοιχείων βάσει του JSON. Τα στοιχεία που σχεδιάζονται φιλτράρονται ανάλογα με το currentZ.
+    // Σχεδίαση στοιχείων βάσει του JSON, φιλτράροντάς τα ανάλογα με το currentZ.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => {
@@ -387,7 +380,7 @@
       });
     }
 
-    // Τα κουμπιά "Συμπλήρωσε" και "Σύμπτυξε/Ανάπτυξε" δεν αλλάζουν.
+    // Το κουμπί "Συμπλήρωσε" παραμένει ανέπαφο, όπως στο αρχικό, θέτοντας το currentZ = 123.
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
@@ -395,19 +388,22 @@
         initializePeriodsCanvas();
         initGroupsCanvases();
         isTableFilled = true;
-        // Το κουμπί "Σύμπτυξε" θα παραμείνει ανενεργό μέχρι να ολοκληρωθεί η διαδικασία (currentZ > 122) ή να πατηθεί "Συμπλήρωσε"
+        // Το "Συμπλήρωσε" ολοκληρώνει τη διαδικασία, θέτοντας currentZ = 123
+        currentZ = 123;
+        // Ενεργοποίηση του κουμπιού "Σύμπτυξε"
+        document.getElementById('toggleFBlock').disabled = false;
+        // Ενεργοποίηση του κουμπιού "Επόμενο" εφόσον το "Συμπλήρωσε" ολοκληρώνει το αποτέλεσμα
         document.getElementById('nextState').disabled = false;
       }
     });
 
-    // Η λειτουργία του κουμπιού "Επόμενο" (μόνο στην διάταξη start)
+    // Το κουμπί "Επόμενο" λειτουργεί αποκλειστικά με τη διάταξη "start"
     document.getElementById('nextState').addEventListener('click', function() {
       updateTable();
     });
 
-    // Η λειτουργία του κουμπιού "Σύμπτυξε/Ανάπτυξε" ενεργοποιείται μόνο όταν ολοκληρωθεί η διαδικασία (currentZ > 122 ή μέσω "Συμπλήρωσε")
+    // Το κουμπί "Σύμπτυξε/Ανάπτυξε" παραμένει ανενεργό μέχρι να ολοκληρωθεί η διαδικασία (currentZ > 122) ή να πατηθεί το "Συμπλήρωσε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
-      // Δεν επιτρέπουμε αλλαγή αν η διαδικασία δεν έχει ολοκληρωθεί.
       if (currentZ <= 122) return;
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
