@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Κώδικας με Διορθώσεις Hit Testing & Συμπλήρωσε</title>
+  <title>Περιοδικός Πίνακας - Κώδικας με Διορθώσεις & Log Ζ στοιχείου</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -134,12 +134,12 @@
       return 0;
     }
     
-    // Προσθήκη computeRightLimit και computeBottomLimit για expanded/collapsed mode
+    // Ορισμοί computeRightLimit και computeBottomLimit για expanded/collapsed mode,
+    // με fallback για τα στοιχεία 1 και 2
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
-        // Χρησιμοποιούμε το positions του τρέχοντος mode, με fallback για στοιχεία 1,2 αν χρειάζεται.
-        let pos = positions[currentMode][e.number] || ( (e.number=="1" || e.number=="2") ? positions["start"][e.number] : null );
+        let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
         if (pos) maxX = Math.max(maxX, pos.x + pos.width);
       });
       return maxX;
@@ -147,13 +147,13 @@
     function computeBottomLimit(block) {
       let maxY = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
-        let pos = positions[currentMode][e.number] || ( (e.number=="1" || e.number=="2") ? positions["start"][e.number] : null );
+        let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
         if (pos) maxY = Math.max(maxY, pos.y + pos.height);
       });
       return maxY;
     }
     
-    // Συνάρτηση που υπολογίζει το bounding box των εμφανιζόμενων στοιχείων ανά mode
+    // Συνάρτηση για τον υπολογισμό του bounding box των εμφανιζόμενων στοιχείων ανά mode
     function computeModeRegion() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
@@ -161,16 +161,16 @@
         if (currentMode === "start") {
           if ((num < 3 && !extraElements[num]) || num > currentZ) return;
         }
-        // Χρησιμοποιούμε fallback για στοιχεία 1 και 2 εάν λείπουν από το τρέχον mode
         let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
         if (pos) {
           let x = pos.x, y = pos.y;
-          if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
+          if (currentMode === "start" && (e.block === "p" || e.block === "d"))
             x += getShiftContainer(e.block);
-          }
           if (currentMode === "start") {
-            if (e.block === "p" && num >= 21 && num <= 30) y += getShift(num, e.block);
-            else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) y += getShift(num, e.block);
+            if (e.block === "p" && num >= 21 && num <= 30)
+              y += getShift(num, e.block);
+            else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
+              y += getShift(num, e.block);
           }
           minX = Math.min(minX, x);
           minY = Math.min(minY, y);
@@ -494,6 +494,22 @@
          console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
       } else {
          console.log("Color Picking: Pixel at (" + x + ", " + y + ") =", pixel);
+         // Εντοπισμός στοιχείου βάσει του χρώματος
+         let found = null;
+         elements.forEach(e => {
+            let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
+            if (pos) {
+               let r = (Number(e.number) * 37) % 256;
+               let g = (Number(e.number) * 67) % 256;
+               let b = (Number(e.number) * 97) % 256;
+               if (pixel[0] === r && pixel[1] === g && pixel[2] === b)
+                  found = e;
+            }
+         });
+         if (found)
+            console.log("Εντοπίστηκε στοιχείο με Ζ =", found.number);
+         else
+            console.log("Δεν βρέθηκε αντιστοιχία για το χρώμα", pixel);
       }
       
       let col = Math.floor((x - regionLeft) / cellSize);
