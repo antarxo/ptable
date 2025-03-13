@@ -90,10 +90,16 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    // Αρχικά, για πλήρη εμφάνιση έχουμε expanded
+    // Αρχικά έχουμε expanded για το fillAll
     let currentMode = "expanded";
     // currentZ χρησιμοποιείται στη διάταξη "start"
-    let currentZ = 0;            
+    let currentZ = 0;
+    // Για να εμφανιστούν τα στοιχεία 1 και 2 μετά το 118
+    let extraElements = {};
+    // Μετρητής βημάτων μετά το 118
+    let postFillingStep = 0;
+    // Σηματοδότης για εμφάνιση καμβά περιόδων
+    let showPeriods = false;
 
     /* 
       Συνάρτηση getShift:
@@ -160,42 +166,45 @@
     /* 
       Συνάρτηση computeNextBgDimensions:
       
-      Διατρέχει όλα τα ορατά στοιχεία (αριθμοί 3 έως currentZ) και υπολογίζει το συνολικό bounding box.
-      Τώρα, για κάθε στοιχείο, εκτός από την κατακόρυφη μετατόπιση (Y) που εφαρμόζεται με getShift,
-      προστίθεται επίσης και η οριζόντια μετατόπιση (shift) στα blocks p και d, μέσω της getShiftContainer.
+      Διατρέχει όλα τα ορατά στοιχεία (αριθμοί 3 έως currentZ, καθώς και τα extraElements για 1,2)
+      και υπολογίζει το συνολικό bounding box.
+      
+      Εδώ, για κάθε στοιχείο, αν ο αριθμός είναι κάτω από 3 και δεν έχει ενεργοποιηθεί στο extraElements,
+      τότε παραλείπεται. Επίσης, εφαρμόζονται οι οριζόντιες μετατοπίσεις (μέσω getShiftContainer)
+      για τα blocks p και d, καθώς και οι κατακόρυφες μετατοπίσεις (μέσω getShift) όπου απαιτείται.
     */
     function computeNextBgDimensions() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
         let num = Number(e.number);
-        if (num >= 3 && num <= currentZ) {
-          let pos = positions[currentMode][e.number];
-          if (pos) {
-            let x = pos.x;
-            let y = pos.y;
-            // Εφαρμογή οριζόντιας μετατόπισης στα blocks p και d
-            if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
-              x += getShiftContainer(e.block);
-            }
-            // Εφαρμογή κατακόρυφης μετατόπισης
-            if (currentMode === "start") {
-              if (e.block === "p" && num >= 21 && num <= 30) {
-                y += getShift(num, e.block);
-              } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
-                y += getShift(num, e.block);
-              }
-            }
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x + pos.width);
-            maxY = Math.max(maxY, y + pos.height);
+        // Εμφανίζουμε τα στοιχεία που είναι >= 3 ή, αν είναι μικρότερα, έχουν ενεργοποιηθεί
+        if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+        let pos = positions[currentMode][e.number];
+        if (pos) {
+          let x = pos.x;
+          let y = pos.y;
+          // Εφαρμογή οριζόντιας μετατόπισης στα blocks p και d
+          if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
+            x += getShiftContainer(e.block);
           }
+          // Εφαρμογή κατακόρυφης μετατόπισης
+          if (currentMode === "start") {
+            if (e.block === "p" && num >= 21 && num <= 30) {
+              y += getShift(num, e.block);
+            } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
+              y += getShift(num, e.block);
+            }
+          }
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x + pos.width);
+          maxY = Math.max(maxY, y + pos.height);
         }
       });
       return { minX, minY, maxX, maxY };
     }
 
-    // Συνάρτηση για τις διατάξεις expanded/collapsed (εύρεση ορίων δεξιάς και κάτω)
+    // Συνάρτηση για τις διατάξεις expanded/collapsed (εύρεση ορίων δεξιάς/κάτω)
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -218,10 +227,11 @@
     }
 
     /* 
-      Νέα συνάρτηση initializeBackgroundCanvas:
+      Νέα initializeBackgroundCanvas:
       
-      Για τη διαδικασία "Επόμενο" (currentMode === "start") καλεί την computeNextBgDimensions
-      ώστε να υπολογίσει το συνολικό bounding box (με οριζόντια και κατακόρυφη μετατόπιση) και προσθέτει περιθώρια 20px.
+      Για τη διαδικασία "Επόμενο" (currentMode === "start") καλεί την computeNextBgDimensions,
+      ώστε να υπολογίσει το συνολικό bounding box (με οριζόντιες και κατακόρυφες μετατοπίσεις)
+      και προσθέτει περιθώρια 20px.
     */
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
@@ -252,7 +262,7 @@
       positions = await (await fetch('positions.json')).json();
     }
 
-    // Δημιουργία καμβάδων περιόδων (δεν τροποποιείται)
+    // Δημιουργία καμβάδων περιόδων (αμετάβλητη)
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
@@ -277,7 +287,7 @@
       });
     }
 
-    // Δημιουργία καμβάδων ομάδων (δεν αλλάζει)
+    // Δημιουργία καμβάδων ομάδων (αμετάβλητη)
     function initGroupsCanvases() {
       new p5(function(p) {
         p.setup = function() {
@@ -358,7 +368,7 @@
         };
       });
       
-      // Τοποθέτηση των καμβάδων ομάδων (δεν αλλάζει)
+      // Τοποθέτηση των καμβάδων ομάδων
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -367,10 +377,13 @@
       });
     }
 
-    // Δημιουργία καμβάδων τομέων βάσει του JSON και της τρέχουσας διάταξης.
-    // Στη διάταξη "start" εφαρμόζονται μετατοπίσεις:
-    // • Για block "p": στοιχεία 21–30 ή 57–70 (για τα 57–70 το shift είναι συσσωρευμένο).
-    // • Για block "d": μόνο για στοιχεία 57–70.
+    /* 
+      Συνάρτηση initializeSectorsCanvas:
+      
+      Διατρέχει τα blocks και για κάθε στοιχείο αν (στη "start") ο αριθμός είναι μικρότερος από 3 και δεν έχει ενεργοποιηθεί
+      στο extraElements ή είναι μεγαλύτερος από currentZ, το παραλείπει.
+      Εφαρμόζονται οι μετατοπίσεις για τα blocks p (στοιχεία 21–30 και 57–70) και d (στοιχεία 57–70).
+    */
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -379,7 +392,7 @@
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
           let num = Number(e.number);
-          if (currentMode === "start" && (num < 3 || num > currentZ)) return;
+          if (currentMode === "start" && ((num < 3 && !extraElements[num]) || num > currentZ)) return;
           let pos = positions[currentMode][e.number];
           if (pos) {
             let yForMin = pos.y;
@@ -416,13 +429,17 @@
       });
     }
 
-    // Σχεδίαση στοιχείων για κάθε block, με εφαρμογή των shift στη διάταξη "start".
-    // Οι αριθμοί στα κελιά στοιχίζονται κεντραρισμένα οριζόντια και κατακόρυφα.
+    /* 
+      Συνάρτηση drawElements:
+      
+      Σχεδιάζει κάθε στοιχείο για το block, εφαρμόζοντας τις μετατοπίσεις στη διάταξη "start".
+      Επίσης, ορίζει το textAlign ως CENTER, CENTER ώστε οι αριθμοί να στοιχίζονται οριζόντια και κατακόρυφα.
+    */
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
         let num = Number(e.number);
-        if (currentMode === "start" && (num < 3 || num > currentZ)) return;
+        if (currentMode === "start" && ((num < 3 && !extraElements[num]) || num > currentZ)) return;
         let pos = positions[currentMode][e.number];
         if (pos) {
           let relativeX = pos.x - containerLeft;
@@ -447,8 +464,7 @@
 
     // --- Event Listeners ---
 
-    // "Συμπλήρωσε": Καθαρίζει όλους τους καμβάδες ώστε να εξαφανιστούν τα προηγούμενα στοιχεία
-    // και εμφανίζει αμέσως την expanded διάταξη.
+    // "Συμπλήρωσε": Εμφανίζει αμέσως την expanded διάταξη και καθαρίζει τους καμβάδες.
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
@@ -476,22 +492,42 @@
       });
     });
 
-    // "Επόμενο": Στη διάταξη "start":
-    // • Αν δεν είμαστε ήδη στη "start", το πρώτο πάτημα θέτει currentZ = 3.
-    // • Στη συνέχεια, κάθε πάτημα αυξάνει το currentZ κατά 1 μέχρι το 118.
-    //    - Για στοιχεία 21–30 στο block p: εφαρμόζεται το αντίστοιχο shift.
-    //    - Για στοιχεία 57–70 στα blocks p και d: εφαρμόζεται ο συσσωρευμένος shift.
-    //    - Μετά το 81, η συμπλήρωση συνεχίζεται κανονικά χωρίς επιπλέον μετατοπίσεις.
+    /* 
+      "Επόμενο": Διαδικασία "start":
+      - Αν δεν είμαστε στη "start", αρχικοποιούμε με currentZ = 3, και μηδενίζουμε τις βοηθητικές μεταβλητές.
+      - Ενώ currentZ < 118, κάθε πάτημα αυξάνει το currentZ κατά 1.
+      - Μετά το 118, ξεκινάμε τα postFillingStep:
+           1. postFillingStep == 1: Εμφάνιση του στοιχείου 1 (extraElements["1"] = true).
+           2. postFillingStep == 2: Εμφάνιση του στοιχείου 2.
+           3. postFillingStep == 3: Εμφάνιση του καμβά περιόδων.
+           4. postFillingStep == 4: Κλήση του fillAll (expanded) για ολοκλήρωση.
+    */
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
         currentZ = 3;
+        postFillingStep = 0;
+        extraElements = {};
+        showPeriods = false;
       } else {
         if (currentZ < 118) {
           currentZ++;
+        } else {
+          postFillingStep++;
+          if (postFillingStep === 1) {
+            extraElements["1"] = true;
+          } else if (postFillingStep === 2) {
+            extraElements["2"] = true;
+          } else if (postFillingStep === 3) {
+            showPeriods = true;
+            initializePeriodsCanvas();
+          } else if (postFillingStep === 4) {
+            // Τελειώνει η διαδικασία "Επόμενο" καλώντας το fillAll
+            document.getElementById('fillAll').click();
+            return;
+          }
         }
       }
-      // Επαναϋπολογισμός του background χρησιμοποιώντας την computeNextBgDimensions
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       ["S", "D", "P"].forEach(sector => {
@@ -500,7 +536,7 @@
         groupCanvas.style.left = sectorCanvas.style.left;
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
-      console.log("Start mode: currentZ =", currentZ, "Positions:", positions["start"]);
+      console.log("Start mode: currentZ =", currentZ, "postFillingStep =", postFillingStep, "Positions:", positions["start"]);
     });
 
     // "Reset": Επαναφορά της σελίδας.
