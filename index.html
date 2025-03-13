@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τελικός Κώδικας με Hit Testing</title>
+  <title>Περιοδικός Πίνακας - Κώδικας με Περιορισμένο Hit Testing</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -101,9 +101,9 @@
     let extraElements = {};
     let postFillingStep = 0;
     let showPeriods = false;
-    let cellSize = 40; // μέγεθος κελιού
+    let cellSize = 40; // Μέγεθος κάθε κελιού
 
-    // Βασικές συναρτήσεις από τον αρχικό κώδικα
+    // Βασικές συναρτήσεις (από τον αρχικό κώδικα)
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -120,25 +120,15 @@
     function getShiftContainer(block) {
       if (currentMode !== "start") return 0;
       if (block === "p") {
-        if (currentZ <= 20) {
-          return 0;
-        } else if (currentZ <= 30) {
-          return (currentZ - 20) * 42;
-        } else if (currentZ <= 56) {
-          return (30 - 20) * 42;
-        } else if (currentZ <= 70) {
-          return (30 - 20) * 42 + (currentZ - 56) * 42;
-        } else {
-          return (30 - 20) * 42 + (70 - 56) * 42;
-        }
+        if (currentZ <= 20) return 0;
+        else if (currentZ <= 30) return (currentZ - 20) * 42;
+        else if (currentZ <= 56) return (30 - 20) * 42;
+        else if (currentZ <= 70) return (30 - 20) * 42 + (currentZ - 56) * 42;
+        else return (30 - 20) * 42 + (70 - 56) * 42;
       } else if (block === "d") {
-        if (currentZ < 57) {
-          return 0;
-        } else if (currentZ <= 70) {
-          return (currentZ - 56) * 42;
-        } else {
-          return (70 - 56) * 42;
-        }
+        if (currentZ < 57) return 0;
+        else if (currentZ <= 70) return (currentZ - 56) * 42;
+        else return (70 - 56) * 42;
       }
       return 0;
     }
@@ -150,17 +140,13 @@
         if ((num < 3 && !extraElements[num]) || num > currentZ) return;
         let pos = positions[currentMode][e.number];
         if (pos) {
-          let x = pos.x;
-          let y = pos.y;
+          let x = pos.x, y = pos.y;
           if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
             x += getShiftContainer(e.block);
           }
           if (currentMode === "start") {
-            if (e.block === "p" && num >= 21 && num <= 30) {
-              y += getShift(num, e.block);
-            } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
-              y += getShift(num, e.block);
-            }
+            if (e.block === "p" && num >= 21 && num <= 30) y += getShift(num, e.block);
+            else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) y += getShift(num, e.block);
           }
           minX = Math.min(minX, x);
           minY = Math.min(minY, y);
@@ -175,9 +161,7 @@
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
         let pos = positions[currentMode][e.number];
-        if (pos) {
-          maxX = Math.max(maxX, pos.x + pos.width);
-        }
+        if (pos) maxX = Math.max(maxX, pos.x + pos.width);
       });
       return maxX;
     }
@@ -185,9 +169,7 @@
       let maxY = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
         let pos = positions[currentMode][e.number];
-        if (pos) {
-          maxY = Math.max(maxY, pos.y + pos.height);
-        }
+        if (pos) maxY = Math.max(maxY, pos.y + pos.height);
       });
       return maxY;
     }
@@ -204,8 +186,7 @@
           bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
         }
       } else if (currentMode === "expanded" || currentMode === "collapsed") {
-        let leftFixed = 17;
-        let topFixed = 55;
+        let leftFixed = 17, topFixed = 55;
         let rightLimit = computeRightLimit("p") + margin;
         let bottomLimit = computeBottomLimit("f") + margin;
         bg.style.left = leftFixed + "px";
@@ -217,7 +198,6 @@
     }
     
     async function loadData() {
-      // Φόρτωση δεδομένων από τα αρχεία elements.json και positions.json
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
     }
@@ -345,14 +325,10 @@
           if (currentMode === "start" && ((num < 3 && !extraElements[num]) || num > currentZ)) return;
           let pos = positions[currentMode][e.number];
           if (pos) {
-            let yForMin = pos.y;
-            let yForMax = pos.y;
+            let yForMin = pos.y, yForMax = pos.y;
             if (currentMode === "start") {
-              if (block === "p" && num >= 21 && num <= 30) {
-                yForMax += getShift(num, block);
-              } else if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
-                yForMax += getShift(num, block);
-              }
+              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
+              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
             }
             minX = Math.min(minX, pos.x);
             minY = Math.min(minY, yForMin);
@@ -389,11 +365,8 @@
           let relativeX = pos.x - containerLeft;
           let relativeY = pos.y - containerTop;
           if (currentMode === "start") {
-            if (block === "p" && num >= 21 && num <= 30) {
-              relativeY += getShift(num, block);
-            } else if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
-              relativeY += getShift(num, block);
-            }
+            if (block === "p" && num >= 21 && num <= 30) relativeY += getShift(num, block);
+            else if ((block === "p" || block === "d") && num >= 57 && num <= 70) relativeY += getShift(num, block);
           }
           p.fill(colors[block] || "#CCCCCC");
           p.rect(relativeX, relativeY, pos.width, pos.height, 5);
@@ -445,13 +418,10 @@
           currentZ++;
         } else {
           postFillingStep++;
-          if (postFillingStep === 1) {
-            extraElements["1"] = true;
-          } else if (postFillingStep === 2) {
-            extraElements["2"] = true;
-          } else if (postFillingStep === 3) {
-            showPeriods = true;
-          } else if (postFillingStep === 4) {
+          if (postFillingStep === 1) extraElements["1"] = true;
+          else if (postFillingStep === 2) extraElements["2"] = true;
+          else if (postFillingStep === 3) showPeriods = true;
+          else if (postFillingStep === 4) {
             currentMode = "expanded";
             currentZ = 123;
             console.log("NextState: Full expanded mode reached via post filling steps.");
@@ -460,9 +430,7 @@
       }
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
-      if (showPeriods) {
-        initializePeriodsCanvas();
-      }
+      if (showPeriods) initializePeriodsCanvas();
       console.log("NextState: currentZ =", currentZ);
     });
     
@@ -470,43 +438,70 @@
       location.reload();
     });
     
-    // Hit-testing: δύο προσεγγίσεις
+    // Η νέα συνάρτηση hit-testing με περιορισμό στο region των στοιχείων
     function performHitTest(x, y) {
-      // Μέθοδος 1: Color Picking με offscreen canvas
+      // Υπολογισμός του bounding box για τα στοιχεία
+      let bbox = computeNextBgDimensions();
+      if (!bbox) {
+        console.log("Δεν υπάρχουν στοιχεία για hit testing.");
+        return;
+      }
+      let regionLeft = bbox.minX, regionTop = bbox.minY;
+      let regionWidth = bbox.maxX - bbox.minX, regionHeight = bbox.maxY - bbox.minY;
+      
+      // Έλεγχος: αν το κλικ είναι εκτός του region
+      if (x < regionLeft || x > bbox.maxX || y < regionTop || y > bbox.maxY) {
+         console.log("Κλικ εκτός περιοχής στοιχείων.");
+         return;
+      }
+      // Μετατροπή συντεταγμένων σε σχετικές προς το region
+      let relX = x - regionLeft, relY = y - regionTop;
+      
+      // Ετοιμασία offscreen canvas: ορισμός διαστάσεων στο region
       let offCanvas = document.getElementById("offscreenCanvas");
+      offCanvas.width = regionWidth;
+      offCanvas.height = regionHeight;
       let offCtx = offCanvas.getContext("2d");
-      // Σχεδιάζουμε όλα τα κελιά με μοναδικό χρώμα βάσει του αριθμού (π.χ. με απλή μαθηματική συνάρτηση)
+      offCtx.clearRect(0, 0, regionWidth, regionHeight);
+      
+      // Σχεδίαση των κελιών με μοναδικά χρώματα, μετατοπισμένα ώστε η πάνω-αριστερή γωνία είναι (0,0)
       elements.forEach(e => {
         let pos = positions[currentMode][e.number];
         if (pos) {
+          let drawX = pos.x - regionLeft;
+          let drawY = pos.y - regionTop;
           let r = (Number(e.number) * 37) % 256;
           let g = (Number(e.number) * 67) % 256;
           let b = (Number(e.number) * 97) % 256;
           offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-          offCtx.fillRect(pos.x, pos.y, pos.width, pos.height);
+          offCtx.fillRect(drawX, drawY, pos.width, pos.height);
         }
       });
-      let pixel = offCtx.getImageData(x, y, 1, 1).data;
-      console.log("Color Picking: Pixel at (" + x + ", " + y + ") =", pixel);
       
-      // Μέθοδος 2: Άμεσος υπολογισμός γραμμής/στήλης
-      // (Προσαρμόστε offsetX και offsetY ανάλογα με τη θέση του grid)
-      let offsetX = 0, offsetY = 0;
+      let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
+      if (pixel[3] === 0) {
+         console.log("Δεν ανιχνεύτηκε στοιχείο με color picking στο σημείο (" + x + ", " + y + ").");
+      } else {
+         console.log("Color Picking: Pixel at (" + x + ", " + y + ") =", pixel);
+      }
+      
+      // Άμεσος υπολογισμός γραμμής/στήλης, θεωρώντας ότι το grid έχει αρχή στο region
+      let offsetX = regionLeft, offsetY = regionTop;
       let col = Math.floor((x - offsetX) / cellSize);
       let row = Math.floor((y - offsetY) / cellSize);
       console.log("Direct Calculation: Row =", row, "Col =", col);
     }
     
-    // Ενσωμάτωση του hit-testing στο p5 canvas
+    // Ενσωμάτωση του hit-testing στο p5 canvas για κάθε block
     function initializeCanvases() {
       Object.keys({s:1, p:1, d:1, f:1}).forEach(function(block) {
         new p5(function(p) {
           p.setup = function() {
             let config = { cols: 10, rows: 7 };
-            if (block === "s") { config = { cols: 2, rows: 7 }; }
-            else if (block === "p") { config = { cols: 6, rows: 7 }; }
-            else if (block === "d") { config = { cols: 10, rows: 7 }; }
-            else if (block === "f") { config = { cols: 14, rows: 7 }; }
+            if (block === "s") config = { cols: 2, rows: 7 };
+            else if (block === "p") config = { cols: 6, rows: 7 };
+            else if (block === "d") config = { cols: 10, rows: 7 };
+            else if (block === "f") config = { cols: 14, rows: 7 };
             let canvas = p.createCanvas(config.cols * cellSize, config.rows * cellSize);
             canvas.parent("canvas" + block.toUpperCase());
             p.skipNextClick = true;
@@ -517,7 +512,6 @@
               let globalY = event.clientY;
               performHitTest(globalX, globalY);
             };
-            // Σχεδίαση των στοιχείων για το συγκεκριμένο block
             window.drawElements(p, block);
           };
         });
