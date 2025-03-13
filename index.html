@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Απόλυτα από JSON (Ενημερωμένο)</title>
+  <title>Περιοδικός Πίνακας - Ομάδες με 40x20 και μετατόπιση -42</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -30,6 +30,7 @@
       z-index: -10;
       opacity: 1;
     }
+    /* Οι καμβάδες των ομάδων θα έχουν το νέο ύψος (20px) */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute; 
     }
@@ -96,7 +97,9 @@
       positions = await (await fetch('positions.json')).json();
     }
 
-    // Δημιουργία καμβάδων περιόδων με κελιά 40x40 και 2px κενά, top από το JSON για το στοιχείο "1"
+    // Δημιουργία καμβάδων περιόδων:
+    // Κάθε κελί έχει 40x40px με 2px κενό μεταξύ, ο συνολικός καμβάς έχει ύψος 292px.
+    // Το top του καμβά ορίζεται από το JSON (στο στοιχείο "1").
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
@@ -113,7 +116,7 @@
           const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(0, i * 42, 40, 40); // κάθε κελί 40x40, βήμα 42 (2px κενό)
+            p.rect(0, i * 42, 40, 40); // κάθε κελί: 40x40, με βήμα 42 (2px κενό)
             p.fill(0);
             p.text(periodLabels[i], 20, i * 42 + 20);
           }
@@ -121,80 +124,66 @@
       });
     }
 
-    // Δημιουργία καμβάδων ομάδων με κελιά 40x40 και 2px κενά.
-    // Το left παίρνεται από το αντίστοιχο left του τομέα,
-    // ενώ το top ορίζεται ως το y του στοιχείου "1" από το JSON με μετατόπιση -42px για επικεφαλίδα.
+    // Δημιουργία καμβάδων ομάδων:
+    // Κάθε κελί έχει 40px πλάτος και 20px ύψος, με 2px κενό μεταξύ τους.
+    // Το left παίρνεται από το left του αντίστοιχου τομέα,
+    // το top ορίζεται ως positions[currentMode]["1"].y - 42 (δηλαδή 42px ψηλότερα από το στοιχείο "1").
     function initGroupsCanvases() {
-      // S-block groups: 2 στήλες, 2 σειρές → πλάτος = 82, ύψος = 82
+      // S-block: 2 κελιά → συνολικό πλάτος = 2*40 + 1*2 = 82px, ύψος = 20px.
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(82, 82);
+          let canvas = p.createCanvas(82, 20);
           canvas.parent("canvasS_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πρώτη σειρά
-          p.text("1", 20, 20);
-          p.text("2", 62, 20);
-          // Δεύτερη σειρά
-          p.text("IA", 20, 62);
-          p.text("IIA", 62, 62);
+          // Σχεδιάζουμε τα δύο κελιά:
+          p.text("1", 20, 10);       // πρώτο κελί: (0,0) έως (40,20)
+          p.text("2", 20 + 42, 10);    // δεύτερο κελί: ξεκινάει στο 42px
         };
       });
       
-      // D-block groups: 10 στήλες, 2 σειρές → πλάτος = 418, ύψος = 82
+      // D-block: 10 κελιά → συνολικό πλάτος = 10*40 + 9*2 = 418px, ύψος = 20px.
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(418, 82);
+          let canvas = p.createCanvas(418, 20);
           canvas.parent("canvasD_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πρώτη σειρά: αριθμοί από 3 έως 12
+          // Σχεδιάζουμε τα 10 κελιά, εμφανίζοντας τους αριθμούς από 3 έως 12:
           for(let c = 0; c < 10; c++){
-            let x = c * 42;
-            p.text((c+3).toString(), x + 20, 20);
-          }
-          // Δεύτερη σειρά: labels
-          const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
-          for(let c = 0; c < 10; c++){
-            let x = c * 42;
-            p.text(oldLabels[c], x + 20, 62);
+            let x = c * 42; // κάθε κελί ξεκινάει 42px μετά το προηγούμενο
+            p.text((c+3).toString(), x + 20, 10);
           }
         };
       });
       
-      // P-block groups: 6 στήλες, 2 σειρές → πλάτος = 250, ύψος = 82
+      // P-block: 6 κελιά → συνολικό πλάτος = 6*40 + 5*2 = 250px, ύψος = 20px.
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(250, 82);
+          let canvas = p.createCanvas(250, 20);
           canvas.parent("canvasP_groups");
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
           p.background(240);
-          // Πρώτη σειρά: αριθμοί από 13 έως 18
+          // Σχεδιάζουμε τα 6 κελιά, με αριθμούς από 13 έως 18:
           for(let c = 0; c < 6; c++){
             let x = c * 42;
-            p.text((c+13).toString(), x + 20, 20);
-          }
-          // Δεύτερη σειρά: labels
-          const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
-          for(let c = 0; c < 6; c++){
-            let x = c * 42;
-            p.text(oldLabels[c], x + 20, 62);
+            p.text((c+13).toString(), x + 20, 10);
           }
         };
       });
       
-      // Τοποθέτηση των καμβάδων ομάδων βάσει τιμών από το JSON:
-      // Το left παίρνεται από το ίδιο left του καμβά του τομέα,
-      // το top ορίζεται ως positions[currentMode]["1"].y - 42 (με μετατόπιση προς τα πάνω 42px)
+      // Τοποθέτηση των καμβάδων ομάδων:
+      // Το left παίρνεται από το left του αντίστοιχου τομέα,
+      // το top ορίζεται ως positions[currentMode]["1"].y - 42 (δηλαδή 42px ψηλότερα από το στοιχείο "1").
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
