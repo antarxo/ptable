@@ -96,18 +96,18 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    // currentMode μπορεί να είναι "expanded", "collapsed" ή "start"
-    let currentMode = "expanded";
-    let currentZ = 0;
+    // Ορίζουμε αρχικά το mode ως "start" και currentZ ως 3 για να εμφανίζεται τουλάχιστον το στοιχείο 3
+    let currentMode = "start";
+    let currentZ = 3;
     let extraElements = {};
     let postFillingStep = 0;
     let showPeriods = false;
     let cellSize = 40; // Μέγεθος κάθε κελιού
 
-    // Global object to store updated positions for hit-testing
+    // Global object για αποθήκευση των ενημερωμένων θέσεων των κελιών για το hit-testing
     let currentCellPositions = {};
 
-    // Ορισμοί συναρτήσεων για μετατοπίσεις
+    // Συναρτήσεις μετατόπισης
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -137,8 +137,7 @@
       return 0;
     }
     
-    // Ορισμοί computeRightLimit και computeBottomLimit για expanded/collapsed mode,
-    // με fallback για τα στοιχεία 1 και 2
+    // Υπολογισμός ορίου δεξιάς και κάτω εμφάνισης (για expanded/collapsed mode)
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -156,7 +155,7 @@
       return maxY;
     }
     
-    // Συνάρτηση για τον υπολογισμό του bounding box των εμφανιζόμενων στοιχείων ανά mode
+    // Υπολογισμός του bounding box για τα εμφανιζόμενα στοιχεία
     function computeModeRegion() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
@@ -184,7 +183,7 @@
       return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
 
-    // Νέα συνάρτηση για δυναμική ενημέρωση θέσεων κελιών για το hit-testing
+    // Νέα συνάρτηση για δυναμική ενημέρωση θέσεων κελιών (για hit-testing)
     function updateCellsPositions() {
       currentCellPositions = {};
       elements.forEach(e => {
@@ -212,7 +211,7 @@
       });
     }
 
-    // Νέα συνάρτηση για τον υπολογισμό του bounding box χρησιμοποιώντας τις δυναμικά ενημερωμένες θέσεις
+    // Νέα συνάρτηση για υπολογισμό bounding box χρησιμοποιώντας τις ενημερωμένες θέσεις
     function computeModeRegionUpdated() {
       let keys = Object.keys(currentCellPositions);
       if (keys.length === 0) return null;
@@ -436,7 +435,7 @@
       });
     }
     
-    // Λειτουργίες κουμπιών με επιπλέον κλήση performHitTest στο κέντρο της τρέχουσας περιοχής εμφάνισης.
+    // Καταγραφή και hit-testing με κλήση στο κέντρο της τρέχουσας περιοχής
     function logHitTestCenter() {
       let region = computeModeRegionUpdated();
       if (region) {
@@ -447,6 +446,7 @@
       }
     }
     
+    // Event listener για το κουμπί "Συμπλήρωσε" (προβάλλει πλήρη εμφάνιση)
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
@@ -461,6 +461,7 @@
       logHitTestCenter();
     });
     
+    // Event listener για το κουμπί "Σύμπτυξε/Ανάπτυξε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
@@ -478,6 +479,7 @@
       logHitTestCenter();
     });
     
+    // Event listener για το κουμπί "Επόμενο"
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
@@ -512,7 +514,7 @@
       location.reload();
     });
     
-    // Ενημέρωση της συνάρτησης hit-testing για χρήση των δυναμικά ενημερωμένων θέσεων
+    // Ενημερωμένη συνάρτηση hit-testing χρησιμοποιώντας τις δυναμικά ενημερωμένες θέσεις
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
@@ -597,13 +599,19 @@
     // Δέσμευση της συνάρτησης drawElements σε global επίπεδο
     window.drawElements = drawElements;
     
-    // Φόρτωση δεδομένων και αρχικοποίηση των canvases
+    // Φόρτωση δεδομένων και αρχικοποίηση των canvases (ανάλογα με το mode)
     loadData().then(() => {
-      initializeBackgroundCanvas();
-      initializeSectorsCanvas();
-      initializePeriodsCanvas();
-      initGroupsCanvases();
-      initializeCanvases();
+      if (currentMode === "expanded" || currentMode === "collapsed") {
+        initializeBackgroundCanvas();
+        initializeSectorsCanvas();
+        initializePeriodsCanvas();
+        initGroupsCanvases();
+        initializeCanvases();
+      } else if (currentMode === "start") {
+        initializeBackgroundCanvas();
+        initializeSectorsCanvas();
+        initializeCanvases();
+      }
       updateCellsPositions();
       console.log("Data loaded and canvases initialized.");
     });
