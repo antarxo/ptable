@@ -80,7 +80,7 @@
 
   <!-- Κουμπιά: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
   <div id="buttonPanel">
-    <!-- Το κουμπί "Επόμενο" είναι πλέον ενεργό από την αρχή -->
+    <!-- Το κουμπί "Επόμενο" δεν είναι πια disabled, ώστε να ξεκινάει τη διαδικασία ανεξάρτητα -->
     <button id="nextState">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="toggleFBlock" disabled>Σύμπτυξε</button>
@@ -93,13 +93,17 @@
     let isTableFilled = false;
     let isCollapsed = false;
     let currentMode = "expanded"; // αρχική διάταξη
-    let currentZ = 0;            // αρχική τιμή currentZ
-    let nextPressed = false;     // έλεγχος για το πρώτο πάτημα του "Επόμενο"
+    let currentZ = 0;            // αρχική τιμή για τη σειρά των στοιχείων
 
-    // Υπολογισμός δεξιού ορίου για ένα block στην τρέχουσα διάταξη
+    // Υπολογισμός δεξιού ορίου για το δοσμένο block στην τρέχουσα διάταξη
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
+        // Σε διάταξη "start" εμφανίζουμε μόνο τα στοιχεία με αριθμό από 3 έως currentZ
+        if (currentMode === "start") {
+          let num = Number(e.number);
+          if (num < 3 || num > currentZ) return;
+        }
         let pos = positions[currentMode][e.number];
         if (pos) {
           maxX = Math.max(maxX, pos.x + pos.width);
@@ -108,10 +112,14 @@
       return maxX;
     }
 
-    // Υπολογισμός κάτω ορίου για ένα block στην τρέχουσα διάταξη
+    // Υπολογισμός κάτω ορίου για το δοσμένο block στην τρέχουσα διάταξη
     function computeBottomLimit(block) {
       let maxY = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
+        if (currentMode === "start") {
+          let num = Number(e.number);
+          if (num < 3 || num > currentZ) return;
+        }
         let pos = positions[currentMode][e.number];
         if (pos) {
           maxY = Math.max(maxY, pos.y + pos.height);
@@ -120,7 +128,7 @@
       return maxY;
     }
 
-    // Ενημέρωση του background canvas με margin 20px
+    // Ενημέρωση του background canvas με margin 20px ώστε να περιβάλλει μόνο τα εμφανιζόμενα στοιχεία
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let leftFixed = 17;
@@ -147,7 +155,7 @@
       positions = await (await fetch('positions.json')).json();
     }
 
-    // Δημιουργία καμβάδων περιόδων με τις θέσεις της τρέχουσας διάταξης
+    // Δημιουργία καμβάδων περιόδων βάσει της τρέχουσας διάταξης
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
@@ -262,7 +270,7 @@
       });
     }
 
-    // Δημιουργία καμβάδων τομέων σύμφωνα με το JSON και την τρέχουσα διάταξη
+    // Δημιουργία καμβάδων τομέων βάσει του JSON και της τρέχουσας διάταξης
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -270,6 +278,11 @@
         container.innerHTML = "";
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
+          // Σε "start" εμφάνιση, φιλτράρουμε μόνο τα στοιχεία με αριθμό από 3 έως currentZ
+          if (currentMode === "start") {
+            let num = Number(e.number);
+            if (num < 3 || num > currentZ) return;
+          }
           let pos = positions[currentMode][e.number];
           if (pos) {
             minX = Math.min(minX, pos.x);
@@ -293,10 +306,14 @@
       });
     }
 
-    // Σχεδίαση στοιχείων για κάθε block σύμφωνα με το JSON
+    // Σχεδίαση στοιχείων για κάθε block σύμφωνα με τις τιμές του JSON
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
+        if (currentMode === "start") {
+          let num = Number(e.number);
+          if (num < 3 || num > currentZ) return;
+        }
         let pos = positions[currentMode][e.number];
         if (pos) {
           let relativeX = pos.x - containerLeft;
@@ -314,19 +331,16 @@
 
     // --- Event Listeners ---
 
-    // "Συμπλήρωσε": Κάνει όλα τα γεμίσματα/μεταθέσεις και θέτει currentZ στο 123,
-    // απελευθερώνοντας το "Σύμπτυξε" (η λειτουργία του δεν αλλάζει).
+    // "Συμπλήρωσε": Εκτελεί όλα τα γεμίσματα/μεταθέσεις και θέτει currentZ στο 123 ώστε να εμφανιστούν όλα τα στοιχεία.
     document.getElementById('fillAll').addEventListener('click', function() {
-      if (!isTableFilled) {
-        initializeBackgroundCanvas();
-        initializeSectorsCanvas();       
-        initializePeriodsCanvas();       
-        initGroupsCanvases();
-        isTableFilled = true;
-        // Θέτουμε το currentZ στο 123 (δηλ. >122) ώστε να ενεργοποιηθεί το "Σύμπτυξε"
-        currentZ = 123;
-        document.getElementById('toggleFBlock').disabled = false;
-      }
+      initializeBackgroundCanvas();
+      initializeSectorsCanvas();       
+      initializePeriodsCanvas();       
+      initGroupsCanvases();
+      // Ολοκληρώνει τη διαδικασία θέτοντας currentZ πάνω από το 20
+      currentZ = 123;
+      document.getElementById('toggleFBlock').disabled = false;
+      console.log("FillAll: currentZ set to", currentZ);
     });
 
     // "Σύμπτυξε/Ανάπτυξε": Αλλάζει μεταξύ των διατάξεων expanded και collapsed.
@@ -344,13 +358,17 @@
       });
     });
 
-    // "Επόμενο": Στο πρώτο πάτημα θέτει το currentZ στο 3 και αλλάζει τη διάταξη σε "start".
+    // "Επόμενο": Αν δεν είμαστε ήδη στη διάταξη "start" το πρώτο πάτημα θέτει currentZ=3 και εμφανίζει μόνο το στοιχείο 3.
+    // Με κάθε επόμενο πάτημα, εάν currentZ < 20, προστίθεται ένα επιπλέον στοιχείο και ανανεώνεται το background.
     document.getElementById('nextState').addEventListener('click', function() {
-      if (!nextPressed) {
-          currentZ = 3;
-          nextPressed = true;
+      if (currentMode !== "start") {
+        currentMode = "start";
+        currentZ = 3;
+      } else {
+        if (currentZ < 20) {
+          currentZ++;
+        }
       }
-      currentMode = "start";
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       ["S", "D", "P"].forEach(sector => {
@@ -359,14 +377,7 @@
         groupCanvas.style.left = sectorCanvas.style.left;
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
-      console.log("Positions for 'start':", positions["start"]);
-      
-      // Ενεργοποίηση του κουμπιού "Σύμπτυξε" μόνο αν το currentZ > 122
-      if (currentZ > 122) {
-          document.getElementById('toggleFBlock').disabled = false;
-      } else {
-          document.getElementById('toggleFBlock').disabled = true;
-      }
+      console.log("Start mode: currentZ =", currentZ, "Positions:", positions["start"]);
     });
 
     // "Reset": Επαναφορά της σελίδας
