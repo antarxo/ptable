@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Έλεγχος Top Offsets</title>
+  <title>Περιοδικός Πίνακας - Απολύτως από JSON</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -80,54 +80,26 @@
     let positions = {};
     let isTableFilled = false;
     let isCollapsed = false;
-    // Ορίζουμε το τρέχον mode: "expanded" ή "collapsed"
     let currentMode = "expanded";
 
-    // Διαστάσεις του background ανά mode
-    const expandedBackground = { width: "1412px", height: "368px" };
-    const collapsedBackground  = { width: "837px",  height: "460px" };
-
-    // Έλεγχος δομής του JSON
-    function checkJSON(json) {
-      if (!json.expanded || !json.collapsed) {
-        console.error("Το positions.json δεν έχει την απαιτούμενη δομή (πρέπει να περιέχει τα keys 'expanded' και 'collapsed').");
-      } else {
-        console.log("Το positions.json ελέγχθηκε: Βασικά keys υπάρχουν.");
-      }
+    // Αρχική διαμόρφωση του background canvas (μπορείς να ενσωματώσεις τιμές και εδώ από το JSON αν υπάρχουν)
+    function initializeBackgroundCanvas() {
+      let bg = document.getElementById("canvasTableBackground");
+      // Σε αυτή την έκδοση ορίζουμε τις τιμές απευθείας, όμως μπορούν να αντληθούν και από JSON
+      bg.style.left = "17px";
+      bg.style.top = "55px";
+      bg.style.width = "1412px";
+      bg.style.height = "368px";
+      bg.style.opacity = "1";
     }
 
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
-      checkJSON(positions);
     }
 
-    // Αρχική διαμόρφωση του background canvas σύμφωνα με το expanded mode
-    function initializeBackgroundCanvas() {
-      let bg = document.getElementById("canvasTableBackground");
-      bg.style.left = "17px";
-      bg.style.top = "55px";
-      bg.style.width = expandedBackground.width;
-      bg.style.height = expandedBackground.height;
-      bg.style.opacity = "1";
-    }
-
-    // Ενημέρωση διαστάσεων background ανάλογα με το mode
-    function updateBackgroundDimensions() {
-      let bg = document.getElementById("canvasTableBackground");
-      if(currentMode === "collapsed") {
-        bg.style.width = collapsedBackground.width;
-        bg.style.height = collapsedBackground.height;
-      } else {
-        bg.style.width = expandedBackground.width;
-        bg.style.height = expandedBackground.height;
-      }
-    }
-
+    // Δημιουργία καμβάδων ομάδων αποκλειστικά βάσει τιμών από το JSON
     function initGroupsCanvases() {
-      if(window.groupsInitialized) return;
-      
-      // Καμβάς για τις ομάδες του S-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -144,7 +116,6 @@
         };
       });
       
-      // Καμβάς για τις ομάδες του D-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(420, 40);
@@ -166,7 +137,6 @@
         };
       });
       
-      // Καμβάς για τις ομάδες του P-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(252, 40);
@@ -188,19 +158,13 @@
         };
       });
       
-      // Τοποθέτηση ομάδων βάσει του πρώτου στοιχείου (ανάγνωση τιμών απευθείας από το JSON)
+      // Τοποθέτηση των ομάδων σύμφωνα με τις τιμές από το JSON
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
-        if(sectorCanvas && groupCanvas) {
-          groupCanvas.style.left = sectorCanvas.style.left;
-          if(positions[currentMode]["1"]) {
-            groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
-          }
-        }
+        groupCanvas.style.left = sectorCanvas.style.left;
+        groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
       });
-      
-      window.groupsInitialized = true;
     }
 
     function initializePeriodsCanvas() {
@@ -227,42 +191,27 @@
       });
     }
 
-    // Αρχικοποίηση του καμβά τομέων για κάθε block, χρησιμοποιώντας τις τιμές του JSON απευθείας
+    // Δημιουργία καμβάδων τομέων (S, P, D, F) αποκλειστικά βάσει τιμών από το JSON
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Εύρεση ελάχιστων και μέγιστων τιμών για το block
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
-          if(positions[currentMode][e.number]){
-            let pos = positions[currentMode][e.number];
+          let pos = positions[currentMode][e.number];
+          if(pos){
             minX = Math.min(minX, pos.x);
             minY = Math.min(minY, pos.y);
             maxX = Math.max(maxX, pos.x + pos.width);
             maxY = Math.max(maxY, pos.y + pos.height);
           }
         });
-        if(minX === Infinity || minY === Infinity) return; // Αν δεν βρέθηκαν στοιχεία για το block
-        
-        // Ορίζουμε το container με τις τιμές του JSON χωρίς επιπλέον offsets
+        if(minX === Infinity || minY === Infinity) return;
         container.style.left = minX + "px";
         container.style.top = minY + "px";
         container.style.width = (maxX - minX) + "px";
         container.style.height = (maxY - minY) + "px";
-        
-        // Έλεγχος για τυχόν αλλαγές στο top offset συγκρίνοντας με το JSON του πρώτου στοιχείου
-        let firstEl = elements.find(e => e.block === block);
-        if(firstEl && positions[currentMode][firstEl.number]) {
-          let expectedTop = positions[currentMode][firstEl.number].y;
-          if(container.style.top !== expectedTop + "px") {
-            console.warn(`Block ${block}: container.style.top (${container.style.top}) διαφέρει από την αναμενόμενη τιμή (${expectedTop}px)`);
-          } else {
-            console.log(`Block ${block}: container.style.top είναι όπως αναμένεται (${container.style.top})`);
-          }
-        }
-        
         new p5(function(p) {
           p.setup = function() {
             let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
@@ -273,7 +222,6 @@
       });
     }
 
-    // Σχεδίαση στοιχείων χρησιμοποιώντας τις τιμές του JSON απευθείας (χωρίς πρόσθετους υπολογισμούς)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -292,7 +240,7 @@
       });
     }
 
-    // Κουμπί "Συμπλήρωσε"
+    // Event listeners: χωρίς κανέναν έλεγχο, όλα βασίζονται στις τιμές του JSON
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
@@ -300,27 +248,21 @@
         initializePeriodsCanvas();       
         initGroupsCanvases();
         isTableFilled = true;
-        // Ενεργοποίηση του toggle μόλις συμπληρωθεί ο πίνακας
         document.getElementById('toggleFBlock').disabled = false;
       }
     });
 
-    // Κουμπί "Σύμπτυξε"/"Ανάπτυξε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
       currentMode = isCollapsed ? "collapsed" : "expanded";
-      updateBackgroundDimensions();
+      initializeBackgroundCanvas();
       initializeSectorsCanvas();
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
-        if(sectorCanvas && groupCanvas) {
-          groupCanvas.style.left = sectorCanvas.style.left;
-          if(positions[currentMode]["1"]) {
-            groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
-          }
-        }
+        groupCanvas.style.left = sectorCanvas.style.left;
+        groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
       });
     });
 
