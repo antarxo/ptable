@@ -22,7 +22,7 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Προσθήκη εφέ μετακίνησης για το background */
+    /* Background canvas */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -32,17 +32,17 @@
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* Οι καμβάδες των ομάδων δεν έχουν άλλες μετατοπίσεις πέραν της καθορισμένης */
+    /* Ομαδοποίηση καμβάδων ομάδων με z-index στο ανώτερο επίπεδο */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
-      position: absolute; 
-    }
-    #canvasPeriods, #canvasS, #canvasD, #canvasP, #canvasF {
       position: absolute;
+      z-index: 60;
     }
+    /* Καμβάδες τομέων και περιοδών */
     #canvasS { z-index: 10; }
     #canvasF { z-index: 20; }
     #canvasD { z-index: 30; }
     #canvasP { z-index: 40; }
+    #canvasPeriods { z-index: 50; }
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -348,7 +348,6 @@
         groupCanvas.style.left = sectorCanvas.style.left;
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42) + "px";
       });
-      // Εμφάνιση των θέσεων για το "start" στο console για έλεγχο
       console.log("Positions for 'start':", positions["start"]);
     });
 
