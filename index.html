@@ -96,12 +96,16 @@
     let currentZ = 0;            
 
     /* 
-      Συνάρτηση getShift: Επιστρέφει την τιμή του shift για ένα στοιχείο βάσει του block και του αριθμού του,
-      μόνο όταν είμαστε στη διάταξη "start".
+      Η συνάρτηση getShift επιστρέφει το shift για κάθε στοιχείο στη διάταξη "start":
       
-      - Για block "p" και στοιχεία 21-30: shift = (min(currentZ,30)-20)*42.
-      - Για block "p" ή "d" και στοιχεία 57-80: shift = (min(currentZ,80)-56)*42.
-      Σε όλες τις άλλες περιπτώσεις επιστρέφει 0.
+      • Για block "p" και στοιχεία 21–30: shift = (min(currentZ,30)-20)*42.
+      
+      • Για στοιχεία 57–80:
+          - Στο block d: shift = (min(currentZ,80)-56)*42.
+          - Στο block p: εφαρμόζεται επιπρόσθετα πάνω στο shift των 21–30, δηλαδή
+            shift = (30-20)*42 + (min(currentZ,80)-56)*42.
+      
+      Για όλες τις άλλες περιπτώσεις επιστρέφει 0.
     */
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
@@ -111,26 +115,33 @@
       }
       if ((block === "p" || block === "d") && num >= 57 && num <= 80) {
         let effective = Math.min(currentZ, 80);
-        return (effective - 56) * 42;
+        let shiftPhase2 = (effective - 56) * 42;
+        if (block === "p") {
+          // Προσθέτουμε το shift των 21–30 που έχει ήδη εφαρμοστεί (όταν currentZ ≥ 30 αυτό γίνεται σταθερό)
+          let phase1Shift = (30 - 20) * 42;
+          return phase1Shift + shiftPhase2;
+        } else {
+          return shiftPhase2;
+        }
       }
       return 0;
     }
 
     /* 
-      Συνάρτηση getShiftContainer: Υπολογίζει το shift που θα προστεθεί στη θέση left του container
-      για τα blocks που υπόκεινται σε μετατόπιση στη διάταξη "start".
+      Η συνάρτηση getShiftContainer υπολογίζει την μετατόπιση (left offset) για τον container
+      των blocks που υπόκεινται σε μετατόπιση στη διάταξη "start".
       
-      Για το block "p":
-        - Αν currentZ <= 20: 0.
-        - Αν 20 < currentZ <= 30: shift = (currentZ - 20)*42.
-        - Αν 30 < currentZ <= 56: παραμένει το max shift της πρώτης φάσης (30-20)*42.
-        - Αν 56 < currentZ <= 80: shift = (currentZ - 56)*42.
-        - Αν currentZ > 80: το max shift για αυτήν τη φάση, δηλαδή (80-56)*42.
+      Για block "p":
+        - currentZ ≤ 20: 0.
+        - 21 ≤ currentZ ≤ 30: shift = (currentZ-20)*42.
+        - 31 ≤ currentZ ≤ 56: σταθερό shift = (30-20)*42.
+        - 57 ≤ currentZ ≤ 80: cumulative shift = (30-20)*42 + (currentZ-56)*42.
+        - currentZ > 80: max cumulative shift = (30-20)*42 + (80-56)*42.
       
-      Για το block "d":
-        - Αν currentZ < 57: 0.
-        - Αν 57 ≤ currentZ ≤ 80: shift = (currentZ - 56)*42.
-        - Αν currentZ > 80: max shift (80-56)*42.
+      Για block "d":
+        - currentZ < 57: 0.
+        - 57 ≤ currentZ ≤ 80: shift = (currentZ-56)*42.
+        - currentZ > 80: max shift = (80-56)*42.
     */
     function getShiftContainer(block) {
       if (currentMode !== "start") return 0;
@@ -142,9 +153,9 @@
         } else if (currentZ <= 56) {
           return (30 - 20) * 42;
         } else if (currentZ <= 80) {
-          return (currentZ - 56) * 42;
+          return (30 - 20) * 42 + (currentZ - 56) * 42;
         } else {
-          return (80 - 56) * 42;
+          return (30 - 20) * 42 + (80 - 56) * 42;
         }
       } else if (block === "d") {
         if (currentZ < 57) {
@@ -159,9 +170,9 @@
     }
 
     // Υπολογισμός ορίων (min/max) για τα ορατά στοιχεία (αριθμοί 3 έως currentZ).
-    // Εφαρμόζουμε shift:
-    // - Για block p και στοιχεία 21-30.
-    // - Για blocks p και d και στοιχεία 57-80.
+    // Εφαρμόζουμε τα shift:
+    // • Για block "p" και στοιχεία 21–30.
+    // • Για blocks "p" και "d" και στοιχεία 57–80.
     function computeVisibleLimits() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
@@ -189,7 +200,7 @@
       return { minX, minY, maxX, maxY };
     }
 
-    // Για expanded/collapsed διατάξεις: εύρεση ορίου δεξιάς και κάτω.
+    // Για τις διατάξεις expanded/collapsed: εύρεση ορίων δεξιάς και κάτω.
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -357,9 +368,9 @@
     }
 
     // Δημιουργία καμβάδων τομέων βάσει του JSON και της τρέχουσας διάταξης.
-    // Για το block "p" και "d" στη διάταξη "start" εφαρμόζουμε μετατόπιση:
-    // - Για block "p": στοιχεία 21-30 ή 57-80.
-    // - Για block "d": μόνο για στοιχεία 57-80.
+    // Στη διάταξη "start" εφαρμόζονται μετατοπίσεις:
+    // • Για block "p": στοιχεία 21–30 ή 57–80 (για τα 57–80 το shift είναι συσσωρευμένο).
+    // • Για block "d": μόνο για στοιχεία 57–80.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -387,7 +398,7 @@
           }
         });
         if (minX === Infinity || minY === Infinity) return;
-        if(currentMode === "start" && (block === "p" || block === "d")) {
+        if (currentMode === "start" && (block === "p" || block === "d")) {
           container.style.left = (minX + getShiftContainer(block)) + "px";
         } else {
           container.style.left = minX + "px";
@@ -405,10 +416,7 @@
       });
     }
 
-    // Σχεδίαση στοιχείων για κάθε block.
-    // Εφαρμόζουμε shift στη διάταξη "start" ως εξής:
-    // - Για block "p": για στοιχεία 21-30 ή για στοιχεία 57-80.
-    // - Για block "d": για στοιχεία 57-80.
+    // Σχεδίαση στοιχείων για κάθε block, με εφαρμογή των shift στην "start" διάταξη.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -437,7 +445,7 @@
 
     // --- Event Listeners ---
 
-    // "Συμπλήρωσε": Καθαρίζει όλους τους καμβάδες ώστε να εξαφανιστούν τα προηγούμενα στοιχεία,
+    // "Συμπλήρωσε": Καθαρίζει όλους τους καμβάδες ώστε να εξαφανιστούν τα προηγούμενα στοιχεία
     // και εμφανίζει αμέσως την expanded διάταξη.
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
@@ -467,12 +475,11 @@
     });
 
     // "Επόμενο": Στη διάταξη "start":
-    // - Αν δεν είμαστε ήδη στη διάταξη "start", το πρώτο πάτημα θέτει currentZ = 3.
-    // - Στη συνέχεια, κάθε πάτημα αυξάνει το currentZ κατά 1 μέχρι το 118.
-    // Οι συνθήκες shift εφαρμόζονται ως εξής:
-    //   • Για στοιχεία 21-30 στο block p.
-    //   • Για στοιχεία 57-80 στα blocks d και p.
-    //   • Μετά το 81, η συμπλήρωση συνεχίζεται κανονικά.
+    // • Αν δεν είμαστε ήδη στη "start", το πρώτο πάτημα θέτει currentZ = 3.
+    // • Στη συνέχεια, κάθε πάτημα αυξάνει το currentZ κατά 1 μέχρι το 118.
+    //    - Για στοιχεία 21–30 στο block p: εφαρμόζεται το αντίστοιχο shift.
+    //    - Για στοιχεία 57–80 στα blocks p και d: εφαρμόζεται ο συσσωρευμένος shift (για το p, επιπλέον το προηγούμενο shift).
+    // • Μετά το 81, η συμπλήρωση συνεχίζεται κανονικά.
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
