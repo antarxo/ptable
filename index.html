@@ -89,18 +89,17 @@
     // Διαμόρφωση του background canvas βάσει του mode.
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      // Για expanded mode
       if (currentMode === "expanded") {
         bg.style.left = "17px";
         bg.style.top = "55px";
         bg.style.width = "1412px";
         bg.style.height = "368px";
       } else {
-        // collapsed mode: νέες τιμές 827x458
+        // collapsed mode: νέες τιμές 827x458, αυξημένες κατά 10px (δηλαδή 837x468)
         bg.style.left = "17px";
         bg.style.top = "55px";
-        bg.style.width = "827px";
-        bg.style.height = "458px";
+        bg.style.width = "837px";
+        bg.style.height = "468px";
       }
       bg.style.opacity = "1";
     }
@@ -111,17 +110,15 @@
     }
 
     // Δημιουργία καμβάδων περιόδων:
-    // Κάθε κελί: 40x40px με 2px κενό (δηλαδή, βήμα 42px). Ο συνολικός καμβάς έχει ύψος 292px.
-    // Το top του καμβά καθορίζεται από το JSON (στο στοιχείο "1").
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(40, 292); // 7*40 + 6*2 = 292px
+          let canvas = p.createCanvas(40, 292);
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
-          container.style.left = (bgLeft + 6) + "px"; // left βάσει του background
-          container.style.top = positions[currentMode]["1"].y + "px"; // top από το JSON
+          container.style.left = (bgLeft + 6) + "px";
+          container.style.top = positions[currentMode]["1"].y + "px";
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
@@ -129,7 +126,7 @@
           const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(0, i * 42, 40, 40); // κάθε κελί: 40x40, με βήμα 42 (δηλαδή 2px κενό)
+            p.rect(0, i * 42, 40, 40);
             p.fill(0);
             p.text(periodLabels[i], 20, i * 42 + 20);
           }
@@ -138,11 +135,7 @@
     }
 
     // Δημιουργία καμβάδων ομάδων χωρίς περιγράμματα:
-    // Κάθε καμβάς έχει δύο σειρές κελιών (ύψος 40px συνολικά).
-    // Κάθε κελί έχει διαστάσεις 40px πλάτος και 20px ύψος, με οριζόντια απόσταση 2px.
-    // Το top ορίζεται ως positions[currentMode]["1"].y - 42, δηλαδή 42px ψηλότερα από το στοιχείο "1".
     function initGroupsCanvases() {
-      // S-block: 2 κελιά → συνολικό πλάτος = 2*40 + 1*2 = 82px, ύψος = 40px.
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(82, 40);
@@ -166,7 +159,6 @@
         };
       });
       
-      // D-block: 10 κελιά → συνολικό πλάτος = 10*40 + 9*2 = 418px, ύψος = 40px.
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(418, 40);
@@ -195,7 +187,6 @@
         };
       });
       
-      // P-block: 6 κελιά → συνολικό πλάτος = 6*40 + 5*2 = 250px, ύψος = 40px.
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(250, 40);
@@ -224,9 +215,6 @@
         };
       });
       
-      // Τοποθέτηση των καμβάδων ομάδων:
-      // Το left παίρνεται από το left του αντίστοιχου τομέα,
-      // το top ορίζεται ως positions[currentMode]["1"].y - 42 (δηλαδή 42px ψηλότερα από το στοιχείο "1")
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -235,7 +223,7 @@
       });
     }
 
-    // Δημιουργία καμβάδων τομέων (S, P, D, F) βάσει των τιμών από το JSON χωρίς μετατοπίσεις.
+    // Δημιουργία καμβάδων τομέων βάσει του JSON χωρίς μετατοπίσεις.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -266,7 +254,7 @@
       });
     }
 
-    // Σχεδίαση των στοιχείων σύμφωνα με τις τιμές θέσης από το JSON.
+    // Σχεδίαση των στοιχείων σύμφωνα με το JSON.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -285,7 +273,7 @@
       });
     }
 
-    // Event listeners: Όλα βασίζονται αποκλειστικά στις τιμές του JSON.
+    // Event listeners βασισμένοι στις τιμές του JSON.
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
@@ -303,7 +291,6 @@
       currentMode = isCollapsed ? "collapsed" : "expanded";
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
-      // Επανατοποθέτηση των καμβάδων ομάδων μετά την αλλαγή mode.
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
