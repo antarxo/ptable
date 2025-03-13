@@ -80,7 +80,8 @@
 
   <!-- Κουμπιά: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
   <div id="buttonPanel">
-    <button id="nextState" disabled>Επόμενο</button>
+    <!-- Το κουμπί "Επόμενο" είναι πλέον ενεργό από την αρχή -->
+    <button id="nextState">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="toggleFBlock" disabled>Σύμπτυξε</button>
     <button id="reset">Reset</button>
@@ -325,7 +326,6 @@
         // Θέτουμε το currentZ στο 123 (δηλ. >122) ώστε να ενεργοποιηθεί το "Σύμπτυξε"
         currentZ = 123;
         document.getElementById('toggleFBlock').disabled = false;
-        document.getElementById('nextState').disabled = false;
       }
     });
 
@@ -361,7 +361,7 @@
       });
       console.log("Positions for 'start':", positions["start"]);
       
-      // Αν currentZ δεν έχει υπερβεί το 122, το κουμπί "Σύμπτυξε" μένει ανενεργό
+      // Ενεργοποίηση του κουμπιού "Σύμπτυξε" μόνο αν το currentZ > 122
       if (currentZ > 122) {
           document.getElementById('toggleFBlock').disabled = false;
       } else {
