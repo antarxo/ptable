@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Debug Grid με Μετρήσεις</title>
+  <title>Περιοδικός Πίνακας - Έλεγχος Top Offsets</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -29,13 +29,6 @@
       box-shadow: 0 3px 3px rgba(0,0,0,0.2); 
       z-index: -10;
       opacity: 1;
-    }
-    /* Debug grid overlay – εμφανίζεται πάνω από το background και είναι draggable */
-    #debugGrid {
-      position: absolute;
-      z-index: -5;
-      pointer-events: auto;
-      cursor: move;
     }
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute; 
@@ -66,8 +59,6 @@
 
   <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
-  <!-- Debug grid overlay -->
-  <div id="debugGrid" class="canvas"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
   <div id="canvasP_groups" class="canvas"></div>
@@ -89,13 +80,14 @@
     let positions = {};
     let isTableFilled = false;
     let isCollapsed = false;
-    let currentMode = "expanded";  // "expanded" ή "collapsed"
-    let debugGridP = null; // p5 instance για το debug grid
+    // Ορίζουμε το τρέχον mode: "expanded" ή "collapsed"
+    let currentMode = "expanded";
 
     // Διαστάσεις του background ανά mode
     const expandedBackground = { width: "1412px", height: "368px" };
     const collapsedBackground  = { width: "837px",  height: "460px" };
 
+    // Έλεγχος δομής του JSON
     function checkJSON(json) {
       if (!json.expanded || !json.collapsed) {
         console.error("Το positions.json δεν έχει την απαιτούμενη δομή (πρέπει να περιέχει τα keys 'expanded' και 'collapsed').");
@@ -110,6 +102,7 @@
       checkJSON(positions);
     }
 
+    // Αρχική διαμόρφωση του background canvas σύμφωνα με το expanded mode
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "17px";
@@ -119,6 +112,7 @@
       bg.style.opacity = "1";
     }
 
+    // Ενημέρωση διαστάσεων background ανάλογα με το mode
     function updateBackgroundDimensions() {
       let bg = document.getElementById("canvasTableBackground");
       if(currentMode === "collapsed") {
@@ -130,85 +124,10 @@
       }
     }
 
-    // Δημιουργεί το debug grid και εμφανίζει την τρέχουσα left/top τιμή (σε px) στο πάνω αριστερό μέρος.
-    function initializeDebugGrid() {
-      let debugDiv = document.getElementById("debugGrid");
-      if(currentMode !== "expanded") {
-        if(debugGridP) {
-          debugGridP.remove();
-          debugGridP = null;
-        }
-        return;
-      }
-      // Τοποθέτηση debug grid πάνω από το canvasTableBackground
-      let bg = document.getElementById("canvasTableBackground");
-      debugDiv.style.left = bg.style.left;
-      debugDiv.style.top = bg.style.top;
-      debugDiv.style.width = bg.style.width;
-      debugDiv.style.height = bg.style.height;
-      
-      if(debugGridP) {
-        debugGridP.remove();
-        debugGridP = null;
-      }
-      debugGridP = new p5(function(p) {
-          p.setup = function() {
-            let w = parseInt(debugDiv.style.width);
-            let h = parseInt(debugDiv.style.height);
-            p.createCanvas(w, h);
-          };
-          p.draw = function() {
-            p.clear();
-            p.stroke(255, 0, 0, 150); // κόκκινες γραμμές
-            let spacing = 20;
-            for(let x = 0; x <= p.width; x += spacing) {
-              p.line(x, 0, x, p.height);
-            }
-            for(let y = 0; y <= p.height; y += spacing) {
-              p.line(0, y, p.width, y);
-            }
-            // Εμφάνιση του τρέχοντος offset (μετράει σε px)
-            let debugDiv = document.getElementById("debugGrid");
-            let left = parseInt(debugDiv.style.left);
-            let top = parseInt(debugDiv.style.top);
-            p.fill(0);
-            p.noStroke();
-            p.textSize(16);
-            p.text(`left: ${left}px, top: ${top}px`, 10, 20);
-          };
-      }, "debugGrid");
-      
-      enableDragForDebugGrid();
-    }
-
-    // Επιτρέπει τη μετακίνηση (drag) του debug grid και ενημερώνει το position ώστε να βλέπεις τις αλλαγές σε px
-    function enableDragForDebugGrid() {
-      let debugDiv = document.getElementById("debugGrid");
-      let isDragging = false;
-      let offsetX, offsetY;
-      
-      debugDiv.addEventListener('mousedown', function(e) {
-        isDragging = true;
-        offsetX = e.clientX - parseInt(debugDiv.style.left);
-        offsetY = e.clientY - parseInt(debugDiv.style.top);
-        e.preventDefault();
-      });
-      
-      document.addEventListener('mousemove', function(e) {
-        if(isDragging) {
-          debugDiv.style.left = (e.clientX - offsetX) + "px";
-          debugDiv.style.top = (e.clientY - offsetY) + "px";
-        }
-      });
-      
-      document.addEventListener('mouseup', function(e) {
-        isDragging = false;
-      });
-    }
-
     function initGroupsCanvases() {
       if(window.groupsInitialized) return;
       
+      // Καμβάς για τις ομάδες του S-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(84, 40);
@@ -225,6 +144,7 @@
         };
       });
       
+      // Καμβάς για τις ομάδες του D-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(420, 40);
@@ -246,6 +166,7 @@
         };
       });
       
+      // Καμβάς για τις ομάδες του P-block
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(252, 40);
@@ -267,6 +188,7 @@
         };
       });
       
+      // Τοποθέτηση ομάδων βάσει του πρώτου στοιχείου (ανάγνωση τιμών απευθείας από το JSON)
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -305,12 +227,13 @@
       });
     }
 
-    // Χρήση των τιμών του JSON για τοποθέτηση των block χωρίς επιπλέον offsets
+    // Αρχικοποίηση του καμβά τομέων για κάθε block, χρησιμοποιώντας τις τιμές του JSON απευθείας
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
+        // Εύρεση ελάχιστων και μέγιστων τιμών για το block
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
           if(positions[currentMode][e.number]){
@@ -321,12 +244,15 @@
             maxY = Math.max(maxY, pos.y + pos.height);
           }
         });
-        if(minX === Infinity || minY === Infinity) return;
+        if(minX === Infinity || minY === Infinity) return; // Αν δεν βρέθηκαν στοιχεία για το block
+        
+        // Ορίζουμε το container με τις τιμές του JSON χωρίς επιπλέον offsets
         container.style.left = minX + "px";
         container.style.top = minY + "px";
         container.style.width = (maxX - minX) + "px";
         container.style.height = (maxY - minY) + "px";
         
+        // Έλεγχος για τυχόν αλλαγές στο top offset συγκρίνοντας με το JSON του πρώτου στοιχείου
         let firstEl = elements.find(e => e.block === block);
         if(firstEl && positions[currentMode][firstEl.number]) {
           let expectedTop = positions[currentMode][firstEl.number].y;
@@ -347,6 +273,7 @@
       });
     }
 
+    // Σχεδίαση στοιχείων χρησιμοποιώντας τις τιμές του JSON απευθείας (χωρίς πρόσθετους υπολογισμούς)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -365,18 +292,20 @@
       });
     }
 
+    // Κουμπί "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
         initializeSectorsCanvas();       
         initializePeriodsCanvas();       
         initGroupsCanvases();
-        initializeDebugGrid();  // Εμφάνιση debug grid στην expanded διάταξη
         isTableFilled = true;
+        // Ενεργοποίηση του toggle μόλις συμπληρωθεί ο πίνακας
         document.getElementById('toggleFBlock').disabled = false;
       }
     });
 
+    // Κουμπί "Σύμπτυξε"/"Ανάπτυξε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
@@ -393,7 +322,6 @@
           }
         }
       });
-      initializeDebugGrid();
     });
 
     window.addEventListener('load', loadData);
