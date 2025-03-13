@@ -36,6 +36,7 @@
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute;
       z-index: 60;
+      display: none;
     }
     /* Καμβάδες τομέων και περιοδών */
     #canvasS { z-index: 10; }
@@ -69,8 +70,8 @@
   <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
-  <div id="canvasD_groups" class="canvas" style="display:none;"></div>
-  <div id="canvasP_groups" class="canvas" style="display:none;"></div>
+  <div id="canvasD_groups" class="canvas"></div>
+  <div id="canvasP_groups" class="canvas"></div>
   
   <div id="canvasPeriods" class="canvas"></div>
   <div id="canvasS" class="canvas"></div>
@@ -78,7 +79,7 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Κουμπιά με σειρά: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
+  <!-- Κουμπιά: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
   <div id="buttonPanel">
     <button id="nextState" disabled>Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -93,19 +94,23 @@
     let isCollapsed = false;
     let currentMode = "expanded"; // αρχική κατάσταση
 
-    // Νέα μεταβλητή για τον έλεγχο της προοδευτικής εμφάνισης
-    let currentZ = 2;  // Ξεκινάμε από 2 ώστε με το πρώτο πάτημα να γίνει 3
+    // Μεταβλητή για προοδευτική εμφάνιση: αρχικά 2 ώστε με το πρώτο πάτημα να γίνει 3
+    let currentZ = 2;
 
-    // Συνάρτηση ενημέρωσης της τοποθέτησης των τομέων με βάση το currentZ
+    // Ενημέρωση των τοποθετήσεων των τομέων με βάση το currentZ
     function updateSectors() {
       let shiftP = 0, shiftD = 0;
       if (currentZ <= 20) {
-        shiftP = 0; shiftD = 0;
+        shiftP = 0; 
+        shiftD = 0;
       } else if (currentZ >= 21 && currentZ <= 30) {
+        // Από το 21 έως το 30: μετατόπιση του τομέα p κατά 42px ανά βήμα
         shiftP = 42 * (currentZ - 20);
       } else if (currentZ >= 31 && currentZ <= 56) {
+        // Σταθερή μετατόπιση για το p
         shiftP = 42 * 10;
       } else if (currentZ >= 57 && currentZ <= 70) {
+        // Από το 57 έως το 70: μετατόπιση του p και d κατά 42px ανά βήμα
         shiftP = 42 * 10 + 42 * (currentZ - 56);
         shiftD = 42 * (currentZ - 56);
       } else if (currentZ > 70) {
@@ -113,21 +118,285 @@
         shiftD = 42 * 14;
       }
       let cP = document.getElementById('canvasP');
-      if(cP) { cP.style.transition = "left 1.2s ease"; cP.style.left = (159 + shiftP) + "px"; }
+      if(cP) { 
+        cP.style.transition = "left 1.2s ease"; 
+        cP.style.left = (159 + shiftP) + "px"; 
+      }
       let cD = document.getElementById('canvasD');
-      if(cD) { cD.style.transition = "left 1.2s ease"; cD.style.left = (159 + shiftD) + "px"; }
+      if(cD) { 
+        cD.style.transition = "left 1.2s ease"; 
+        cD.style.left = (159 + shiftD) + "px"; 
+      }
     }
 
-    // Συνάρτηση ενημέρωσης του currentZ και εμφάνισης στοιχείων/περιοδών/ομάδων
+    // Ενημέρωση του currentZ και εμφάνιση στοιχείων, περιόδων και ομάδων
     function updateTable() {
       if (currentZ < 3) {
         currentZ = 3;
       } else if (currentZ < 118) {
         currentZ++;
       } else if (currentZ === 118) {
-        currentZ = 119;  // Εμφάνιση του στοιχείου 1 (αντί για το 119)
+        currentZ = 119;  // Εμφάνιση στοιχείου 1 (αντί για 119)
       } else if (currentZ === 119) {
-        currentZ = 120;  // Εμφάνιση του στοιχείου 2
+        currentZ = 120;  // Εμφάνιση στοιχείου 2
       } else if (currentZ === 120) {
-        currentZ = 121;  // Εμφάνιση περιόδων\n        document.getElementById('canvasPeriods').style.display = 'block';\n      } else if (currentZ === 121) {\n        currentZ = 122;  // Εμφάνιση ομάδων\n        document.getElementById('canvasS_groups').style.display = 'block';\n        document.getElementById('canvasD_groups').style.display = 'block';\n        document.getElementById('canvasP_groups').style.display = 'block';\n      }\n      initializeBackgroundCanvas();\n      initializeSectorsCanvas();\n      updateSectors();\n      console.log('CurrentZ:', currentZ);\n    }\n\n    function computeRightLimit(block) {\n      let maxX = -Infinity;\n      elements.filter(e => e.block === block).forEach(e => {\n        let pos = positions[currentMode][e.number];\n        if (pos) {\n          maxX = Math.max(maxX, pos.x + pos.width);\n        }\n      });\n      return maxX;\n    }\n\n    function computeBottomLimit(block) {\n      let maxY = -Infinity;\n      elements.filter(e => e.block === block).forEach(e => {\n        let pos = positions[currentMode][e.number];\n        if (pos) {\n          maxY = Math.max(maxY, pos.y + pos.height);\n        }\n      });\n      return maxY;\n    }\n\n    function initializeBackgroundCanvas() {\n      let bg = document.getElementById(\"canvasTableBackground\");\n      let leftFixed = 17;\n      let topFixed = 55;\n      let rightLimit, bottomLimit;\n      if (currentMode === \"expanded\" || currentMode === \"collapsed\") {\n        rightLimit = computeRightLimit(\"p\") + 20;\n      } else if (currentMode === \"start\") {\n        rightLimit = computeRightLimit(\"f\") + 20;\n      }\n      bottomLimit = computeBottomLimit(\"f\") + 20;\n      bg.style.left = leftFixed + \"px\";\n      bg.style.top = topFixed + \"px\";\n      bg.style.width = (rightLimit - leftFixed) + \"px\";\n      bg.style.height = (bottomLimit - topFixed) + \"px\";\n      bg.style.opacity = \"1\";\n    }\n\n    async function loadData() {\n      elements = await (await fetch('elements.json')).json();\n      positions = await (await fetch('positions.json')).json();\n    }\n\n    function initializePeriodsCanvas() {\n      new p5(function(p) {\n        p.setup = function() {\n          let canvas = p.createCanvas(40, 292);\n          canvas.parent(\"canvasPeriods\");\n          let container = document.getElementById(\"canvasPeriods\");\n          let bgLeft = parseInt(document.getElementById(\"canvasTableBackground\").style.left);\n          container.style.left = (bgLeft + 6) + \"px\";\n          container.style.top = positions[currentMode][\"1\"].y + \"px\";\n          p.noStroke();\n          p.textAlign(p.CENTER, p.CENTER);\n          p.textSize(11);\n          p.textStyle(p.BOLD);\n          const periodLabels = [\"1η K\", \"2η L\", \"3η M\", \"4η N\", \"5η Ο\", \"6η Ρ\", \"7η Q\"];\n          for (let i = 0; i < 7; i++) {\n            p.fill(240);\n            p.rect(0, i * 42, 40, 40);\n            p.fill(0);\n            p.text(periodLabels[i], 20, i * 42 + 20);\n          }\n        };\n      });\n    }\n\n    function initGroupsCanvases() {\n      new p5(function(p) {\n        p.setup = function() {\n          let canvas = p.createCanvas(82, 40);\n          canvas.parent(\"canvasS_groups\");\n          p.background(240);\n          for (let col = 0; col < 2; col++) {\n            p.noStroke();\n            p.noFill();\n            p.rect(col * 42, 0, 40, 20);\n            p.rect(col * 42, 20, 40, 20);\n          }\n          p.noStroke();\n          p.fill(0);\n          p.textAlign(p.CENTER, p.CENTER);\n          p.textSize(11);\n          p.textStyle(p.BOLD);\n          p.text(\"1\", 20, 10);\n          p.text(\"2\", 20 + 42, 10);\n          p.text(\"IA\", 20, 30);\n          p.text(\"IIA\", 20 + 42, 30);\n        };\n      });\n      new p5(function(p) {\n        p.setup = function() {\n          let canvas = p.createCanvas(418, 40);\n          canvas.parent(\"canvasD_groups\");\n          p.background(240);\n          for (let col = 0; col < 10; col++) {\n            p.noStroke();\n            p.noFill();\n            p.rect(col * 42, 0, 40, 20);\n            p.rect(col * 42, 20, 40, 20);\n          }\n          p.noStroke();\n          p.fill(0);\n          p.textAlign(p.CENTER, p.CENTER);\n          p.textSize(11);\n          p.textStyle(p.BOLD);\n          for (let c = 0; c < 10; c++) {\n            let x = c * 42;\n            p.text((c+3).toString(), x + 20, 10);\n          }\n          const oldLabels = [\"IIIB\",\"IVB\",\"VB\",\"VIB\",\"VIIB\",\"VIIIB\",\"VIIIB\",\"VIIIB\",\"IB\",\"IIB\"];\n          for (let c = 0; c < 10; c++) {\n            let x = c * 42;\n            p.text(oldLabels[c], x + 20, 30);\n          }\n        };\n      });\n      new p5(function(p) {\n        p.setup = function() {\n          let canvas = p.createCanvas(250, 40);\n          canvas.parent(\"canvasP_groups\");\n          p.background(240);\n          for (let col = 0; col < 6; col++) {\n            p.noStroke();\n            p.noFill();\n            p.rect(col * 42, 0, 40, 20);\n            p.rect(col * 42, 20, 40, 20);\n          }\n          p.noStroke();\n          p.fill(0);\n          p.textAlign(p.CENTER, p.CENTER);\n          p.textSize(11);\n          p.textStyle(p.BOLD);\n          for (let c = 0; c < 6; c++) {\n            let x = c * 42;\n            p.text((c+13).toString(), x + 20, 10);\n          }\n          const oldLabels = [\"IIIA\",\"IVA\",\"VA\",\"VIA\",\"VIIA\",\"VIIIA\"];\n          for (let c = 0; c < 6; c++) {\n            let x = c * 42;\n            p.text(oldLabels[c], x + 20, 30);\n          }\n        };\n      });\n      [\"S\", \"D\", \"P\"].forEach(sector => {\n        let sectorCanvas = document.getElementById(\"canvas\" + sector);\n        let groupCanvas = document.getElementById(\"canvas\" + sector + \"_groups\");\n        if(sectorCanvas && groupCanvas) {\n          groupCanvas.style.left = sectorCanvas.style.left;\n          groupCanvas.style.top = (parseInt(positions[currentMode][\"1\"].y) - 42 - 2) + \"px\";\n        }\n      });\n    }\n\n    function initializeSectorsCanvas() {\n      let blocks = [\"s\", \"p\", \"d\", \"f\"];\n      blocks.forEach(block => {\n        let container = document.getElementById(\"canvas\" + block.toUpperCase());\n        container.innerHTML = \"\";\n        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;\n        elements.filter(e => e.block === block).forEach(e => {\n          let pos = positions[currentMode][e.number];\n          if (pos) {\n            minX = Math.min(minX, pos.x);\n            minY = Math.min(minY, pos.y);\n            maxX = Math.max(maxX, pos.x + pos.width);\n            maxY = Math.max(maxY, pos.y + pos.height);\n          }\n        });\n        if (minX === Infinity || minY === Infinity) return;\n        container.style.left = minX + \"px\";\n        container.style.top = minY + \"px\";\n        container.style.width = (maxX - minX) + \"px\";\n        container.style.height = (maxY - minY) + \"px\";\n        new p5(function(p) {\n          p.setup = function() {\n            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));\n            canvas.parent(\"canvas\" + block.toUpperCase());\n            drawElements(p, block, minX, minY);\n          };\n        });\n      });\n    }\n\n    function drawElements(p, block, containerLeft, containerTop) {\n      let colors = { s: \"#FF477E\", p: \"#26FF31\", d: \"#3F99FF\", f: \"#FFD051\" };\n      elements.filter(e => e.block === block).forEach(e => {\n        let pos = positions[currentMode][e.number];\n        if (pos) {\n          let relativeX = pos.x - containerLeft;\n          let relativeY = pos.y - containerTop;\n          p.fill(colors[block] || \"#CCCCCC\");\n          p.rect(relativeX, relativeY, pos.width, pos.height, 5);\n          p.fill(0);\n          p.textSize(13);\n          p.textStyle(p.BOLD);\n          p.text(e.number, relativeX + pos.width/2, relativeY + pos.height/2);\n        }\n      });\n    }\n\n    document.getElementById('fillAll').addEventListener('click', function() {\n      if (!isTableFilled) {\n        initializeBackgroundCanvas();\n        initializeSectorsCanvas();\n        initializePeriodsCanvas();\n        initGroupsCanvases();\n        isTableFilled = true;\n        document.getElementById('toggleFBlock').disabled = false;\n        document.getElementById('nextState').disabled = false;\n      }\n    });\n\n    document.getElementById('nextState').addEventListener('click', function() {\n      updateTable();\n    });\n\n    document.getElementById('toggleFBlock').addEventListener('click', function() {\n      isCollapsed = !isCollapsed;\n      this.textContent = isCollapsed ? \"Ανάπτυξε\" : \"Σύμπτυξε\";\n      currentMode = isCollapsed ? \"collapsed\" : \"expanded\";\n      initializeBackgroundCanvas();\n      initializeSectorsCanvas();\n      [\"S\", \"D\", \"P\"].forEach(sector => {\n        let sectorCanvas = document.getElementById(\"canvas\" + sector);\n        let groupCanvas = document.getElementById(\"canvas\" + sector + \"_groups\");\n        if(sectorCanvas && groupCanvas) {\n          groupCanvas.style.left = sectorCanvas.style.left;\n          groupCanvas.style.top = (parseInt(positions[currentMode][\"1\"].y) - 42 - 2) + \"px\";\n        }\n      });\n    });\n\n    document.getElementById('reset').addEventListener('click', function() {\n      location.reload();\n    });\n\n    window.addEventListener('load', loadData);\n  </script>
-</body>\n</html>
+        currentZ = 121;  // Εμφάνιση περιόδων
+        document.getElementById('canvasPeriods').style.display = 'block';
+      } else if (currentZ === 121) {
+        currentZ = 122;  // Εμφάνιση ομάδων
+        document.getElementById('canvasS_groups').style.display = 'block';
+        document.getElementById('canvasD_groups').style.display = 'block';
+        document.getElementById('canvasP_groups').style.display = 'block';
+      }
+      initializeBackgroundCanvas();
+      initializeSectorsCanvas();
+      updateSectors();
+      console.log('CurrentZ:', currentZ);
+    }
+
+    function computeRightLimit(block) {
+      let maxX = -Infinity;
+      elements.filter(e => e.block === block).forEach(e => {
+        let pos = positions[currentMode][e.number];
+        if (pos) {
+          maxX = Math.max(maxX, pos.x + pos.width);
+        }
+      });
+      return maxX;
+    }
+
+    function computeBottomLimit(block) {
+      let maxY = -Infinity;
+      elements.filter(e => e.block === block).forEach(e => {
+        let pos = positions[currentMode][e.number];
+        if (pos) {
+          maxY = Math.max(maxY, pos.y + pos.height);
+        }
+      });
+      return maxY;
+    }
+
+    function initializeBackgroundCanvas() {
+      let bg = document.getElementById("canvasTableBackground");
+      let leftFixed = 17;
+      let topFixed = 55;
+      let rightLimit, bottomLimit;
+      if (currentMode === "expanded" || currentMode === "collapsed") {
+        rightLimit = computeRightLimit("p") + 20;
+      } else if (currentMode === "start") {
+        rightLimit = computeRightLimit("f") + 20;
+      }
+      bottomLimit = computeBottomLimit("f") + 20;
+      bg.style.left = leftFixed + "px";
+      bg.style.top = topFixed + "px";
+      bg.style.width = (rightLimit - leftFixed) + "px";
+      bg.style.height = (bottomLimit - topFixed) + "px";
+      bg.style.opacity = "1";
+    }
+
+    async function loadData() {
+      elements = await (await fetch('elements.json')).json();
+      positions = await (await fetch('positions.json')).json();
+    }
+
+    function initializePeriodsCanvas() {
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(40, 292);
+          canvas.parent("canvasPeriods");
+          let container = document.getElementById("canvasPeriods");
+          let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
+          container.style.left = (bgLeft + 6) + "px";
+          container.style.top = positions[currentMode]["1"].y + "px";
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(11);
+          p.textStyle(p.BOLD);
+          const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
+          for (let i = 0; i < 7; i++) {
+            p.fill(240);
+            p.rect(0, i * 42, 40, 40);
+            p.fill(0);
+            p.text(periodLabels[i], 20, i * 42 + 20);
+          }
+        };
+      });
+    }
+
+    function initGroupsCanvases() {
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(82, 40);
+          canvas.parent("canvasS_groups");
+          p.background(240);
+          for (let col = 0; col < 2; col++) {
+            p.noStroke();
+            p.noFill();
+            p.rect(col * 42, 0, 40, 20);
+            p.rect(col * 42, 20, 40, 20);
+          }
+          p.noStroke();
+          p.fill(0);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(11);
+          p.textStyle(p.BOLD);
+          p.text("1", 20, 10);
+          p.text("2", 20 + 42, 10);
+          p.text("IA", 20, 30);
+          p.text("IIA", 20 + 42, 30);
+        };
+      });
+      
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(418, 40);
+          canvas.parent("canvasD_groups");
+          p.background(240);
+          for (let col = 0; col < 10; col++) {
+            p.noStroke();
+            p.noFill();
+            p.rect(col * 42, 0, 40, 20);
+            p.rect(col * 42, 20, 40, 20);
+          }
+          p.noStroke();
+          p.fill(0);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(11);
+          p.textStyle(p.BOLD);
+          for (let c = 0; c < 10; c++) {
+            let x = c * 42;
+            p.text((c+3).toString(), x + 20, 10);
+          }
+          const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
+          for (let c = 0; c < 10; c++) {
+            let x = c * 42;
+            p.text(oldLabels[c], x + 20, 30);
+          }
+        };
+      });
+      
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(250, 40);
+          canvas.parent("canvasP_groups");
+          p.background(240);
+          for (let col = 0; col < 6; col++) {
+            p.noStroke();
+            p.noFill();
+            p.rect(col * 42, 0, 40, 20);
+            p.rect(col * 42, 20, 40, 20);
+          }
+          p.noStroke();
+          p.fill(0);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(11);
+          p.textStyle(p.BOLD);
+          for (let c = 0; c < 6; c++) {
+            let x = c * 42;
+            p.text((c+13).toString(), x + 20, 10);
+          }
+          const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
+          for (let c = 0; c < 6; c++) {
+            let x = c * 42;
+            p.text(oldLabels[c], x + 20, 30);
+          }
+        };
+      });
+      
+      ["S", "D", "P"].forEach(sector => {
+        let sectorCanvas = document.getElementById("canvas" + sector);
+        let groupCanvas = document.getElementById("canvas" + sector + "_groups");
+        if(sectorCanvas && groupCanvas) {
+          groupCanvas.style.left = sectorCanvas.style.left;
+          groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
+        }
+      });
+    }
+
+    function initializeSectorsCanvas() {
+      let blocks = ["s", "p", "d", "f"];
+      blocks.forEach(block => {
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.filter(e => e.block === block).forEach(e => {
+          let pos = positions[currentMode][e.number];
+          if (pos) {
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, pos.y);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, pos.y + pos.height);
+          }
+        });
+        if (minX === Infinity || minY === Infinity) return;
+        container.style.left = minX + "px";
+        container.style.top = minY + "px";
+        container.style.width = (maxX - minX) + "px";
+        container.style.height = (maxY - minY) + "px";
+        new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+            canvas.parent("canvas" + block.toUpperCase());
+            drawElements(p, block, minX, minY);
+          };
+        });
+      });
+    }
+
+    function drawElements(p, block, containerLeft, containerTop) {
+      let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
+      elements.filter(e => e.block === block).forEach(e => {
+        let pos = positions[currentMode][e.number];
+        if (pos) {
+          let relativeX = pos.x - containerLeft;
+          let relativeY = pos.y - containerTop;
+          p.fill(colors[block] || "#CCCCCC");
+          p.rect(relativeX, relativeY, pos.width, pos.height, 5);
+          p.fill(0);
+          p.textSize(13);
+          p.textStyle(p.BOLD);
+          p.text(e.number, relativeX + pos.width/2, relativeY + pos.height/2);
+        }
+      });
+    }
+
+    document.getElementById('fillAll').addEventListener('click', function() {
+      if (!isTableFilled) {
+        initializeBackgroundCanvas();
+        initializeSectorsCanvas();       
+        initializePeriodsCanvas();       
+        initGroupsCanvases();
+        isTableFilled = true;
+        document.getElementById('toggleFBlock').disabled = false;
+        document.getElementById('nextState').disabled = false;
+      }
+    });
+
+    document.getElementById('nextState').addEventListener('click', function() {
+      updateTable();
+    });
+
+    document.getElementById('toggleFBlock').addEventListener('click', function() {
+      isCollapsed = !isCollapsed;
+      this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
+      currentMode = isCollapsed ? "collapsed" : "expanded";
+      initializeBackgroundCanvas();
+      initializeSectorsCanvas();
+      ["S", "D", "P"].forEach(sector => {
+        let sectorCanvas = document.getElementById("canvas" + sector);
+        let groupCanvas = document.getElementById("canvas" + sector + "_groups");
+        if(sectorCanvas && groupCanvas) {
+          groupCanvas.style.left = sectorCanvas.style.left;
+          groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
+        }
+      });
+    });
+
+    document.getElementById('reset').addEventListener('click', function() {
+      location.reload();
+    });
+
+    window.addEventListener('load', loadData);
+  </script>
+</body>
+</html>
