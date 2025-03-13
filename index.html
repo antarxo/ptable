@@ -47,7 +47,7 @@
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
-      right: 20px; 
+      right: 20px;
       z-index: 100;
       display: flex; 
       flex-direction: column;
@@ -209,6 +209,17 @@
           height: pos.height
         };
       });
+      // Κάλεσμα για δυναμική ενημέρωση του πίνακα "χρωμάτων"
+      updateColorTable();
+    }
+
+    // Συνάρτηση ενημέρωσης πίνακα "χρωμάτων" (ή εμφάνισης των θέσεων)
+    function updateColorTable() {
+      console.log("Ενημέρωση πίνακα χρωμάτων με τις νέες θέσεις:");
+      for (let key in currentCellPositions) {
+        console.log("Στοιχείο", key, ":", currentCellPositions[key]);
+      }
+      // Αν έχετε HTML στοιχείο για εμφάνιση, μπορείτε να το ενημερώσετε εδώ.
     }
 
     // Υπολογισμός bounding box με τις ενημερωμένες θέσεις
@@ -229,11 +240,10 @@
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
-      // Σε όλα τα modes θέτουμε left στο 17px, όπως στην expanded
       if (currentMode === "start") {
         let limits = computeModeRegion();
         if (limits) {
-          bg.style.left = "17px";
+          bg.style.left = "17px"; // left σταθερό
           bg.style.top = (limits.minY - margin) + "px";
           let rightLimit = computeRightLimit("p") + margin;
           bg.style.width = (rightLimit - 17) + "px";
@@ -485,6 +495,7 @@
     
     // Event listener για το κουμπί "Επόμενο"
     document.getElementById('nextState').addEventListener('click', function() {
+      // Εάν δεν είμαστε στο "start", επιστρέφουμε στην αρχική κατάσταση
       if (currentMode !== "start") {
         currentMode = "start";
         currentZ = 3;
@@ -492,9 +503,11 @@
         extraElements = {};
         showPeriods = false;
       } else {
+        // Μόνο εάν δεν έχει φτάσει το όριο του 122
         if (currentZ < 122) {
           currentZ++;
         } else {
+          // Αν έχουμε φτάσει το 122, εκτελούμε μόνο τα post filling βήματα
           postFillingStep++;
           if (postFillingStep === 1) extraElements["1"] = true;
           else if (postFillingStep === 2) extraElements["2"] = true;
@@ -514,7 +527,14 @@
       logHitTestCenter();
     });
     
+    // Event listener για το κουμπί "Reset"
     document.getElementById('reset').addEventListener('click', function() {
+      // Επαναφορά όλων των μεταβλητών στην αρχική κατάσταση και ανανέωση της σελίδας
+      currentMode = "start";
+      currentZ = 3;
+      postFillingStep = 0;
+      extraElements = {};
+      showPeriods = false;
       location.reload();
     });
     
@@ -585,7 +605,6 @@
             else if (block === "d") config = { cols: 10, rows: 7 };
             else if (block === "f") config = { cols: 14, rows: 7 };
             let canvas = p.createCanvas(config.cols * cellSize, config.rows * cellSize);
-            // Θέτουμε το willReadFrequently attribute για καλύτερη απόδοση στο getImageData
             canvas.elt.getContext("2d", { willReadFrequently: true });
             canvas.parent("canvas" + block.toUpperCase());
             p.skipNextClick = true;
