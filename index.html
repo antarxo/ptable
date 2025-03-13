@@ -96,7 +96,7 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    // Ορίζουμε αρχικά το mode ως "start" και currentZ ως 3 για να εμφανίζεται τουλάχιστον το στοιχείο 3
+    // Αρχική κατάσταση: "start" με currentZ = 3 για εμφάνιση του στοιχείου 3
     let currentMode = "start";
     let currentZ = 3;
     let extraElements = {};
@@ -183,7 +183,7 @@
       return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
 
-    // Νέα συνάρτηση για δυναμική ενημέρωση θέσεων κελιών (για hit-testing)
+    // Συνάρτηση για δυναμική ενημέρωση θέσεων κελιών (για hit-testing)
     function updateCellsPositions() {
       currentCellPositions = {};
       elements.forEach(e => {
@@ -211,7 +211,7 @@
       });
     }
 
-    // Νέα συνάρτηση για υπολογισμό bounding box χρησιμοποιώντας τις ενημερωμένες θέσεις
+    // Υπολογισμός bounding box με τις ενημερωμένες θέσεις
     function computeModeRegionUpdated() {
       let keys = Object.keys(currentCellPositions);
       if (keys.length === 0) return null;
@@ -435,7 +435,7 @@
       });
     }
     
-    // Καταγραφή και hit-testing με κλήση στο κέντρο της τρέχουσας περιοχής
+    // Καταγραφή και hit-testing στο κέντρο της τρέχουσας περιοχής
     function logHitTestCenter() {
       let region = computeModeRegionUpdated();
       if (region) {
@@ -446,7 +446,7 @@
       }
     }
     
-    // Event listener για το κουμπί "Συμπλήρωσε" (προβάλλει πλήρη εμφάνιση)
+    // Event listener για το κουμπί "Συμπλήρωσε"
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
@@ -514,7 +514,7 @@
       location.reload();
     });
     
-    // Ενημερωμένη συνάρτηση hit-testing χρησιμοποιώντας τις δυναμικά ενημερωμένες θέσεις
+    // Ενημερωμένη συνάρτηση hit-testing χρησιμοποιώντας τις ενημερωμένες θέσεις
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
@@ -581,6 +581,8 @@
             else if (block === "d") config = { cols: 10, rows: 7 };
             else if (block === "f") config = { cols: 14, rows: 7 };
             let canvas = p.createCanvas(config.cols * cellSize, config.rows * cellSize);
+            // Θέτουμε το willReadFrequently attribute για βελτίωση της απόδοσης στο getImageData
+            canvas.elt.getContext("2d", { willReadFrequently: true });
             canvas.parent("canvas" + block.toUpperCase());
             p.skipNextClick = true;
             setTimeout(() => { p.skipNextClick = false; }, 100);
