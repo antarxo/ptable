@@ -43,12 +43,14 @@
     #canvasD { z-index: 30; }
     #canvasP { z-index: 40; }
     #canvasPeriods { z-index: 50; }
+    /* Κουμπιά: τοποθέτηση κατακόρυφα με σκίαση και διάταξη από πάνω προς τα κάτω */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
       right: 20px; 
       z-index: 100;
       display: flex; 
+      flex-direction: column;
       gap: 5px;
     }
     #buttonPanel button {
@@ -58,6 +60,7 @@
       border: none; 
       border-radius: 5px; 
       cursor: pointer;
+      box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
     }
   </style>
 </head>
@@ -75,11 +78,12 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Κουμπιά -->
+  <!-- Κουμπιά με σειρά: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
   <div id="buttonPanel">
+    <button id="nextState" disabled>Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="toggleFBlock" disabled>Σύμπτυξε</button>
-    <button id="nextState" disabled>Επόμενο</button>
+    <button id="reset">Reset</button>
   </div>
 
   <script>
@@ -255,7 +259,8 @@
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42) + "px";
+        // Μετακίνηση 42 pixels πάνω από την αρχική θέση, επιπλέον αφαιρούμε 2 για να ανέβουν ψηλότερα
+        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
 
@@ -333,7 +338,7 @@
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42) + "px";
+        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     });
 
@@ -346,9 +351,14 @@
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42) + "px";
+        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
       console.log("Positions for 'start':", positions["start"]);
+    });
+
+    // Event listener για το κουμπί "Reset" που επαναφέρει τη σελίδα
+    document.getElementById('reset').addEventListener('click', function() {
+      location.reload();
     });
 
     window.addEventListener('load', loadData);
