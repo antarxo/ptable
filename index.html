@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Απόλυτα από JSON</title>
+  <title>Περιοδικός Πίνακας - Απόλυτα από JSON (Ενημερωμένο)</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -32,7 +32,6 @@
     }
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute; 
-      height: 40px; 
     }
     #canvasPeriods, #canvasS, #canvasD, #canvasP, #canvasF {
       position: absolute;
@@ -82,7 +81,7 @@
     let isCollapsed = false;
     let currentMode = "expanded";
 
-    // Αρχική διαμόρφωση του background canvas
+    // Αρχική διαμόρφωση του background canvas (μπορεί να τροποποιηθεί για να αντλεί από JSON αν απαιτείται)
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "17px";
@@ -97,84 +96,16 @@
       positions = await (await fetch('positions.json')).json();
     }
 
-    // Δημιουργία καμβάδων ομάδων αποκλειστικά βάσει τιμών από το JSON
-    function initGroupsCanvases() {
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(84, 40);
-          canvas.parent("canvasS_groups");
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(11);
-          p.textStyle(p.BOLD);
-          p.background(240);
-          p.text("1", 20, 10);
-          p.text("2", 62, 10);
-          p.text("IA", 20, 30);
-          p.text("IIA", 62, 30);
-        };
-      });
-      
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(420, 40);
-          canvas.parent("canvasD_groups");
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(11);
-          p.textStyle(p.BOLD);
-          p.background(240);
-          for(let c = 0; c < 10; c++){
-            let x = c * 42;
-            p.text((c+3).toString(), x + 20, 10);
-          }
-          const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
-          for(let c = 0; c < 10; c++){
-            let x = c * 42;
-            p.text(oldLabels[c], x + 20, 30);
-          }
-        };
-      });
-      
-      new p5(function(p) {
-        p.setup = function() {
-          let canvas = p.createCanvas(252, 40);
-          canvas.parent("canvasP_groups");
-          p.noStroke();
-          p.textAlign(p.CENTER, p.CENTER);
-          p.textSize(11);
-          p.textStyle(p.BOLD);
-          p.background(240);
-          for(let c = 0; c < 6; c++){
-            let x = c * 42;
-            p.text((c+13).toString(), x + 20, 10);
-          }
-          const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
-          for(let c = 0; c < 6; c++){
-            let x = c * 42;
-            p.text(oldLabels[c], x + 20, 30);
-          }
-        };
-      });
-      
-      // Τοποθέτηση των ομάδων σύμφωνα με τις τιμές από το JSON χωρίς πρόσθετη μετατόπιση
-      ["S", "D", "P"].forEach(sector => {
-        let sectorCanvas = document.getElementById("canvas" + sector);
-        let groupCanvas = document.getElementById("canvas" + sector + "_groups");
-        groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = positions[currentMode]["1"].y + "px";
-      });
-    }
-
+    // Δημιουργία καμβάδων περιόδων με κελιά 40x40 και 2px κενά, top από το JSON για το στοιχείο "1"
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
-          let canvas = p.createCanvas(40, 294);
+          let canvas = p.createCanvas(40, 292); // 7 κελία: 7*40 + 6*2 = 292px
           canvas.parent("canvasPeriods");
           let container = document.getElementById("canvasPeriods");
           let bgLeft = parseInt(document.getElementById("canvasTableBackground").style.left);
-          container.style.left = (bgLeft + 6) + "px";
-          container.style.top = "110px";
+          container.style.left = (bgLeft + 6) + "px"; // left βάσει του background
+          container.style.top = positions[currentMode]["1"].y + "px"; // top από το JSON
           p.noStroke();
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
@@ -182,11 +113,93 @@
           const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
-            p.rect(5, i * 42, 35, 40);
+            p.rect(0, i * 42, 40, 40); // κάθε κελί 40x40, βήμα 42 (2px κενό)
             p.fill(0);
-            p.text(periodLabels[i], 5 + 35/2, i * 42 + 20);
+            p.text(periodLabels[i], 20, i * 42 + 20);
           }
         };
+      });
+    }
+
+    // Δημιουργία καμβάδων ομάδων με κελιά 40x40 και 2px κενά.
+    // Το left παίρνεται από το αντίστοιχο left του τομέα,
+    // ενώ το top ορίζεται ως το y του στοιχείου "1" από το JSON με μετατόπιση -42px για επικεφαλίδα.
+    function initGroupsCanvases() {
+      // S-block groups: 2 στήλες, 2 σειρές → πλάτος = 82, ύψος = 82
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(82, 82);
+          canvas.parent("canvasS_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(11);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          // Πρώτη σειρά
+          p.text("1", 20, 20);
+          p.text("2", 62, 20);
+          // Δεύτερη σειρά
+          p.text("IA", 20, 62);
+          p.text("IIA", 62, 62);
+        };
+      });
+      
+      // D-block groups: 10 στήλες, 2 σειρές → πλάτος = 418, ύψος = 82
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(418, 82);
+          canvas.parent("canvasD_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(11);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          // Πρώτη σειρά: αριθμοί από 3 έως 12
+          for(let c = 0; c < 10; c++){
+            let x = c * 42;
+            p.text((c+3).toString(), x + 20, 20);
+          }
+          // Δεύτερη σειρά: labels
+          const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
+          for(let c = 0; c < 10; c++){
+            let x = c * 42;
+            p.text(oldLabels[c], x + 20, 62);
+          }
+        };
+      });
+      
+      // P-block groups: 6 στήλες, 2 σειρές → πλάτος = 250, ύψος = 82
+      new p5(function(p) {
+        p.setup = function() {
+          let canvas = p.createCanvas(250, 82);
+          canvas.parent("canvasP_groups");
+          p.noStroke();
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(11);
+          p.textStyle(p.BOLD);
+          p.background(240);
+          // Πρώτη σειρά: αριθμοί από 13 έως 18
+          for(let c = 0; c < 6; c++){
+            let x = c * 42;
+            p.text((c+13).toString(), x + 20, 20);
+          }
+          // Δεύτερη σειρά: labels
+          const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
+          for(let c = 0; c < 6; c++){
+            let x = c * 42;
+            p.text(oldLabels[c], x + 20, 62);
+          }
+        };
+      });
+      
+      // Τοποθέτηση των καμβάδων ομάδων βάσει τιμών από το JSON:
+      // Το left παίρνεται από το ίδιο left του καμβά του τομέα,
+      // το top ορίζεται ως positions[currentMode]["1"].y - 42 (με μετατόπιση προς τα πάνω 42px)
+      ["S", "D", "P"].forEach(sector => {
+        let sectorCanvas = document.getElementById("canvas" + sector);
+        let groupCanvas = document.getElementById("canvas" + sector + "_groups");
+        groupCanvas.style.left = sectorCanvas.style.left;
+        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42) + "px";
       });
     }
 
@@ -239,7 +252,7 @@
       });
     }
 
-    // Event listeners: όλα βασίζονται αποκλειστικά στις τιμές του JSON
+    // Event listeners: Όλα βασίζονται αποκλειστικά στις τιμές του JSON
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
@@ -257,11 +270,12 @@
       currentMode = isCollapsed ? "collapsed" : "expanded";
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
+      // Επανατοποθέτηση των καμβάδων ομάδων μετά την αλλαγή mode
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = positions[currentMode]["1"].y + "px";
+        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42) + "px";
       });
     });
 
