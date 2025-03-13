@@ -2,11 +2,11 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Τελικός Κώδικας με Info Panels & Balloon (Συμπλήρωσε)</title>
+  <title>Περιοδικός Πίνακας - Συμπλήρωσε με Info Panels & Balloon</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Original styles from ptablelike.html */
+    /* Αρχικά στυλ από το ptablelike.html */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
@@ -23,24 +23,28 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
+    /* Background canvas */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
       border: 1px solid rgba(0,0,0,0.1);
       box-shadow: 6px 6px 10px rgba(0,0,0,0.3); 
-      z-index: -10;
+      z-index: -10; /* αρχικά -10, αλλά στο fillAll θα ανεβάσουμε το z-index */
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
+    /* Ομαδοποίηση καμβάδων ομάδων */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute;
       z-index: 60;
     }
+    /* Καμβάδες τομέων και περιοδών */
     #canvasS { z-index: 10; }
     #canvasF { z-index: 20; }
     #canvasD { z-index: 30; }
     #canvasP { z-index: 40; }
     #canvasPeriods { z-index: 50; }
+    /* Κουμπιά */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -59,9 +63,7 @@
       cursor: pointer;
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
     }
-    /* ------------------------------------------
-       Προσθήκη styles για Info Panels και Balloon Tooltip
-    ------------------------------------------ */
+    /* Styles για Info Panels και Balloon Tooltip */
     #infoPanelExpanded, #infoPanelCollapsed {
       background: #fff;
       border: 2px solid #333;
@@ -110,7 +112,7 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Info Panels για πληροφορίες (δανεισμένες από ALLtoDOM1) -->
+  <!-- Info Panels για πληροφορίες (δανεισμένα από ALLtoDOM1) -->
   <div id="infoPanelExpanded"></div>
   <div id="infoPanelCollapsed"></div>
 
@@ -132,7 +134,7 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    // currentMode: "expanded" για την πλήρη εμφάνιση (Συμπλήρωσε), "start" για τη διαδικασία Επόμενο
+    // currentMode: "expanded" για την πλήρη εμφάνιση, "start" για τη διαδικασία Επόμενο
     let currentMode = "expanded";
     let currentZ = 0;
     let extraElements = {};
@@ -141,11 +143,9 @@
 
     /***************************************
      * Offscreen Canvas για Color Picking
-     * (Δεν εμφανίζεται στον χρήστη)
     ***************************************/
     let pickingCanvas = document.createElement('canvas');
     let pickingCtx = pickingCanvas.getContext('2d');
-    // Map που συσχετίζει το μοναδικό χρώμα με το στοιχείο (βάσει του number)
     let pickingMap = {};
 
     // Παράγει μοναδικό RGB χρώμα για κάθε στοιχείο (υποθέτουμε elementNumber ≤ 255)
@@ -356,7 +356,7 @@
       });
     }
 
-    // Κλικ στον background καμβά χρησιμοποιώντας το Color Picking
+    // Χειριστής κλικ στον background καμβά μέσω Color Picking
     function onTableClick(event) {
       let bg = document.getElementById("canvasTableBackground");
       let rect = bg.getBoundingClientRect();
@@ -374,7 +374,6 @@
 
     /***************************************
      * Balloon Tooltip
-     * Εμφάνιση πληροφοριών του στοιχείου σε ένα tooltip
     ***************************************/
     function showBalloon(element) {
       let balloon = document.getElementById("balloonTooltip");
@@ -392,9 +391,7 @@
     }
 
     /***************************************
-     * Info Panels
-     * Ενημέρωση των πινάκων πληροφοριών για το επιλεγμένο στοιχείο.
-     * Για το "Συμπλήρωσε" χρησιμοποιούμε την expanded μορφή.
+     * Info Panels (μόνο για λειτουργία "Συμπλήρωσε")
     ***************************************/
     function updateInfo(clickedZ) {
       let infoPanel = document.getElementById("infoPanelExpanded");
@@ -416,8 +413,11 @@
     }
 
     /***************************************
-     * Event Listeners για τα κουμπιά
+     * Event Listeners για κουμπιά
     ***************************************/
+    // "Συμπλήρωσε": Λειτουργεί όπως πριν, αλλά τώρα
+    // ανεβάζουμε το z-index του background (πίνακας χρωμάτων) ώστε να αντιλαμβάνεται το κλικ
+    // και ενημερώνουμε το info panel (expanded) και το picking canvas
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
@@ -425,12 +425,14 @@
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       updateAll();
+      // Ανεβάζουμε το z-index του canvasTableBackground για να "πιάνει" τα κλικ
+      document.getElementById("canvasTableBackground").style.zIndex = "100";
       document.getElementById('toggleFBlock').disabled = false;
       console.log("FillAll: currentZ set to", currentZ);
-      // Ενημέρωση info panel για το στοιχείο με currentZ
       updateInfo(currentZ);
     });
 
+    // "Επόμενο": Διαδικασία "start" (ακολουθεί την αρχική λογική συμπλήρωσης)
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
@@ -447,7 +449,7 @@
           else if (postFillingStep === 2) extraElements["2"] = true;
           else if (postFillingStep === 3) {
             showPeriods = true;
-            // Ενσωμάτωση καμβά περιόδων εάν χρειαστεί
+            // Ενσωμάτωση καμβά περιόδων αν απαιτείται
           } else if (postFillingStep === 4) {
             document.getElementById('fillAll').click();
             return;
@@ -458,6 +460,7 @@
       console.log("Start mode: currentZ =", currentZ, "postFillingStep =", postFillingStep);
     });
 
+    // "Σύμπτυξε/Ανάπτυξε": Εναλλαγή μεταξύ expanded και collapsed (δεν επηρεάζει τη λειτουργία "Συμπλήρωσε" εδώ)
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       if (isCollapsed) {
@@ -474,12 +477,13 @@
       updateAll();
     });
 
+    // "Reset": Επαναφορά της σελίδας
     document.getElementById('reset').addEventListener('click', function() {
       location.reload();
     });
 
     /***************************************
-     * Φόρτωση Δεδομένων: elements και positions από τα αντίστοιχα JSON
+     * Φόρτωση δεδομένων: elements και positions από τα JSON αρχεία
     ***************************************/
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
