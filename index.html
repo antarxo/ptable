@@ -80,7 +80,6 @@
 
   <!-- Κουμπιά: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
   <div id="buttonPanel">
-    <!-- Το κουμπί "Επόμενο" δεν είναι πια disabled, ώστε να ξεκινάει τη διαδικασία ανεξάρτητα -->
     <button id="nextState">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
     <button id="toggleFBlock" disabled>Σύμπτυξε</button>
@@ -95,15 +94,29 @@
     let currentMode = "expanded"; // αρχική διάταξη
     let currentZ = 0;            // αρχική τιμή για τη σειρά των στοιχείων
 
-    // Υπολογισμός δεξιού ορίου για το δοσμένο block στην τρέχουσα διάταξη
+    // Συνάρτηση για υπολογισμό ορίων (min/max) για όλα τα εμφανιζόμενα στοιχεία στη διάταξη "start"
+    function computeVisibleLimits() {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      elements.forEach(e => {
+        let num = Number(e.number);
+        if (num >= 3 && num <= currentZ) {
+          let pos = positions[currentMode][e.number];
+          if (pos) {
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, pos.y);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, pos.y + pos.height);
+          }
+        }
+      });
+      if (minX === Infinity) return null;
+      return { minX, minY, maxX, maxY };
+    }
+
+    // Υπολογισμός δεξιού ορίου για συγκεκριμένο block (για expanded/collapsed)
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
-        // Σε διάταξη "start" εμφανίζουμε μόνο τα στοιχεία με αριθμό από 3 έως currentZ
-        if (currentMode === "start") {
-          let num = Number(e.number);
-          if (num < 3 || num > currentZ) return;
-        }
         let pos = positions[currentMode][e.number];
         if (pos) {
           maxX = Math.max(maxX, pos.x + pos.width);
@@ -112,14 +125,10 @@
       return maxX;
     }
 
-    // Υπολογισμός κάτω ορίου για το δοσμένο block στην τρέχουσα διάταξη
+    // Υπολογισμός κάτω ορίου για συγκεκριμένο block (για expanded/collapsed)
     function computeBottomLimit(block) {
       let maxY = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
-        if (currentMode === "start") {
-          let num = Number(e.number);
-          if (num < 3 || num > currentZ) return;
-        }
         let pos = positions[currentMode][e.number];
         if (pos) {
           maxY = Math.max(maxY, pos.y + pos.height);
@@ -128,25 +137,28 @@
       return maxY;
     }
 
-    // Ενημέρωση του background canvas με margin 20px ώστε να περιβάλλει μόνο τα εμφανιζόμενα στοιχεία
+    // Ενημέρωση του background canvas ώστε να περιβάλλει τα εμφανιζόμενα στοιχεία με margin 20px.
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      let leftFixed = 17;
-      let topFixed = 55;
-      let rightLimit, bottomLimit;
-      
-      if (currentMode === "expanded" || currentMode === "collapsed") {
-        rightLimit = computeRightLimit("p") + 20;
-      } else if (currentMode === "start") {
-        rightLimit = computeRightLimit("f") + 20;
+      let margin = 20;
+      if (currentMode === "start") {
+        let limits = computeVisibleLimits();
+        if (limits) {
+          bg.style.left = (limits.minX - margin) + "px";
+          bg.style.top = (limits.minY - margin) + "px";
+          bg.style.width = (limits.maxX - limits.minX + 2 * margin) + "px";
+          bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
+        }
+      } else if (currentMode === "expanded" || currentMode === "collapsed") {
+        let leftFixed = 17;
+        let topFixed = 55;
+        let rightLimit = computeRightLimit("p") + margin;
+        let bottomLimit = computeBottomLimit("f") + margin;
+        bg.style.left = leftFixed + "px";
+        bg.style.top = topFixed + "px";
+        bg.style.width = (rightLimit - leftFixed) + "px";
+        bg.style.height = (bottomLimit - topFixed) + "px";
       }
-      
-      bottomLimit = computeBottomLimit("f") + 20;
-      
-      bg.style.left = leftFixed + "px";
-      bg.style.top = topFixed + "px";
-      bg.style.width = (rightLimit - leftFixed) + "px";
-      bg.style.height = (bottomLimit - topFixed) + "px";
       bg.style.opacity = "1";
     }
 
@@ -278,7 +290,7 @@
         container.innerHTML = "";
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
-          // Σε "start" εμφάνιση, φιλτράρουμε μόνο τα στοιχεία με αριθμό από 3 έως currentZ
+          // Στη διάταξη "start" εμφανίζονται μόνο τα στοιχεία με αριθμούς από 3 έως currentZ
           if (currentMode === "start") {
             let num = Number(e.number);
             if (num < 3 || num > currentZ) return;
@@ -331,19 +343,18 @@
 
     // --- Event Listeners ---
 
-    // "Συμπλήρωσε": Εκτελεί όλα τα γεμίσματα/μεταθέσεις και θέτει currentZ στο 123 ώστε να εμφανιστούν όλα τα στοιχεία.
+    // "Συμπλήρωσε": Ολοκληρώνει τη διαδικασία θέτοντας το currentZ σε 123 ώστε να εμφανιστούν όλα τα στοιχεία.
     document.getElementById('fillAll').addEventListener('click', function() {
       initializeBackgroundCanvas();
       initializeSectorsCanvas();       
       initializePeriodsCanvas();       
       initGroupsCanvases();
-      // Ολοκληρώνει τη διαδικασία θέτοντας currentZ πάνω από το 20
       currentZ = 123;
       document.getElementById('toggleFBlock').disabled = false;
       console.log("FillAll: currentZ set to", currentZ);
     });
 
-    // "Σύμπτυξε/Ανάπτυξε": Αλλάζει μεταξύ των διατάξεων expanded και collapsed.
+    // "Σύμπτυξε/Ανάπτυξε": Εναλλαγή μεταξύ των διατάξεων expanded και collapsed.
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
@@ -358,8 +369,7 @@
       });
     });
 
-    // "Επόμενο": Αν δεν είμαστε ήδη στη διάταξη "start" το πρώτο πάτημα θέτει currentZ=3 και εμφανίζει μόνο το στοιχείο 3.
-    // Με κάθε επόμενο πάτημα, εάν currentZ < 20, προστίθεται ένα επιπλέον στοιχείο και ανανεώνεται το background.
+    // "Επόμενο": Στη διάταξη "start" το πρώτο πάτημα θέτει currentZ=3 και με κάθε επόμενο προστίθεται ένα στοιχείο (μέχρι το 20)
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
