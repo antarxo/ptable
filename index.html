@@ -22,12 +22,12 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas */
+    /* Background canvas με ίδια σκίαση με τα κελιά */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
       border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 3px 3px rgba(0,0,0,0.2); 
+      box-shadow: 4px 4px 4px rgba(0,0,0,0.5); 
       z-index: -10;
       opacity: 1;
       transition: all 0.5s ease-in-out;
@@ -254,12 +254,12 @@
         };
       });
       
-      // Προσαρμογή θέσεων των καμβάδων ομάδων βάσει του τρέχοντος mode
+      // Προσαρμογή θέσεων των καμβάδων ομάδων βάσει του τρέχοντος mode,
+      // ανεβάζοντας τις θέσεις κατά 2 επιπλέον pixels
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        // Μετακίνηση 42 pixels πάνω από την αρχική θέση, επιπλέον αφαιρούμε 2 για να ανέβουν ψηλότερα
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
