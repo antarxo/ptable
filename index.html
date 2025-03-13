@@ -115,11 +115,7 @@
     // Αρχική κατάσταση: mode "start" με currentZ = 3 ώστε να εμφανίζεται τουλάχιστον το στοιχείο 3
     let currentMode = "start";
     let currentZ = 3;
-    // Οι μεταβλητές postFillingStep, extraElements και showPeriods χρησιμοποιούνταν στο αρχικό code για post filling,
-    // αλλά σύμφωνα με την απαίτηση το "Επόμενο" δεν θα λειτουργεί μετά το 122.
-    let postFillingStep = 0;
-    let extraElements = {};
-    let showPeriods = false;
+    // Οι μεταβλητές postFillingStep, extraElements και showPeriods δεν χρησιμοποιούνται πλέον
     let cellSize = 40; // Μέγεθος κάθε κελιού
 
     // Global object για αποθήκευση των ενημερωμένων θέσεων των κελιών για το hit-testing
@@ -155,38 +151,20 @@
       return 0;
     }
     
-    // Υπολογισμός ορίου δεξιάς και κάτω εμφάνισης (για expanded/collapsed mode)
-    function computeRightLimit(block) {
-      let maxX = -Infinity;
-      elements.filter(e => e.block === block).forEach(e => {
-        let pos = positions[currentMode][e.number] || ((e.number == "1" || e.number == "2") ? positions["start"][e.number] : null);
-        if (pos) maxX = Math.max(maxX, pos.x + pos.width);
-      });
-      return maxX;
-    }
-    function computeBottomLimit(block) {
-      let maxY = -Infinity;
-      elements.filter(e => e.block === block).forEach(e => {
-        let pos = positions[currentMode][e.number] || ((e.number == "1" || e.number == "2") ? positions["start"][e.number] : null);
-        if (pos) maxY = Math.max(maxY, pos.y + pos.height);
-      });
-      return maxY;
-    }
-    
-    // Υπολογισμός του bounding box για τα εμφανιζόμενα στοιχεία
+    // Υπολογισμός του bounding box για όλα τα εμφανιζόμενα στοιχεία (χωρίς να διαχωρίζουμε τα blocks)
     function computeModeRegion() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
         let num = Number(e.number);
         if (currentMode === "start") {
-          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          if ((num < 3) || num > currentZ) return;
         }
-        let pos = positions[currentMode][e.number] || ((e.number == "1" || e.number == "2") ? positions["start"][e.number] : null);
+        let pos = positions[currentMode][e.number] || ( (e.number === "1" || e.number === "2") ? positions["start"][e.number] : null );
         if (pos) {
-          let x = pos.x, y = pos.y;
-          if (currentMode === "start" && (e.block === "p" || e.block === "d"))
+          let x = pos.x;
+          let y = pos.y;
+          if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
             x += getShiftContainer(e.block);
-          if (currentMode === "start") {
             if (e.block === "p" && num >= 21 && num <= 30)
               y += getShift(num, e.block);
             else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
@@ -201,24 +179,22 @@
       return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
 
-    // Συνάρτηση για δυναμική ενημέρωση θέσεων κελιών (για hit-testing)
+    // Συνάρτηση για ενημέρωση θέσεων κελιών (για hit-testing)
     function updateCellsPositions() {
       currentCellPositions = {};
       elements.forEach(e => {
-        let pos = positions[currentMode][e.number] || ((e.number == "1" || e.number == "2") ? positions["start"][e.number] : null);
+        let pos = positions[currentMode][e.number] || ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
         if (!pos) return;
-        let offsetX = 0;
-        let offsetY = 0;
+        let offsetX = 0, offsetY = 0;
         if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
           offsetX = getShiftContainer(e.block);
         }
         let num = Number(e.number);
         if (currentMode === "start") {
-          if (e.block === "p" && num >= 21 && num <= 30) {
+          if (e.block === "p" && num >= 21 && num <= 30)
             offsetY = getShift(num, e.block);
-          } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
+          else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
             offsetY = getShift(num, e.block);
-          }
         }
         currentCellPositions[e.number] = {
           x: pos.x + offsetX,
@@ -227,11 +203,10 @@
           height: pos.height
         };
       });
-      // Ενημέρωση του πίνακα "χρωμάτων" στο HTML
       updateColorTable();
     }
 
-    // Συνάρτηση ενημέρωσης πίνακα "χρωμάτων"
+    // Συνάρτηση ενημέρωσης του πίνακα "χρωμάτων" στο HTML
     function updateColorTable() {
       let tableDiv = document.getElementById("colorTable");
       let html = "<h4>Πίνακας Χρωμάτων</h4><ul>";
@@ -243,7 +218,7 @@
       tableDiv.innerHTML = html;
     }
 
-    // Υπολογισμός bounding box με τις ενημερωμένες θέσεις
+    // Υπολογισμός bounding box με βάση τις ενημερωμένες θέσεις
     function computeModeRegionUpdated() {
       let keys = Object.keys(currentCellPositions);
       if (keys.length === 0) return null;
@@ -258,22 +233,28 @@
       return { minX, minY, maxX, maxY };
     }
     
+    // Ενημέρωση του background με margin 20px σε όλες τις πλευρές,
+    // με left σταθερό στο 17px.
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
       if (currentMode === "start") {
         let limits = computeModeRegion();
         if (limits) {
-          bg.style.left = "17px"; // left σταθερό
+          // left σταθερό στο 17px, όμως υπολογίζουμε το υπόλοιπο από τα όρια
+          bg.style.left = "17px";
           bg.style.top = (limits.minY - margin) + "px";
-          let rightLimit = computeRightLimit("p") + margin;
-          bg.style.width = (rightLimit - 17) + "px";
+          // Το width υπολογίζεται ως: (maxX - minX) + (minX - 17) + margin
+          let width = (limits.maxX - limits.minX) + (limits.minX - 17) + margin;
+          bg.style.width = width + "px";
           bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
         }
       } else if (currentMode === "expanded" || currentMode === "collapsed") {
         let leftFixed = 17, topFixed = 55;
-        let rightLimit = computeRightLimit("p") + margin;
-        let bottomLimit = computeBottomLimit("f") + margin;
+        let margin = 20;
+        // Σε αυτές τις λειτουργίες υπολογίζουμε από τα όρια του block "f" (ή χρησιμοποιούμε computeBottomLimit)
+        let rightLimit = computeModeRegion().maxX + margin;
+        let bottomLimit = computeModeRegion().maxY + margin;
         bg.style.left = leftFixed + "px";
         bg.style.top = topFixed + "px";
         bg.style.width = (rightLimit - leftFixed) + "px";
@@ -408,9 +389,9 @@
         elements.filter(e => e.block === block).forEach(e => {
           let num = Number(e.number);
           if (currentMode === "start") {
-            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+            if (num < 3 || num > currentZ) return;
           }
-          let pos = positions[currentMode][e.number] || ((e.number == "1" || e.number == "2") ? positions["start"][e.number] : null);
+          let pos = positions[currentMode][e.number] || ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
           if (pos) {
             let yForMin = pos.y, yForMax = pos.y;
             if (currentMode === "start") {
@@ -441,15 +422,15 @@
       });
     }
     
-    // Διορθωμένη συνάρτηση drawElements με p.textAlign ώστε οι αριθμοί να είναι στοιχισμένοι στο κέντρο
+    // Συνάρτηση drawElements ώστε οι αριθμοί να είναι στοιχισμένοι στο κέντρο
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
         let num = Number(e.number);
         if (currentMode === "start") {
-          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          if (num < 3 || num > currentZ) return;
         }
-        let pos = positions[currentMode][e.number] || ((e.number == "1" || e.number == "2") ? positions["start"][e.number] : null);
+        let pos = positions[currentMode][e.number] || ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
         if (pos) {
           let relativeX = pos.x - containerLeft;
           let relativeY = pos.y - containerTop;
@@ -470,7 +451,7 @@
       });
     }
     
-    // Καταγραφή και hit-testing στο κέντρο της τρέχουσας περιοχής
+    // Hit-testing στο κέντρο της τρέχουσας περιοχής
     function logHitTestCenter() {
       let region = computeModeRegionUpdated();
       if (region) {
@@ -481,10 +462,9 @@
       }
     }
     
-    // Event listener για το κουμπί "Συμπλήρωσε" (προβάλλει πλήρη εμφάνιση)
+    // Κουμπί "Συμπλήρωσε": Μεταβαίνουμε στην expanded κατάσταση (currentZ=123)
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
-      // Εδώ μεταβαίνουμε στην expanded κατάσταση (π.χ. full εμφάνιση)
       currentMode = "expanded";
       currentZ = 123;
       initializeBackgroundCanvas();
@@ -497,7 +477,7 @@
       logHitTestCenter();
     });
     
-    // Event listener για το κουμπί "Σύμπτυξε/Ανάπτυξε"
+    // Κουμπί "Σύμπτυξε/Ανάπτυξε"
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
@@ -515,45 +495,31 @@
       logHitTestCenter();
     });
     
-    // Event listener για το κουμπί "Επόμενο"
+    // Κουμπί "Επόμενο": Λειτουργεί μόνο όταν είμαστε σε κατάσταση "start" και μόνο μέχρι το currentZ να φτάσει στο 122.
     document.getElementById('nextState').addEventListener('click', function() {
-      // Στην κατάσταση "start" το "Επόμενο" λειτουργεί μόνο μέχρι το currentZ να φτάσει το 122
-      if (currentMode === "start") {
-        if (currentZ < 122) {
-          currentZ++;
-          initializeBackgroundCanvas();
-          initializeSectorsCanvas();
-          updateCellsPositions();
-          logHitTestCenter();
-        } else {
-          console.log("Το 'Επόμενο' δεν λειτουργεί μετά το 122. Παρακαλώ κάντε Reset.");
-        }
-      } else {
-        // Αν δεν είμαστε σε "start", επαναφέρουμε την αρχική κατάσταση
-        currentMode = "start";
-        currentZ = 3;
-        postFillingStep = 0;
-        extraElements = {};
-        showPeriods = false;
+      if (currentMode !== "start") {
+        console.log("Το κουμπί 'Επόμενο' λειτουργεί μόνο στην κατάσταση 'start'. Κάντε Reset για επαναφορά.");
+        return;
+      }
+      if (currentZ < 122) {
+        currentZ++;
         initializeBackgroundCanvas();
         initializeSectorsCanvas();
         updateCellsPositions();
         logHitTestCenter();
+      } else {
+        console.log("Το 'Επόμενο' δεν λειτουργεί μετά το 122. Παρακαλώ κάντε Reset.");
       }
     });
     
-    // Event listener για το κουμπί "Reset"
+    // Κουμπί "Reset": Πλήρης επαναφορά της εφαρμογής
     document.getElementById('reset').addEventListener('click', function() {
-      // Επαναφορά όλων των μεταβλητών στην αρχική κατάσταση και ανανέωση της σελίδας
       currentMode = "start";
       currentZ = 3;
-      postFillingStep = 0;
-      extraElements = {};
-      showPeriods = false;
       location.reload();
     });
     
-    // Ενημερωμένη συνάρτηση hit-testing χρησιμοποιώντας τις ενημερωμένες θέσεις
+    // Hit-testing με χρήση των ενημερωμένων θέσεων
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
