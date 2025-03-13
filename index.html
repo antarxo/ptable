@@ -90,14 +90,17 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    let currentMode = "expanded"; // αρχική διάταξη
-    let currentZ = 0;            // αρχική τιμή για τη σειρά εμφάνισης
-    // Βοηθητική συνάρτηση για τον υπολογισμό του offset για το block p στη διάταξη "start"
+    // Αρχική διάταξη: expanded για την πλήρη (fillAll) εμφάνιση
+    let currentMode = "expanded";
+    // currentZ χρησιμοποιείται μόνο στη διαδικασία "start"
+    let currentZ = 0;            
+
+    // Βοηθητική συνάρτηση για τον υπολογισμό του shift για το block p στη διάταξη "start"
     function getPOffset() {
       return (currentMode === "start" && currentZ > 20) ? (currentZ - 20) * 42 : 0;
     }
 
-    // Υπολογισμός ορίων (min/max) για όλα τα εμφανιζόμενα στοιχεία στη διάταξη "start"
+    // Αν είμαστε στη "start", υπολογίζουμε τα όρια (min/max) όλων των εμφανιζόμενων στοιχείων (αριθμοί 3 έως currentZ).
     function computeVisibleLimits() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       let offset = getPOffset();
@@ -106,9 +109,9 @@
         if (num >= 3 && num <= currentZ) {
           let pos = positions[currentMode][e.number];
           if (pos) {
-            // Εάν το στοιχείο ανήκει στο block p και έχει αριθμό ≥ 21, προσθέτουμε το offset
             let y = pos.y;
-            if (currentMode === "start" && e.block === "p" && num >= 21) {
+            // Εάν το στοιχείο ανήκει στο block p και είναι ≥21, προσθέτουμε το offset
+            if (e.block === "p" && num >= 21) {
               y += offset;
             }
             minX = Math.min(minX, pos.x);
@@ -122,7 +125,7 @@
       return { minX, minY, maxX, maxY };
     }
 
-    // Για τις διατάξεις expanded/collapsed, οι συναρτήσεις αυτές παραμένουν ως έχουν.
+    // Για expanded/collapsed διατάξεις, οι παρακάτω συναρτήσεις παραμένουν ως είχαν.
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -297,13 +300,13 @@
         container.innerHTML = "";
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
-          // Στη διάταξη "start" εμφανίζονται μόνο τα στοιχεία με αριθμούς από 3 έως currentZ
           let num = Number(e.number);
+          // Στη διάταξη "start" εμφανίζονται μόνο τα στοιχεία με αριθμούς 3 έως currentZ
           if (currentMode === "start" && (num < 3 || num > currentZ)) return;
           let pos = positions[currentMode][e.number];
           if (pos) {
             let y = pos.y;
-            // Αν πρόκειται για το block p και το στοιχείο έχει αριθμό ≥ 21, προσθέτουμε το offset
+            // Για το block p στη διάταξη "start" και για στοιχεία ≥ 21, προσθέτουμε το offset
             if (currentMode === "start" && block === "p" && num >= 21) {
               y += getPOffset();
             }
@@ -315,12 +318,7 @@
         });
         if (minX === Infinity || minY === Infinity) return;
         container.style.left = minX + "px";
-        // Για το block p στη διάταξη start, ορίζουμε το top με το offset
-        if (currentMode === "start" && block === "p") {
-          container.style.top = (minY) + "px";
-        } else {
-          container.style.top = minY + "px";
-        }
+        container.style.top = minY + "px";
         container.style.width = (maxX - minX) + "px";
         container.style.height = (maxY - minY) + "px";
         new p5(function(p) {
@@ -343,7 +341,7 @@
         if (pos) {
           let relativeX = pos.x - containerLeft;
           let relativeY = pos.y;
-          // Για το block p και στοιχεία με αριθμό ≥ 21 στη διάταξη start, προσθέτουμε το offset
+          // Για το block p στη "start" και για στοιχεία ≥ 21, προσθέτουμε το offset
           if (currentMode === "start" && block === "p" && num >= 21) {
             relativeY += getPOffset();
           }
@@ -361,16 +359,17 @@
 
     // --- Event Listeners ---
 
-    // "Συμπλήρωσε": Ανεξάρτητη ολοκλήρωση – ξεχνάμε κάθε ενδιάμεσο, εξαφανίζουμε τα προηγούμενα και καλούμε τη fillAll (το αποτέλεσμα είναι μόνο expanded).
+    // "Συμπλήρωσε": Μόλις πατηθεί, αγνοούνται όλα τα προηγούμενα (η διαδικασία "start") και εμφανίζεται αποκλειστικά το τελικό αποτέλεσμα.
     document.getElementById('fillAll').addEventListener('click', function() {
+      // Αλλαγή διάταξης σε expanded και επαναφορά της διαδικασίας
+      currentMode = "expanded";
+      currentZ = 123;
       initializeBackgroundCanvas();
       initializeSectorsCanvas();       
       initializePeriodsCanvas();       
       initGroupsCanvases();
-      // Ολοκληρώνουμε τη διαδικασία θέτοντας currentZ σε μια τιμή >30 (π.χ. 123)
-      currentZ = 123;
       document.getElementById('toggleFBlock').disabled = false;
-      console.log("FillAll: currentZ set to", currentZ);
+      console.log("FillAll: currentZ set to", currentZ, "- πλήρης εμφάνιση (expanded)");
     });
 
     // "Σύμπτυξε/Ανάπτυξε": Εναλλαγή μεταξύ των διατάξεων expanded και collapsed.
@@ -389,16 +388,14 @@
     });
 
     // "Επόμενο": Στη διάταξη "start" η διαδικασία έχει δύο φάσεις:
-    // (α) Για currentZ < 20, κάθε πάτημα αυξάνει το currentZ κατά 1 (εμφάνιση στοιχείων 3 έως 20).
-    // (β) Για currentZ ≥ 20 και μικρότερο του 30, κάθε πάτημα μετατοπίζει τον καμβά του block p κατά 42 και εμφανίζει το επόμενο στοιχείο (21 έως 30).
+    // 1. Αν currentZ < 20, κάθε πάτημα αυξάνει το currentZ κατά 1 (εμφάνιση στοιχείων 3 έως 20) χωρίς shift.
+    // 2. Μετά το 20 (μέχρι 30), κάθε πάτημα αυξάνει το currentZ κατά 1 και εφαρμόζεται shift στον block p.
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
         currentZ = 3;
       } else {
-        if (currentZ < 20) {
-          currentZ++;
-        } else if (currentZ < 30) {
+        if (currentZ < 30) {
           currentZ++;
         }
       }
