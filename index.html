@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Κώδικας με Περιορισμένο Hit Testing</title>
+  <title>Περιοδικός Πίνακας - Κώδικας με Περιορισμένο Hit Testing Ανάλογα με Mode</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -96,14 +96,14 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    let currentMode = "expanded";
+    let currentMode = "expanded";  // Μπορεί να είναι "expanded", "collapsed" ή "start"
     let currentZ = 0;
     let extraElements = {};
     let postFillingStep = 0;
     let showPeriods = false;
     let cellSize = 40; // Μέγεθος κάθε κελιού
 
-    // Βασικές συναρτήσεις (από τον αρχικό κώδικα)
+    // Βασικές συναρτήσεις για μετατοπίσεις (από τον αρχικό κώδικα)
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -133,11 +133,15 @@
       return 0;
     }
     
-    function computeNextBgDimensions() {
+    // Συνάρτηση για τον υπολογισμό της περιοχής (bounding box) των εμφανιζόμενων στοιχείων ανά mode.
+    function computeModeRegion() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
         let num = Number(e.number);
-        if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+        // Στο "start" mode εφαρμόζουμε το φίλτρο εμφάνισης, ενώ στα άλλα mode θεωρούμε ότι όλα τα στοιχεία με θέση είναι εμφανή.
+        if (currentMode === "start") {
+          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+        }
         let pos = positions[currentMode][e.number];
         if (pos) {
           let x = pos.x, y = pos.y;
@@ -154,31 +158,14 @@
           maxY = Math.max(maxY, y + pos.height);
         }
       });
-      return { minX, minY, maxX, maxY };
-    }
-    
-    function computeRightLimit(block) {
-      let maxX = -Infinity;
-      elements.filter(e => e.block === block).forEach(e => {
-        let pos = positions[currentMode][e.number];
-        if (pos) maxX = Math.max(maxX, pos.x + pos.width);
-      });
-      return maxX;
-    }
-    function computeBottomLimit(block) {
-      let maxY = -Infinity;
-      elements.filter(e => e.block === block).forEach(e => {
-        let pos = positions[currentMode][e.number];
-        if (pos) maxY = Math.max(maxY, pos.y + pos.height);
-      });
-      return maxY;
+      return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
     
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
       if (currentMode === "start") {
-        let limits = computeNextBgDimensions();
+        let limits = computeModeRegion();
         if (limits) {
           bg.style.left = (limits.minX - margin) + "px";
           bg.style.top = (limits.minY - margin) + "px";
@@ -322,7 +309,9 @@
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.filter(e => e.block === block).forEach(e => {
           let num = Number(e.number);
-          if (currentMode === "start" && ((num < 3 && !extraElements[num]) || num > currentZ)) return;
+          if (currentMode === "start") {
+            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          }
           let pos = positions[currentMode][e.number];
           if (pos) {
             let yForMin = pos.y, yForMax = pos.y;
@@ -359,7 +348,9 @@
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
         let num = Number(e.number);
-        if (currentMode === "start" && ((num < 3 && !extraElements[num]) || num > currentZ)) return;
+        if (currentMode === "start") {
+          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+        }
         let pos = positions[currentMode][e.number];
         if (pos) {
           let relativeX = pos.x - containerLeft;
@@ -438,33 +429,33 @@
       location.reload();
     });
     
-    // Η νέα συνάρτηση hit-testing με περιορισμό στο region των στοιχείων
+    // Η νέα συνάρτηση hit-testing που λαμβάνει υπόψη την περιοχή για το τρέχον mode.
     function performHitTest(x, y) {
-      // Υπολογισμός του bounding box για τα στοιχεία
-      let bbox = computeNextBgDimensions();
-      if (!bbox) {
-        console.log("Δεν υπάρχουν στοιχεία για hit testing.");
-        return;
+      let region = computeModeRegion();
+      if (!region) {
+         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
+         return;
       }
-      let regionLeft = bbox.minX, regionTop = bbox.minY;
-      let regionWidth = bbox.maxX - bbox.minX, regionHeight = bbox.maxY - bbox.minY;
+      let regionLeft = region.minX, regionTop = region.minY;
+      let regionWidth = region.maxX - region.minX, regionHeight = region.maxY - region.minY;
       
-      // Έλεγχος: αν το κλικ είναι εκτός του region
-      if (x < regionLeft || x > bbox.maxX || y < regionTop || y > bbox.maxY) {
+      // Έλεγχος: αν το κλικ γίνεται εκτός της περιοχής των στοιχείων, αγνόησέ το.
+      if (x < regionLeft || x > region.maxX || y < regionTop || y > region.maxY) {
          console.log("Κλικ εκτός περιοχής στοιχείων.");
          return;
       }
-      // Μετατροπή συντεταγμένων σε σχετικές προς το region
+      
+      // Μετατροπή σε σχετικές συντεταγμένες
       let relX = x - regionLeft, relY = y - regionTop;
       
-      // Ετοιμασία offscreen canvas: ορισμός διαστάσεων στο region
+      // Ενημέρωση του offscreen canvas ώστε να έχει διαστάσεις ίδιες με το region
       let offCanvas = document.getElementById("offscreenCanvas");
       offCanvas.width = regionWidth;
       offCanvas.height = regionHeight;
       let offCtx = offCanvas.getContext("2d");
       offCtx.clearRect(0, 0, regionWidth, regionHeight);
       
-      // Σχεδίαση των κελιών με μοναδικά χρώματα, μετατοπισμένα ώστε η πάνω-αριστερή γωνία είναι (0,0)
+      // Σχεδίαση των κελιών με μοναδικά χρώματα (με μετατόπιση ώστε το region να ξεκινά από το 0,0)
       elements.forEach(e => {
         let pos = positions[currentMode][e.number];
         if (pos) {
@@ -480,15 +471,14 @@
       
       let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
       if (pixel[3] === 0) {
-         console.log("Δεν ανιχνεύτηκε στοιχείο με color picking στο σημείο (" + x + ", " + y + ").");
+         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
       } else {
          console.log("Color Picking: Pixel at (" + x + ", " + y + ") =", pixel);
       }
       
-      // Άμεσος υπολογισμός γραμμής/στήλης, θεωρώντας ότι το grid έχει αρχή στο region
-      let offsetX = regionLeft, offsetY = regionTop;
-      let col = Math.floor((x - offsetX) / cellSize);
-      let row = Math.floor((y - offsetY) / cellSize);
+      // Direct calculation: υπολογισμός γραμμής/στήλης σχετικής με την περιοχή των στοιχείων
+      let col = Math.floor((x - regionLeft) / cellSize);
+      let row = Math.floor((y - regionTop) / cellSize);
       console.log("Direct Calculation: Row =", row, "Col =", col);
     }
     
