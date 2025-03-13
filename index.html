@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Απολύτως από JSON</title>
+  <title>Περιοδικός Πίνακας - Απόλυτα από JSON</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -82,10 +82,9 @@
     let isCollapsed = false;
     let currentMode = "expanded";
 
-    // Αρχική διαμόρφωση του background canvas (μπορείς να ενσωματώσεις τιμές και εδώ από το JSON αν υπάρχουν)
+    // Αρχική διαμόρφωση του background canvas
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
-      // Σε αυτή την έκδοση ορίζουμε τις τιμές απευθείας, όμως μπορούν να αντληθούν και από JSON
       bg.style.left = "17px";
       bg.style.top = "55px";
       bg.style.width = "1412px";
@@ -158,12 +157,12 @@
         };
       });
       
-      // Τοποθέτηση των ομάδων σύμφωνα με τις τιμές από το JSON
+      // Τοποθέτηση των ομάδων σύμφωνα με τις τιμές από το JSON χωρίς πρόσθετη μετατόπιση
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
+        groupCanvas.style.top = positions[currentMode]["1"].y + "px";
       });
     }
 
@@ -240,7 +239,7 @@
       });
     }
 
-    // Event listeners: χωρίς κανέναν έλεγχο, όλα βασίζονται στις τιμές του JSON
+    // Event listeners: όλα βασίζονται αποκλειστικά στις τιμές του JSON
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
@@ -262,7 +261,7 @@
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = (positions[currentMode]["1"].y + 2) + "px";
+        groupCanvas.style.top = positions[currentMode]["1"].y + "px";
       });
     });
 
