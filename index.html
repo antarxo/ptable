@@ -89,13 +89,14 @@
     let currentMode = "expanded";
 
     // Διαμόρφωση του background canvas βάσει του mode.
-    // Το αριστερό όριο παραμένει 17px, ενώ το δεξί όριο υπολογίζεται ως το δεξί άκρο του p τομέα +20.
+    // Το αριστερό όριο παραμένει 17px, ενώ το δεξί όριο υπολογίζεται δυναμικά ως το δεξί άκρο του p τομέα +20.
+    // Για το "expanded" και "start" το ύψος είναι 368px, ενώ για το "collapsed" 468px.
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       bg.style.left = "17px";
       bg.style.top = "55px";
       
-      // Ορισμός ύψους βάσει mode:
+      // Ορισμός ύψους βάσει του mode:
       if (currentMode === "collapsed") {
         bg.style.height = "468px";
       } else {
@@ -109,10 +110,9 @@
       if (pCanvas && pCanvas.style.width) {
         let pLeft = parseInt(pCanvas.style.left) || 0;
         let pWidth = parseInt(pCanvas.style.width) || 0;
-        // Δεξί άκρο του p τομέα +20, αφαιρώντας το σταθερό αριστερό όριο (17px)
+        // Το δεξί άκρο του p τομέα +20, αφαιρώντας το σταθερό αριστερό όριο (17px)
         newWidth = (pLeft + pWidth + 20) - 17;
       } else {
-        // Fallback τιμές αν δεν έχει οριστεί ακόμα το pCanvas
         newWidth = (currentMode === "collapsed") ? 837 : 1412;
       }
       bg.style.width = newWidth + "px";
@@ -273,7 +273,7 @@
       });
     }
 
-    // Σχεδίαση στοιχείων βάσει των τιμών του JSON.
+    // Σχεδίαση στοιχείων βάσει του JSON.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -311,7 +311,6 @@
       currentMode = isCollapsed ? "collapsed" : "expanded";
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
-      // Αναπροσαρμογή των καμβάδων ομάδων:
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -320,11 +319,11 @@
       });
     });
 
-    // Νέο κουμπί για ενεργοποίηση του mode "start"
+    // Κουμπί "Επόμενο" που ενεργοποιεί το mode "start"
     document.getElementById('startMode').addEventListener('click', function() {
       currentMode = "start";
       isCollapsed = false;
-      // Επαναφορτώστε όλες τις διατάξεις βάσει του mode "start"
+      // Επαναφόρτωση όλων των στοιχείων βάσει του mode "start"
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       initializePeriodsCanvas();
