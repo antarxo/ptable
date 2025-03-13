@@ -96,15 +96,12 @@
     let currentZ = 0;            
 
     /* 
-      Η συνάρτηση getShift επιστρέφει το shift για κάθε στοιχείο στη διάταξη "start":
+      Συνάρτηση getShift:
       
-      • Για block "p" και στοιχεία 21–30: shift = (min(currentZ,30)-20)*42.
-      
-      • Για τα στοιχεία 57–70 (και στα blocks p και d): 
-          - Εάν currentZ < 70, shift = (currentZ-56)*42.
-          - Εάν currentZ ≥ 70, το shift παραμένει σταθερό στο (70-56)*42.
-      
-      Σε όλες τις άλλες περιπτώσεις επιστρέφει 0.
+      • Για το block "p" και στοιχεία 21–30: shift = (min(currentZ,30)-20)*42.
+      • Για τα στοιχεία 57–70 (και στα blocks p και d):
+           Εάν currentZ < 70, shift = (currentZ-56)*42.
+           Εάν currentZ ≥ 70, παραμένει σταθερό στο (70-56)*42.
     */
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
@@ -120,8 +117,7 @@
     }
 
     /* 
-      Η συνάρτηση getShiftContainer υπολογίζει την μετατόπιση (left offset) για τον container
-      των blocks που υπόκεινται σε μετατόπιση στη διάταξη "start".
+      Συνάρτηση getShiftContainer:
       
       Για block "p":
         - currentZ ≤ 20: 0.
@@ -161,38 +157,43 @@
       return 0;
     }
 
-    // Υπολογισμός ορίων (min/max) για τα ορατά στοιχεία (αριθμοί 3 έως currentZ).
-    // Εφαρμόζονται τα shift:
-    // • Για block "p" και στοιχεία 21–30.
-    // • Για blocks "p" και "d" και στοιχεία 57–70.
-    function computeVisibleLimits() {
+    /* 
+      Συνάρτηση computeNextBgDimensions:
+      
+      Υπολογίζει τις διαστάσεις (minX, minY, maxX, maxY) του background για τη διαδικασία "Επόμενο".
+      Αυτή η συνάρτηση διατρέχει όλα τα ορατά στοιχεία (αριθμοί από 3 έως currentZ) και λαμβάνει υπόψη:
+         - Τις προκαθορισμένες θέσεις (από το positions JSON)
+         - Τις μετατοπίσεις (shift) για τα συγκεκριμένα blocks και σειρές
+      Σε επόμενες ενημερώσεις, μπορεί να επεκταθεί ώστε να συμπεριλαμβάνει και τα καμβάδες περιόδων και ομάδων.
+    */
+    function computeNextBgDimensions() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
         let num = Number(e.number);
         if (num >= 3 && num <= currentZ) {
           let pos = positions[currentMode][e.number];
           if (pos) {
-            let yForMin = pos.y;
-            let yForMax = pos.y;
+            let x = pos.x;
+            let y = pos.y;
+            // Εφαρμόζουμε μετατοπίσεις για τη διάταξη "start"
             if (currentMode === "start") {
               if (e.block === "p" && num >= 21 && num <= 30) {
-                yForMax += getShift(num, e.block);
+                y += getShift(num, e.block);
               } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
-                yForMax += getShift(num, e.block);
+                y += getShift(num, e.block);
               }
             }
-            minX = Math.min(minX, pos.x);
-            minY = Math.min(minY, yForMin);
-            maxX = Math.max(maxX, pos.x + pos.width);
-            maxY = Math.max(maxY, yForMax + pos.height);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + pos.width);
+            maxY = Math.max(maxY, y + pos.height);
           }
         }
       });
-      if (minX === Infinity) return null;
       return { minX, minY, maxX, maxY };
     }
 
-    // Για τις διατάξεις expanded/collapsed: εύρεση ορίων δεξιάς και κάτω.
+    // Συνάρτηση για τις διατάξεις expanded/collapsed (απλά για τα όρια δεξιάς/κάτω)
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -215,21 +216,32 @@
     }
 
     /* 
-      Η νέα προσέγγιση για το background:
-      Αντί να βασιζόμαστε σε τιμές σταθερές για expanded/collapsed,
-      υπολογίζουμε τα όρια όλων των ορατών στοιχείων (3 έως currentZ)
-      και προσθέτουμε περιθώρια 20px. Έτσι, το background θα προσαρμόζεται 
-      δυναμικά τόσο σε πλάτος όσο και σε ύψος.
+      Νέα συνάρτηση initializeBackgroundCanvas:
+      
+      Για τη διαδικασία "Επόμενο" (currentMode === "start"), καλεί την computeNextBgDimensions()
+      ώστε να υπολογίσει το πλήρες bounding box των ορατών στοιχείων και προσθέτει περιθώρια 20px.
+      Έτσι το background θα αναπροσαρμόζεται δυναμικά τόσο σε ύψος όσο και σε πλάτος.
     */
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
-      let limits = computeVisibleLimits();
-      if (limits) {
-        bg.style.left = (limits.minX - margin) + "px";
-        bg.style.top = (limits.minY - margin) + "px";
-        bg.style.width = (limits.maxX - limits.minX + 2 * margin) + "px";
-        bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
+      if (currentMode === "start") {
+        let limits = computeNextBgDimensions();
+        if (limits) {
+          bg.style.left = (limits.minX - margin) + "px";
+          bg.style.top = (limits.minY - margin) + "px";
+          bg.style.width = (limits.maxX - limits.minX + 2 * margin) + "px";
+          bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
+        }
+      } else if (currentMode === "expanded" || currentMode === "collapsed") {
+        let leftFixed = 17;
+        let topFixed = 55;
+        let rightLimit = computeRightLimit("p") + margin;
+        let bottomLimit = computeBottomLimit("f") + margin;
+        bg.style.left = leftFixed + "px";
+        bg.style.top = topFixed + "px";
+        bg.style.width = (rightLimit - leftFixed) + "px";
+        bg.style.height = (bottomLimit - topFixed) + "px";
       }
       bg.style.opacity = "1";
     }
@@ -404,6 +416,7 @@
     }
 
     // Σχεδίαση στοιχείων για κάθε block, με εφαρμογή των shift στη διάταξη "start".
+    // Επίσης, οι ατομικοί αριθμοί εμφανίζονται στοιχιμένοι οριζόντια και κατακόρυφα (CENTER, CENTER).
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -476,6 +489,7 @@
           currentZ++;
         }
       }
+      // Επαναϋπολογισμός του background με τη νέα συνάρτηση computeNextBgDimensions()
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       ["S", "D", "P"].forEach(sector => {
