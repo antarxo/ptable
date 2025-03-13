@@ -90,7 +90,7 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    // Για πλήρη εμφάνιση (fillAll) αρχικά έχουμε expanded
+    // Αρχικά, για πλήρη εμφάνιση έχουμε expanded
     let currentMode = "expanded";
     // currentZ χρησιμοποιείται στη διάταξη "start"
     let currentZ = 0;            
@@ -98,10 +98,10 @@
     /* 
       Συνάρτηση getShift:
       
-      • Για το block "p" και στοιχεία 21–30: shift = (min(currentZ,30)-20)*42.
+      • Για block "p" και στοιχεία 21–30: shift = (min(currentZ,30)-20)*42.
       • Για τα στοιχεία 57–70 (και στα blocks p και d):
-           Εάν currentZ < 70, shift = (currentZ-56)*42.
-           Εάν currentZ ≥ 70, παραμένει σταθερό στο (70-56)*42.
+            Εάν currentZ < 70, shift = (currentZ-56)*42.
+            Εάν currentZ ≥ 70, παραμένει σταθερό στο (70-56)*42.
     */
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
@@ -160,11 +160,9 @@
     /* 
       Συνάρτηση computeNextBgDimensions:
       
-      Υπολογίζει τις διαστάσεις (minX, minY, maxX, maxY) του background για τη διαδικασία "Επόμενο".
-      Αυτή η συνάρτηση διατρέχει όλα τα ορατά στοιχεία (αριθμοί από 3 έως currentZ) και λαμβάνει υπόψη:
-         - Τις προκαθορισμένες θέσεις (από το positions JSON)
-         - Τις μετατοπίσεις (shift) για τα συγκεκριμένα blocks και σειρές
-      Σε επόμενες ενημερώσεις, μπορεί να επεκταθεί ώστε να συμπεριλαμβάνει και τα καμβάδες περιόδων και ομάδων.
+      Διατρέχει όλα τα ορατά στοιχεία (αριθμοί 3 έως currentZ) και υπολογίζει το συνολικό bounding box.
+      Τώρα, για κάθε στοιχείο, εκτός από την κατακόρυφη μετατόπιση (Y) που εφαρμόζεται με getShift,
+      προστίθεται επίσης και η οριζόντια μετατόπιση (shift) στα blocks p και d, μέσω της getShiftContainer.
     */
     function computeNextBgDimensions() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -175,7 +173,11 @@
           if (pos) {
             let x = pos.x;
             let y = pos.y;
-            // Εφαρμόζουμε μετατοπίσεις για τη διάταξη "start"
+            // Εφαρμογή οριζόντιας μετατόπισης στα blocks p και d
+            if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
+              x += getShiftContainer(e.block);
+            }
+            // Εφαρμογή κατακόρυφης μετατόπισης
             if (currentMode === "start") {
               if (e.block === "p" && num >= 21 && num <= 30) {
                 y += getShift(num, e.block);
@@ -193,7 +195,7 @@
       return { minX, minY, maxX, maxY };
     }
 
-    // Συνάρτηση για τις διατάξεις expanded/collapsed (απλά για τα όρια δεξιάς/κάτω)
+    // Συνάρτηση για τις διατάξεις expanded/collapsed (εύρεση ορίων δεξιάς και κάτω)
     function computeRightLimit(block) {
       let maxX = -Infinity;
       elements.filter(e => e.block === block).forEach(e => {
@@ -218,9 +220,8 @@
     /* 
       Νέα συνάρτηση initializeBackgroundCanvas:
       
-      Για τη διαδικασία "Επόμενο" (currentMode === "start"), καλεί την computeNextBgDimensions()
-      ώστε να υπολογίσει το πλήρες bounding box των ορατών στοιχείων και προσθέτει περιθώρια 20px.
-      Έτσι το background θα αναπροσαρμόζεται δυναμικά τόσο σε ύψος όσο και σε πλάτος.
+      Για τη διαδικασία "Επόμενο" (currentMode === "start") καλεί την computeNextBgDimensions
+      ώστε να υπολογίσει το συνολικό bounding box (με οριζόντια και κατακόρυφη μετατόπιση) και προσθέτει περιθώρια 20px.
     */
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
@@ -416,7 +417,7 @@
     }
 
     // Σχεδίαση στοιχείων για κάθε block, με εφαρμογή των shift στη διάταξη "start".
-    // Επίσης, οι ατομικοί αριθμοί εμφανίζονται στοιχιμένοι οριζόντια και κατακόρυφα (CENTER, CENTER).
+    // Οι αριθμοί στα κελιά στοιχίζονται κεντραρισμένα οριζόντια και κατακόρυφα.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -438,6 +439,7 @@
           p.fill(0);
           p.textSize(13);
           p.textStyle(p.BOLD);
+          p.textAlign(p.CENTER, p.CENTER);
           p.text(e.number, relativeX + pos.width/2, relativeY + pos.height/2);
         }
       });
@@ -478,7 +480,7 @@
     // • Αν δεν είμαστε ήδη στη "start", το πρώτο πάτημα θέτει currentZ = 3.
     // • Στη συνέχεια, κάθε πάτημα αυξάνει το currentZ κατά 1 μέχρι το 118.
     //    - Για στοιχεία 21–30 στο block p: εφαρμόζεται το αντίστοιχο shift.
-    //    - Για στοιχεία 57–70 στα blocks p και d: εφαρμόζεται ο συσσωρευμένος shift (για το p, προστίθεται και το shift των 21–30).
+    //    - Για στοιχεία 57–70 στα blocks p και d: εφαρμόζεται ο συσσωρευμένος shift.
     //    - Μετά το 81, η συμπλήρωση συνεχίζεται κανονικά χωρίς επιπλέον μετατοπίσεις.
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
@@ -489,7 +491,7 @@
           currentZ++;
         }
       }
-      // Επαναϋπολογισμός του background με τη νέα συνάρτηση computeNextBgDimensions()
+      // Επαναϋπολογισμός του background χρησιμοποιώντας την computeNextBgDimensions
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       ["S", "D", "P"].forEach(sector => {
