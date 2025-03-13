@@ -214,28 +214,22 @@
       return maxY;
     }
 
-    // Ενημέρωση του background ώστε να περιβάλλει τα ορατά στοιχεία με περιθώρια 20px.
-    // Υπολογίζεται από όλα τα ορατά στοιχεία (αριθμοί 3 έως currentZ) κάθε φορά.
+    /* 
+      Η νέα προσέγγιση για το background:
+      Αντί να βασιζόμαστε σε τιμές σταθερές για expanded/collapsed,
+      υπολογίζουμε τα όρια όλων των ορατών στοιχείων (3 έως currentZ)
+      και προσθέτουμε περιθώρια 20px. Έτσι, το background θα προσαρμόζεται 
+      δυναμικά τόσο σε πλάτος όσο και σε ύψος.
+    */
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
-      if (currentMode === "start") {
-        let limits = computeVisibleLimits();
-        if (limits) {
-          bg.style.left = (limits.minX - margin) + "px";
-          bg.style.top = (limits.minY - margin) + "px";
-          bg.style.width = (limits.maxX - limits.minX + 2 * margin) + "px";
-          bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
-        }
-      } else if (currentMode === "expanded" || currentMode === "collapsed") {
-        let leftFixed = 17;
-        let topFixed = 55;
-        let rightLimit = computeRightLimit("p") + margin;
-        let bottomLimit = computeBottomLimit("f") + margin;
-        bg.style.left = leftFixed + "px";
-        bg.style.top = topFixed + "px";
-        bg.style.width = (rightLimit - leftFixed) + "px";
-        bg.style.height = (bottomLimit - topFixed) + "px";
+      let limits = computeVisibleLimits();
+      if (limits) {
+        bg.style.left = (limits.minX - margin) + "px";
+        bg.style.top = (limits.minY - margin) + "px";
+        bg.style.width = (limits.maxX - limits.minX + 2 * margin) + "px";
+        bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
       }
       bg.style.opacity = "1";
     }
