@@ -96,28 +96,72 @@
     let currentZ = 0;            
 
     /* 
-      Η νέα συνάρτηση getPOffset εφαρμόζει το shift μόνο για στοιχεία του block "p"
-      με αριθμούς από 21 έως 30. Για στοιχεία ≥31, δεν επιστρέφει shift.
+      Συνάρτηση getShift: Επιστρέφει την τιμή του shift για ένα στοιχείο βάσει του block και του αριθμού του,
+      μόνο όταν είμαστε στη διάταξη "start".
+      
+      - Για block "p" και στοιχεία 21-30: shift = (min(currentZ,30)-20)*42.
+      - Για block "p" ή "d" και στοιχεία 57-80: shift = (min(currentZ,80)-56)*42.
+      Σε όλες τις άλλες περιπτώσεις επιστρέφει 0.
     */
-    function getPOffset(num) {
-      if (currentMode === "start" && num >= 21 && num <= 30) {
+    function getShift(num, block) {
+      if (currentMode !== "start") return 0;
+      if (block === "p" && num >= 21 && num <= 30) {
         let effectiveZ = Math.min(currentZ, 30);
         return (effectiveZ - 20) * 42;
       }
-      return 0;
-    }
-
-    // Χρησιμοποιείται για το container του block p στη διάταξη "start"
-    function getPOffsetContainer() {
-      if (currentMode === "start") {
-        let effectiveZ = Math.min(currentZ, 30);
-        return (effectiveZ > 20) ? (effectiveZ - 20) * 42 : 0;
+      if ((block === "p" || block === "d") && num >= 57 && num <= 80) {
+        let effective = Math.min(currentZ, 80);
+        return (effective - 56) * 42;
       }
       return 0;
     }
 
-    // Υπολογισμός ορίων για τα ορατά στοιχεία (αριθμοί 3 έως currentZ).
-    // Για το block p, αν το στοιχείο είναι από 21 έως 30 προστίθεται το shift.
+    /* 
+      Συνάρτηση getShiftContainer: Υπολογίζει το shift που θα προστεθεί στη θέση left του container
+      για τα blocks που υπόκεινται σε μετατόπιση στη διάταξη "start".
+      
+      Για το block "p":
+        - Αν currentZ <= 20: 0.
+        - Αν 20 < currentZ <= 30: shift = (currentZ - 20)*42.
+        - Αν 30 < currentZ <= 56: παραμένει το max shift της πρώτης φάσης (30-20)*42.
+        - Αν 56 < currentZ <= 80: shift = (currentZ - 56)*42.
+        - Αν currentZ > 80: το max shift για αυτήν τη φάση, δηλαδή (80-56)*42.
+      
+      Για το block "d":
+        - Αν currentZ < 57: 0.
+        - Αν 57 ≤ currentZ ≤ 80: shift = (currentZ - 56)*42.
+        - Αν currentZ > 80: max shift (80-56)*42.
+    */
+    function getShiftContainer(block) {
+      if (currentMode !== "start") return 0;
+      if (block === "p") {
+        if (currentZ <= 20) {
+          return 0;
+        } else if (currentZ <= 30) {
+          return (currentZ - 20) * 42;
+        } else if (currentZ <= 56) {
+          return (30 - 20) * 42;
+        } else if (currentZ <= 80) {
+          return (currentZ - 56) * 42;
+        } else {
+          return (80 - 56) * 42;
+        }
+      } else if (block === "d") {
+        if (currentZ < 57) {
+          return 0;
+        } else if (currentZ <= 80) {
+          return (currentZ - 56) * 42;
+        } else {
+          return (80 - 56) * 42;
+        }
+      }
+      return 0;
+    }
+
+    // Υπολογισμός ορίων (min/max) για τα ορατά στοιχεία (αριθμοί 3 έως currentZ).
+    // Εφαρμόζουμε shift:
+    // - Για block p και στοιχεία 21-30.
+    // - Για blocks p και d και στοιχεία 57-80.
     function computeVisibleLimits() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
@@ -127,8 +171,12 @@
           if (pos) {
             let yForMin = pos.y;
             let yForMax = pos.y;
-            if (e.block === "p" && num >= 21 && num <= 30) {
-              yForMax += getPOffset(num);
+            if (currentMode === "start") {
+              if (e.block === "p" && num >= 21 && num <= 30) {
+                yForMax += getShift(num, e.block);
+              } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 80) {
+                yForMax += getShift(num, e.block);
+              }
             }
             minX = Math.min(minX, pos.x);
             minY = Math.min(minY, yForMin);
@@ -309,7 +357,9 @@
     }
 
     // Δημιουργία καμβάδων τομέων βάσει του JSON και της τρέχουσας διάταξης.
-    // Για το block p στη διάταξη "start": η θέση του container ορίζεται ως: minX + getPOffsetContainer()
+    // Για το block "p" και "d" στη διάταξη "start" εφαρμόζουμε μετατόπιση:
+    // - Για block "p": στοιχεία 21-30 ή 57-80.
+    // - Για block "d": μόνο για στοιχεία 57-80.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -323,8 +373,12 @@
           if (pos) {
             let yForMin = pos.y;
             let yForMax = pos.y;
-            if (currentMode === "start" && block === "p" && num >= 21 && num <= 30) {
-              yForMax += getPOffset(num);
+            if (currentMode === "start") {
+              if (block === "p" && num >= 21 && num <= 30) {
+                yForMax += getShift(num, block);
+              } else if ((block === "p" || block === "d") && num >= 57 && num <= 80) {
+                yForMax += getShift(num, block);
+              }
             }
             minX = Math.min(minX, pos.x);
             minY = Math.min(minY, yForMin);
@@ -333,8 +387,8 @@
           }
         });
         if (minX === Infinity || minY === Infinity) return;
-        if(currentMode === "start" && block === "p") {
-          container.style.left = (minX + getPOffsetContainer()) + "px";
+        if(currentMode === "start" && (block === "p" || block === "d")) {
+          container.style.left = (minX + getShiftContainer(block)) + "px";
         } else {
           container.style.left = minX + "px";
         }
@@ -352,7 +406,9 @@
     }
 
     // Σχεδίαση στοιχείων για κάθε block.
-    // Για το block p στη διάταξη "start": αν το στοιχείο είναι από 21 έως 30, προστίθεται το shift.
+    // Εφαρμόζουμε shift στη διάταξη "start" ως εξής:
+    // - Για block "p": για στοιχεία 21-30 ή για στοιχεία 57-80.
+    // - Για block "d": για στοιχεία 57-80.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -362,8 +418,12 @@
         if (pos) {
           let relativeX = pos.x - containerLeft;
           let relativeY = pos.y - containerTop;
-          if (currentMode === "start" && block === "p" && num >= 21 && num <= 30) {
-            relativeY += getPOffset(num);
+          if (currentMode === "start") {
+            if (block === "p" && num >= 21 && num <= 30) {
+              relativeY += getShift(num, block);
+            } else if ((block === "p" || block === "d") && num >= 57 && num <= 80) {
+              relativeY += getShift(num, block);
+            }
           }
           p.fill(colors[block] || "#CCCCCC");
           p.rect(relativeX, relativeY, pos.width, pos.height, 5);
@@ -377,9 +437,9 @@
 
     // --- Event Listeners ---
 
-    // "Συμπλήρωσε": Αδειάζει τους καμβάδες και εμφανίζει αμέσως την expanded διάταξη.
+    // "Συμπλήρωσε": Καθαρίζει όλους τους καμβάδες ώστε να εξαφανιστούν τα προηγούμενα στοιχεία,
+    // και εμφανίζει αμέσως την expanded διάταξη.
     document.getElementById('fillAll').addEventListener('click', function() {
-      // Καθαρίζουμε όλους τους καμβάδες ώστε να εξαφανιστούν τα προηγούμενα στοιχεία
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
       currentZ = 123;
@@ -406,16 +466,19 @@
       });
     });
 
-    // "Επόμενο": Στη διάταξη "start": 
+    // "Επόμενο": Στη διάταξη "start":
     // - Αν δεν είμαστε ήδη στη διάταξη "start", το πρώτο πάτημα θέτει currentZ = 3.
-    // - Μέχρι το 30, κάθε πάτημα αυξάνει το currentZ κατά 1 (και για στοιχεία 21-30 εφαρμόζεται το shift).
-    // - Από το 31 έως το 56, κάθε πάτημα αυξάνει το currentZ κατά 1 χωρίς επιπλέον shift.
+    // - Στη συνέχεια, κάθε πάτημα αυξάνει το currentZ κατά 1 μέχρι το 118.
+    // Οι συνθήκες shift εφαρμόζονται ως εξής:
+    //   • Για στοιχεία 21-30 στο block p.
+    //   • Για στοιχεία 57-80 στα blocks d και p.
+    //   • Μετά το 81, η συμπλήρωση συνεχίζεται κανονικά.
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
         currentZ = 3;
       } else {
-        if (currentZ < 56) {
+        if (currentZ < 118) {
           currentZ++;
         }
       }
