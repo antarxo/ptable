@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας – Κώδικας με Color Picking & Info Panels</title>
+  <title>Περιοδικός Πίνακας – Ολοκληρωμένος Κώδικας</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -22,7 +22,7 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas */
+    /* Background canvas με ελαφριά σκιά */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -32,36 +32,23 @@
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* Info Panels */
-    #infoPanelExpanded, #infoPanelCollapsed {
-      background: #fff;
-      border: 2px solid #333;
-      border-radius: 8px;
-      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
-      padding: 10px;
-      position: fixed;
-      z-index: 100;
-      font-size: 16px;
-    }
-    #infoPanelExpanded { bottom: 20px; left: 20px; }
-    #infoPanelCollapsed { bottom: 20px; right: 20px; display: none; }
-    /* Balloon Tooltip */
-    #balloonTooltip {
+    /* Ομαδοποίηση καμβάδων ομάδων με υψηλό z-index */
+    #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute;
-      background: #fff;
-      border: 1px solid #333;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
-      z-index: 200;
-      display: none;
+      z-index: 60;
     }
-    /* Buttons */
+    /* Καμβάδες τομέων και περιοδών */
+    #canvasS { z-index: 10; }
+    #canvasF { z-index: 20; }
+    #canvasD { z-index: 30; }
+    #canvasP { z-index: 40; }
+    #canvasPeriods { z-index: 50; }
+    /* Διάταξη κουμπιών */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
       right: 20px; 
-      z-index: 150;
+      z-index: 100;
       display: flex; 
       flex-direction: column;
       gap: 5px;
@@ -74,6 +61,42 @@
       border-radius: 5px;
       cursor: pointer;
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
+    }
+    /* -------------------------------
+       Styles για Info Panels και Balloon
+    ------------------------------- */
+    #infoPanelExpanded, #infoPanelCollapsed {
+      background: #fff;
+      border: 2px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
+      padding: 10px;
+      position: fixed;
+      z-index: 150;
+      font-size: 16px;
+      transition: all 0.5s ease;
+    }
+    #infoPanelExpanded {
+      bottom: 20px;
+      left: 20px;
+      display: block;
+    }
+    #infoPanelCollapsed {
+      bottom: 20px;
+      right: 20px;
+      display: none;
+    }
+    /* Balloon Tooltip */
+    #balloonTooltip {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
+      z-index: 200;
+      display: none;
+      transition: all 0.2s ease;
     }
   </style>
 </head>
@@ -91,14 +114,14 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Info Panels -->
+  <!-- Info Panels (δεδομένων στοιχείων) -->
   <div id="infoPanelExpanded"></div>
   <div id="infoPanelCollapsed"></div>
 
   <!-- Balloon Tooltip -->
   <div id="balloonTooltip"></div>
 
-  <!-- Buttons -->
+  <!-- Buttons: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
   <div id="buttonPanel">
     <button id="nextState">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -107,36 +130,40 @@
   </div>
 
   <script>
-    /* -------------------------------
+    /* ================================================================
        Global Variables & Configuration
-    ------------------------------- */
+    ================================================================ */
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    // currentMode: "expanded" (ή "collapsed") για τις info panels ή "start" για τη διαδικασία "Επόμενο"
-    let currentMode = "expanded"; 
+    // currentMode: "expanded" για τις info panels, "collapsed" για το collapsed, ή "start" για τη διαδικασία Επόμενο
+    let currentMode = "expanded";
     let currentZ = 0;
     let extraElements = {};
     let postFillingStep = 0;
     let showPeriods = false;
-    
-    // Offscreen canvas για Color Picking
+
+    /* -------------------------------
+       Offscreen Canvas για Color Picking
+       (Δεν εμφανίζεται στον χρήστη)
+    ------------------------------- */
     let pickingCanvas = document.createElement('canvas');
     let pickingCtx = pickingCanvas.getContext('2d');
-    // Χάρτης που συνδέει το μοναδικό χρώμα με το στοιχείο (βάσει του αριθμού του)
+    // Map που συνδέει το μοναδικό χρώμα με το στοιχείο (με βάση το number)
     let pickingMap = {};
 
-    // -------------------------------
-    // Συνάρτηση: getUniqueColor
-    // Παράγει ένα μοναδικό χρώμα για κάθε στοιχείο, χρησιμοποιώντας την τιμή του αριθμού του.
+    // -----------------------------------------------------------
+    // Συνάρτηση getUniqueColor: Παράγει μοναδικό RGB χρώμα για κάθε στοιχείο
     function getUniqueColor(elementNumber) {
-      // Χρησιμοποιούμε το κόκκινο κανάλι για τον αριθμό (υποθέτουμε ότι elementNumber <= 255)
+      // Υποθέτουμε ότι elementNumber ≤ 255 (ή κάνουμε scaling)
       let r = elementNumber; 
       return `rgb(${r},0,0)`;
     }
-
-    // -------------------------------
-    // Οι συναρτήσεις getShift, getShiftContainer, computeNextBgDimensions, κλπ. παραμένουν όπως στο αρχικό αρχείο.
+    
+    /* ================================================================
+       Οι συναρτήσεις για μετατόπιση (shifts) και υπολογισμούς (bounding box)
+       παραμένουν όπως στον αρχικό κώδικα.
+    ================================================================ */
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -173,8 +200,7 @@
         if ((num < 3 && !extraElements[num]) || num > currentZ) return;
         let pos = positions[currentMode][e.number];
         if (pos) {
-          let x = pos.x;
-          let y = pos.y;
+          let x = pos.x, y = pos.y;
           if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
             x += getShiftContainer(e.block);
           }
@@ -297,8 +323,10 @@
       });
     }
 
-    // -------------------------------
-    // Color Picking: Δημιουργούμε και ενημερώνουμε το offscreen canvas
+    /* ================================================================
+       Color Picking: Ενημέρωση του offscreen canvas
+       ώστε κάθε στοιχείο να σχεδιάζεται με μοναδικό χρώμα.
+    ================================================================ */
     function updatePickingCanvas() {
       let limits = computeNextBgDimensions();
       if (!limits) return;
@@ -335,7 +363,7 @@
       });
     }
 
-    // Χειριστής κλικ με Color Picking
+    // Χειριστής κλικ με χρήση Color Picking στον background καμβά
     function onTableClick(event) {
       let bg = document.getElementById("canvasTableBackground");
       let rect = bg.getBoundingClientRect();
@@ -351,8 +379,9 @@
     }
     document.getElementById("canvasTableBackground").addEventListener("click", onTableClick);
 
-    // -------------------------------
-    // Balloon Tooltip
+    /* ================================================================
+       Balloon Tooltip: Εμφάνιση με πληροφορίες του στοιχείου
+    ================================================================ */
     function showBalloon(element) {
       let balloon = document.getElementById("balloonTooltip");
       balloon.innerHTML = `<strong>${element.symbol}</strong> (${element.name})<br>Ζ=${element.number}`;
@@ -368,10 +397,12 @@
       }
     }
 
-    // -------------------------------
-    // Info Panels Update
+    /* ================================================================
+       Info Panels: Ενημέρωση με πληροφορίες για το στοιχείο που επιλέχθηκε
+    ================================================================ */
     function updateInfo(clickedZ) {
       let infoPanel;
+      // Για το παράδειγμα χρησιμοποιούμε την expanded μορφή αν δεν είμαστε collapsed
       if (currentMode === "expanded") {
         infoPanel = document.getElementById("infoPanelExpanded");
         document.getElementById("infoPanelCollapsed").style.display = "none";
@@ -379,34 +410,39 @@
         infoPanel = document.getElementById("infoPanelCollapsed");
         document.getElementById("infoPanelExpanded").style.display = "none";
       }
-      let element = elements.find(e => Number(e.number) === (clickedZ === 119 ? 1 : (clickedZ === 120 ? 2 : clickedZ)));
+      let numberToShow = (clickedZ === 119 ? 1 : (clickedZ === 120 ? 2 : clickedZ));
+      let element = elements.find(e => Number(e.number) === numberToShow);
       if (!element) return;
-      infoPanel.innerHTML = `<strong>Ζ=${element.number}</strong> ${element.symbol} - ${element.name}`;
+      infoPanel.innerHTML = `<strong>Ζ=${element.number}</strong> ${element.symbol} – ${element.name}`;
       infoPanel.style.display = "block";
     }
 
-    // -------------------------------
-    // Συνάρτηση updateAll: Ενημερώνει όλα τα σχετικά (καμβά, sectors, picking canvas)
+    /* ================================================================
+       Συνάρτηση updateAll: Ενημερώνει background, sectors και το picking canvas
+    ================================================================ */
     function updateAll() {
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
       updatePickingCanvas();
     }
 
-    // -------------------------------
-    // Event Listeners για τα κουμπιά
+    /* ================================================================
+       Event Listeners για τα κουμπιά
+    ================================================================ */
+    // "Συμπλήρωσε": Αμέσως εμφάνιση expanded διάταξης
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
       currentZ = 123;
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
-      // (θα μπορούσαν να κληθούν και οι initializePeriodsCanvas() και initGroupsCanvases() όπως στο ALLtoDOM1)
+      // Εδώ μπορείς να ενσωματώσεις και άλλες λειτουργίες (π.χ. initializePeriodsCanvas, initGroupsCanvases)
       updateAll();
       document.getElementById('toggleFBlock').disabled = false;
       console.log("FillAll: currentZ set to", currentZ);
     });
 
+    // "Επόμενο": Διαδικασία "start" για σταδιακή εμφάνιση στοιχείων
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         currentMode = "start";
@@ -423,7 +459,7 @@
           else if (postFillingStep === 2) extraElements["2"] = true;
           else if (postFillingStep === 3) {
             showPeriods = true;
-            // Μπορείς να καλέσεις initializePeriodsCanvas() εδώ αν έχεις υλοποιήσει τον καμβά περιόδων
+            // Ενσωμάτωση καμβά περιόδων εάν χρειαστεί
           } else if (postFillingStep === 4) {
             document.getElementById('fillAll').click();
             return;
@@ -434,6 +470,7 @@
       console.log("Start mode: currentZ =", currentZ, "postFillingStep =", postFillingStep);
     });
 
+    // "Σύμπτυξε/Ανάπτυξε": Εναλλαγή μεταξύ expanded και collapsed info panels
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       if (isCollapsed) {
@@ -450,12 +487,14 @@
       updateAll();
     });
 
+    // "Reset": Επαναφορά της σελίδας
     document.getElementById('reset').addEventListener('click', function() {
       location.reload();
     });
 
-    // -------------------------------
-    // Φόρτωση δεδομένων (elements και positions)
+    /* ================================================================
+       Φόρτωση Δεδομένων: elements και positions από τα αντίστοιχα JSON
+    ================================================================ */
     async function loadData() {
       elements = await (await fetch('elements.json')).json();
       positions = await (await fetch('positions.json')).json();
