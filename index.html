@@ -229,9 +229,9 @@
     /* 
       Νέα initializeBackgroundCanvas:
       
-      Για τη διαδικασία "Επόμενο" (currentMode === "start") καλεί την computeNextBgDimensions,
-      ώστε να υπολογίσει το συνολικό bounding box (με οριζόντιες και κατακόρυφες μετατοπίσεις)
-      και προσθέτει περιθώρια 20px.
+      Στη διαδικασία "Επόμενο" (currentMode === "start") υπολογίζεται το bounding box με τις μετατοπίσεις,
+      αλλά το αριστερό του όριο τίθεται σταθερά όπως στην expanded (leftFixed = 17). 
+      Το πλάτος προσαρμόζεται ώστε να καλύπτει πλήρως τα στοιχεία.
     */
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
@@ -239,9 +239,10 @@
       if (currentMode === "start") {
         let limits = computeNextBgDimensions();
         if (limits) {
-          bg.style.left = (limits.minX - margin) + "px";
+          let leftFixed = 17;
+          bg.style.left = leftFixed + "px";
           bg.style.top = (limits.minY - margin) + "px";
-          bg.style.width = (limits.maxX - limits.minX + 2 * margin) + "px";
+          bg.style.width = (limits.maxX + margin - leftFixed) + "px";
           bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
         }
       } else if (currentMode === "expanded" || currentMode === "collapsed") {
@@ -405,7 +406,7 @@
               }
             }
             minX = Math.min(minX, pos.x);
-            minY = Math.min(minY, yForMin);
+            minY = Math.min(minY, pos.y);
             maxX = Math.max(maxX, pos.x + pos.width);
             maxY = Math.max(maxY, yForMax + pos.height);
           }
