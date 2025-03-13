@@ -22,6 +22,7 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
+    /* Προσθήκη εφέ μετακίνησης για το background */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -29,6 +30,7 @@
       box-shadow: 0 3px 3px rgba(0,0,0,0.2); 
       z-index: -10;
       opacity: 1;
+      transition: all 0.5s ease-in-out;
     }
     /* Οι καμβάδες των ομάδων δεν έχουν άλλες μετατοπίσεις πέραν της καθορισμένης */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
