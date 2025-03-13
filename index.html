@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Κώδικας με Διορθώσεις & Log Ζ στοιχείου</title>
+  <title>Περιοδικός Πίνακας - Κώδικας με Hit Testing σε Όλες τις Λειτουργίες</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -391,10 +391,19 @@
       });
     }
     
-    // Event Listeners για τα κουμπιά
+    // Λειτουργίες κουμπιών με επιπλέον κλήση performHitTest στο κέντρο της τρέχουσας περιοχής εμφάνισης.
+    function logHitTestCenter() {
+      let region = computeModeRegion();
+      if (region) {
+        let centerX = (region.minX + region.maxX) / 2;
+        let centerY = (region.minY + region.maxY) / 2;
+        console.log("Κλήση hit test στο κέντρο: (" + centerX + ", " + centerY + ")");
+        performHitTest(centerX, centerY);
+      }
+    }
+    
     document.getElementById('fillAll').addEventListener('click', function() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
-      // Στο fillAll θέτουμε expanded mode και currentZ = 123
       currentMode = "expanded";
       currentZ = 123;
       initializeBackgroundCanvas();
@@ -403,6 +412,7 @@
       initGroupsCanvases();
       document.getElementById('toggleFBlock').disabled = false;
       console.log("FillAll: currentZ set to", currentZ, "- πλήρης εμφάνιση (expanded)");
+      logHitTestCenter();
     });
     
     document.getElementById('toggleFBlock').addEventListener('click', function() {
@@ -417,6 +427,8 @@
         groupCanvas.style.left = sectorCanvas.style.left;
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
+      console.log("ToggleFBlock: Mode changed to", currentMode);
+      logHitTestCenter();
     });
     
     document.getElementById('nextState').addEventListener('click', function() {
@@ -445,13 +457,14 @@
       initializeSectorsCanvas();
       if (showPeriods) initializePeriodsCanvas();
       console.log("NextState: currentZ =", currentZ);
+      logHitTestCenter();
     });
     
     document.getElementById('reset').addEventListener('click', function() {
       location.reload();
     });
     
-    // Νέα συνάρτηση hit-testing που λαμβάνει υπόψη την περιοχή των εμφανιζόμενων στοιχείων ανά mode
+    // Η συνάρτηση hit-testing όπως προηγουμένως, με προσθήκη του logging του Ζ του στοιχείου
     function performHitTest(x, y) {
       let region = computeModeRegion();
       if (!region) {
@@ -459,23 +472,16 @@
          return;
       }
       let regionLeft = region.minX, regionTop = region.minY;
-      let regionWidth = region.maxX - region.minX, regionHeight = region.maxY - region.minY;
-      
-      // Έλεγχος: αν το κλικ γίνεται εκτός της περιοχής
       if (x < regionLeft || x > region.maxX || y < regionTop || y > region.maxY) {
          console.log("Κλικ εκτός περιοχής στοιχείων.");
          return;
       }
-      
       let relX = x - regionLeft, relY = y - regionTop;
-      
       let offCanvas = document.getElementById("offscreenCanvas");
-      offCanvas.width = regionWidth;
-      offCanvas.height = regionHeight;
+      offCanvas.width = region.maxX - region.minX;
+      offCanvas.height = region.maxY - region.minY;
       let offCtx = offCanvas.getContext("2d");
-      offCtx.clearRect(0, 0, regionWidth, regionHeight);
-      
-      // Σχεδίαση κελιών στο offscreen canvas με μοναδικά χρώματα
+      offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
       elements.forEach(e => {
         let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
         if (pos) {
@@ -488,13 +494,11 @@
           offCtx.fillRect(drawX, drawY, pos.width, pos.height);
         }
       });
-      
       let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
       if (pixel[3] === 0) {
          console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
       } else {
          console.log("Color Picking: Pixel at (" + x + ", " + y + ") =", pixel);
-         // Εντοπισμός στοιχείου βάσει του χρώματος
          let found = null;
          elements.forEach(e => {
             let pos = positions[currentMode][e.number] || ((e.number=="1" || e.number=="2") ? positions["start"][e.number] : null);
@@ -511,7 +515,6 @@
          else
             console.log("Δεν βρέθηκε αντιστοιχία για το χρώμα", pixel);
       }
-      
       let col = Math.floor((x - regionLeft) / cellSize);
       let row = Math.floor((y - regionTop) / cellSize);
       console.log("Direct Calculation: Row =", row, "Col =", col);
