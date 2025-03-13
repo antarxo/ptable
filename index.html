@@ -139,13 +139,11 @@
           let canvas = p.createCanvas(82, 40);
           canvas.parent("canvasS_groups");
           p.background(240);
-          // Σχεδιάζουμε οπτικά τα κελιά χωρίς περιγράμματα:
+          // Σχεδιάζουμε τα κελιά χωρίς περιγράμματα:
           for(let col = 0; col < 2; col++){
-            p.noStroke(); // Απενεργοποίηση περιγράμματος
+            p.noStroke();
             p.noFill();
-            // Πρώτη σειρά: κάθε κελί 40x20
             p.rect(col * 42, 0, 40, 20);
-            // Δεύτερη σειρά: κάθε κελί 40x20
             p.rect(col * 42, 20, 40, 20);
           }
           // Σχεδιάζουμε τα κείμενα:
@@ -154,10 +152,8 @@
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          // Πρώτη σειρά (νέα αρίθμηση)
           p.text("1", 20, 10);
           p.text("2", 20 + 42, 10);
-          // Δεύτερη σειρά (παλιά αρίθμηση)
           p.text("IA", 20, 30);
           p.text("IIA", 20 + 42, 30);
         };
@@ -169,27 +165,21 @@
           let canvas = p.createCanvas(418, 40);
           canvas.parent("canvasD_groups");
           p.background(240);
-          // Σχεδιάζουμε τα 10 κελιά χωρίς περιγράμματα:
           for(let col = 0; col < 10; col++){
             p.noStroke();
             p.noFill();
-            // Πρώτη σειρά: 40x20
             p.rect(col * 42, 0, 40, 20);
-            // Δεύτερη σειρά: 40x20
             p.rect(col * 42, 20, 40, 20);
           }
-          // Σχεδιάζουμε τα κείμενα:
           p.noStroke();
           p.fill(0);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          // Πρώτη σειρά: νέα αρίθμηση από 3 έως 12
           for(let c = 0; c < 10; c++){
             let x = c * 42;
             p.text((c+3).toString(), x + 20, 10);
           }
-          // Δεύτερη σειρά: παλιά labels
           const oldLabels = ["IIIB","IVB","VB","VIB","VIIB","VIIIB","VIIIB","VIIIB","IB","IIB"];
           for(let c = 0; c < 10; c++){
             let x = c * 42;
@@ -204,25 +194,21 @@
           let canvas = p.createCanvas(250, 40);
           canvas.parent("canvasP_groups");
           p.background(240);
-          // Σχεδιάζουμε τα 6 κελιά χωρίς περιγράμματα:
           for(let col = 0; col < 6; col++){
             p.noStroke();
             p.noFill();
             p.rect(col * 42, 0, 40, 20);
             p.rect(col * 42, 20, 40, 20);
           }
-          // Σχεδιάζουμε τα κείμενα:
           p.noStroke();
           p.fill(0);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          // Πρώτη σειρά: νέα αρίθμηση από 13 έως 18
           for(let c = 0; c < 6; c++){
             let x = c * 42;
             p.text((c+13).toString(), x + 20, 10);
           }
-          // Δεύτερη σειρά: παλιά labels
           const oldLabels = ["IIIA","IVA","VA","VIA","VIIA","VIIIA"];
           for(let c = 0; c < 6; c++){
             let x = c * 42;
@@ -242,8 +228,7 @@
       });
     }
 
-    // Δημιουργία καμβάδων τομέων (S, P, D, F) αποκλειστικά βάσει τιμών από το JSON.
-    // Εδώ για κάθε block (συμπεριλαμβανομένου του F block) τα στοιχεία τοποθετούνται σύμφωνα με τις τιμές του JSON χωρίς επιπρόσθετες μετατροπές.
+    // Δημιουργία καμβάδων τομέων (S, P, D, F) βάσει των τιμών από το JSON χωρίς μετατοπίσεις.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -274,7 +259,7 @@
       });
     }
 
-    // Σχεδίαση των στοιχείων σύμφωνα με τις τιμές θέσης από το JSON
+    // Σχεδίαση των στοιχείων σύμφωνα με τις τιμές θέσης από το JSON.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -293,13 +278,29 @@
       });
     }
 
-    // Event listeners: Όλα βασίζονται αποκλειστικά στις τιμές του JSON
+    // Event listeners: Όλα βασίζονται αποκλειστικά στις τιμές του JSON.
     document.getElementById('fillAll').addEventListener('click', function() {
       if (!isTableFilled) {
         initializeBackgroundCanvas();
         initializeSectorsCanvas();       
         initializePeriodsCanvas();       
         initGroupsCanvases();
+        
+        // Μετακίνηση του F τομέα στην expanded κατάσταση:
+        // Ο F τομέας τοποθετείται 2px δίπλα από τον S τομέα, δηλαδή:
+        // newF_left = S.left + S.width + 2
+        if (currentMode === "expanded") {
+          let sCanvas = document.getElementById("canvasS");
+          let fCanvas = document.getElementById("canvasF");
+          let sLeft = parseInt(sCanvas.style.left);
+          let sWidth = parseInt(sCanvas.style.width);
+          let newFLeft = sLeft + sWidth + 2;
+          let oldFLeft = parseInt(fCanvas.style.left);
+          fCanvas.style.left = newFLeft + "px";
+          let offset = newFLeft - oldFLeft;
+          console.log("Μετατόπιση F τομέα: " + offset + "px");
+        }
+        
         isTableFilled = true;
         document.getElementById('toggleFBlock').disabled = false;
       }
@@ -311,7 +312,7 @@
       currentMode = isCollapsed ? "collapsed" : "expanded";
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
-      // Επανατοποθέτηση των καμβάδων ομάδων μετά την αλλαγή mode
+      // Επανατοποθέτηση των καμβάδων ομάδων μετά την αλλαγή mode.
       ["S", "D", "P"].forEach(sector => {
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
