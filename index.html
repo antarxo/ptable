@@ -6,6 +6,7 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
+    /* --- Βασικά Styles --- */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
@@ -22,7 +23,7 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas */
+    /* --- Background Canvas --- */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -32,7 +33,18 @@
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* Balloon (Subshells) CSS */
+    /* --- Ομαδοποίηση καμβάδων --- */
+    #canvasS_groups, #canvasD_groups, #canvasP_groups { 
+      position: absolute;
+      z-index: 60;
+    }
+    /* --- Καμβάδες του πίνακα --- */
+    #canvasS { z-index: 10; }
+    #canvasF { z-index: 20; }
+    #canvasD { z-index: 30; }
+    #canvasP { z-index: 40; }
+    #canvasPeriods { z-index: 50; }
+    /* --- Balloon (Subshells) --- */
     #canvasSubshells {
       position: absolute;
       background: #fff;
@@ -44,18 +56,7 @@
       display: none;
       transition: all 0.2s ease;
     }
-    /* Ομαδοποίηση καμβάδων */
-    #canvasS_groups, #canvasD_groups, #canvasP_groups { 
-      position: absolute;
-      z-index: 60;
-    }
-    /* Καμβάδες τομέων */
-    #canvasS { z-index: 10; }
-    #canvasF { z-index: 20; }
-    #canvasD { z-index: 30; }
-    #canvasP { z-index: 40; }
-    #canvasPeriods { z-index: 50; }
-    /* Panel κουμπιών */
+    /* --- Panel με κουμπιά --- */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -74,12 +75,12 @@
       cursor: pointer;
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
     }
-    /* Offscreen canvas για color picking */
+    /* --- Offscreen canvas για color picking --- */
     #offscreenCanvas { display: none; }
   </style>
 </head>
 <body>
-  <!-- Καμβάδες του πίνακα -->
+  <!-- --- Καμβάδες του Περιοδικού Πίνακα --- -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -90,13 +91,13 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   
-  <!-- Balloon για εμφάνιση subshells -->
+  <!-- --- Balloon για Subshells --- -->
   <div id="canvasSubshells" class="canvas"></div>
   
-  <!-- Offscreen canvas για color picking -->
+  <!-- --- Offscreen Canvas για color picking --- -->
   <canvas id="offscreenCanvas" width="800" height="600"></canvas>
   
-  <!-- Panel κουμπιών -->
+  <!-- --- Panel με κουμπιά --- -->
   <div id="buttonPanel">
     <button id="nextState">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -106,19 +107,19 @@
   
   <script>
     // ===================== Global Variables =====================
-    let elements = [];
-    let positions = {};
+    let elements = [];         // Θα φορτωθούν από το elements.json
+    let positions = {};        // Θα φορτωθούν από το positions.json
     let isCollapsed = false;
-    let currentMode = "start";
+    let currentMode = "start"; // "start", "expanded", "collapsed"
     let currentZ = 3;
     let extraElements = {};
     let postFillingStep = 0;
     let showPeriods = false;
     let cellSize = 40;
-    let currentCellPositions = {};
-    let subshellsP; // για το canvas του balloon
-    
-    // Dummy getBlockColor (αντικαταστήστε το με το δικό σας εάν υπάρχει)
+    let currentCellPositions = {}; // Για hit-testing
+    let subshellsP;           // p5 instance για το balloon
+
+    // Dummy συνάρτηση για getBlockColor – αντικαταστήστε την αν έχετε δική σας υλοποίηση
     window.getBlockColor = function(b) {
       switch(b) {
         case "s": return "#FF477E";
@@ -128,8 +129,8 @@
         default: return "#000";
       }
     };
-    
-    // ===================== Λειτουργίες ptablelike =====================
+
+    // ===================== Λειτουργίες του ptablelike =====================
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -148,61 +149,36 @@
       if (block === "p") {
         if (currentZ <= 20) return 0;
         else if (currentZ <= 30) return (currentZ - 20) * 42;
-        else if (currentZ <= 56) return (30 - 20) * 42;
-        else if (currentZ <= 70) return (30 - 20) * 42 + (currentZ - 56) * 42;
-        else return (30 - 20) * 42 + (70 - 56) * 42;
+        else if (currentZ <= 56) return 10 * 42;
+        else if (currentZ <= 70) return 10 * 42 + (currentZ - 56) * 42;
+        else return 10 * 42 + 14 * 42;
       } else if (block === "d") {
         if (currentZ < 57) return 0;
         else if (currentZ <= 70) return (currentZ - 56) * 42;
-        else return (70 - 56) * 42;
+        else return 14 * 42;
       }
       return 0;
     }
     
-    function computeModeRegion() {
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      elements.forEach(e => {
-        let num = Number(e.number);
-        if (currentMode === "start") {
-          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
-        }
-        let pos = positions[currentMode] && positions[currentMode][e.number] ? positions[currentMode][e.number] : null;
-        if (pos) {
-          let x = pos.x, y = pos.y;
-          if (currentMode === "start" && (e.block === "p" || e.block === "d"))
-            x += getShiftContainer(e.block);
-          if (currentMode === "start") {
-            if (e.block === "p" && num >= 21 && num <= 30)
-              y += getShift(num, e.block);
-            else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
-              y += getShift(num, e.block);
-          }
-          minX = Math.min(minX, x);
-          minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x + pos.width);
-          maxY = Math.max(maxY, y + pos.height);
-        }
-      });
-      return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
-    }
-    
+    // Ενημερώνει τις θέσεις των κελιών για το hit-testing
     function updateCellsPositions() {
       currentCellPositions = {};
-      elements.forEach(e => {
+      for (let e of elements) {
+        let num = Number(e.number);
+        if (currentMode === "start") {
+          if ((num < 3 && !extraElements[num]) || num > currentZ) continue;
+        }
         let pos = positions[currentMode] && positions[currentMode][e.number] ? positions[currentMode][e.number] : null;
-        if (!pos) return;
-        let offsetX = 0;
-        let offsetY = 0;
+        if (!pos) continue;
+        let offsetX = 0, offsetY = 0;
         if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
           offsetX = getShiftContainer(e.block);
         }
-        let num = Number(e.number);
         if (currentMode === "start") {
-          if (e.block === "p" && num >= 21 && num <= 30) {
+          if (e.block === "p" && num >= 21 && num <= 30)
             offsetY = getShift(num, e.block);
-          } else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70) {
+          else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
             offsetY = getShift(num, e.block);
-          }
         }
         currentCellPositions[e.number] = {
           x: pos.x + offsetX,
@@ -210,7 +186,20 @@
           width: pos.width,
           height: pos.height
         };
-      });
+      }
+    }
+    
+    // Υπολογίζει το bounding box των στοιχείων για το background
+    function computeModeRegion() {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (let key in currentCellPositions) {
+        let pos = currentCellPositions[key];
+        minX = Math.min(minX, pos.x);
+        minY = Math.min(minY, pos.y);
+        maxX = Math.max(maxX, pos.x + pos.width);
+        maxY = Math.max(maxY, pos.y + pos.height);
+      }
+      return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
     
     function initializeBackgroundCanvas() {
@@ -221,25 +210,23 @@
         if (limits) {
           bg.style.left = "17px";
           bg.style.top = (limits.minY - margin) + "px";
-          let rightLimit = limits.maxX + margin;
-          bg.style.width = (rightLimit - 17) + "px";
+          bg.style.width = (limits.maxX + margin - 17) + "px";
           bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
         }
       }
       bg.style.opacity = "1";
     }
     
-    // Για demo: μια απλή υλοποίηση για τα canvases κάθε block
+    // Απλή υλοποίηση για τα canvases κάθε block.
+    // Στην πλήρη εφαρμογή οι θέσεις θα φορτώνονται από το positions.json.
     function initializeSectorsCanvas() {
-      // Δημιουργούμε απλά παραδείγματα θέσεων για κάθε block
       ["s", "p", "d", "f"].forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        // Για demo θέτουμε placeholder θέση
-        let pos = { x: 50 + (block.charCodeAt(0) - 115) * 100, y: 50, width: 40, height: 40 };
-        if(!positions[currentMode]) positions[currentMode] = {};
+        // Αν υπάρχει θέση για το block στο positions object, χρησιμοποιείται.
+        let pos = (positions[currentMode] && positions[currentMode][block]) || { x: 50 + (block.charCodeAt(0)-115)*100, y: 50, width: 40, height: 40 };
+        if (!positions[currentMode]) positions[currentMode] = {};
         positions[currentMode][block] = pos;
-        // Σχεδιάζουμε ένα ορθογώνιο με το όνομα του block
         new p5(function(p) {
           p.setup = function() {
             let canvas = p.createCanvas(150, 150);
@@ -254,21 +241,22 @@
       });
     }
     
+    // Εκτέλεση hit-test στο κέντρο της περιοχής
     function logHitTestCenter() {
       let region = computeModeRegion();
       if (region) {
         let centerX = (region.minX + region.maxX) / 2;
         let centerY = (region.minY + region.maxY) / 2;
-        console.log("Κλήση hit test στο κέντρο: (" + centerX + ", " + centerY + ")");
+        console.log("Hit test στο κέντρο: (" + centerX + ", " + centerY + ")");
         performHitTest(centerX, centerY);
       }
     }
     
-    // Η υλοποίηση του hit-testing χρησιμοποιεί offscreen canvas και color picking
+    // Hit-testing μέσω offscreen canvas και color picking
     function performHitTest(x, y) {
       let region = computeModeRegion();
       if (!region) {
-         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
+         console.log("Δεν υπάρχουν στοιχεία στο τρέχον mode.");
          return;
       }
       let regionLeft = region.minX, regionTop = region.minY;
@@ -295,7 +283,7 @@
       }
       let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
       if (pixel[3] === 0) {
-         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
+         console.log("Δεν ανιχνεύτηκε στοιχείο στο (" + x + ", " + y + ")");
       } else {
          let found = null;
          for (let key in currentCellPositions) {
@@ -310,10 +298,10 @@
             }
          }
          if (found) {
-            console.log("Εντοπίστηκε στοιχείο με Ζ =", found);
+            console.log("Βρέθηκε στοιχείο με Ζ =", found);
             let element = elements.find(e => e.number == found);
             if(element) {
-                // Εμφάνιση balloon για το επιλεγμένο στοιχείο
+                // Εμφάνιση του balloon με τα subshells (αν υπάρχουν)
                 updateBalloonPosition(element);
                 if(element.subshells) {
                   drawSubshells({
@@ -332,7 +320,7 @@
       }
     }
     
-    // ===================== Λειτουργίες Balloon από ALLtoDOM1 =====================
+    // ===================== Λειτουργίες Balloon (από το ALLtoDOM1) =====================
     window.updateBalloonPosition = function(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -340,8 +328,8 @@
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
       let rect = blockCanvas.getBoundingClientRect();
-      // Χρησιμοποιούμε την ίδια θέση placeholder όπως στο initializeSectorsCanvas
-      let pos = { x: 50, y: 50 };
+      // Χρησιμοποιούμε τη θέση του blockCanvas μαζί με τις θέσεις από το positions object
+      let pos = positions[currentMode] && positions[currentMode][element.block] ? positions[currentMode][element.block] : { x:50, y:50 };
       let defaultLeft = rect.left + pos.x + 40;
       let defaultTop = rect.top + pos.y + 40;
       let leftPos = defaultLeft - 5;
@@ -444,28 +432,27 @@
       location.reload();
     });
     
-    // ===================== Dummy Data για Demo =====================
-    // Στην πράξη, φορτώστε τα στοιχεία από αρχείο JSON (elements.json)
-    elements = [
-      { number: "3", block: "s", subshells: "2,8,1" },
-      { number: "10", block: "p", subshells: "2,8,8,2" },
-      { number: "17", block: "p", subshells: "2,8,7" }
-    ];
-    // Dummy θέσεις για demo (θα φορτωθούν πραγματικά από positions.json)
-    positions["start"] = {
-      "s": { x: 50, y: 50, width: 40, height: 40 },
-      "p": { x: 150, y: 50, width: 40, height: 40 },
-      "d": { x: 250, y: 50, width: 40, height: 40 },
-      "f": { x: 350, y: 50, width: 40, height: 40 }
-    };
+    // ===================== Φόρτωση Δεδομένων από JSON =====================
+    async function loadData() {
+      try {
+        let elementsRes = await fetch('elements.json');
+        let positionsRes = await fetch('positions.json');
+        elements = await elementsRes.json();
+        positions = await positionsRes.json();
+        console.log("JSON δεδομένα φορτώθηκαν επιτυχώς.");
+        // Μετά τη φόρτωση, εκτελούμε τις αρχικές ρυθμίσεις
+        initializeBackgroundCanvas();
+        initializeSectorsCanvas();
+        initSubshellsCanvas();
+        updateCellsPositions();
+        logHitTestCenter();
+      } catch (e) {
+        console.error("Σφάλμα φόρτωσης JSON:", e);
+      }
+    }
     
-    // ===================== Αρχικοποίηση =====================
-    initializeBackgroundCanvas();
-    initializeSectorsCanvas();
-    initSubshellsCanvas();
-    updateCellsPositions();
-    // Δοκιμαστικό hit test στο κέντρο μετά από 1 δευτερόλεπτο
-    setTimeout(logHitTestCenter, 1000);
+    loadData();
+    
   </script>
 </body>
 </html>
