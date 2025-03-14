@@ -70,7 +70,7 @@
       background: white;
       border: 1px solid rgba(0,0,0,0.2);
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-      padding: 6px 8px; /* μειωμένα περιθώρια */
+      padding: 6px 8px;
       border-radius: 5px;
       z-index: 150;
       visibility: hidden;
@@ -118,7 +118,7 @@
     let showPeriods = false;
     let cellSize = 40;
     let currentCellPositions = {};
-    let currentBalloonElement = null;  // Για ενημέρωση θέσης σε αλλαγές κατάστασης
+    let currentBalloonElement = null; // αποθηκεύει το στοιχείο για το οποίο εμφανίζεται το balloon
 
     // Βοηθητικές συναρτήσεις μετατόπισης (ίδιες όπως πριν)
     function getShift(num, block) {
@@ -480,6 +480,9 @@
       console.log("ToggleFBlock: Mode changed to", currentMode);
       updateCellsPositions();
       logHitTestCenter();
+      if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+        showBalloonOverlay(currentBalloonElement);
+      }
     });
     
     document.getElementById('nextState').addEventListener('click', function() {
@@ -570,10 +573,8 @@
     
     // Βοηθητικές συναρτήσεις για εύρεση του "από πάνω" και "του επόμενου" στοιχείου
     function getPrevElement(currentElement) {
-      // Αρχικά προσπαθούμε να βρούμε στοιχείο με ίδια col και row = current.row - 1 και στο ίδιο block
       let prev = elements.find(e => e.col == currentElement.col && e.block == currentElement.block && e.row == currentElement.row - 1);
       if(prev) return prev;
-      // Διαφορετικά ψάχνουμε για το στοιχείο με row < current.row στο ίδιο col και block, με το μέγιστο row
       let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row < currentElement.row);
       if(candidates.length > 0) {
          candidates.sort((a,b) => b.row - a.row);
@@ -583,10 +584,8 @@
     }
     
     function getNextElement(currentElement) {
-      // Αρχικά προσπαθούμε να βρούμε στοιχείο με ίδια col και row = current.row + 1 και στο ίδιο block
       let next = elements.find(e => e.col == currentElement.col && e.block == currentElement.block && e.row == currentElement.row + 1);
       if(next) return next;
-      // Διαφορετικά ψάχνουμε για το στοιχείο με row > current.row στο ίδιο col και block, με το ελάχιστο row
       let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row > currentElement.row);
       if(candidates.length > 0) {
          candidates.sort((a,b) => a.row - b.row);
@@ -595,7 +594,7 @@
       return null;
     }
     
-    // Συναρτήσεις για formatting των υποστιβάδων
+    // Συνάρτηση για την επιστροφή των formatted υποστιβάδων
     function getSubshells(element) {
       if (!element) return [];
       if (typeof element.subshells === "string") return element.subshells.split(" ");
@@ -603,14 +602,12 @@
       return [];
     }
     
-    // Μετατρέπει το principal quantum number σε γράμμα (K, L, M, …)
     function shellLetter(n) {
       let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
       return mapping[n] || n;
     }
     
     function formatSubshell(subshell) {
-      // Χρησιμοποιούμε regex για να πάρουμε τον principal αριθμό και το count
       let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
       if(match){
          let principal = match[1];
@@ -624,57 +621,49 @@
       let subs = getSubshells(element);
       let formattedArr = subs.map(subshell => formatSubshell(subshell));
       if(isCurrent && formattedArr.length > 0) {
-         // Μόνο η τελευταία υποστιβάδα για το τρέχον στοιχείο εμφανίζεται σε έντονη γραφή
          formattedArr[formattedArr.length - 1] = "<b>" + formattedArr[formattedArr.length - 1] + "</b>";
       }
       return formattedArr.join(" ");
     }
     
-    // Δημιουργία μιας σειράς του πίνακα (μία γραμμή για ένα στοιχείο)
-    // Η πρώτη στήλη: label "Ζ=Αριθμός" (ο τρέχων με bold)
-    // Η δεύτερη στήλη: δύο γραμμές: πρώτη γραμμή με τα raw subshells, δεύτερη με τα formatted (όπου για το τρέχον, μόνο η τελευταία σε bold)
+    // Δημιουργία μίας γραμμής του πίνακα για ένα στοιχείο.
+    // Εάν το στοιχείο δεν υπάρχει, εμφανίζεται "–" και στις δύο στήλες.
     function rowHTML(element, isCurrent) {
-      let atomicNumber = element ? element.number : "N/A";
-      let labelHTML = isCurrent 
-            ? `<div style="font-size:11px; font-weight:bold; min-width:50px;">Ζ=${atomicNumber}</div>` 
-            : `<div style="font-size:11px; min-width:50px;">Ζ=${atomicNumber}</div>`;
-      let rawHTML = element 
-            ? `<div style="font-size:11px; line-height:1;">${getSubshells(element).join(" ")}</div>` 
-            : `<div style="font-size:11px; line-height:1;">N/A</div>`;
-      let formattedHTML = element 
-            ? `<div style="font-size:11px; line-height:1;">${getFormattedLine(element, isCurrent)}</div>` 
-            : `<div style="font-size:11px; line-height:1;">N/A</div>`;
-      let secondCol = `<div style="display: table-cell; vertical-align: top; padding:2px;">
-                           ${rawHTML}
-                           ${formattedHTML}
-                         </div>`;
-      let firstCol = `<div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">
-                         ${labelHTML}
-                      </div>`;
-      return `<div style="display: table-row;">${firstCol}${secondCol}</div>`;
+      if(!element) {
+        return `<div style="display: table-row;">
+                  <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">-</div>
+                  <div style="display: table-cell; vertical-align: top; padding:2px;">-</div>
+                </div>`;
+      }
+      let atomicNumber = element.number;
+      let leftCell = isCurrent 
+         ? `<div style="font-size:11px; font-weight:bold; min-width:50px;">Ζ=${atomicNumber}</div>` 
+         : `<div style="font-size:11px; min-width:50px;">Ζ=${atomicNumber}</div>`;
+      let rightCell = `<div style="font-size:11px; line-height:1;">${getFormattedLine(element, isCurrent)}</div>`;
+      return `<div style="display: table-row;">
+                <div style="display: table-cell; vertical-align: top; padding:2px; border-right:1px solid lightgray;">${leftCell}</div>
+                <div style="display: table-cell; vertical-align: top; padding:2px;">${rightCell}</div>
+              </div>`;
     }
     
-    // Η κύρια συνάρτηση εμφάνισης του balloon overlay
+    // Η κύρια συνάρτηση εμφάνισης του balloon overlay.
+    // Δημιουργεί έναν πίνακα 3 γραμμών: πάνω, τρέχον, επόμενο (χρησιμοποιώντας τις βοηθητικές getPrevElement και getNextElement).
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
-      currentBalloonElement = elementNumber; // αποθηκεύουμε για ενημέρωση θέσης σε αλλαγές
-      let overlay = document.getElementById("balloonOverlay");
+      currentBalloonElement = elementNumber;
       
-      // Βρείτε το στοιχείο "από πάνω": αν δεν υπάρχει απευθείας, ψάξτε στο ίδιο col και block για το μεγαλύτερο row < current.row
       let prevElement = getPrevElement(currentElement);
-      // Βρείτε το στοιχείο "επόμενο": αν δεν υπάρχει απευθείας, ψάξτε στο ίδιο col και block για το ελάχιστο row > current.row
       let nextElement = getNextElement(currentElement);
       
-      // Δημιουργία του πίνακα με 3 γραμμές, μία για κάθε στοιχείο
       let tableHTML = `<div style="display: table; border-collapse: collapse;">`
                       + rowHTML(prevElement, false)
                       + rowHTML(currentElement, true)
                       + rowHTML(nextElement, false)
                       + `</div>`;
+      let overlay = document.getElementById("balloonOverlay");
       overlay.innerHTML = tableHTML;
       
-      // Τοποθέτηση overlay
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       overlay.style.visibility = "visible";
@@ -697,7 +686,7 @@
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
     }
     
-    // Ενημέρωση θέσης του overlay όταν αλλάζει το μέγεθος του παραθύρου
+    // Ενημέρωση θέσης του balloon όταν αλλάζει το μέγεθος του παραθύρου ή κατάσταση (collapse/expand)
     window.addEventListener("resize", function(){
       if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
         showBalloonOverlay(currentBalloonElement);
@@ -750,7 +739,6 @@
       }
       updateCellsPositions();
       console.log("Data loaded and canvases initialized.");
-      // Εμφάνιση overlay στην εκκίνηση για το στοιχείο 3 αν είμαστε στη "start"
       if (currentMode === "start" && currentCellPositions[3]) {
         showBalloonOverlay(3);
       }
