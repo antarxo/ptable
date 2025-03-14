@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας - Κώδικας με Hit Testing και Νέα Λογική "Επόμενο"</title>
+  <title>Περιοδικός Πίνακας - Νέα Λογική "Επόμενο" με FillAll</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -112,15 +112,15 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    // Αρχική κατάσταση: mode "start" με currentZ = 3 ώστε να εμφανίζεται τουλάχιστον το στοιχείο 3
+    // Στην αρχική κατάσταση "start" εμφανίζονται τουλάχιστον τα στοιχεία 3 (currentZ = 3)
     let currentMode = "start";
     let currentZ = 3;
-    // Οι μεταβλητές για post filling (extraElements και showPeriods) θα χρησιμοποιηθούν για τα στοιχεία 1,2 και την εμφάνιση περιόδων.
-    let extraElements = {};  // extraElements["1"] και extraElements["2"]
+    // extraElements για τα στοιχεία 1 και 2 (που ενεργοποιούνται στα 119 και 120)
+    let extraElements = {};  
     let showPeriods = false;
     let cellSize = 40; // Μέγεθος κάθε κελιού
 
-    // Global object για αποθήκευση των θέσεων (μόνο των εμφανιζόμενων στοιχείων)
+    // Αντικείμενο για καταγραφή θέσεων (μόνο για τα εμφανιζόμενα στοιχεία)
     let currentCellPositions = {};
 
     // Συναρτήσεις μετατόπισης
@@ -153,12 +153,12 @@
       return 0;
     }
     
-    // Υπολογισμός bounding box για όλα τα εμφανιζόμενα στοιχεία (χωρίς διαχωρισμό των blocks)
+    // Υπολογισμός bounding box για όλα τα εμφανιζόμενα στοιχεία (χωρίς διαχωρισμό blocks)
     function computeModeRegion() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
         let num = Number(e.number);
-        // Στη "start" εμφανίζονται μόνο τα στοιχεία 3 έως currentZ, εκτός εάν ενεργοποιηθούν 1 και 2
+        // Στη "start" εμφανίζονται τα στοιχεία 3 έως currentZ, και τα 1,2 μόνο εάν έχουν ενεργοποιηθεί
         if (currentMode === "start") {
           if ((num < 3 && !extraElements[num]) || num > currentZ) return;
         }
@@ -182,7 +182,7 @@
       return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
 
-    // Ενημέρωση των θέσεων για hit-testing – καταγράφει μόνο τα εμφανιζόμενα στοιχεία
+    // Ενημέρωση των θέσεων για hit-testing – καταγράφονται ΜΟΝΟ τα εμφανιζόμενα στοιχεία
     function updateCellsPositions() {
       currentCellPositions = {};
       elements.forEach(e => {
@@ -190,6 +190,7 @@
         if (currentMode === "start") {
           if ((num < 3 && !extraElements[num]) || num > currentZ) return;
         }
+        // Για τα στοιχεία 1 και 2, καταγράφονται μόνο αν έχουν ενεργοποιηθεί μέσω extraElements
         let pos = positions[currentMode][e.number] || (((e.number === "1" || e.number === "2") && extraElements[e.number]) ? positions["start"][e.number] : null);
         if (!pos) return;
         let offsetX = 0, offsetY = 0;
@@ -239,7 +240,7 @@
       return { minX, minY, maxX, maxY };
     }
     
-    // Ενημέρωση του background με margin 20px από όλες τις πλευρές, με left σταθερό στο 17px.
+    // Ενημέρωση του background με margin 20px από όλες τις πλευρές, με left σταθερό στο "17px"
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
@@ -248,7 +249,6 @@
         if (limits) {
           bg.style.left = "17px";
           bg.style.top = (limits.minY - margin) + "px";
-          // Υπολογισμός width: το διάστημα από 17 έως το maxX + margin
           let width = (limits.maxX - 17) + margin;
           bg.style.width = width + "px";
           bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
@@ -393,7 +393,7 @@
         elements.filter(e => e.block === block).forEach(e => {
           let num = Number(e.number);
           if (currentMode === "start") {
-            // Εμφανίζονται τα στοιχεία 3 έως currentZ, και για τα 1,2 μόνο αν έχουν ενεργοποιηθεί μέσω extraElements.
+            // Εμφανίζονται τα στοιχεία 3 έως currentZ και τα 1,2 μόνο αν έχουν ενεργοποιηθεί
             if ((num < 3 && !extraElements[num]) || num > currentZ) return;
           }
           let pos = positions[currentMode][e.number] || ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
@@ -467,8 +467,8 @@
       }
     }
     
-    // Κουμπί "Συμπλήρωσε": Μεταβαίνουμε στην expanded κατάσταση (currentZ=123)
-    document.getElementById('fillAll').addEventListener('click', function() {
+    // Συνάρτηση fillAllAction: Καθαρίζει τα στοιχεία από την οθόνη και εμφανίζει τον πλήρη πίνακα (expanded)
+    function fillAllAction() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
       currentZ = 123;
@@ -480,6 +480,11 @@
       console.log("FillAll: currentZ set to", currentZ, "- πλήρης εμφάνιση (expanded)");
       updateCellsPositions();
       logHitTestCenter();
+    }
+    
+    // Κουμπί "Συμπλήρωσε": Μεταβαίνουμε στην expanded κατάσταση (full πίνακας)
+    document.getElementById('fillAll').addEventListener('click', function() {
+      fillAllAction();
     });
     
     // Κουμπί "Σύμπτυξε/Ανάπτυξε"
@@ -501,11 +506,11 @@
     });
     
     // Κουμπί "Επόμενο": Λειτουργεί μόνο σε κατάσταση "start" σύμφωνα με τη νέα λογική:
-    // - Εάν currentZ < 119: αύξηση κανονικά.
-    // - Όταν currentZ == 118: στο επόμενο κλικ γίνεται currentZ = 119 και extraElements["1"] ενεργοποιείται.
-    // - Όταν currentZ == 119: στο επόμενο κλικ γίνεται currentZ = 120 και extraElements["2"] ενεργοποιείται.
-    // - Όταν currentZ == 120: στο επόμενο κλικ γίνεται currentZ = 121 και showPeriods ενεργοποιείται.
-    // - Όταν currentZ == 121: στο επόμενο κλικ γίνεται currentZ = 122, εξαφανίζονται όλα και μεταβαίνουμε σε fillAll (expanded, currentZ = 123).
+    // - Αν currentZ < 118: αύξηση κανονικά.
+    // - Όταν currentZ == 118: στο επόμενο κλικ γίνεται currentZ = 119 και ενεργοποιείται το στοιχείο 1 (extraElements["1"] = true).
+    // - Όταν currentZ == 119: στο επόμενο κλικ γίνεται currentZ = 120 και ενεργοποιείται το στοιχείο 2 (extraElements["2"] = true).
+    // - Όταν currentZ == 120: στο επόμενο κλικ γίνεται currentZ = 121 και εμφανίζονται οι περίοδοι (showPeriods = true).
+    // - Όταν currentZ == 121: στο επόμενο κλικ όλα εξαφανίζονται (σβήνονται) και καλείται η fillAllAction για εμφάνιση πλήρους πίνακα.
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         console.log("Το κουμπί 'Επόμενο' λειτουργεί μόνο στην κατάσταση 'start'. Κάντε Reset για επαναφορά.");
@@ -523,10 +528,9 @@
         currentZ = 121;
         showPeriods = true;
       } else if (currentZ === 121) {
-        currentZ = 122;
-        // Στο 122 εξαφανίζονται όλα και μεταβαίνει στην expanded κατάσταση (fillAll)
-        currentMode = "expanded";
-        currentZ = 123;
+        // Όταν φτάνει στο 121, στο επόμενο κλικ εξαφανίζονται όλα και καλείται η fillAllAction
+        fillAllAction();
+        return;
       }
       initializeBackgroundCanvas();
       initializeSectorsCanvas();
