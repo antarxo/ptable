@@ -9,11 +9,11 @@
     /* Νέο στυλ για τον τίτλο με σκιά προς τα κάτω και δεξιά */
     #pageTitleOverlay {
       position: fixed;
-      top: 5px;  /* top 5 */
+      top: 5px;
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.9); /* σκιά με οριζόντια και κάθετη μετατόπιση */
+      box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.9); /* οριζόντια και κάθετη μετατόπιση */
       padding: 5px 10px;
       z-index: 999;
       display: flex;
@@ -22,7 +22,7 @@
       width: auto;
       white-space: nowrap;
     }
-    /* Στοιχεία του τίτλου σε μία γραμμή */
+    /* Στοιχεία του τίτλου */
     #pageTitleOverlay h1,
     #pageTitleOverlay h2 {
       display: inline-block;
@@ -41,13 +41,12 @@
       font-weight: normal;
       color: #333;
     }
-    /* Βασικές ρυθμίσεις */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
       overflow: hidden; 
       background: #f7f7f7; 
-      padding-top: 60px; /* για να μην καλύπτεται ο τίτλος */
+      padding-top: 60px;
     }
     .canvas { 
       position: absolute; 
@@ -59,7 +58,6 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas – με z-index -5 */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -238,31 +236,9 @@
       }
     });
   
-    /********** ΔΕΙΚΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΓΙΑ ΤΑ BALLON ELEMENTS **********/
+    /********** ΣΥΝΑΡΤΗΣΕΙΣ ΓΙΑ ΤΟ BALLOON OVERLAY **********/
   
-    // Παλιό pair (6 σειρών) για τη δεξιά στήλη του balloon overlay
-    function rowHTMLPair(element, type) {
-      if (!element) {
-        return `
-          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
-          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
-        `;
-      }
-      let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
-      let color = textColors[element.block] || "#CCCCCC";
-      return `
-        <tr style="${borderStyle}">
-          <td style="color:${color}; font-weight:bold; font-size:12px;">Ζ=${element.number}</td>
-          <td style="color:${color}; font-size:12px;">${element.subshells || "-"}</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td style="color:${color}; font-size:12px;">${formatShells(element)}</td>
-        </tr>
-      `;
-    }
-  
-    // Νέα συνάρτηση για εμφάνιση του Ζ σε μία σειρά (αριστερή στήλη του balloon)
+    // Συναρτησία για την αριστερή στήλη: 3 σειρές με ένα κελί η καθεμία που εμφανίζει το "Ζ=..."
     function rowZ(element) {
       let color = element ? (textColors[element.block] || "#CCCCCC") : "#CCCCCC";
       let zText = element ? `Ζ=${element.number}` : "-";
@@ -273,10 +249,34 @@
               </tr>`;
     }
   
+    // Νέα συναρτησία για τη δεξιά στήλη: διατηρείται η υπάρχουσα δομή (2 σειρές ανά στοιχείο) αλλά εμφανίζονται ΜΟΝΟ οι υποστιβάδες
+    // Καμία διακριτική γραμμή δεν προστίθεται.
+    function rowSubshells(element) {
+      if (!element) {
+        return `<tr>
+                  <td style="text-align:center; font-size:12px;">-</td>
+                </tr>
+                <tr>
+                  <td style="text-align:center; font-size:12px;">-</td>
+                </tr>`;
+      }
+      let color = textColors[element.block] || "#CCCCCC";
+      return `<tr>
+                <td style="color:${color}; font-size:12px; text-align:center;">
+                  ${element.subshells || "-"}
+                </td>
+              </tr>
+              <tr>
+                <td style="color:${color}; font-size:12px; text-align:center;">
+                  ${formatShells(element)}
+                </td>
+              </tr>`;
+    }
+  
     // Τροποποιημένη συνάρτηση για το Balloon Overlay:
     // Ο κύριος πίνακας έχει 2 στήλες:
-    // • Αριστερή: 3 σειρές με τα Ζ του προηγούμενου, τρέχοντος και επόμενου στοιχείου.
-    // • Δεξιά: διατηρεί την υπάρχουσα δομή (6 σειρές) μέσω της rowHTMLPair.
+    // • Αριστερή: 3 σειρές (μέσω rowZ) για το προηγούμενο, τρέχον και επόμενο στοιχείο.
+    // • Δεξιά: 6 σειρές (μέσω rowSubshells) που εμφανίζουν ΜΟΝΟ τις υποστιβάδες.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -291,9 +291,9 @@
                            </table>`;
       
       let rightTableHTML = `<table style="border-collapse: collapse; width:100%;">
-                              ${rowHTMLPair(prevElement, "prev")}
-                              ${rowHTMLPair(currentElement, "current")}
-                              ${rowHTMLPair(nextElement, "next")}
+                              ${rowSubshells(prevElement)}
+                              ${rowSubshells(currentElement)}
+                              ${rowSubshells(nextElement)}
                             </table>`;
       
       let tableHTML = `<table style="width:100%; border-collapse: collapse;">
