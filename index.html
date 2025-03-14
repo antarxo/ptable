@@ -66,12 +66,10 @@
     }
     /* Offscreen canvas για color picking */
     #offscreenCanvas { display: none; }
-    /* Balloon overlay – επιστροφή στην αρχική εμφάνιση (χωρίς περιγράμματα κελιών) */
+    /* Balloon overlay – εμφανίζεται με διαχωριστικές οριζόντιες γραμμές μόνο μεταξύ των υποστιβάδων */
     #balloonOverlay {
       position: absolute;
       background: white;
-      /* Αφαιρούμε το εξωτερικό border */
-      /* border: 1px solid rgba(0,0,0,0.2); */
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
       padding: 6px 8px;
       border-radius: 5px;
@@ -81,13 +79,10 @@
       transition: opacity 0.3s ease;
       pointer-events: none;
     }
-    /* Info Panel – τοποθετούμε το panel σύμφωνα με τις απαιτήσεις */
+    /* Info Panel για Expanded */
     #infoPanelFull {
       position: fixed;
-      /* Το top θα οριστεί δυναμικά ώστε να είναι ίδιο με το κουμπί "Επόμενο" */
-      top: 0;
-      /* Το width θα είναι 17px μικρότερο από το left των κουμπιών (ορίζεται δυναμικά) */
-      width: 300px;
+      top: 0; /* το top θα οριστεί δυναμικά ώστε να είναι ίδιο με το κουμπί "Επόμενο" */
       left: 0;
       background: #fff;
       border: 2px solid #333;
@@ -97,37 +92,47 @@
       z-index: 40;
       transition: top 0.8s ease, width 0.8s ease;
     }
-    /* Δομή του info panel ως πίνακας χωρίς κάθετα περιγράμματα αλλά με οριζόντιες διαχωριστικές γραμμές */
-    #infoTable {
+    /* Info Panel για Collapsed */
+    #infoPanelCollapsed {
+      position: fixed;
+      background: #fff;
+      border: 2px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 3px 3px rgba(0,0,0,0.3);
+      padding: 10px;
+      z-index: 40;
+    }
+    /* Δομή των info panels ως πίνακες χωρίς κάθετα περιγράμματα αλλά με οριζόντιες διαχωριστικές γραμμές */
+    #infoTable, #infoTableCollapsed {
       width: 100%;
       border-collapse: collapse;
     }
-    #infoTable td {
+    #infoTable td, #infoTableCollapsed td {
       border: none;
       border-bottom: 1px solid #ccc;
       vertical-align: top;
       padding: 4px;
     }
     /* Η πρώτη στήλη έχει σταθερό πλάτος 160px */
-    #infoLeft {
+    #infoLeft, #infoLeftCollapsed {
       width: 160px;
     }
     /* Η δεύτερη στήλη περιέχει έναν εσωτερικό πίνακα */
-    #infoRight table {
+    #infoRight table, #infoRightCollapsed table {
       width: 100%;
       border-collapse: collapse;
     }
-    #infoRight table td {
+    #infoRight table td, #infoRightCollapsed table td {
       border: none;
       border-bottom: 1px solid #ccc;
       vertical-align: top;
       padding: 4px;
     }
-    /* Η πρώτη σειρά του εσωτερικού πίνακα: δύο στήλες (70% και 30%) */
-    #infoSubshells {
+    /* Σειρές του εσωτερικού πίνακα: 70% για υποστιβάδες και 30% για στιβάδες + μήνυμα */
+    #infoSubshells, #infoSubshellsCollapsed {
       width: 70%;
     }
-    #infoShellsMsg {
+    #infoShellsMsg, #infoShellsMsgCollapsed {
       width: 30%;
     }
   </style>
@@ -147,7 +152,7 @@
   <!-- Balloon Overlay -->
   <div id="balloonOverlay"></div>
   
-  <!-- Info Panel (Full) -->
+  <!-- Info Panel για Expanded -->
   <div id="infoPanelFull">
     <table id="infoTable">
       <tr>
@@ -160,6 +165,26 @@
             </tr>
             <tr>
               <td colspan="2" id="infoRemarks"></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+  
+  <!-- Info Panel για Collapsed -->
+  <div id="infoPanelCollapsed" style="display:none;">
+    <table id="infoTableCollapsed">
+      <tr>
+        <td id="infoLeftCollapsed"></td>
+        <td id="infoRightCollapsed">
+          <table>
+            <tr>
+              <td id="infoSubshellsCollapsed"></td>
+              <td id="infoShellsMsgCollapsed"></td>
+            </tr>
+            <tr>
+              <td colspan="2" id="infoRemarksCollapsed"></td>
             </tr>
           </table>
         </td>
@@ -197,9 +222,11 @@
     /********************** Συνάρτηση για τη δημιουργία HTML γραμμής στο balloon overlay **********************/
     function rowHTML(element, type) {
       if (!element) return `<tr><td colspan="2" style="text-align:center;">-</td></tr>`;
+      // Προσθέτουμε οριζόντια γραμμή (border-bottom) στις πρώτες δύο σειρές
+      let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
       let color = sectorColors[element.block] || "#CCCCCC";
       return `
-        <tr>
+        <tr style="${borderStyle}">
           <td style="color:${color}; font-weight:bold;">Ζ=${element.number}</td>
           <td>${element.subshells || "-"}</td>
         </tr>`;
@@ -529,21 +556,20 @@
         return "";
       }
     }
-    /* -------------------- Συνάρτηση ενημέρωσης του Info Panel -------------------- */
+    /* -------------------- Συνάρτηση ενημέρωσης των Info Panels -------------------- */
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
-      let prevElement = getPrevElement(currentElement);
-      let nextElement = getNextElement(currentElement);
       
+      // Δημιουργία του περιεχομένου (ίδιο για Expanded και Collapsed)
       let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentElement.number}</span> 
                       <span style="font-size:3em; font-weight:bold; color:${sectorColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       
-      let prevStr = `<div style="color:${sectorColors[prevElement ? prevElement.block : '']};">Ζ=${prevElement ? (prevElement.number + " " + prevElement.subshells) : "-"}</div>`;
+      let prevStr = `<div style="color:${sectorColors[prevElement = getPrevElement(currentElement)] || ''};">Ζ=${prevElement ? (prevElement.number + " " + prevElement.subshells) : "-"}</div>`;
       let currentStr = `<div style="font-weight:bold; color:${sectorColors[currentElement.block]};">Ζ=${currentElement.number} ${currentElement.subshells}</div>`;
-      let nextStr = `<div style="color:${sectorColors[nextElement ? nextElement.block : '']};">Ζ=${nextElement ? nextElement.number : ""} ${nextElement ? nextElement.subshells : "-"}</div>`;
+      let nextStr = `<div style="color:${sectorColors[nextElement = getNextElement(currentElement)] || ''};">Ζ=${nextElement ? nextElement.number : ""} ${nextElement ? nextElement.subshells : "-"}</div>`;
       let subshellsHTML = prevStr + currentStr + nextStr;
       
       let shellsMsgHTML = `<div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
@@ -551,15 +577,38 @@
       
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       
+      // Ενημέρωση Expanded Panel
+      let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
       document.getElementById("infoSubshells").innerHTML = subshellsHTML;
       document.getElementById("infoShellsMsg").innerHTML = shellsMsgHTML;
       document.getElementById("infoRemarks").innerHTML = remarksHTML;
       
       let btnPanelRect = document.getElementById("buttonPanel").getBoundingClientRect();
-      let infoPanel = document.getElementById("infoPanelFull");
-      infoPanel.style.top = btnPanelRect.top + "px";
-      infoPanel.style.width = (btnPanelRect.left - 17) + "px";
+      infoPanelFull.style.top = btnPanelRect.top + "px";
+      // Ορίζουμε το πλάτος ώστε το δεξί του όριο να απέχει 20px από το left των κουμπιών
+      infoPanelFull.style.width = (btnPanelRect.left - 20) + "px";
+      
+      // Ενημέρωση Collapsed Panel (μόνο όταν η κατάσταση είναι collapsed)
+      if (currentMode === "collapsed") {
+        let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
+        // Τοποθετούμε το panel 20px δεξιά από το background
+        let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
+        infoPanelCollapsed.style.left = (bgRect.right + 20) + "px";
+        // Το top το ορίζουμε ίσο με το top του στοιχείου "1"
+        if (positions[currentMode] && positions[currentMode]["1"]) {
+          infoPanelCollapsed.style.top = positions[currentMode]["1"].y + "px";
+        }
+        // Το πλάτος ώστε το δεξί όριο να ευθυγραμμίζεται με το δεξί όριο των κουμπιών
+        infoPanelCollapsed.style.width = (btnPanelRect.left - (bgRect.right + 20)) + "px";
+        // Το ύψος θα είναι auto
+        infoPanelCollapsed.style.height = "auto";
+        
+        document.getElementById("infoLeftCollapsed").innerHTML = leftHTML;
+        document.getElementById("infoSubshellsCollapsed").innerHTML = subshellsHTML;
+        document.getElementById("infoShellsMsgCollapsed").innerHTML = shellsMsgHTML;
+        document.getElementById("infoRemarksCollapsed").innerHTML = remarksHTML;
+      }
     }
     /* -------------------- Συνάρτηση σχεδίασης στοιχείων στο p5 canvas -------------------- */
     function drawElements(p, block, containerLeft, containerTop) {
@@ -627,6 +676,8 @@
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
+      // Ενημέρωση του Info Panel
+      updateInfo();
     }
     /* -------------------- Συνάρτηση fillAllAction -------------------- */
     function fillAllAction() {
@@ -647,6 +698,9 @@
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
       currentMode = isCollapsed ? "collapsed" : "expanded";
+      // Εμφάνιση/απόκρυψη του αντίστοιχου info panel
+      document.getElementById("infoPanelFull").style.display = (currentMode === "expanded") ? "block" : "none";
+      document.getElementById("infoPanelCollapsed").style.display = (currentMode === "collapsed") ? "block" : "none";
       initializeBackgroundCanvas();
       window.initializeSectorsCanvas();
       ["S", "D", "P"].forEach(sector => {
