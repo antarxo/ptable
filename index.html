@@ -370,89 +370,81 @@
       });
     }
     
-    // Συνάρτηση για την αρχικοποίηση του canvas για τους τομείς (sectors)
-    function initializeSectorsCanvas() {
-      let blocks = ["s", "p", "d", "f"];
-      blocks.forEach(block => {
-        let container = document.getElementById("canvas" + block.toUpperCase());
-        container.innerHTML = "";
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        elements.filter(e => e.block === block).forEach(e => {
-          let num = Number(e.number);
-          if (currentMode === "start") {
-            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
-          }
-          let pos = positions[currentMode][e.number] ||
-                    ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
-          if (pos) {
-            let yForMin = pos.y, yForMax = pos.y;
-            if (currentMode === "start") {
-              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
-              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
-            }
-            minX = Math.min(minX, pos.x);
-            minY = Math.min(minY, yForMin);
-            maxX = Math.max(maxX, pos.x + pos.width);
-            maxY = Math.max(maxY, yForMax + pos.height);
-          }
-        });
-        if (minX === Infinity || minY === Infinity) return;
-        if (currentMode === "start" && (block === "p" || block === "d"))
-          container.style.left = (minX + getShiftContainer(block)) + "px";
-        else
-          container.style.left = minX + "px";
-        container.style.top = minY + "px";
-        container.style.width = (maxX - minX) + "px";
-        container.style.height = (maxY - minY) + "px";
-        new p5(function(p) {
-          p.setup = function() {
-            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
-            canvas.parent("canvas" + block.toUpperCase());
-            drawElements(p, block, minX, minY);
-          };
-        });
-      });
+    /* 
+     * ΝΕΕΣ συναρτήσεις για επιλογή προηγούμενου και επόμενου στοιχείου:
+     * - Για το προηγούμενο: αναζητούμε το στοιχείο στην ίδια στήλη (col) με row ίση με (τρέχον row - 1).
+     * - Για το επόμενο: αναζητούμε το στοιχείο στην ίδια σειρά (row) με col ίση με (τρέχον col + 1).
+     * Αυτό σύμφωνα με το παράδειγμα: για τρέχον το 11, προηγούμενο το 3 (π.χ. Li) και επόμενο το 12 (π.χ. Mg).
+     */
+    function getPrevElement(currentElement) {
+      let prev = elements.find(e => e.col == currentElement.col && e.row == currentElement.row - 1);
+      return prev || null;
     }
-    window.initializeSectorsCanvas = initializeSectorsCanvas;
     
-    // Balloon overlay: κάθε στοιχείο θα εμφανίζεται σε μία γραμμή (3 συνολικά: προηγούμενο, τρέχον, επόμενο)
-    function rowHTML(element, isCurrent) {
+    function getNextElement(currentElement) {
+      let next = elements.find(e => e.row == currentElement.row && e.col == currentElement.col + 1);
+      return next || null;
+    }
+    
+    /* 
+     * Δημιουργία του HTML για κάθε γραμμή στο balloon overlay.
+     * Κάθε γραμμή αντιστοιχεί σε ένα στοιχείο (προηγούμενο, τρέχον, επόμενο).
+     * Η γραμμή αποτελείται από δύο "σειρές" (div):
+     * - Πρώτη: τα subshells. Για το τρέχον στοιχείο εμφανίζονται με <b> ολόκληρη.
+     * - Δεύτερη: τα shells σε μορφή "K(2), L8, M(3)" με bold μόνο το τελευταίο.
+     * Επιπλέον, ο αριθμός (Ζ=...) εμφανίζεται στην αριστερή στήλη, και όλα τα κείμενα έχουν το χρώμα του τομέα.
+     */
+    function rowHTML(element, role) {
       if (!element) {
-        return `<div style="display: table-row;">
-                  <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">-</div>
-                  <div style="display: table-cell; vertical-align: top; padding:2px;">-</div>
-                </div>`;
+        return `<tr style="color: #000;">
+                  <td style="padding: 2px; min-width:50px; border-right:1px solid lightgray;">-</td>
+                  <td style="padding: 2px; font-size:11px; line-height:1.1;">-<br>-</td>
+                </tr>`;
       }
-      let atomicNumberText = isCurrent ? `<b>Ζ=${element.number}</b>` : `Ζ=${element.number}`;
+      let color = sectorColors[element.block] || "#000";
+      let atomicHTML = (role === "current") ? `<b>Ζ=${element.number}</b>` : `Ζ=${element.number}`;
+      
       let subs = getSubshells(element);
-      let rawLine = "";
-      if (subs.length > 0) {
-        rawLine = isCurrent ? `<b>${subs.join(" ")}</b>` 
-                            : subs.slice(0, subs.length - 1).join(" ") + " <b>" + subs[subs.length - 1] + "</b>";
+      let subsLine = subs.join(" ");
+      if(role === "current"){
+          subsLine = `<b>${subsLine}</b>`;
       }
+      
       let shells = subs.map(s => formatSubshell(s));
       let shellsLine = "";
-      if (shells.length > 0) {
-        shellsLine = shells.slice(0, shells.length - 1).join(" ") + " <b>" + shells[shells.length - 1] + "</b>";
+      if(shells.length > 0){
+        let allButLast = shells.slice(0, shells.length - 1).join(", ");
+        let last = `<b>${shells[shells.length - 1]}</b>`;
+        shellsLine = (allButLast.length > 0) ? allButLast + ", " + last : last;
       }
-      let colorStyle = sectorColors[element.block] ? `color: ${sectorColors[element.block]};` : "";
-      return `<div style="display: table-row;">
-                <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">${atomicNumberText}</div>
-                <div style="display: table-cell; vertical-align: top; padding:2px; font-size:11px; line-height:1.1;">${rawLine}<br><span style="${colorStyle}">${shellsLine}</span></div>
-              </div>`;
+      
+      return `<tr style="color: ${color};">
+                <td style="padding: 2px; min-width:50px; border-right:1px solid lightgray;">${atomicHTML}</td>
+                <td style="padding: 2px; font-size:11px; line-height:1.1;">
+                  <div>${subsLine}</div>
+                  <div>${shellsLine}</div>
+                </td>
+              </tr>`;
     }
     
+    /* 
+     * Εμφάνιση του balloon overlay:
+     * Δημιουργείται πίνακας (<table>) με τρεις γραμμές (tr):
+     * 1η γραμμή: Προηγούμενο στοιχείο
+     * 2η γραμμή: Τρέχον στοιχείο (με bold στις γραμμές όπως ζητήθηκε)
+     * 3η γραμμή: Επόμενο στοιχείο
+     */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
       currentBalloonElement = elementNumber;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      let tableHTML = `<div style="display: table; border-collapse: collapse;">`
-                      + rowHTML(prevElement, false)
-                      + rowHTML(currentElement, true)
-                      + rowHTML(nextElement, false)
-                      + `</div>`;
+      let tableHTML = `<table style="border-collapse: collapse;">`
+                      + rowHTML(prevElement, "prev")
+                      + rowHTML(currentElement, "current")
+                      + rowHTML(nextElement, "next")
+                      + `</table>`;
       let overlay = document.getElementById("balloonOverlay");
       overlay.innerHTML = tableHTML;
       let cellPos = currentCellPositions[elementNumber];
@@ -468,59 +460,6 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-    }
-    
-    // Συναρτήσεις για υποστιβάδες και στιβάδες
-    function getSubshells(element) {
-      if (!element) return [];
-      if (typeof element.subshells === "string") return element.subshells.split(" ");
-      if (Array.isArray(element.subshells)) return element.subshells;
-      return [];
-    }
-    function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
-      return mapping[n] || n;
-    }
-    function formatSubshell(subshell) {
-      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
-      if(match){
-         let principal = match[1];
-         let count = match[2];
-         return shellLetter(principal) + "(" + count + ")";
-      }
-      return subshell;
-    }
-    
-    // Για ταξινόμηση των στοιχείων βάσει της θέσης τους (για το balloon overlay)
-    function getOrderedElements() {
-      let displayed = elements.filter(e => currentCellPositions[e.number]);
-      displayed.sort((a, b) => {
-        let posA = currentCellPositions[a.number];
-        let posB = currentCellPositions[b.number];
-        if (posA.y === posB.y) {
-          return posA.x - posB.x;
-        }
-        return posA.y - posB.y;
-      });
-      return displayed;
-    }
-    
-    function getPrevElement(currentElement) {
-      let ordered = getOrderedElements();
-      let index = ordered.findIndex(e => e.number == currentElement.number);
-      if(index > 0) {
-         return ordered[index - 1];
-      }
-      return null;
-    }
-    
-    function getNextElement(currentElement) {
-      let ordered = getOrderedElements();
-      let index = ordered.findIndex(e => e.number == currentElement.number);
-      if(index >= 0 && index < ordered.length - 1) {
-         return ordered[index + 1];
-      }
-      return null;
     }
     
     // Σχεδίαση στοιχείων στο p5 canvas (με stroke 3 για το επιλεγμένο κελί)
@@ -616,6 +555,7 @@
       if (showPeriods) initializePeriodsCanvas();
       updateCellsPositions();
       if(currentCellPositions[currentZ]) {
+         // Στη λειτουργία "Επόμενο" το τρέχον κελί (και όχι το προηγούμενο) εμφανίζεται με έντονο περίγραμμα
          showBalloonOverlay(currentZ);
       }
     });
@@ -709,6 +649,27 @@
       }
     }
     
+    // Συναρτήσεις για υποστιβάδες και στιβάδες
+    function getSubshells(element) {
+      if (!element) return [];
+      if (typeof element.subshells === "string") return element.subshells.split(" ");
+      if (Array.isArray(element.subshells)) return element.subshells;
+      return [];
+    }
+    function shellLetter(n) {
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      return mapping[n] || n;
+    }
+    function formatSubshell(subshell) {
+      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
+      if(match){
+         let principal = match[1];
+         let count = match[2];
+         return shellLetter(principal) + "(" + count + ")";
+      }
+      return subshell;
+    }
+    
     // Φόρτωση δεδομένων και αρχικοποίηση
     loadData().then(() => {
       if (currentMode === "expanded" || currentMode === "collapsed") {
@@ -727,6 +688,51 @@
         showBalloonOverlay(3);
       }
     });
+    
+    // Συνάρτηση για αρχικοποίηση των καμβάδων τομέων (sectors)
+    function initializeSectorsCanvas() {
+      let blocks = ["s", "p", "d", "f"];
+      blocks.forEach(block => {
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.filter(e => e.block === block).forEach(e => {
+          let num = Number(e.number);
+          if (currentMode === "start") {
+            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          }
+          let pos = positions[currentMode][e.number] ||
+                    ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
+          if (pos) {
+            let yForMin = pos.y, yForMax = pos.y;
+            if (currentMode === "start") {
+              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
+              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
+            }
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, yForMin);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, yForMax + pos.height);
+          }
+        });
+        if (minX === Infinity || minY === Infinity) return;
+        if (currentMode === "start" && (block === "p" || block === "d"))
+          container.style.left = (minX + getShiftContainer(block)) + "px";
+        else
+          container.style.left = minX + "px";
+        container.style.top = minY + "px";
+        container.style.width = (maxX - minX) + "px";
+        container.style.height = (maxY - minY) + "px";
+        new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+            canvas.parent("canvas" + block.toUpperCase());
+            drawElements(p, block, minX, minY);
+          };
+        });
+      });
+    }
+    window.initializeSectorsCanvas = initializeSectorsCanvas;
   </script>
 </body>
 </html>
