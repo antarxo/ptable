@@ -9,12 +9,12 @@
     /* Νέο στυλ για τον τίτλο */
     #pageTitleOverlay {
       position: fixed;
-      top: 5px;  /* top 5 */
+      top: 5px;
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.9); /* πιο έντονη σκιά */
-      padding: 5px 10px;  /* μικρό περιθώριο αριστερά και δεξιά */
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.9);
+      padding: 5px 10px;
       z-index: 999;
       display: flex;
       align-items: center;
@@ -30,27 +30,25 @@
       vertical-align: middle;
       white-space: nowrap;
     }
-    /* Κύρια φράση τίτλου – με υπολογιζόμενο left-padding */
+    /* Κύρια φράση τίτλου */
     #pageTitleOverlay h1 {
-      font-size: 24px; /* μέγεθος 24 */
+      font-size: 24px;
       font-weight: bold;
       color: black;
-      letter-spacing: 1px; /* ομοιόμορφες αποστάσεις χαρακτήρων */
-      /* Το left padding θα οριστεί δυναμικά ώστε το κενό πριν την φράση να ισούται με το πλάτος του h2 + 5px */
+      letter-spacing: 1px;
     }
     /* Δεύτερη φράση */
     #pageTitleOverlay h2 {
-      font-size: 11px; /* μέγεθος 11 */
+      font-size: 11px;
       font-weight: normal;
       color: #333;
     }
-    /* Βασικές ρυθμίσεις */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
       overflow: hidden; 
       background: #f7f7f7; 
-      padding-top: 60px; /* για να μην καλύπτεται ο τίτλος */
+      padding-top: 60px;
     }
     .canvas { 
       position: absolute; 
@@ -149,7 +147,6 @@
   <div id="pageTitleOverlay">
     <h1>
       Διαδραστική Συμπλήρωση του 
-      <!-- Έγχρωμη λέξη με χρωματισμό ανά χαρακτήρα (σειρά: s, f, d, p) -->
       <span id="styledPeriodicou">
         <span style="color: #8B0000;">Π</span>
         <span style="color: #FF8C00;">ε</span>
@@ -233,17 +230,17 @@
     let currentBalloonElement = null;
     let sectorInstances = [];
 
-    // Μετά τη φόρτωση, υπολογίζουμε το πλάτος του h2 και το ορίζουμε ως left-padding για το h1
     window.addEventListener('load', function(){
       const h2 = document.querySelector('#pageTitleOverlay h2');
       const h1 = document.querySelector('#pageTitleOverlay h1');
-      const gap = 5; // επιπλέον κενό
+      const gap = 5;
       if(h2 && h1) {
         h1.style.paddingLeft = (h2.offsetWidth + gap) + 'px';
       }
     });
 
     function rowHTMLPair(element, type) {
+      // Η συνάρτηση αυτή χρησιμοποιείται για το info panel και όχι για το balloon.
       if (!element) {
         return `
           <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
@@ -263,6 +260,7 @@
         </tr>
       `;
     }
+
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -582,6 +580,73 @@
         return "";
       }
     }
+    
+    // --- Νέα υλοποίηση της showBalloonOverlay με δομή MsWord πίνακα ---
+    function showBalloonOverlay(elementNumber) {
+      let currentElement = elements.find(e => e.number == elementNumber);
+      if (!currentElement) return;
+      currentBalloonElement = elementNumber;
+      let prevElement = getPrevElement(currentElement);
+      let nextElement = getNextElement(currentElement);
+
+      let prevColor = prevElement ? (textColors[prevElement.block] || "#CCCCCC") : "#CCCCCC";
+      let currColor = currentElement ? (textColors[currentElement.block] || "#CCCCCC") : "#CCCCCC";
+      let nextColor = nextElement ? (textColors[nextElement.block] || "#CCCCCC") : "#CCCCCC";
+
+      let prevSubshells = prevElement ? (prevElement.subshells || "-") : "-";
+      let prevShells = prevElement ? formatShells(prevElement) : "-";
+      let currSubshells = currentElement ? (currentElement.subshells || "-") : "-";
+      let currShells = currentElement ? formatShells(currentElement) : "-";
+      let nextSubshells = nextElement ? (nextElement.subshells || "-") : "-";
+      let nextShells = nextElement ? formatShells(nextElement) : "-";
+
+      let tableHTML = `
+      <table style="border-collapse: collapse; width:100%; font-size:12px;">
+        <tr>
+          <td rowspan="2" style="color:${prevColor}; font-weight:bold; border-bottom:1px solid #ccc;">Ζ=${prevElement ? prevElement.number : "-"}</td>
+          <td style="color:${prevColor};">${prevSubshells}</td>
+        </tr>
+        <tr>
+          <td style="color:${prevColor};">${prevShells}</td>
+        </tr>
+        <tr>
+          <td rowspan="2" style="color:${currColor}; font-weight:bold; border-bottom:1px solid #ccc;">Ζ=${currentElement ? currentElement.number : "-"}</td>
+          <td style="color:${currColor};">${currSubshells}</td>
+        </tr>
+        <tr>
+          <td style="color:${currColor};">${currShells}</td>
+        </tr>
+        <tr>
+          <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${nextElement ? nextElement.number : "-"}</td>
+          <td style="color:${nextColor};">${nextSubshells}</td>
+        </tr>
+        <tr>
+          <td style="color:${nextColor};">${nextShells}</td>
+        </tr>
+      </table>
+      `;
+      let overlay = document.getElementById("balloonOverlay");
+      overlay.innerHTML = tableHTML;
+      let cellPos = currentCellPositions[elementNumber];
+      if (!cellPos) return;
+      overlay.style.visibility = "visible";
+      overlay.style.opacity = "0";
+      let overlayRect = overlay.getBoundingClientRect();
+      let overlayWidth = overlayRect.width;
+      let cellRight = cellPos.x + cellPos.width;
+      let screenHalf = window.innerWidth / 2;
+      let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
+      let overlayY = cellPos.y + cellPos.height - 5;
+      overlay.style.left = overlayX + "px";
+      overlay.style.top = overlayY + "px";
+      overlay.style.fontSize = "12px";
+      setTimeout(() => { overlay.style.opacity = "1"; }, 10);
+      sectorInstances.forEach(inst => {
+        if (typeof inst.myRedraw === "function") inst.myRedraw();
+      });
+      updateInfo();
+    }
+    
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -704,37 +769,8 @@
         }
       });
     }
-    function showBalloonOverlay(elementNumber) {
-      let currentElement = elements.find(e => e.number == elementNumber);
-      if (!currentElement) return;
-      currentBalloonElement = elementNumber;
-      let prevElement = getPrevElement(currentElement);
-      let nextElement = getNextElement(currentElement);
-      let tableHTML = `<table style="border-collapse: collapse; width:100%;">`
-                      + rowHTMLPair(prevElement, "prev")
-                      + rowHTMLPair(currentElement, "current")
-                      + rowHTMLPair(nextElement, "next")
-                      + `</table>`;
-      let overlay = document.getElementById("balloonOverlay");
-      overlay.innerHTML = tableHTML;
-      let cellPos = currentCellPositions[elementNumber];
-      if (!cellPos) return;
-      overlay.style.visibility = "visible";
-      overlay.style.opacity = "0";
-      let overlayRect = overlay.getBoundingClientRect();
-      let overlayWidth = overlayRect.width;
-      let cellRight = cellPos.x + cellPos.width;
-      let screenHalf = window.innerWidth / 2;
-      let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
-      let overlayY = cellPos.y + cellPos.height - 5;
-      overlay.style.left = overlayX + "px";
-      overlay.style.top = overlayY + "px";
-      overlay.style.fontSize = "12px";
-      setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-      sectorInstances.forEach(inst => {
-        if (typeof inst.myRedraw === "function") inst.myRedraw();
-      });
-      updateInfo();
+    function showBalloonOverlayOld(elementNumber) {
+      // Παλαιά υλοποίηση (μη χρησιμοποιούμενη πλέον)
     }
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
