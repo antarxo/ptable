@@ -13,38 +13,36 @@
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8); /* πιο έντονη σκιά */
-      padding: 5px 10px;  /* μειωμένο padding ώστε να περιβάλλει μόλις το κείμενο */
-      z-index: 999;    /* υψηλό z-index ώστε να κατατάσσεται πάνω από άλλα στοιχεία */
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.9); /* πιο έντονη σκιά */
+      padding: 5px 10px;  /* μικρό περιθώριο αριστερά και δεξιά */
+      z-index: 999;
       display: flex;
       align-items: center;
-      gap: 5px;  /* μικρό κενό μεταξύ των στοιχείων */
-      width: auto; /* πλάτος ώστε να περιβάλλει το κείμενο */
+      gap: 10px;
+      width: auto;
     }
-
-    /* Εμφάνιση των στοιχείων του τίτλου σε μία γραμμή */
+    /* Τα στοιχεία του τίτλου σε μία γραμμή */
     #pageTitleOverlay h1,
     #pageTitleOverlay h2 {
       display: inline-block;
       margin: 0;
       vertical-align: middle;
     }
-
     /* Κύριο κείμενο τίτλου */
     #pageTitleOverlay h1 {
-      font-size: 22px; /* μέγεθος 22 για "Διαδραστική Συμπλήρωση..." */
+      font-size: 24px; /* μέγεθος 24 για "Διαδραστική Συμπλήρωση..." */
       font-weight: bold;
       color: black;
-      letter-spacing: 0.5px; /* διορθώνει τις αποστάσεις μεταξύ των χαρακτήρων */
+      letter-spacing: 1px; /* ομοιόμορφες αποστάσεις χαρακτήρων */
+      white-space: nowrap; /* για να μην γίνεται wrap */
     }
-
     /* Συμπληρωματικό κείμενο */
     #pageTitleOverlay h2 {
-      font-size: 10px; /* μέγεθος 10 για το "2025, ..." */
+      font-size: 11px; /* μέγεθος 11 για το "2025, ..." */
       font-weight: normal;
       color: #333;
+      white-space: nowrap;
     }
-
     /* Βασικές ρυθμίσεις */
     body { 
       font-family: 'Roboto', sans-serif; 
@@ -120,7 +118,7 @@
       pointer-events: none;
       font-size: 12px;
     }
-    /* Info Panel Expanded – z-index -10, πιο έντονη "βύθιση" */
+    /* Info Panel Expanded – z-index -10 */
     #infoPanelFull {
       position: fixed;
       top: 0;
@@ -133,7 +131,7 @@
       z-index: -10;
       transition: all 0.5s ease;
     }
-    /* Info Panel Collapsed – z-index -20, πιο έντονη "βύθιση" */
+    /* Info Panel Collapsed – z-index -20 */
     #infoPanelCollapsed {
       position: fixed;
       background: #fff;
@@ -151,11 +149,18 @@
   <div id="pageTitleOverlay">
     <h1>
       Διαδραστική Συμπλήρωση του 
+      <!-- Έγχρωμη λέξη με χρωματισμό ανά χαρακτήρα (σειρά: s, f, d, p) -->
       <span id="styledPeriodicou">
-        <span id="periodPart1" style="color: #8B0000;">Πε</span>
-        <span id="periodPart2" style="color: #FF8C00;">ριο</span>
-        <span id="periodPart3" style="color: #00008B;">δικ</span>
-        <span id="periodPart4" style="color: #006400;">ού</span>
+        <span style="color: #8B0000;">Π</span>
+        <span style="color: #FF8C00;">ε</span>
+        <span style="color: #00008B;">ρ</span>
+        <span style="color: #006400;">ι</span>
+        <span style="color: #8B0000;">ο</span>
+        <span style="color: #FF8C00;">δ</span>
+        <span style="color: #00008B;">ι</span>
+        <span style="color: #006400;">κ</span>
+        <span style="color: #8B0000;">ο</span>
+        <span style="color: #FF8C00;">ύ</span>
       </span> 
       Πίνακα
     </h1>
@@ -250,7 +255,6 @@
         </tr>
       `;
     }
-
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
