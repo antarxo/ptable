@@ -561,13 +561,14 @@
       }
     }
     
-    // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay:
+    // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay με οριζόντια διάταξη,
+    // γραμματοσειρά στο χρώμα του τομέα, λευκό φόντο και μέγεθος 11px.
     function showBalloonOverlay(elementNumber) {
       let elementData = elements.find(e => e.number == elementNumber);
       if (!elementData) return;
       let overlay = document.getElementById("balloonOverlay");
       
-      // Ελέγχουμε το πεδίο subshells: αν είναι string, το διασπάμε (με διάστημα ως διαχωριστικό).
+      // Διαχωρισμός των subshells αν είναι string
       let subshells = [];
       if (typeof elementData.subshells === "string") {
          subshells = elementData.subshells.split(" ");
@@ -577,18 +578,18 @@
       
       let contentHTML = "";
       if (subshells.length > 0) {
-         contentHTML = "<ul style='list-style:none; margin:0; padding:0;'>";
+         contentHTML = `<div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px;">`;
          subshells.forEach(subshell => {
              let color = "";
              if(elementData.block === "s") color = "#FF477E";
              else if(elementData.block === "p") color = "#26FF31";
              else if(elementData.block === "d") color = "#3F99FF";
              else if(elementData.block === "f") color = "#FFD051";
-             contentHTML += `<li style="background: ${color}; margin: 2px 0; padding: 2px 5px; border-radius: 3px;">${subshell}</li>`;
+             contentHTML += `<span style="color: ${color}; font-size: 11px;">${subshell}</span>`;
          });
-         contentHTML += "</ul>";
+         contentHTML += "</div>";
       } else {
-         contentHTML = "<em>Δεν υπάρχουν subshells</em>";
+         contentHTML = "<em style='font-size:11px; color: gray;'>Δεν υπάρχουν subshells</em>";
       }
       
       overlay.innerHTML = contentHTML;
@@ -597,7 +598,7 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Κάνουμε το overlay ορατό για μετρήσεις, χωρίς όμως να το εμφανίζουμε
+      // Κάνουμε το overlay ορατό για μετρήσεις
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
       
@@ -620,7 +621,7 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       
-      // Τέλος, εμφανίζουμε το overlay
+      // Τέλος, εμφανίζουμε το overlay με διαφάνεια
       setTimeout(() => {
          overlay.style.opacity = "1";
       }, 10);
