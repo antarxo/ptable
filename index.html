@@ -242,7 +242,7 @@
       }
     });
 
-    // Η νέα συνάρτηση που δημιουργεί μία απλή γραμμή για τον πίνακα των υποστιβαδών.
+    // Νέα βοηθητική συνάρτηση για τη δημιουργία απλής γραμμής (2 στήλες) για τις υποστιβάδες
     function rowHTMLSimple(element, addBorder) {
       let borderStyle = addBorder ? "border-bottom:1px solid #ccc;" : "";
       if (!element) {
@@ -704,7 +704,7 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
-    // Ενημερωμένη συνάρτηση updateInfo με την νέα διάταξη για τον πίνακα υποστιβαδών.
+    // Ενημερωμένη συνάρτηση updateInfo – μόνο το περιεχόμενο του "infoSubshells" έχει τροποποιηθεί
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -714,6 +714,7 @@
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
+      // Χρήση του νέου πίνακα με 2 στήλες και 3 σειρές για τις υποστιβάδες
       let subshellsHTML = `
         <table style="border-collapse: collapse; width:100%; font-size:12px;">
           ${rowHTMLSimple(prevElement, true)}
