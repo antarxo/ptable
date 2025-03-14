@@ -120,6 +120,14 @@
     let currentCellPositions = {};
     let currentBalloonElement = null; // αποθηκεύει το στοιχείο για το οποίο εμφανίζεται το balloon
 
+    // Global definition για getSubshells (έστω ότι το πεδίο "subshells" είναι string ή πίνακας)
+    function getSubshells(element) {
+      if (!element) return [];
+      if (typeof element.subshells === "string") return element.subshells.split(" ");
+      if (Array.isArray(element.subshells)) return element.subshells;
+      return [];
+    }
+    
     // Βοηθητικές συναρτήσεις μετατόπισης (ίδιες όπως πριν)
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
@@ -571,65 +579,8 @@
       }
     }
     
-    // Βοηθητικές συναρτήσεις για εύρεση στοιχείων "από πάνω" και "διπλανό" (επόμενο)
-    function getPrevElement(currentElement) {
-      let prev = elements.find(e => e.col == currentElement.col && e.block == currentElement.block && e.row == currentElement.row - 1);
-      if(prev) return prev;
-      let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row < currentElement.row);
-      if(candidates.length > 0) {
-         candidates.sort((a, b) => b.row - a.row);
-         return candidates[0];
-      }
-      return null;
-    }
-    
-    function getNextElement(currentElement) {
-      let next = elements.find(e => e.col == currentElement.col && e.block == currentElement.block && e.row == currentElement.row + 1);
-      if(next) return next;
-      let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row > currentElement.row);
-      if(candidates.length > 0) {
-         candidates.sort((a, b) => a.row - b.row);
-         return candidates[0];
-      }
-      return null;
-    }
-    
-    // Συνάρτηση που επιστρέφει τους raw subshells ως string
-    function getRawLine(element, isCurrent) {
-      let subs = getSubshells(element);
-      let text = subs.join(" ");
-      return isCurrent ? "<b>" + text + "</b>" : text;
-    }
-    
-    // Μετατρέπει την υποστιβάδα στη μορφή LETTER(count)
-    function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
-      return mapping[n] || n;
-    }
-    
-    function formatSubshell(subshell) {
-      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
-      if(match){
-         let principal = match[1];
-         let count = match[2];
-         return shellLetter(principal) + "(" + count + ")";
-      }
-      return subshell;
-    }
-    
-    function getFormattedLine(element, isCurrent) {
-      let subs = getSubshells(element);
-      let formattedArr = subs.map(subshell => formatSubshell(subshell));
-      if(formattedArr.length > 0) {
-         // Σε κάθε περίπτωση, μόνο η τελευταία υποστιβάδα είναι bold για όλα τα στοιχεία
-         formattedArr[formattedArr.length - 1] = "<b>" + formattedArr[formattedArr.length - 1] + "</b>";
-      }
-      return formattedArr.join(" ");
-    }
-    
-    // Δημιουργία μίας γραμμής του πίνακα για ένα στοιχείο.
-    // Η πρώτη στήλη: "Ζ=Αριθμός" (για το τρέχον στοιχείο bold, για τα άλλα κανονικά; αν δεν υπάρχει, εμφανίζεται "-").
-    // Η δεύτερη στήλη: δύο γραμμές, μία με τα raw subshells και μία με τα formatted.
+    // Δημιουργία γραμμής του πίνακα για ένα στοιχείο.
+    // Αν δεν υπάρχει στοιχείο, επιστρέφει "-" και στα δύο κελιά.
     function rowHTML(element, isCurrent) {
       if(!element) {
         return `<div style="display: table-row;">
@@ -650,8 +601,43 @@
       return `<div style="display: table-row;">${leftCell}${rightCell}</div>`;
     }
     
-    // Η κύρια συνάρτηση εμφάνισης του balloon overlay.
-    // Δημιουργεί έναν πίνακα 3 γραμμών για: το στοιχείο από πάνω, το τρέχον, και το επόμενο (με χρήση getPrevElement και getNextElement).
+    // Συνάρτηση για raw subshells
+    function getRawLine(element, isCurrent) {
+      let subs = getSubshells(element);
+      let text = subs.join(" ");
+      return isCurrent ? "<b>" + text + "</b>" : text;
+    }
+    
+    // Συνάρτηση για formatted subshells: για κάθε υποστιβάδα μετατρέπει σε "LETTER(count)" και μόνο η τελευταία είναι bold
+    function getFormattedLine(element, isCurrent) {
+      let subs = getSubshells(element);
+      let formattedArr = subs.map(subshell => formatSubshell(subshell));
+      if(formattedArr.length > 0) {
+         formattedArr[formattedArr.length - 1] = "<b>" + formattedArr[formattedArr.length - 1] + "</b>";
+      }
+      return formattedArr.join(" ");
+    }
+    
+    // Μετατρέπει την υποστιβάδα στη μορφή LETTER(count)
+    function shellLetter(n) {
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      return mapping[n] || n;
+    }
+    
+    function formatSubshell(subshell) {
+      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
+      if(match){
+         let principal = match[1];
+         let count = match[2];
+         return shellLetter(principal) + "(" + count + ")";
+      }
+      return subshell;
+    }
+    
+    // Κύρια συνάρτηση εμφάνισης του balloon overlay με δομή πίνακα δύο στηλών:
+    // Η πρώτη στήλη (3 γραμμές): για το στοιχείο από πάνω, τρέχον και το επόμενο.
+    // Αν κάποιο δεν υπάρχει, εμφανίζεται "-" στα δύο κελιά.
+    // Η δεύτερη στήλη περιέχει τις υποστιβάδες σε formatted μορφή.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -690,7 +676,7 @@
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
     }
     
-    // Ενημέρωση θέσης του balloon όταν αλλάζει το μέγεθος του παραθύρου ή κατάσταση (collapse/expand)
+    // Ενημέρωση θέσης του balloon όταν αλλάζει το μέγεθος του παραθύρου ή κατάσταση
     window.addEventListener("resize", function(){
       if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
         showBalloonOverlay(currentBalloonElement);
@@ -710,43 +696,4 @@
             canvas.elt.getContext("2d", { willReadFrequently: true });
             canvas.parent("canvas" + block.toUpperCase());
             p.skipNextClick = true;
-            setTimeout(() => { p.skipNextClick = false; }, 100);
-            p.mouseClicked = function(event) {
-              if (p.skipNextClick) return;
-              let globalX = event.clientX;
-              let globalY = event.clientY;
-              let found = performHitTest(globalX, globalY);
-              if(found !== null){
-                console.log("Clicked element:", found);
-                showBalloonOverlay(found);
-              }
-            };
-            window.drawElements(p, block);
-          };
-        });
-      });
-    }
-    
-    window.drawElements = drawElements;
-    
-    loadData().then(() => {
-      if (currentMode === "expanded" || currentMode === "collapsed") {
-        initializeBackgroundCanvas();
-        initializeSectorsCanvas();
-        initializePeriodsCanvas();
-        initGroupsCanvases();
-        initializeCanvases();
-      } else if (currentMode === "start") {
-        initializeBackgroundCanvas();
-        initializeSectorsCanvas();
-        initializeCanvases();
-      }
-      updateCellsPositions();
-      console.log("Data loaded and canvases initialized.");
-      if (currentMode === "start" && currentCellPositions[3]) {
-        showBalloonOverlay(3);
-      }
-    });
-  </script>
-</body>
-</html>
+            setTimeout(() => { p.skipNextClick =
