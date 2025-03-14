@@ -112,6 +112,7 @@
       border-radius: 5px;
       z-index: 150;
       visibility: hidden;
+      /* Αρχική τιμή opacity */
       opacity: 0;
       transition: opacity 0.3s ease;
       pointer-events: none;
@@ -129,6 +130,7 @@
       padding: 10px;
       z-index: -10;
       transition: all 0.5s ease;
+      opacity: 1;
     }
     #infoPanelCollapsed {
       position: fixed;
@@ -139,6 +141,7 @@
       padding: 10px;
       z-index: -20;
       transition: all 0.5s ease;
+      opacity: 1;
     }
   </style>
 </head>
@@ -580,8 +583,8 @@
       }
     }
     
-    // --- Νέα υλοποίηση της showBalloonOverlay με πίνακα 2 στηλών, 6 σειρών ---
-    // Στις δύο πρώτες ομάδες (προηγούμενο και τρέχον) ορίζουμε το border-bottom στα κελιά και στις δύο στήλες
+    // Νέα υλοποίηση της showBalloonOverlay:
+    // Ο πίνακας έχει 2 στήλες και 6 σειρές, με τις δύο πρώτες ομάδες να έχουν border-bottom στα κελιά και στις δύο στήλες.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -630,7 +633,9 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       overlay.style.visibility = "visible";
+      // Εδώ θέτουμε opacity 0.96 (96%)
       overlay.style.opacity = "0";
+      setTimeout(() => { overlay.style.opacity = "0.96"; }, 10);
       let overlayRect = overlay.getBoundingClientRect();
       let overlayWidth = overlayRect.width;
       let cellRight = cellPos.x + cellPos.width;
@@ -640,13 +645,13 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       overlay.style.fontSize = "12px";
-      setTimeout(() => { overlay.style.opacity = "1"; }, 10);
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
       updateInfo();
     }
     
+    // Απλοποιημένες συναρτήσεις αλλαγής κατάστασης των info panels, χωρίς transitionend event.
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -657,12 +662,12 @@
       infoFull.style.left = targetLeft + "px";
       infoFull.style.top = targetTop + "px";
       infoFull.style.width = targetWidth + "px";
-      infoFull.addEventListener("transitionend", function handler() {
+      // Αφού ολοκληρωθεί η μετάβαση (π.χ. μετά από 500ms) εναλλάσσουμε την προβολή
+      setTimeout(() => {
         infoFull.style.display = "none";
         infoCollapsed.style.display = "block";
         infoCollapsed.style.opacity = "1";
-        infoFull.removeEventListener("transitionend", handler);
-      });
+      }, 500);
     }
     function switchToExpanded() {
       let infoFull = document.getElementById("infoPanelFull");
@@ -676,6 +681,8 @@
       infoFull.style.width = collapsedWidth + "px";
       infoCollapsed.style.display = "none";
       infoFull.style.display = "block";
+      // Θέτουμε opacity στο expanded ώστε να εμφανιστεί
+      infoFull.style.opacity = "1";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let targetLeft = 20;
       let targetWidth = window.innerWidth - 207;
@@ -722,16 +729,6 @@
           <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
         `;
         infoPanelCollapsed.innerHTML = collapsedHTML;
-        adjustSubshellFontSize();
-      }
-    }
-    function adjustSubshellFontSize() {
-      let subshellElem = document.getElementById("infoSubshellsCollapsed");
-      if (!subshellElem) return;
-      let currentFontSize = parseFloat(window.getComputedStyle(subshellElem).fontSize);
-      while (subshellElem.scrollWidth > subshellElem.clientWidth && currentFontSize > 6) {
-        currentFontSize -= 1;
-        subshellElem.style.fontSize = currentFontSize + "px";
       }
     }
     function drawElements(p, block, containerLeft, containerTop) {
