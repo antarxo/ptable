@@ -112,7 +112,6 @@
       border-radius: 5px;
       z-index: 150;
       visibility: hidden;
-      /* Αρχική τιμή opacity */
       opacity: 0;
       transition: opacity 0.3s ease;
       pointer-events: none;
@@ -144,8 +143,9 @@
       opacity: 1;
     }
     
-    /* Ο νέος κανόνας για να αποκρύψει τις στιβάδες (τη δεύτερη σειρά κάθε ζεύγους) */
-    #infoSubshells tr:nth-child(2n) {
+    /* Ο νέος κανόνας για να αποκρύψει τις στιβάδες (δηλ. τις δεύτερες σειρές κάθε ζεύγους)
+       μόνο στο infoPanelFull */
+    #infoPanelFull #infoSubshells > tr:nth-child(2n) {
       display: none;
     }
     
@@ -590,7 +590,6 @@
     }
     
     // Νέα υλοποίηση της showBalloonOverlay:
-    // Ο πίνακας έχει 2 στήλες και 6 σειρές, με τις δύο πρώτες ομάδες να έχουν border-bottom στα κελιά και στις δύο στήλες.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -639,7 +638,6 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       overlay.style.visibility = "visible";
-      // Εδώ θέτουμε opacity 0.96 (96%)
       overlay.style.opacity = "0";
       setTimeout(() => { overlay.style.opacity = "0.96"; }, 10);
       let overlayRect = overlay.getBoundingClientRect();
@@ -657,7 +655,7 @@
       updateInfo();
     }
     
-    // Απλοποιημένες συναρτήσεις αλλαγής κατάστασης των info panels, χωρίς transitionend event.
+    // Απλοποιημένες συναρτήσεις αλλαγής κατάστασης των info panels
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -668,7 +666,6 @@
       infoFull.style.left = targetLeft + "px";
       infoFull.style.top = targetTop + "px";
       infoFull.style.width = targetWidth + "px";
-      // Αφού ολοκληρωθεί η μετάβαση (π.χ. μετά από 500ms) εναλλάσσουμε την προβολή
       setTimeout(() => {
         infoFull.style.display = "none";
         infoCollapsed.style.display = "block";
@@ -687,7 +684,6 @@
       infoFull.style.width = collapsedWidth + "px";
       infoCollapsed.style.display = "none";
       infoFull.style.display = "block";
-      // Θέτουμε opacity στο expanded ώστε να εμφανιστεί
       infoFull.style.opacity = "1";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let targetLeft = 20;
