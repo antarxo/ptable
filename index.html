@@ -64,7 +64,7 @@
     }
     /* Offscreen canvas για color picking */
     #offscreenCanvas { display: none; }
-    /* Στυλ για το balloon overlay (παραμένει στην DOM αλλά κρύβεται με visibility) */
+    /* Στυλ για το balloon overlay */
     #balloonOverlay {
       position: absolute;
       background: white;
@@ -561,17 +561,24 @@
       }
     }
     
-    // Συνάρτηση εμφάνισης του balloon overlay με τις subshells του στοιχείου
+    // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay:
     function showBalloonOverlay(elementNumber) {
-      let elementData = elements.find(e => e.number === elementNumber);
+      let elementData = elements.find(e => e.number == elementNumber);
       if (!elementData) return;
       let overlay = document.getElementById("balloonOverlay");
       
-      // Δημιουργία περιεχομένου βάσει των subshells του στοιχείου
+      // Ελέγχουμε το πεδίο subshells: αν είναι string, το διασπάμε (με διάστημα ως διαχωριστικό).
+      let subshells = [];
+      if (typeof elementData.subshells === "string") {
+         subshells = elementData.subshells.split(" ");
+      } else if (Array.isArray(elementData.subshells)) {
+         subshells = elementData.subshells;
+      }
+      
       let contentHTML = "";
-      if (elementData.subshells && elementData.subshells.length > 0) {
+      if (subshells.length > 0) {
          contentHTML = "<ul style='list-style:none; margin:0; padding:0;'>";
-         elementData.subshells.forEach(subshell => {
+         subshells.forEach(subshell => {
              let color = "";
              if(elementData.block === "s") color = "#FF477E";
              else if(elementData.block === "p") color = "#26FF31";
@@ -586,20 +593,18 @@
       
       overlay.innerHTML = contentHTML;
       
-      // Εύρεση θέσης του τρέχοντος/κλικαρισμένου κελιού
+      // Εύρεση θέσης του κελιού
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Κάνουμε το overlay ορατό για να μετρηθούν οι διαστάσεις του
+      // Κάνουμε το overlay ορατό για μετρήσεις, χωρίς όμως να το εμφανίζουμε
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
       
-      // Μετράμε τις διαστάσεις του overlay (με αναγκαστικό reflow)
       let overlayRect = overlay.getBoundingClientRect();
       let overlayWidth = overlayRect.width;
       let overlayHeight = overlayRect.height;
       
-      // Υπολογισμός δεξιού ορίου του κελιού και τοποθέτηση του overlay
       let cellRight = cellPos.x + cellPos.width;
       let screenHalf = window.innerWidth / 2;
       let overlayX, overlayY;
@@ -615,7 +620,7 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       
-      // Εμφάνιση overlay με εφέ διαφάνειας
+      // Τέλος, εμφανίζουμε το overlay
       setTimeout(() => {
          overlay.style.opacity = "1";
       }, 10);
