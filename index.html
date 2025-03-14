@@ -119,7 +119,7 @@
     let cellSize = 40;
     let currentCellPositions = {};
 
-    // Συναρτήσεις μετατόπισης
+    // Συναρτήσεις μετατόπισης (όπως πριν)
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -158,8 +158,7 @@
         }
         let pos = positions[currentMode][e.number] || ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
         if (pos) {
-          let x = pos.x;
-          let y = pos.y;
+          let x = pos.x, y = pos.y;
           if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
             x += getShiftContainer(e.block);
             if (e.block === "p" && num >= 21 && num <= 30)
@@ -183,7 +182,8 @@
         if (currentMode === "start") {
           if ((num < 3 && !extraElements[num]) || num > currentZ) return;
         }
-        let pos = positions[currentMode][e.number] || (((e.number === "1" || e.number === "2") && extraElements[e.number]) ? positions["start"][e.number] : null);
+        let pos = positions[currentMode][e.number] ||
+                  (((e.number === "1" || e.number === "2") && extraElements[e.number]) ? positions["start"][e.number] : null);
         if (!pos) return;
         let offsetX = 0, offsetY = 0;
         if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
@@ -505,7 +505,7 @@
       logHitTestCenter();
       console.log("NextState: currentZ =", currentZ, "extraElements:", extraElements, "showPeriods:", showPeriods);
       
-      // Εμφάνιση balloon overlay για το στοιχείο με αριθμό currentZ, εφόσον υπάρχει
+      // Εμφάνιση overlay για το στοιχείο με αριθμό currentZ, εφόσον υπάρχει
       if(currentCellPositions[currentZ]) {
          showBalloonOverlay(currentZ);
       }
@@ -566,18 +566,21 @@
       }
     }
     
-    // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay:
-    // - Περιέχει 3 σειρές:
-    //    1η: υποστιβάδες του στοιχείου της προηγούμενης περιόδου (row - 1, ίδια col)
-    //    2η: υποστιβάδες του τρέχοντος στοιχείου (έντονη γραμματοσειρά)
-    //    3η: υποστιβάδες του επόμενου στοιχείου (row + 1, ίδια col) εφόσον υπάρχει.
-    // - Κάθε σειρά εμφανίζεται ως flex container με λευκό φόντο, font-size 11px, και το χρώμα του τομέα.
+    // Ενημερωμένη συνάρτηση εμφάνισης του balloon overlay:
+    // 1η σειρά: υποστιβάδες του στοιχείου της προηγούμενης περιόδου (ίδιας ομάδας: ίδια τιμή "col" και row = current.row - 1)
+    // 2η σειρά: υποστιβάδες του τρέχοντος στοιχείου (με έντονη γραμματοσειρά)
+    // 3η σειρά: υποστιβάδες του επόμενου στοιχείου (με row = current.row + 1, αν υπάρχει)
+    // Σε κάθε σειρά, κάθε υποστιβάδα εμφανίζεται ως: "Ζ=Αριθμός | υποστιβάδα", με το χρώμα του τομέα.
+    // Επιπλέον, το overlay εμφανίζεται τόσο στη λειτουργία "Επόμενο" (βάσει του currentZ, ξεκινώντας από το στοιχείο 3) όσο και με κλικ.
+    // Η θέση του overlay: αν το δεξί όριο του κελιού ξεπερνάει το μισό πλάτος της οθόνης, μετατοπίζεται αριστερότερα κατά (overlayWidth + 27),
+    // αλλιώς ευθυγραμμίζεται με την κάτω δεξιά γωνία του κελιού, μετατοπισμένη κατά 5px προς τα πάνω και 5px προς τα αριστερά.
+    // Στο ύψος, αφαιρείται μέρος των περιθωρίων και το διάστιχο μειώνεται.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
       let overlay = document.getElementById("balloonOverlay");
       
-      // Βοηθητική συνάρτηση για αποσπάσματα subshells
+      // Βοηθητική συνάρτηση που επιστρέφει τους subshells ως πίνακα
       function getSubshells(element) {
         if (!element) return [];
         if (typeof element.subshells === "string") return element.subshells.split(" ");
@@ -585,7 +588,7 @@
         return [];
       }
       
-      // Βρείτε το στοιχείο της προηγούμενης και της επόμενης περιόδου (ίδιας ομάδας)
+      // Βρείτε το προηγούμενο και το επόμενο στοιχείο (σύμφωνα με row: current.row - 1 και current.row + 1)
       let prevElement = elements.find(e => e.col == currentElement.col && e.row == (currentElement.row - 1));
       let nextElement = elements.find(e => e.col == currentElement.col && e.row == (currentElement.row + 1));
       
@@ -593,17 +596,25 @@
       let subshellsCurrent = getSubshells(currentElement);
       let subshellsNext = getSubshells(nextElement);
       
-      // Βοηθητική συνάρτηση δημιουργίας HTML για κάθε σειρά
+      // Βοηθητική συνάρτηση για τη δημιουργία HTML κάθε σειράς
+      // Κάθε υποστιβάδα εμφανίζεται ως: "Ζ=Αριθμός | υποστιβάδα"
+      // Το isBold καθορίζει αν η γραμματοσειρά θα είναι έντονη (μόνο για το τρέχον στοιχείο)
       function rowHTML(element, subshells, isBold) {
+        let atomicNumber = element ? element.number : "N/A";
         let color = "";
-        if (!element) return `<div style="display:flex; align-items:center; gap:5px; background:white; padding:5px; font-size:11px;"> <span style="color:gray;">N/A</span> </div>`;
-        if (element.block === "s") color = "#FF477E";
-        else if (element.block === "p") color = "#26FF31";
-        else if (element.block === "d") color = "#3F99FF";
-        else if (element.block === "f") color = "#FFD051";
+        if (element) {
+          if (element.block === "s") color = "#FF477E";
+          else if (element.block === "p") color = "#26FF31";
+          else if (element.block === "d") color = "#3F99FF";
+          else if (element.block === "f") color = "#FFD051";
+        } else {
+          color = "gray";
+        }
         let fontWeight = isBold ? "bold" : "normal";
-        let innerHTML = subshells.map(subshell => `<span style="color:${color};">${subshell}</span>`).join("");
-        return `<div style="display:flex; align-items:center; gap:5px; background:white; padding:5px; font-size:11px; font-weight:${fontWeight};">${innerHTML}</div>`;
+        // Κάθε υποστιβάδα εμφανίζεται με τη μορφή: "Ζ=atomicNumber | subshell"
+        let innerHTML = subshells.map(subshell => `<span style="color:${color};">Ζ=${atomicNumber} | ${subshell}</span>`).join(" ");
+        // Μειωμένο διάστιχο και χωρίς επιπλέον περιθώρια
+        return `<div style="display:flex; align-items:center; gap:5px; background:white; padding:2px 4px; font-size:11px; line-height:1; font-weight:${fontWeight};">${innerHTML}</div>`;
       }
       
       let rowPrevHTML = rowHTML(prevElement, subshellsPrev, false);
@@ -613,7 +624,7 @@
       let finalContent = rowPrevHTML + rowCurrentHTML + rowNextHTML;
       overlay.innerHTML = finalContent;
       
-      // Εύρεση θέσης του κελιού
+      // Εύρεση θέσης του κελιού για το στοιχείο currentElement
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
@@ -628,14 +639,11 @@
       let screenHalf = window.innerWidth / 2;
       let overlayX, overlayY;
       
-      // Υπολογισμός θέσης:
-      // Αν το δεξί όριο του κελιού ξεπερνάει το μισό πλάτος της οθόνης, μετατοπίζεται αριστερότερα κατά (overlayWidth + 37)
       if (cellRight > screenHalf) {
-         overlayX = cellPos.x + cellPos.width - (overlayWidth + 37);
+         overlayX = cellPos.x + cellPos.width - (overlayWidth + 27);
       } else {
          overlayX = cellPos.x + cellPos.width - 5;
       }
-      // Η πάνω αριστερή γωνία του overlay τοποθετείται στην κάτω δεξιά γωνία του κελιού, μετατοπισμένη κατά 5px προς τα πάνω
       overlayY = cellPos.y + cellPos.height - 5;
       
       overlay.style.left = overlayX + "px";
