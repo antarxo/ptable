@@ -119,7 +119,7 @@
     let cellSize = 40;
     let currentCellPositions = {};
     let currentBalloonElement = null; // Το επιλεγμένο κελί (μέσω του balloon)
-    
+
     // Για ανανέωση των καμβάδων τομέα
     let sectorInstances = [];
 
@@ -375,24 +375,34 @@
     
     /* 
      * ΝΕΕΣ συναρτήσεις επιλογής προηγούμενου/επόμενου στοιχείου:
-     * - Για το προηγούμενο: στοιχείο της ίδιας στήλης με row = (τρέχον row - 1).
-     * - Για το επόμενο: στοιχείο της ίδιας σειράς με col = (τρέχον col + 1).
-     * (Παράδειγμα: για τρέχον το 11, προηγούμενο το 3 και επόμενο το 12)
+     * Αντί για απλή σύγκριση row και col, φιλτράρουμε τα εμφανιζόμενα στοιχεία
+     * (δηλαδή εκείνα που έχουν θέση στο currentCellPositions), ταξινομούμε με βάση row και col,
+     * και επιστρέφουμε το προηγούμενο/επόμενο στοιχείο.
      */
+    function getDisplayedElements() {
+      let displayed = elements.filter(e => currentCellPositions[e.number]);
+      displayed.sort((a, b) => {
+        if (a.row === b.row) return a.col - b.col;
+        return a.row - b.row;
+      });
+      return displayed;
+    }
+    
     function getPrevElement(currentElement) {
-      let prev = elements.find(e => e.col == currentElement.col && e.row == currentElement.row - 1);
-      return prev || null;
+      let displayed = getDisplayedElements();
+      let index = displayed.findIndex(e => e.number == currentElement.number);
+      return (index > 0) ? displayed[index - 1] : null;
     }
     
     function getNextElement(currentElement) {
-      let next = elements.find(e => e.row == currentElement.row && e.col == currentElement.col + 1);
-      return next || null;
+      let displayed = getDisplayedElements();
+      let index = displayed.findIndex(e => e.number == currentElement.number);
+      return (index < displayed.length - 1) ? displayed[index + 1] : null;
     }
     
     /* 
      * Συνάρτηση formatSubshell:
-     * Εξάγει τον αριθμό (π.χ. "1" από "1s2") και τον αριθμό ηλεκτρονίων.
-     * Για παράδειγμα: "1s2" → "K(2)", "2p6" → "L6" (δηλαδή χωρίς παρένθεση για τον 2ο κύριο κβάντο)
+     * Εμφανίζει το subshell σε μορφή "K(2)" για κύριο κβάντο ≠2, και για κύριο 2 χωρίς παρένθεση (π.χ. L8).
      */
     function formatSubshell(subshell) {
       let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
@@ -400,7 +410,6 @@
          let principal = match[1];
          let count = match[2];
          let letter = shellLetter(principal);
-         // Για το κύριο 2, εμφανίζεται χωρίς παρένθεση (π.χ. L8), αλλιώς με παρένθεση
          return (principal === "2") ? letter + count : letter + "(" + count + ")";
       }
       return subshell;
@@ -421,10 +430,10 @@
     /* 
      * Δημιουργία HTML για κάθε γραμμή στο balloon overlay.
      * Κάθε γραμμή έχει δύο στήλες:
-     * 1η: Ο αριθμός του στοιχείου (Ζ=...) με το χρώμα του τομέα, bold μόνο για το τρέχον.
+     * 1η: Ο αριθμός του στοιχείου (Ζ=...) με το χρώμα του τομέα (bold μόνο για το τρέχον).
      * 2η: Δύο γραμμές:
-     *    - Πρώτη: Οι υποστιβάδες (subshells). Για το τρέχον στοιχείο, εμφανίζονται με bold και monospace.
-     *    - Δεύτερη: Οι στιβάδες (shells) στη μορφή "K(2), L8, M(3)" με bold μόνο την τελευταία.
+     *    - Πρώτη: Οι υποστιβάδες (subshells) όπως στο elements.json, με monospace bold μόνο για το τρέχον.
+     *    - Δεύτερη: Οι στιβάδες (shells) σε μορφή "K(2), L8, M(3)", με μόνο το τελευταίο στοιχείο bold.
      */
     function rowHTML(element, role) {
       if (!element) {
@@ -464,8 +473,10 @@
     /* 
      * Εμφάνιση του balloon overlay:
      * Δημιουργείται ένας πίνακας (<table>) με 3 γραμμές: προηγούμενο, τρέχον, επόμενο.
-     * Στη λειτουργία "Επόμενο" το τρέχον κελί (και όχι το προηγούμενο) επισημαίνεται.
-     * Με κάθε αλλαγή (μέσω κλικ ή εναλλαγής collapsed/expanded) καλείται το redraw στα p5 instances ώστε το περίγραμμα να ενημερώνεται.
+     * Στη λειτουργία "Επόμενο" το τρέχον κελί επισημαίνεται.
+     * Με κάθε αλλαγή (είτε μέσω κλικ είτε μέσω toggle μεταξύ expanded/collapsed), 
+     * καλείται το redraw στα p5 instances ώστε το περίγραμμα να ενημερώνεται.
+     * Επιπλέον, με setTimeout εξασφαλίζουμε ότι η θέση του επιλεγμένου κελιού αναζητείται ξανά μετά την αλλαγή.
      */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
@@ -493,13 +504,13 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-      // Ενημέρωση περιγραμμάτων στα canvases:
+      // Ενημέρωση περιγραμμάτων στα p5 canvases
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
     }
     
-    // Σχεδίαση στοιχείων στο p5 canvas (έντονο περίγραμμα stroke 3 για το επιλεγμένο κελί)
+    // Σχεδίαση στοιχείων στο p5 canvas (έντονο περίγραμμα (stroke 3) για το επιλεγμένο κελί)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -550,6 +561,7 @@
     
     // Event listeners για κουμπιά
     document.getElementById('fillAll').addEventListener('click', function() { fillAllAction(); });
+    
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
@@ -563,10 +575,14 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
       updateCellsPositions();
-      if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
-        showBalloonOverlay(currentBalloonElement);
-      }
+      // Με setTimeout εξασφαλίζουμε ότι μετά το toggle αναζητείται ξανά η θέση του επιλεγμένου κελιού
+      setTimeout(() => {
+        if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+          showBalloonOverlay(currentBalloonElement);
+        }
+      }, 100);
     });
+    
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         console.log("Το κουμπί 'Επόμενο' λειτουργεί μόνο στην κατάσταση 'start'. Κάντε Reset για επαναφορά.");
@@ -596,6 +612,7 @@
          showBalloonOverlay(currentZ);
       }
     });
+    
     document.getElementById('reset').addEventListener('click', function() {
       currentMode = "start";
       currentZ = 3;
@@ -603,6 +620,7 @@
       showPeriods = false;
       location.reload();
     });
+    
     window.addEventListener("resize", function(){
       if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
         showBalloonOverlay(currentBalloonElement);
