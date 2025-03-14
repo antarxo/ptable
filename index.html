@@ -6,12 +6,37 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
+    /* Νέο overlay για τον τίτλο */
+    #pageTitleOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      padding: 10px 0;
+      z-index: 200;
+    }
+    #pageTitleOverlay h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: black;
+    }
+    #pageTitleOverlay h2 {
+      margin: 0;
+      font-size: 11px;
+      font-weight: normal;
+      color: #333;
+    }
     /* Βασικές ρυθμίσεις */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
       overflow: hidden; 
       background: #f7f7f7; 
+      padding-top: 60px; /* για να μην καλύπτεται ο τίτλος */
     }
     .canvas { 
       position: absolute; 
@@ -107,6 +132,21 @@
   </style>
 </head>
 <body>
+  <!-- Overlay για τον τίτλο -->
+  <div id="pageTitleOverlay">
+    <h1>
+      Διαδραστική Συμπλήρωση του 
+      <span id="styledPeriodicou">
+        <span id="periodPart1" style="color: #8B0000;">Πε</span>
+        <span id="periodPart2" style="color: #FF8C00;">ριο</span>
+        <span id="periodPart3" style="color: #00008B;">δικ</span>
+        <span id="periodPart4" style="color: #006400;">ού</span>
+      </span> 
+      Πίνακα
+    </h1>
+    <h2>2025, Created by Antonios Archontoulis, Greece</h2>
+  </div>
+  
   <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
@@ -130,7 +170,7 @@
           <table style="width:100%; border-collapse:collapse;">
             <tr>
               <td id="infoSubshells" style="width:70%;"></td>
-              <td id="infoShellsMsg" style="width:30%;"></td>
+              <!-- Αφαιρέσαμε την προβολή των στιβάδων -->
             </tr>
             <tr>
               <td colspan="2" id="infoRemarks"></td>
@@ -159,7 +199,7 @@
     /********************** Global Variables & Configuration **********************/
     // Αρχικές τιμές για τα blocks
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-    // Νέα χρώματα για τις γραμματοσειρές, σύμφωνα με τις απαιτήσεις:
+    // Νέα χρώματα για τις γραμματοσειρές, σύμφωνα με τις οδηγίες:
     let textColors = { 
       s: "#8B0000",  // σκοτεινό κόκκινο
       p: "#006400",  // σκοτεινό πράσινο
@@ -179,7 +219,7 @@
     let currentBalloonElement = null;
     let sectorInstances = [];
 
-    /********************** Νέα Συνάρτηση για Balloon Overlay – Δύο γραμμές ανά στοιχείο **********************/
+    /********************** Νέα Συνάρτηση για Balloon Overlay – 2 γραμμές ανά στοιχείο **********************/
     function rowHTMLPair(element, type) {
       if (!element) {
         return `
@@ -577,25 +617,23 @@
       
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      // Δημιουργούμε ζεύγη γραμμών για κάθε στοιχείο χρησιμοποιώντας τη νέα συνάρτηση rowHTMLPair
+      // Εδώ χρησιμοποιούμε την παλιά μέθοδο για info panels (χωρίς τις επιπλέον 2 γραμμές για τις στιβάδες)
       let subshellsHTML = rowHTMLPair(prevElement, "prev") + rowHTMLPair(currentElement, "current") + rowHTMLPair(nextElement, "next");
       
-      let shellsMsgHTML = `<div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
-                           <div style="font-style: italic;">${messageForElement(currentElement)}</div>`;
-      
+      // Για τα info panels αφαιρούμε το τμήμα που αφορά τις στιβάδες (θα το τροποποιήσουμε περαιτέρω αργότερα)
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       
       // Expanded Panel: μειωμένο πλάτος κατά 27
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
       document.getElementById("infoSubshells").innerHTML = subshellsHTML;
-      document.getElementById("infoShellsMsg").innerHTML = shellsMsgHTML;
+      // Αφαιρέσαμε την εμφάνιση των στιβάδων (infoShellsMsg)
       document.getElementById("infoRemarks").innerHTML = remarksHTML;
       infoPanelFull.style.width = (window.innerWidth - 207) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
       
-      // Collapsed Panel: μειωμένο πλάτος κατά 10
+      // Collapsed Panel: μειωμένο πλάτος κατά 10 (και χωρίς την προσθήκη των στιβαδών)
       if (currentMode === "collapsed") {
         let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
         let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
@@ -610,10 +648,6 @@
           <div>${leftHTML}</div>
           <hr>
           ${rowHTMLPair(currentElement, "current")}
-          <hr>
-          <div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
-          <hr>
-          <div style="font-style: italic;">${messageForElement(currentElement)}</div>
           <hr>
           <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
         `;
@@ -674,7 +708,6 @@
       currentBalloonElement = elementNumber;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      // Χρησιμοποιούμε τη νέα rowHTMLPair για να παράγουμε 2 γραμμές ανά στοιχείο (6 συνολικά)
       let tableHTML = `<table style="border-collapse: collapse; width:100%;">`
                       + rowHTMLPair(prevElement, "prev")
                       + rowHTMLPair(currentElement, "current")
@@ -733,8 +766,7 @@
       infoFull.style.display = "block";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let targetLeft = 20;
-      // Expanded width μειώνεται κατά 27
-      let targetWidth = window.innerWidth - 207;
+      let targetWidth = window.innerWidth - 207; // Expanded width μειωμένο κατά 27
       let targetTop = btnRect.top;
       setTimeout(() => {
         infoFull.style.left = targetLeft + "px";
