@@ -80,25 +80,25 @@
       pointer-events: none;
       font-size: 12px;
     }
-    /* Info Panel Expanded – z-index -10, αχνό περίγραμμα και inset εφέ */
+    /* Info Panel Expanded – z-index -10, πιο έντονη "βύθιση" */
     #infoPanelFull {
       position: fixed;
       top: 0;
       left: 20px;
       background: #fff;
       border: 1px solid rgba(0,0,0,0.2);
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.4);
       border-radius: 8px;
       padding: 10px;
       z-index: -10;
       transition: all 0.5s ease;
     }
-    /* Info Panel Collapsed – z-index -20 */
+    /* Info Panel Collapsed – z-index -20, πιο έντονη "βύθιση" */
     #infoPanelCollapsed {
       position: fixed;
       background: #fff;
       border: 1px solid rgba(0,0,0,0.2);
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.4);
       border-radius: 8px;
       padding: 10px;
       z-index: -20;
@@ -157,14 +157,14 @@
   
   <script>
     /********************** Global Variables & Configuration **********************/
-    // Αρχικές τιμές για τα blocks (sectorColors)
+    // Αρχικές τιμές για τα blocks
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-    // Νέα χρώματα για τις γραμματοσειρές, πιο σκοτεινά από τις αρχικές
+    // Νέα χρώματα για τις γραμματοσειρές, σύμφωνα με τις απαιτήσεις:
     let textColors = { 
-      s: "#CC3965",  // darken("#FF477E")
-      p: "#1ECC27",  // darken("#26FF31")
-      d: "#327ACC",  // darken("#3F99FF")
-      f: "#CCA641"   // darken("#FFD051")
+      s: "#8B0000",  // dark red
+      p: "#006400",  // dark green
+      d: "#00008B",  // dark blue
+      f: "#FF8C00"   // dark orange
     };
 
     let elements = [];
@@ -183,7 +183,6 @@
     function rowHTML(element, type) {
       if (!element) return `<tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>`;
       let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
-      // Χρησιμοποιούμε το textColors για τις γραμματοσειρές
       let color = textColors[element.block] || "#CCCCCC";
       return `
         <tr style="${borderStyle}">
@@ -547,7 +546,8 @@
       infoFull.style.display = "block";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let targetLeft = 20;
-      let targetWidth = window.innerWidth - 180;
+      // Expanded width μειώνεται κατά 27
+      let targetWidth = window.innerWidth - 207;
       let targetTop = btnRect.top;
       setTimeout(() => {
         infoFull.style.left = targetLeft + "px";
@@ -560,7 +560,6 @@
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
       
-      // Χρησιμοποιούμε το textColors για τις γραμματοσειρές
       let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:${textColors[currentElement.block]};">Ζ=${currentElement.number}</span> 
                       <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
@@ -578,17 +577,17 @@
       
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       
-      // Ενημέρωση Expanded Panel
+      // Expanded Panel: μειωμένο πλάτος κατά 27
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
       document.getElementById("infoSubshells").innerHTML = subshellsHTML;
       document.getElementById("infoShellsMsg").innerHTML = shellsMsgHTML;
       document.getElementById("infoRemarks").innerHTML = remarksHTML;
-      infoPanelFull.style.width = (window.innerWidth - 180) + "px";
+      infoPanelFull.style.width = (window.innerWidth - 207) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
       
-      // Ενημέρωση Collapsed Panel
+      // Collapsed Panel: μειωμένο πλάτος κατά 10
       if (currentMode === "collapsed") {
         let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
         let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
@@ -596,7 +595,7 @@
         if (positions[currentMode] && positions[currentMode]["1"]) {
           infoPanelCollapsed.style.top = positions[currentMode]["1"].y + "px";
         }
-        let collapsedWidth = window.innerWidth - bgRect.width - 200 + 126;
+        let collapsedWidth = window.innerWidth - bgRect.width - 200 + 126 - 10;
         infoPanelCollapsed.style.width = collapsedWidth + "px";
         infoPanelCollapsed.style.height = "auto";
         let collapsedHTML = `
@@ -619,7 +618,6 @@
       let subshellElem = document.getElementById("infoSubshellsCollapsed");
       if (!subshellElem) return;
       let currentFontSize = parseFloat(window.getComputedStyle(subshellElem).fontSize);
-      // Μείωση του font size κατά 1 μέχρι να χωρέσει σε μία γραμμή
       while (subshellElem.scrollWidth > subshellElem.clientWidth && currentFontSize > 6) {
         currentFontSize -= 1;
         subshellElem.style.fontSize = currentFontSize + "px";
@@ -726,7 +724,8 @@
       infoFull.style.display = "block";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let targetLeft = 20;
-      let targetWidth = window.innerWidth - 180;
+      // Expanded width μειώνεται κατά 27
+      let targetWidth = window.innerWidth - 207;
       let targetTop = btnRect.top;
       setTimeout(() => {
         infoFull.style.left = targetLeft + "px";
