@@ -64,7 +64,7 @@
     }
     /* Offscreen canvas για color picking */
     #offscreenCanvas { display: none; }
-    /* Στυλ για το balloon overlay */
+    /* Στυλ για το balloon overlay (παραμένει στην DOM αλλά κρύβεται με visibility) */
     #balloonOverlay {
       position: absolute;
       background: white;
@@ -73,8 +73,10 @@
       padding: 10px;
       border-radius: 5px;
       z-index: 150;
+      visibility: hidden;
       opacity: 0;
       transition: opacity 0.3s ease;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -102,7 +104,7 @@
   <!-- Offscreen canvas για color picking -->
   <canvas id="offscreenCanvas" width="800" height="600"></canvas>
   
-  <!-- Balloon overlay για τα subshells -->
+  <!-- Balloon overlay για τα subshells (παραμένει στην DOM αλλά αρχικά κρυφό) -->
   <div id="balloonOverlay"></div>
 
   <script>
@@ -588,14 +590,18 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Υπολογισμός δεξιού ορίου του κελιού και θέσης του overlay σύμφωνα με τις προδιαγραφές:
-      // - Αν το δεξί όριο είναι μικρότερο από το μισό πλάτος της οθόνης: θέση στη δεξιά κάτω γωνία με μετατόπιση 5px πάνω και 5px αριστερά.
-      // - Διαφορετικά: μετακίνηση αριστερά από τη δεξιά κάτω γωνία κατά το πλάτος του overlay συν 37px.
+      // Κάνουμε το overlay ορατό για να μετρηθούν οι διαστάσεις του
+      overlay.style.visibility = "visible";
+      overlay.style.opacity = "0";
+      
+      // Μετράμε τις διαστάσεις του overlay (με αναγκαστικό reflow)
+      let overlayRect = overlay.getBoundingClientRect();
+      let overlayWidth = overlayRect.width;
+      let overlayHeight = overlayRect.height;
+      
+      // Υπολογισμός δεξιού ορίου του κελιού και τοποθέτηση του overlay
       let cellRight = cellPos.x + cellPos.width;
       let screenHalf = window.innerWidth / 2;
-      overlay.style.display = "block";
-      let overlayWidth = overlay.offsetWidth;
-      let overlayHeight = overlay.offsetHeight;
       let overlayX, overlayY;
       
       if (cellRight < screenHalf) {
