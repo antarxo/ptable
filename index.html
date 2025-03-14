@@ -374,9 +374,10 @@
     }
     
     /* 
-     * Επιλογή προηγούμενου/επόμενου στοιχείου:
+     * Διαχείριση προηγούμενου & επόμενου στοιχείου:
      * Ταξινομούμε τα εμφανιζόμενα στοιχεία βάσει των υπολογισμένων θέσεων (πρώτα κατά y και μετά κατά x)
-     * και επιστρέφουμε το προηγούμενο και επόμενο ως προς αυτήν την οπτική διάταξη.
+     * ώστε για το τρέχον στοιχείο, π.χ. Ζ=11, το προηγούμενο (στο πάνω μέρος) να είναι το στοιχείο 3
+     * και το επόμενο (δίπλα) να είναι το στοιχείο 12.
      */
     function getDisplayedElements() {
       let displayed = elements.filter(e => currentCellPositions[e.number]);
@@ -403,8 +404,7 @@
     
     /* 
      * Συνάρτηση formatSubshell:
-     * Εμφανίζει το subshell σε μορφή "K(2)" για κύριο κβάντο ≠2, 
-     * και για κύριο 2 χωρίς παρένθεση (π.χ. L8).
+     * Εμφανίζει το subshell σε μορφή "K(2)" για κύριο κβάντο ≠2, και για κύριο 2 χωρίς παρένθεση (π.χ. L8).
      */
     function formatSubshell(subshell) {
       let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
@@ -429,7 +429,8 @@
       return [];
     }
     
-    // Νέα συνάρτηση μορφοποίησης των στιβάδων: κάθε στοιχείο θα έχει πάντα παρένθεση
+    // Νέα συνάρτηση μορφοποίησης των στιβάδων: κάθε στοιχείο εμφανίζει πάντα την τιμή μέσα σε παρένθεση,
+    // και μόνο η τελευταία στιβάδα εμφανίζεται με bold.
     function formatShells(element) {
       if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
@@ -590,7 +591,7 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
       updateCellsPositions();
-      // Με καθυστέρηση 1300ms για την αλλαγή
+      // Με καθυστέρηση 1300ms για το toggle ώστε να ενημερώνεται σωστά η νέα θέση
       setTimeout(() => {
         updateCellsPositions();
         if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
