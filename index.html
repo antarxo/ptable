@@ -9,7 +9,7 @@
     /* Νέο στυλ για τον τίτλο */
     #pageTitleOverlay {
       position: fixed;
-      top: 0;
+      top: 5px;  /* top 5 */
       left: 50%;
       transform: translateX(-50%);
       background: white;
@@ -20,6 +20,7 @@
       align-items: center;
       gap: 10px;
       width: auto;
+      white-space: nowrap;
     }
     /* Τα στοιχεία του τίτλου σε μία γραμμή */
     #pageTitleOverlay h1,
@@ -27,21 +28,21 @@
       display: inline-block;
       margin: 0;
       vertical-align: middle;
+      white-space: nowrap;
     }
-    /* Κύριο κείμενο τίτλου */
+    /* Κύρια φράση τίτλου – με υπολογιζόμενο left-padding */
     #pageTitleOverlay h1 {
-      font-size: 24px; /* μέγεθος 24 για "Διαδραστική Συμπλήρωση..." */
+      font-size: 24px; /* μέγεθος 24 */
       font-weight: bold;
       color: black;
       letter-spacing: 1px; /* ομοιόμορφες αποστάσεις χαρακτήρων */
-      white-space: nowrap; /* για να μην γίνεται wrap */
+      /* Το left padding θα οριστεί δυναμικά ώστε το κενό πριν την φράση να ισούται με το πλάτος του h2 + 5px */
     }
-    /* Συμπληρωματικό κείμενο */
+    /* Δεύτερη φράση */
     #pageTitleOverlay h2 {
-      font-size: 11px; /* μέγεθος 11 για το "2025, ..." */
+      font-size: 11px; /* μέγεθος 11 */
       font-weight: normal;
       color: #333;
-      white-space: nowrap;
     }
     /* Βασικές ρυθμίσεις */
     body { 
@@ -118,7 +119,7 @@
       pointer-events: none;
       font-size: 12px;
     }
-    /* Info Panel Expanded – z-index -10 */
+    /* Info Panels */
     #infoPanelFull {
       position: fixed;
       top: 0;
@@ -131,7 +132,6 @@
       z-index: -10;
       transition: all 0.5s ease;
     }
-    /* Info Panel Collapsed – z-index -20 */
     #infoPanelCollapsed {
       position: fixed;
       background: #fff;
@@ -181,7 +181,7 @@
   <!-- Balloon Overlay -->
   <div id="balloonOverlay"></div>
   
-  <!-- Info Panel Expanded -->
+  <!-- Info Panels -->
   <div id="infoPanelFull">
     <table style="width:100%; border-collapse:collapse;">
       <tr>
@@ -199,8 +199,6 @@
       </tr>
     </table>
   </div>
-  
-  <!-- Info Panel Collapsed -->
   <div id="infoPanelCollapsed" style="display:none;"></div>
   
   <!-- Button Panel -->
@@ -234,6 +232,16 @@
     let currentCellPositions = {};
     let currentBalloonElement = null;
     let sectorInstances = [];
+
+    // Μετά τη φόρτωση, υπολογίζουμε το πλάτος του h2 και το ορίζουμε ως left-padding για το h1
+    window.addEventListener('load', function(){
+      const h2 = document.querySelector('#pageTitleOverlay h2');
+      const h1 = document.querySelector('#pageTitleOverlay h1');
+      const gap = 5; // επιπλέον κενό
+      if(h2 && h1) {
+        h1.style.paddingLeft = (h2.offsetWidth + gap) + 'px';
+      }
+    });
 
     function rowHTMLPair(element, type) {
       if (!element) {
