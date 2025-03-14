@@ -194,6 +194,17 @@
 
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
 
+    /********************** Συνάρτηση για τη δημιουργία HTML γραμμής στο balloon overlay **********************/
+    function rowHTML(element, type) {
+      if (!element) return `<tr><td colspan="2" style="text-align:center;">-</td></tr>`;
+      let color = sectorColors[element.block] || "#CCCCCC";
+      return `
+        <tr>
+          <td style="color:${color}; font-weight:bold;">Ζ=${element.number}</td>
+          <td>${element.subshells || "-"}</td>
+        </tr>`;
+    }
+
     /********************** Βοηθητικές Συναρτήσεις **********************/
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
@@ -494,7 +505,7 @@
       }
       return formatted.join(", ");
     }
-    /* -------------------- Συνάρτηση messageForElement (όπως στο ALLtoDOM1) -------------------- */
+    /* -------------------- Συνάρτηση messageForElement -------------------- */
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -520,43 +531,31 @@
     }
     /* -------------------- Συνάρτηση ενημέρωσης του Info Panel -------------------- */
     function updateInfo() {
-      // Επιλέγουμε το τρέχον στοιχείο βάσει του currentBalloonElement ή, ως default, το στοιχείο με number "3"
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
       
-      // Δημιουργούμε το περιεχόμενο για την πρώτη στήλη (leftPanel)
       let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentElement.number}</span> 
                       <span style="font-size:3em; font-weight:bold; color:${sectorColors[currentElement.block]};">
-                        ${currentElement.symbol || ""}
-                      </span> 
+                        ${currentElement.symbol || ""}</span> 
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       
-      // Δημιουργούμε το περιεχόμενο για το τμήμα υποστιβάδων (στο 70%)
       let prevStr = `<div style="color:${sectorColors[prevElement ? prevElement.block : '']};">Ζ=${prevElement ? (prevElement.number + " " + prevElement.subshells) : "-"}</div>`;
       let currentStr = `<div style="font-weight:bold; color:${sectorColors[currentElement.block]};">Ζ=${currentElement.number} ${currentElement.subshells}</div>`;
       let nextStr = `<div style="color:${sectorColors[nextElement ? nextElement.block : '']};">Ζ=${nextElement ? nextElement.number : ""} ${nextElement ? nextElement.subshells : "-"}</div>`;
       let subshellsHTML = prevStr + currentStr + nextStr;
       
-      // Δημιουργούμε το περιεχόμενο για τις στιβάδες και το μήνυμα (στο 30%)
       let shellsMsgHTML = `<div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
                            <div style="font-style: italic;">${messageForElement(currentElement)}</div>`;
       
-      // Περιεχόμενο για τα remarks
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       
-      // Ενημέρωση του info panel – δομή δύο στηλών:
-      // Αριστερή στήλη (#infoLeft): 160px πλάτος, περιέχει τα βασικά στοιχεία
-      // Δεξιά στήλη (#infoRight): Περιέχει έναν εσωτερικό πίνακα με:
-      //   πρώτη γραμμή: δύο στήλες, αριστερή (70%) για τα subshells, δεξιά (30%) για τις στιβάδες + μήνυμα
-      //   δεύτερη γραμμή: τα remarks.
       document.getElementById("infoLeft").innerHTML = leftHTML;
       document.getElementById("infoSubshells").innerHTML = subshellsHTML;
       document.getElementById("infoShellsMsg").innerHTML = shellsMsgHTML;
       document.getElementById("infoRemarks").innerHTML = remarksHTML;
       
-      // Θέτουμε το top του info panel ίσο με το top του κουμπιού "Επόμενο" και το πλάτος του 17px μικρότερο του left των κουμπιών.
       let btnPanelRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let infoPanel = document.getElementById("infoPanelFull");
       infoPanel.style.top = btnPanelRect.top + "px";
@@ -625,7 +624,6 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-      // Ανανεώνουμε τους καμβάδες τομέα
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
