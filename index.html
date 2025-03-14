@@ -567,41 +567,51 @@
     }
     
     // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay:
-    // - Το περιεχόμενο εμφανίζεται οριζόντια σε flex container.
-    // - Η γραμματοσειρά είναι έντονη, μέγεθος 11px, με το χρώμα του τομέα και λευκό φόντο.
-    // - Η θέση του overlay: η πάνω αριστερή γωνία του τοποθετείται στην κάτω δεξιά γωνία του κελιού,
-    //   μετατοπισμένη κατά 5px προς τα πάνω και 5px προς τα αριστερά, εκτός αν το δεξί όριο του κελιού ξεπερνάει το μισό πλάτος της οθόνης,
-    //   οπότε μετατοπίζεται αριστερότερα κατά το πλάτος του overlay + 37.
+    // - Περιέχει 3 σειρές:
+    //    1η: υποστιβάδες του στοιχείου της προηγούμενης περιόδου (row - 1, ίδια col)
+    //    2η: υποστιβάδες του τρέχοντος στοιχείου (έντονη γραμματοσειρά)
+    //    3η: υποστιβάδες του επόμενου στοιχείου (row + 1, ίδια col) εφόσον υπάρχει.
+    // - Κάθε σειρά εμφανίζεται ως flex container με λευκό φόντο, font-size 11px, και το χρώμα του τομέα.
     function showBalloonOverlay(elementNumber) {
-      let elementData = elements.find(e => e.number == elementNumber);
-      if (!elementData) return;
+      let currentElement = elements.find(e => e.number == elementNumber);
+      if (!currentElement) return;
       let overlay = document.getElementById("balloonOverlay");
       
-      // Διαχωρισμός των subshells (αν είναι string, διαχωρίζουμε με κενό)
-      let subshells = [];
-      if (typeof elementData.subshells === "string") {
-         subshells = elementData.subshells.split(" ");
-      } else if (Array.isArray(elementData.subshells)) {
-         subshells = elementData.subshells;
+      // Βοηθητική συνάρτηση για αποσπάσματα subshells
+      function getSubshells(element) {
+        if (!element) return [];
+        if (typeof element.subshells === "string") return element.subshells.split(" ");
+        if (Array.isArray(element.subshells)) return element.subshells;
+        return [];
       }
       
-      let contentHTML = "";
-      if (subshells.length > 0) {
-         contentHTML = `<div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px; font-weight: bold; font-size: 11px;">`;
-         subshells.forEach(subshell => {
-             let color = "";
-             if(elementData.block === "s") color = "#FF477E";
-             else if(elementData.block === "p") color = "#26FF31";
-             else if(elementData.block === "d") color = "#3F99FF";
-             else if(elementData.block === "f") color = "#FFD051";
-             contentHTML += `<span style="color: ${color};">${subshell}</span>`;
-         });
-         contentHTML += "</div>";
-      } else {
-         contentHTML = `<em style="font-weight: bold; font-size: 11px; color: gray;">Δεν υπάρχουν subshells</em>`;
+      // Βρείτε το στοιχείο της προηγούμενης και της επόμενης περιόδου (ίδιας ομάδας)
+      let prevElement = elements.find(e => e.col == currentElement.col && e.row == (currentElement.row - 1));
+      let nextElement = elements.find(e => e.col == currentElement.col && e.row == (currentElement.row + 1));
+      
+      let subshellsPrev = getSubshells(prevElement);
+      let subshellsCurrent = getSubshells(currentElement);
+      let subshellsNext = getSubshells(nextElement);
+      
+      // Βοηθητική συνάρτηση δημιουργίας HTML για κάθε σειρά
+      function rowHTML(element, subshells, isBold) {
+        let color = "";
+        if (!element) return `<div style="display:flex; align-items:center; gap:5px; background:white; padding:5px; font-size:11px;"> <span style="color:gray;">N/A</span> </div>`;
+        if (element.block === "s") color = "#FF477E";
+        else if (element.block === "p") color = "#26FF31";
+        else if (element.block === "d") color = "#3F99FF";
+        else if (element.block === "f") color = "#FFD051";
+        let fontWeight = isBold ? "bold" : "normal";
+        let innerHTML = subshells.map(subshell => `<span style="color:${color};">${subshell}</span>`).join("");
+        return `<div style="display:flex; align-items:center; gap:5px; background:white; padding:5px; font-size:11px; font-weight:${fontWeight};">${innerHTML}</div>`;
       }
       
-      overlay.innerHTML = contentHTML;
+      let rowPrevHTML = rowHTML(prevElement, subshellsPrev, false);
+      let rowCurrentHTML = rowHTML(currentElement, subshellsCurrent, true);
+      let rowNextHTML = rowHTML(nextElement, subshellsNext, false);
+      
+      let finalContent = rowPrevHTML + rowCurrentHTML + rowNextHTML;
+      overlay.innerHTML = finalContent;
       
       // Εύρεση θέσης του κελιού
       let cellPos = currentCellPositions[elementNumber];
@@ -610,7 +620,6 @@
       // Κάνουμε το overlay ορατό για μετρήσεις
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
-      
       let overlayRect = overlay.getBoundingClientRect();
       let overlayWidth = overlayRect.width;
       let overlayHeight = overlayRect.height;
@@ -619,11 +628,14 @@
       let screenHalf = window.innerWidth / 2;
       let overlayX, overlayY;
       
+      // Υπολογισμός θέσης:
+      // Αν το δεξί όριο του κελιού ξεπερνάει το μισό πλάτος της οθόνης, μετατοπίζεται αριστερότερα κατά (overlayWidth + 37)
       if (cellRight > screenHalf) {
-        overlayX = cellPos.x + cellPos.width - (overlayWidth + 37);
+         overlayX = cellPos.x + cellPos.width - (overlayWidth + 37);
       } else {
-        overlayX = cellPos.x + cellPos.width - 5;
+         overlayX = cellPos.x + cellPos.width - 5;
       }
+      // Η πάνω αριστερή γωνία του overlay τοποθετείται στην κάτω δεξιά γωνία του κελιού, μετατοπισμένη κατά 5px προς τα πάνω
       overlayY = cellPos.y + cellPos.height - 5;
       
       overlay.style.left = overlayX + "px";
