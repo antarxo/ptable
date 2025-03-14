@@ -561,14 +561,16 @@
       }
     }
     
-    // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay με οριζόντια διάταξη,
-    // γραμματοσειρά στο χρώμα του τομέα, λευκό φόντο και μέγεθος 11px.
+    // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay:
+    // - Το περιεχόμενο εμφανίζεται οριζόντια σε flex container.
+    // - Η γραμματοσειρά έχει έντονο χαρακτήρα και μέγεθος 11px, με το χρώμα του τομέα και λευκό φόντο.
+    // - Η θέση του overlay: η πάνω αριστερή γωνία του τοποθετείται στην κάτω δεξιά γωνία του κελιού, μετατοπισμένη κατά 5px προς τα πάνω και 5px προς τα αριστερά.
     function showBalloonOverlay(elementNumber) {
       let elementData = elements.find(e => e.number == elementNumber);
       if (!elementData) return;
       let overlay = document.getElementById("balloonOverlay");
       
-      // Διαχωρισμός των subshells αν είναι string
+      // Διαχωρισμός των subshells (αν είναι string, διαχωρίζουμε με κενό)
       let subshells = [];
       if (typeof elementData.subshells === "string") {
          subshells = elementData.subshells.split(" ");
@@ -578,18 +580,18 @@
       
       let contentHTML = "";
       if (subshells.length > 0) {
-         contentHTML = `<div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px;">`;
+         contentHTML = `<div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px; font-weight: bold; font-size: 11px;">`;
          subshells.forEach(subshell => {
              let color = "";
              if(elementData.block === "s") color = "#FF477E";
              else if(elementData.block === "p") color = "#26FF31";
              else if(elementData.block === "d") color = "#3F99FF";
              else if(elementData.block === "f") color = "#FFD051";
-             contentHTML += `<span style="color: ${color}; font-size: 11px;">${subshell}</span>`;
+             contentHTML += `<span style="color: ${color};">${subshell}</span>`;
          });
          contentHTML += "</div>";
       } else {
-         contentHTML = "<em style='font-size:11px; color: gray;'>Δεν υπάρχουν subshells</em>";
+         contentHTML = `<em style="font-weight: bold; font-size: 11px; color: gray;">Δεν υπάρχουν subshells</em>`;
       }
       
       overlay.innerHTML = contentHTML;
@@ -603,25 +605,16 @@
       overlay.style.opacity = "0";
       
       let overlayRect = overlay.getBoundingClientRect();
-      let overlayWidth = overlayRect.width;
-      let overlayHeight = overlayRect.height;
-      
-      let cellRight = cellPos.x + cellPos.width;
-      let screenHalf = window.innerWidth / 2;
-      let overlayX, overlayY;
-      
-      if (cellRight < screenHalf) {
-        overlayX = cellPos.x + cellPos.width - overlayWidth - 5;
-        overlayY = cellPos.y + cellPos.height - overlayHeight - 5;
-      } else {
-        overlayX = cellPos.x + cellPos.width - (overlayWidth + 37);
-        overlayY = cellPos.y + cellPos.height - overlayHeight;
-      }
+      // Θέτουμε τη θέση σύμφωνα με τις νέες προδιαγραφές:
+      // Η πάνω αριστερή γωνία του overlay στην κάτω δεξιά γωνία του κελιού,
+      // μετατοπισμένη κατά 5px προς τα πάνω και 5px προς τα αριστερά.
+      let overlayX = cellPos.x + cellPos.width - 5;
+      let overlayY = cellPos.y + cellPos.height - 5;
       
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       
-      // Τέλος, εμφανίζουμε το overlay με διαφάνεια
+      // Τέλος, εμφανίζουμε το overlay με εφέ διαφάνειας
       setTimeout(() => {
          overlay.style.opacity = "1";
       }, 10);
