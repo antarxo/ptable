@@ -22,7 +22,7 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas με ελαφριά σκιά */
+    /* Background canvas */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -32,18 +32,18 @@
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* Ομαδοποίηση καμβάδων ομάδων με υψηλό z-index */
+    /* Group canvases */
     #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute;
       z-index: 60;
     }
-    /* Καμβάδες τομέων και περιοχών */
+    /* Sector canvases */
     #canvasS { z-index: 10; }
     #canvasF { z-index: 20; }
     #canvasD { z-index: 30; }
     #canvasP { z-index: 40; }
     #canvasPeriods { z-index: 50; }
-    /* Διάταξη κουμπιών */
+    /* Button panel */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -62,7 +62,7 @@
       cursor: pointer;
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
     }
-    /* Offscreen canvas για color picking (προσωρινό) */
+    /* Offscreen canvas για color picking */
     #offscreenCanvas { display: none; }
     /* Στυλ για το balloon overlay */
     #balloonOverlay {
@@ -73,13 +73,12 @@
       padding: 10px;
       border-radius: 5px;
       z-index: 150;
+      opacity: 0;
       transition: opacity 0.3s ease;
-      pointer-events: none;
     }
   </style>
 </head>
 <body>
-
   <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
@@ -92,7 +91,7 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
 
-  <!-- Κουμπιά: Επόμενο, Συμπλήρωσε, Σύμπτυξε/Ανάπτυξε, Reset -->
+  <!-- Κουμπιά -->
   <div id="buttonPanel">
     <button id="nextState">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -103,8 +102,8 @@
   <!-- Offscreen canvas για color picking -->
   <canvas id="offscreenCanvas" width="800" height="600"></canvas>
   
-  <!-- Balloon Overlay για τα subshells -->
-  <div id="balloonOverlay" style="display:none;"></div>
+  <!-- Balloon overlay για τα subshells -->
+  <div id="balloonOverlay"></div>
 
   <script>
     // Global Variables
@@ -118,7 +117,7 @@
     let cellSize = 40;
     let currentCellPositions = {};
 
-    // Λειτουργίες μετατόπισης
+    // Συναρτήσεις μετατόπισης
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -560,13 +559,13 @@
       }
     }
     
-    // Συνάρτηση εμφάνισης balloon overlay με τα subshells
+    // Συνάρτηση εμφάνισης του balloon overlay με τις subshells του στοιχείου
     function showBalloonOverlay(elementNumber) {
       let elementData = elements.find(e => e.number === elementNumber);
       if (!elementData) return;
       let overlay = document.getElementById("balloonOverlay");
       
-      // Δημιουργία περιεχομένου από τις subshells (υποστιβάδες) του στοιχείου
+      // Δημιουργία περιεχομένου βάσει των subshells του στοιχείου
       let contentHTML = "";
       if (elementData.subshells && elementData.subshells.length > 0) {
          contentHTML = "<ul style='list-style:none; margin:0; padding:0;'>";
@@ -580,7 +579,7 @@
          });
          contentHTML += "</ul>";
       } else {
-         contentHTML = "No subshells available";
+         contentHTML = "<em>Δεν υπάρχουν subshells</em>";
       }
       
       overlay.innerHTML = contentHTML;
@@ -589,21 +588,16 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Υπολογισμός δεξιού ορίου κελιού και σύγκριση με το μισό πλάτος της οθόνης
+      // Υπολογισμός δεξιού ορίου του κελιού και θέσης του overlay σύμφωνα με τις προδιαγραφές:
+      // - Αν το δεξί όριο είναι μικρότερο από το μισό πλάτος της οθόνης: θέση στη δεξιά κάτω γωνία με μετατόπιση 5px πάνω και 5px αριστερά.
+      // - Διαφορετικά: μετακίνηση αριστερά από τη δεξιά κάτω γωνία κατά το πλάτος του overlay συν 37px.
       let cellRight = cellPos.x + cellPos.width;
       let screenHalf = window.innerWidth / 2;
-      
-      // Προσωρινή εμφάνιση για μέτρηση διαστάσεων overlay
       overlay.style.display = "block";
-      overlay.style.opacity = "0";
       let overlayWidth = overlay.offsetWidth;
       let overlayHeight = overlay.offsetHeight;
-      
       let overlayX, overlayY;
-      // Υπολογισμός θέσης:
-      // Αν το δεξί όριο του κελιού είναι μικρότερο από το μισό πλάτος της οθόνης,
-      // το overlay τοποθετείται στη δεξιά κάτω γωνία του κελιού, μετατοπισμένο 5px προς τα πάνω και 5px προς τα αριστερά.
-      // Διαφορετικά, μετακινείται αριστερά από τη δεξιά κάτω γωνία κατά το πλάτος του overlay συν 37px.
+      
       if (cellRight < screenHalf) {
         overlayX = cellPos.x + cellPos.width - overlayWidth - 5;
         overlayY = cellPos.y + cellPos.height - overlayHeight - 5;
@@ -615,7 +609,7 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       
-      // Εμφάνιση overlay με διαφάνεια
+      // Εμφάνιση overlay με εφέ διαφάνειας
       setTimeout(() => {
          overlay.style.opacity = "1";
       }, 10);
