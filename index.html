@@ -371,10 +371,10 @@
     }
     
     /* 
-     * ΝΕΕΣ συναρτήσεις για επιλογή προηγούμενου και επόμενου στοιχείου:
-     * - Για το προηγούμενο: αναζητούμε το στοιχείο στην ίδια στήλη (col) με row ίση με (τρέχον row - 1).
-     * - Για το επόμενο: αναζητούμε το στοιχείο στην ίδια σειρά (row) με col ίση με (τρέχον col + 1).
-     * Αυτό σύμφωνα με το παράδειγμα: για τρέχον το 11, προηγούμενο το 3 (π.χ. Li) και επόμενο το 12 (π.χ. Mg).
+     * ΝΕΕΣ συναρτήσεις επιλογής προηγούμενου/επόμενου στοιχείου:
+     * - Για το προηγούμενο: αναζητούμε το στοιχείο στην ίδια στήλη (col) με row = (τρέχον row - 1).
+     * - Για το επόμενο: αναζητούμε το στοιχείο στην ίδια σειρά (row) με col = (τρέχον col + 1).
+     * (Σύμφωνα με το παράδειγμα: για τρέχον το 11, προηγούμενο το 3 και επόμενο το 12)
      */
     function getPrevElement(currentElement) {
       let prev = elements.find(e => e.col == currentElement.col && e.row == currentElement.row - 1);
@@ -387,29 +387,36 @@
     }
     
     /* 
-     * Δημιουργία του HTML για κάθε γραμμή στο balloon overlay.
+     * Δημιουργία HTML για κάθε γραμμή στο balloon overlay.
      * Κάθε γραμμή αντιστοιχεί σε ένα στοιχείο (προηγούμενο, τρέχον, επόμενο).
-     * Η γραμμή αποτελείται από δύο "σειρές" (div):
-     * - Πρώτη: τα subshells. Για το τρέχον στοιχείο εμφανίζονται με <b> ολόκληρη.
-     * - Δεύτερη: τα shells σε μορφή "K(2), L8, M(3)" με bold μόνο το τελευταίο.
-     * Επιπλέον, ο αριθμός (Ζ=...) εμφανίζεται στην αριστερή στήλη, και όλα τα κείμενα έχουν το χρώμα του τομέα.
+     * Η πρώτη στήλη (atomic) εμφανίζει "Ζ=<αριθμός>" στα χρώματα του τομέα,
+     * με μόνο το τρέχον να εμφανίζεται με bold.
+     * Στη δεύτερη στήλη:
+     *  - Η πρώτη γραμμή εμφανίζει τις υποστιβάδες (subshells). Για το τρέχον στοιχείο,
+     *    εμφανίζονται με bold και σε μονοδιάστατη γραμματοσειρά.
+     *  - Η δεύτερη γραμμή εμφανίζει τις στιβάδες (shells) σε μορφή "K(2), L8, M(3)",
+     *    με μόνο το τελευταίο bold.
      */
     function rowHTML(element, role) {
       if (!element) {
         return `<tr style="color: #000;">
                   <td style="padding: 2px; min-width:50px; border-right:1px solid lightgray;">-</td>
-                  <td style="padding: 2px; font-size:11px; line-height:1.1;">-<br>-</td>
+                  <td style="padding: 2px; font-size:11px; line-height:1.1;">
+                    <div>-</div><div>-</div>
+                  </td>
                 </tr>`;
       }
       let color = sectorColors[element.block] || "#000";
+      // Στην πρώτη στήλη: bold μόνο αν είναι το τρέχον
       let atomicHTML = (role === "current") ? `<b>Ζ=${element.number}</b>` : `Ζ=${element.number}`;
       
+      // Δεύτερη στήλη, πρώτη γραμμή: υποστιβάδες (subshells)
       let subs = getSubshells(element);
       let subsLine = subs.join(" ");
       if(role === "current"){
-          subsLine = `<b>${subsLine}</b>`;
+        subsLine = `<b style="font-family: monospace;">${subsLine}</b>`;
       }
-      
+      // Δεύτερη στήλη, δεύτερη γραμμή: στιβάδες (shells) σε μορφή "K(2), L8, M(3)"
       let shells = subs.map(s => formatSubshell(s));
       let shellsLine = "";
       if(shells.length > 0){
@@ -429,10 +436,8 @@
     
     /* 
      * Εμφάνιση του balloon overlay:
-     * Δημιουργείται πίνακας (<table>) με τρεις γραμμές (tr):
-     * 1η γραμμή: Προηγούμενο στοιχείο
-     * 2η γραμμή: Τρέχον στοιχείο (με bold στις γραμμές όπως ζητήθηκε)
-     * 3η γραμμή: Επόμενο στοιχείο
+     * Δημιουργείται ένας πίνακας (<table>) με τρεις γραμμές, κάθε μία για (προηγούμενο, τρέχον, επόμενο).
+     * Στη λειτουργία "Επόμενο" το τρέχον κελί (και όχι το προηγούμενο) επισημαίνεται.
      */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
@@ -462,7 +467,7 @@
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
     }
     
-    // Σχεδίαση στοιχείων στο p5 canvas (με stroke 3 για το επιλεγμένο κελί)
+    // Σχεδίαση στοιχείων στο p5 canvas με έντονο περίγραμμα (stroke 3) για το επιλεγμένο κελί.
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -554,8 +559,8 @@
       initializeSectorsCanvas();
       if (showPeriods) initializePeriodsCanvas();
       updateCellsPositions();
+      // Στη λειτουργία "Επόμενο" το τρέχον κελί επισημαίνεται
       if(currentCellPositions[currentZ]) {
-         // Στη λειτουργία "Επόμενο" το τρέχον κελί (και όχι το προηγούμενο) εμφανίζεται με έντονο περίγραμμα
          showBalloonOverlay(currentZ);
       }
     });
@@ -592,6 +597,7 @@
               let globalY = event.clientY;
               let found = performHitTest(globalX, globalY);
               if(found !== null){
+                // Με κλικ αλλάζει το περίγραμμα στο κελί που έγινε κλικ.
                 showBalloonOverlay(found);
               }
             };
@@ -670,26 +676,7 @@
       return subshell;
     }
     
-    // Φόρτωση δεδομένων και αρχικοποίηση
-    loadData().then(() => {
-      if (currentMode === "expanded" || currentMode === "collapsed") {
-        initializeBackgroundCanvas();
-        initializeSectorsCanvas();
-        initializePeriodsCanvas();
-        initGroupsCanvases();
-        initializeCanvases();
-      } else if (currentMode === "start") {
-        initializeBackgroundCanvas();
-        initializeSectorsCanvas();
-        initializeCanvases();
-      }
-      updateCellsPositions();
-      if (currentMode === "start" && currentCellPositions[3]) {
-        showBalloonOverlay(3);
-      }
-    });
-    
-    // Συνάρτηση για αρχικοποίηση των καμβάδων τομέων (sectors)
+    // Σύνδεση της συνάρτησης initializeSectorsCanvas στο global scope για να αποφεύγονται θέματα scope.
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -733,6 +720,25 @@
       });
     }
     window.initializeSectorsCanvas = initializeSectorsCanvas;
+    
+    // Φόρτωση δεδομένων και αρχικοποίηση
+    loadData().then(() => {
+      if (currentMode === "expanded" || currentMode === "collapsed") {
+        initializeBackgroundCanvas();
+        initializeSectorsCanvas();
+        initializePeriodsCanvas();
+        initGroupsCanvases();
+        initializeCanvases();
+      } else if (currentMode === "start") {
+        initializeBackgroundCanvas();
+        initializeSectorsCanvas();
+        initializeCanvases();
+      }
+      updateCellsPositions();
+      if (currentMode === "start" && currentCellPositions[3]) {
+        showBalloonOverlay(3);
+      }
+    });
   </script>
 </body>
 </html>
