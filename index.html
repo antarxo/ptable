@@ -6,14 +6,14 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Τίτλος: σκιά κάτω & δεξιά */
+    /* Νέο στυλ για τον τίτλο */
     #pageTitleOverlay {
       position: fixed;
       top: 5px;
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.9);
+      box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.9); /* σκιά κάτω και δεξιά */
       padding: 5px 10px;
       z-index: 999;
       display: flex;
@@ -22,7 +22,7 @@
       width: auto;
       white-space: nowrap;
     }
-    /* Στοιχεία του τίτλου σε μία γραμμή */
+    /* Τα στοιχεία του τίτλου σε μία γραμμή */
     #pageTitleOverlay h1,
     #pageTitleOverlay h2 {
       display: inline-block;
@@ -30,13 +30,12 @@
       vertical-align: middle;
       white-space: nowrap;
     }
-    /* Κύρια φράση */
+    /* Κύρια φράση τίτλου – με υπολογιζόμενο left-padding */
     #pageTitleOverlay h1 {
       font-size: 24px;
       font-weight: bold;
       color: black;
       letter-spacing: 1px;
-      /* left-padding ορίζεται δυναμικά */
     }
     /* Δεύτερη φράση */
     #pageTitleOverlay h2 {
@@ -45,35 +44,35 @@
       color: #333;
     }
     /* Βασικές ρυθμίσεις */
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      overflow: hidden;
-      background: #f7f7f7;
+    body { 
+      font-family: 'Roboto', sans-serif; 
+      margin: 0; 
+      overflow: hidden; 
+      background: #f7f7f7; 
       padding-top: 60px;
     }
-    .canvas {
-      position: absolute;
-      background: transparent;
-      transition: all 0.5s ease-in-out;
+    .canvas { 
+      position: absolute; 
+      background: transparent; 
+      transition: all 0.5s ease-in-out; 
     }
     canvas {
       padding: 8px;
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas: σκιά κάτω & δεξιά */
+    /* Background canvas – με z-index -5 */
     #canvasTableBackground {
-      position: absolute;
-      background: white;
+      position: absolute; 
+      background: white; 
       border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
+      box-shadow: 4px 4px 10px rgba(0,0,0,0.3); /* σκιά κάτω και δεξιά */
       z-index: -5;
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* Ομαδοποίηση καμβάδων */
-    #canvasS_groups, #canvasD_groups, #canvasP_groups {
+    /* Group canvases */
+    #canvasS_groups, #canvasD_groups, #canvasP_groups { 
       position: absolute;
       z-index: 60;
     }
@@ -85,19 +84,19 @@
     #canvasPeriods { z-index: 50; }
     /* Button panel */
     #buttonPanel {
-      position: fixed;
-      bottom: 20px;
+      position: fixed; 
+      bottom: 20px; 
       right: 20px;
       z-index: 100;
-      display: flex;
+      display: flex; 
       flex-direction: column;
       gap: 5px;
     }
     #buttonPanel button {
-      background-color: #008CBA;
-      color: white;
+      background-color: #008CBA; 
+      color: white; 
       padding: 10px 15px;
-      border: none;
+      border: none; 
       border-radius: 5px;
       cursor: pointer;
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
@@ -105,28 +104,28 @@
     }
     /* Offscreen canvas */
     #offscreenCanvas { display: none; }
-    /* Balloon Overlay: πολύ λίγο διαφανές (opacity 0.95) */
+    /* Balloon overlay */
     #balloonOverlay {
       position: absolute;
       background: white;
-      opacity: 0.95;
-      box-shadow: 4px 4px 6px rgba(0,0,0,0.3);
+      box-shadow: 4px 4px 6px rgba(0,0,0,0.3); /* σκιά κάτω και δεξιά */
       padding: 6px 8px;
       border-radius: 5px;
       z-index: 150;
       visibility: hidden;
+      opacity: 0;
       transition: opacity 0.3s ease;
       pointer-events: none;
       font-size: 12px;
     }
-    /* Πίνακες πληροφοριών: βύθισμα με inset σκιά (φωτισμός από πάνω/αριστερά) */
+    /* Πίνακες πληροφοριών – χρήση σκιάς προς τα κάτω και δεξιά */
     #infoPanelFull {
       position: fixed;
       top: 0;
       left: 20px;
       background: #fff;
       border: 1px solid rgba(0,0,0,0.2);
-      box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4);
+      box-shadow: 4px 4px 8px rgba(0,0,0,0.4); /* σκιά κάτω και δεξιά */
       border-radius: 8px;
       padding: 10px;
       z-index: -10;
@@ -136,7 +135,7 @@
       position: fixed;
       background: #fff;
       border: 1px solid rgba(0,0,0,0.2);
-      box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4);
+      box-shadow: 4px 4px 8px rgba(0,0,0,0.4); /* σκιά κάτω και δεξιά */
       border-radius: 8px;
       padding: 10px;
       z-index: -20;
@@ -149,7 +148,7 @@
   <div id="pageTitleOverlay">
     <h1>
       Διαδραστική Συμπλήρωση του 
-      <!-- Έγχρωμη λέξη, χαρακτήρας-χαρακτήρας (σειρά: s,f,d,p) -->
+      <!-- Έγχρωμη λέξη με χρωματισμό ανά χαρακτήρα (σειρά: s, f, d, p) -->
       <span id="styledPeriodicou">
         <span style="color: #8B0000;">Π</span>
         <span style="color: #FF8C00;">ε</span>
@@ -215,78 +214,54 @@
   <script>
     /********************** Global Variables & Configuration **********************/
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-    let textColors = {
-      s: "#8B0000",
-      p: "#006400",
-      d: "#00008B",
-      f: "#FF8C00"
+    let textColors = { 
+      s: "#8B0000", 
+      p: "#006400", 
+      d: "#00008B", 
+      f: "#FF8C00" 
     };
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    let currentMode = "start";
+    let currentMode = "start"; 
     let currentZ = 3;
-    let extraElements = {};
+    let extraElements = {};  
     let showPeriods = false;
     let cellSize = 40;
     let currentCellPositions = {};
     let currentBalloonElement = null;
     let sectorInstances = [];
 
-    // Μετά το φόρτωμα, ορίζει το left-padding του h1 βάσει του πλάτους του h2 + 5px
+    // Μετά τη φόρτωση, υπολογίζουμε το πλάτος του h2 και το ορίζουμε ως left-padding για το h1
     window.addEventListener('load', function(){
       const h2 = document.querySelector('#pageTitleOverlay h2');
       const h1 = document.querySelector('#pageTitleOverlay h1');
-      const gap = 5;
+      const gap = 5; // επιπλέον κενό
       if(h2 && h1) {
         h1.style.paddingLeft = (h2.offsetWidth + gap) + 'px';
       }
     });
 
-    // Συνάρτηση για το Balloon Overlay
-    // Αριστερή στήλη: 3 σειρές με τα "Ζ=" (προηγούμενο, τρέχον, επόμενο)
-    // Δεξιά στήλη: 3 ζευγάρια (6 σειρές) με πληροφορίες, όπου τα ζευγάρια διαχωρίζονται με οριζόντιες γραμμές.
-    function buildBalloonHTML(prevElement, currentElement, nextElement) {
-      const zPrev = prevElement ? `Ζ=${prevElement.number}` : "-";
-      const zCurrent = currentElement ? `Ζ=${currentElement.number}` : "-";
-      const zNext = nextElement ? `Ζ=${nextElement.number}` : "-";
-      
-      // Συνάρτηση δημιουργίας ζευγαριών πληροφοριών για κάθε στοιχείο
-      function buildInfoPair(element) {
-        if(!element) {
-          return `<tr><td style="padding:2px;">-</td></tr>
-                  <tr><td style="padding:2px;">-</td></tr>`;
-        }
-        return `<tr><td style="padding:2px;">${element.subshells || "-"}</td></tr>
-                <tr><td style="padding:2px;">${formatShells(element)}</td></tr>`;
+    function rowHTMLPair(element, type) {
+      if (!element) {
+        return `
+          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
+          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
+        `;
       }
-      
-      // Δημιουργία της δεξιάς στήλης με 3 ζευγάρια χωρισμένα με οριζόντιες γραμμές
-      const infoPrev = buildInfoPair(prevElement);
-      const infoCurrent = buildInfoPair(currentElement);
-      const infoNext = buildInfoPair(nextElement);
-      
-      return `<table style="width:100%; border-collapse:collapse;">
-        <tr>
-          <td style="vertical-align: top; width: 30%;">
-            <div style="padding:2px 0;">${zPrev}</div>
-            <div style="padding:2px 0;">${zCurrent}</div>
-            <div style="padding:2px 0;">${zNext}</div>
-          </td>
-          <td style="vertical-align: top; width: 70%;">
-            <table style="width:100%; border-collapse:collapse;">
-              <tbody>
-                <tr><td>${infoPrev}</td></tr>
-                <tr><td style="border-top:1px solid #ccc; padding-top:2px;">${infoCurrent}</td></tr>
-                <tr><td style="border-top:1px solid #ccc; padding-top:2px;">${infoNext}</td></tr>
-              </tbody>
-            </table>
-          </td>
+      let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
+      let color = textColors[element.block] || "#CCCCCC";
+      return `
+        <tr style="${borderStyle}">
+          <td style="color:${color}; font-weight:bold; font-size:12px;">Ζ=${element.number}</td>
+          <td style="color:${color}; font-size:12px;">${element.subshells || "-"}</td>
         </tr>
-      </table>`;
+        <tr>
+          <td></td>
+          <td style="color:${color}; font-size:12px;">${formatShells(element)}</td>
+        </tr>
+      `;
     }
-
-    // Οι υπόλοιπες συναρτήσεις παραμένουν όπως στο προηγούμενο αποτέλεσμα
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -570,7 +545,7 @@
       return mapping[n] || n;
     }
     function formatShells(element) {
-      if (!element || !element.shells) return "";
+      if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
       let formatted = shellCounts.map((count, index) => {
          let letter = shellLetter((index+1).toString());
@@ -654,11 +629,12 @@
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      // Χρησιμοποιούμε το buildBalloonHTML για το περιεχόμενο του Balloon
-      let balloonHTML = buildBalloonHTML(prevElement, currentElement, nextElement);
+      let subshellsHTML = rowHTMLPair(prevElement, "prev") + rowHTMLPair(currentElement, "current") + rowHTMLPair(nextElement, "next");
+      let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
-      // Στους πίνακες πληροφοριών εμφανίζεται το Balloon Overlay (στην περίπτωση collapsed)
+      document.getElementById("infoSubshells").innerHTML = subshellsHTML;
+      document.getElementById("infoRemarks").innerHTML = remarksHTML;
       infoPanelFull.style.width = (window.innerWidth - 207) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
@@ -672,7 +648,15 @@
         let collapsedWidth = window.innerWidth - bgRect.width - 200 + 126 - 10;
         infoPanelCollapsed.style.width = collapsedWidth + "px";
         infoPanelCollapsed.style.height = "auto";
-        infoPanelCollapsed.innerHTML = balloonHTML;
+        let collapsedHTML = `
+          <div>${leftHTML}</div>
+          <hr>
+          ${rowHTMLPair(currentElement, "current")}
+          <hr>
+          <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
+        `;
+        infoPanelCollapsed.innerHTML = collapsedHTML;
+        adjustSubshellFontSize();
       }
     }
     function adjustSubshellFontSize() {
@@ -703,10 +687,10 @@
               relativeY += getShift(num, block);
           }
           if (currentBalloonElement == e.number) { 
-              p.strokeWeight(3);
-              p.stroke(0);
-          } else {
-              p.noStroke();
+              p.strokeWeight(3); 
+              p.stroke(0); 
+          } else { 
+              p.noStroke(); 
           }
           p.fill(colors[block] || "#CCCCCC");
           p.rect(relativeX, relativeY, pos.width, pos.height, 5);
@@ -725,13 +709,17 @@
       currentBalloonElement = elementNumber;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      let overlayHTML = buildBalloonHTML(prevElement, currentElement, nextElement);
+      let tableHTML = `<table style="border-collapse: collapse; width:100%;">`
+                      + rowHTMLPair(prevElement, "prev")
+                      + rowHTMLPair(currentElement, "current")
+                      + rowHTMLPair(nextElement, "next")
+                      + `</table>`;
       let overlay = document.getElementById("balloonOverlay");
-      overlay.innerHTML = overlayHTML;
+      overlay.innerHTML = tableHTML;
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       overlay.style.visibility = "visible";
-      overlay.style.opacity = "0.95";
+      overlay.style.opacity = "0";
       let overlayRect = overlay.getBoundingClientRect();
       let overlayWidth = overlayRect.width;
       let cellRight = cellPos.x + cellPos.width;
@@ -741,11 +729,219 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       overlay.style.fontSize = "12px";
+      setTimeout(() => { overlay.style.opacity = "1"; }, 10);
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
       updateInfo();
     }
+    function performHitTest(x, y) {
+      let region = computeModeRegionUpdated();
+      if (!region) {
+         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
+         return null;
+      }
+      let regionLeft = region.minX, regionTop = region.minY;
+      if (x < regionLeft || x > region.maxX || y < regionTop) {
+         console.log("Κλικ εκτός περιοχής στοιχείων.");
+         return null;
+      }
+      let relX = x - regionLeft, relY = y - regionTop;
+      let offCanvas = document.getElementById("offscreenCanvas");
+      offCanvas.width = region.maxX - region.minX;
+      offCanvas.height = region.maxY - region.minY;
+      let offCtx = offCanvas.getContext("2d");
+      offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+      for (let key in currentCellPositions) {
+         let pos = currentCellPositions[key];
+         let drawX = pos.x - regionLeft;
+         let drawY = pos.y - regionTop;
+         let num = Number(key);
+         let r = (num * 37) % 256;
+         let g = (num * 67) % 256;
+         let b = (num * 97) % 256;
+         offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+         offCtx.fillRect(drawX, drawY, pos.width, pos.height);
+      }
+      let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
+      if (pixel[3] === 0) {
+         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
+         return null;
+      } else {
+         for (let key in currentCellPositions) {
+            let pos = currentCellPositions[key];
+            let num = Number(key);
+            let r = (num * 37) % 256;
+            let g = (num * 67) % 256;
+            let b = (num * 97) % 256;
+            if (pixel[0] === r && pixel[1] === g && pixel[2] === b) {
+                return key;
+            }
+         }
+         return null;
+      }
+    }
+    window.initializeSectorsCanvas = function() {
+      sectorInstances = [];
+      let blocks = ["s", "p", "d", "f"];
+      blocks.forEach(block => {
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.filter(e => e.block === block).forEach(e => {
+          let num = Number(e.number);
+          if (currentMode === "start") {
+            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          }
+          let pos = positions[currentMode][e.number] ||
+                    ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
+          if (pos) {
+            let yForMin = pos.y, yForMax = pos.y;
+            if (currentMode === "start") {
+              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
+              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
+            }
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, yForMin);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, yForMax + pos.height);
+          }
+        });
+        if (minX === Infinity || minY === Infinity) return;
+        if (currentMode === "start" && (block === "p" || block === "d"))
+          container.style.left = (minX + getShiftContainer(block)) + "px";
+        else
+          container.style.left = minX + "px";
+        container.style.top = minY + "px";
+        container.style.width = (maxX - minX) + "px";
+        container.style.height = (maxY - minY) + "px";
+        let inst = new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+            canvas.parent("canvas" + block.toUpperCase());
+            p.noLoop();
+            drawElements(p, block, minX, minY);
+          };
+          p.myRedraw = function() {
+            p.clear();
+            drawElements(p, block, minX, minY);
+          };
+        });
+        sectorInstances.push(inst);
+      });
+    };
+    function fillAllAction() {
+      document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
+      currentMode = "expanded";
+      currentZ = 123;
+      initializeBackgroundCanvas();
+      window.initializeSectorsCanvas();
+      initializePeriodsCanvas();
+      initGroupsCanvases();
+      document.getElementById('toggleFBlock').disabled = false;
+      updateCellsPositions();
+      updateInfo();
+    }
+    document.getElementById('fillAll').addEventListener('click', function() { fillAllAction(); });
+    document.getElementById('toggleFBlock').addEventListener('click', function() {
+      isCollapsed = !isCollapsed;
+      this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
+      if (isCollapsed) {
+        currentMode = "collapsed";
+        switchToCollapsed();
+      } else {
+        currentMode = "expanded";
+        switchToExpanded();
+      }
+      document.getElementById("infoPanelFull").style.display = (currentMode === "expanded") ? "block" : "none";
+      document.getElementById("infoPanelCollapsed").style.display = (currentMode === "collapsed") ? "block" : "none";
+      initializeBackgroundCanvas();
+      window.initializeSectorsCanvas();
+      ["S", "D", "P"].forEach(sector => {
+        let sectorCanvas = document.getElementById("canvas" + sector);
+        let groupCanvas = document.getElementById("canvas" + sector + "_groups");
+        groupCanvas.style.left = sectorCanvas.style.left;
+        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
+      });
+      updateCellsPositions();
+      setTimeout(() => {
+        updateCellsPositions();
+        if (currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+          showBalloonOverlay(currentBalloonElement);
+        }
+        updateInfo();
+      }, 1300);
+    });
+    document.getElementById('nextState').addEventListener('click', function() {
+      if (currentMode !== "start") {
+        console.log("Το κουμπί 'Επόμενο' λειτουργεί μόνο στην κατάσταση 'start'. Κάντε Reset για επαναφορά.");
+        return;
+      }
+      if (currentZ < 118) {
+        currentZ++;
+      } else if (currentZ === 118) {
+        currentZ = 119;
+        extraElements["1"] = true;
+      } else if (currentZ === 119) {
+        currentZ = 120;
+        extraElements["2"] = true;
+      } else if (currentZ === 120) {
+        currentZ = 121;
+        showPeriods = true;
+      } else if (currentZ === 121) {
+        fillAllAction();
+        return;
+      }
+      initializeBackgroundCanvas();
+      window.initializeSectorsCanvas();
+      if (showPeriods) initializePeriodsCanvas();
+      updateCellsPositions();
+      if (currentCellPositions[currentZ]) {
+         showBalloonOverlay(currentZ);
+      }
+      updateInfo();
+    });
+    document.getElementById('reset').addEventListener('click', function() {
+      currentMode = "start";
+      currentZ = 3;
+      extraElements = {};
+      showPeriods = false;
+      location.reload();
+    });
+    window.addEventListener("resize", function(){
+      if (currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+        showBalloonOverlay(currentBalloonElement);
+      }
+    });
+    function initializeCanvases() {
+      Object.keys({ s: 1, p: 1, d: 1, f: 1 }).forEach(function(block) {
+        new p5(function(p) {
+          p.setup = function() {
+            let config = { cols: 10, rows: 7 };
+            if (block === "s") config = { cols: 2, rows: 7 };
+            else if (block === "p") config = { cols: 6, rows: 7 };
+            else if (block === "d") config = { cols: 10, rows: 7 };
+            else if (block === "f") config = { cols: 14, rows: 7 };
+            let canvas = p.createCanvas(config.cols * cellSize, config.rows * cellSize);
+            canvas.elt.getContext("2d", { willReadFrequently: true });
+            canvas.parent("canvas" + block.toUpperCase());
+            p.skipNextClick = true;
+            setTimeout(() => { p.skipNextClick = false; }, 100);
+            p.mouseClicked = function(event) {
+              if (p.skipNextClick) return;
+              let globalX = event.clientX;
+              let globalY = event.clientY;
+              let found = performHitTest(globalX, globalY);
+              if (found !== null) {
+                showBalloonOverlay(found);
+              }
+            };
+            window.drawElements(p, block);
+          };
+        });
+      });
+    }
+    window.drawElements = drawElements;
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
