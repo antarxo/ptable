@@ -313,25 +313,20 @@
     
     // ---------- Λειτουργίες για το Balloon (χωρίς αλλαγές στη λογική) ----------
     window.updateBalloonPosition = function(element) {
-      let cs = document.getElementById('canvasSubshells');
-      if(!cs) return;
-      cs.style.transition = "all 0.2s ease";
-      let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
-      if(!blockCanvas) return;
-      let rect = blockCanvas.getBoundingClientRect();
-      // Χρήση της θέσης από το positions object χωρίς dummy αλλαγές
-      let pos = positions[currentMode] && positions[currentMode][element.block] ? positions[currentMode][element.block] : { x:50, y:50 };
-      let defaultLeft = rect.left + pos.x + 40;
-      let defaultTop = rect.top + pos.y + 40;
-      let leftPos = defaultLeft - 5;
-      let topPos = defaultTop;
-      let balloonWidth = cs.offsetWidth;
-      if(defaultLeft > window.innerWidth / 2) { leftPos = defaultLeft - (33 + balloonWidth); }
-      if(leftPos + balloonWidth > window.innerWidth) { leftPos = window.innerWidth - balloonWidth - 5; }
-      cs.style.display = "block";
-      cs.style.left = leftPos + "px";
-      cs.style.top = topPos + "px";
-    };
+  let cs = document.getElementById('canvasSubshells');
+  if (!cs) return;
+  cs.style.transition = "all 0.2s ease";
+  // Λαμβάνουμε απευθείας την απόλυτη θέση για το στοιχείο, βάσει του element.number
+  let pos = positions[currentMode] && positions[currentMode][element.number];
+  if (!pos) return;
+  // Προσθέτουμε ένα σταθερό offset για το balloon, π.χ. 40 pixels
+  let defaultLeft = pos.x + 40;
+  let defaultTop = pos.y + 40;
+  cs.style.display = "block";
+  cs.style.left = defaultLeft + "px";
+  cs.style.top = defaultTop + "px";
+};
+
     
     window.drawSubshells = function(data) {
       if (!subshellsP) return;
