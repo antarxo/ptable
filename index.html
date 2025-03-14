@@ -6,15 +6,15 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Νέο στυλ για τον τίτλο με σκιά προς τα κάτω και δεξιά */
+    /* Νέο στυλ για τον τίτλο */
     #pageTitleOverlay {
       position: fixed;
-      top: 5px;
+      top: 5px;  /* top 5 */
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.9); /* οριζόντια και κάθετη μετατόπιση */
-      padding: 5px 10px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.9); /* πιο έντονη σκιά */
+      padding: 5px 10px;  /* μικρό περιθώριο αριστερά και δεξιά */
       z-index: 999;
       display: flex;
       align-items: center;
@@ -22,7 +22,7 @@
       width: auto;
       white-space: nowrap;
     }
-    /* Στοιχεία του τίτλου */
+    /* Τα στοιχεία του τίτλου σε μία γραμμή */
     #pageTitleOverlay h1,
     #pageTitleOverlay h2 {
       display: inline-block;
@@ -30,23 +30,27 @@
       vertical-align: middle;
       white-space: nowrap;
     }
+    /* Κύρια φράση τίτλου – με υπολογιζόμενο left-padding */
     #pageTitleOverlay h1 {
-      font-size: 24px;
+      font-size: 24px; /* μέγεθος 24 */
       font-weight: bold;
       color: black;
-      letter-spacing: 1px;
+      letter-spacing: 1px; /* ομοιόμορφες αποστάσεις χαρακτήρων */
+      /* Το left padding θα οριστεί δυναμικά ώστε το κενό πριν την φράση να ισούται με το πλάτος του h2 + 5px */
     }
+    /* Δεύτερη φράση */
     #pageTitleOverlay h2 {
-      font-size: 11px;
+      font-size: 11px; /* μέγεθος 11 */
       font-weight: normal;
       color: #333;
     }
+    /* Βασικές ρυθμίσεις */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
       overflow: hidden; 
       background: #f7f7f7; 
-      padding-top: 60px;
+      padding-top: 60px; /* για να μην καλύπτεται ο τίτλος */
     }
     .canvas { 
       position: absolute; 
@@ -58,6 +62,7 @@
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
+    /* Background canvas – με z-index -5 */
     #canvasTableBackground {
       position: absolute; 
       background: white; 
@@ -144,6 +149,7 @@
   <div id="pageTitleOverlay">
     <h1>
       Διαδραστική Συμπλήρωση του 
+      <!-- Έγχρωμη λέξη με χρωματισμό ανά χαρακτήρα (σειρά: s, f, d, p) -->
       <span id="styledPeriodicou">
         <span style="color: #8B0000;">Π</span>
         <span style="color: #FF8C00;">ε</span>
@@ -175,7 +181,7 @@
   <!-- Balloon Overlay -->
   <div id="balloonOverlay"></div>
   
-  <!-- Πίνακες Πληροφοριών -->
+  <!-- Info Panels -->
   <div id="infoPanelFull">
     <table style="width:100%; border-collapse:collapse;">
       <tr>
@@ -226,169 +232,90 @@
     let currentCellPositions = {};
     let currentBalloonElement = null;
     let sectorInstances = [];
-  
+
+    // Μετά τη φόρτωση, υπολογίζουμε το πλάτος του h2 και το ορίζουμε ως left-padding για το h1
     window.addEventListener('load', function(){
       const h2 = document.querySelector('#pageTitleOverlay h2');
       const h1 = document.querySelector('#pageTitleOverlay h1');
-      const gap = 5;
+      const gap = 5; // επιπλέον κενό
       if(h2 && h1) {
         h1.style.paddingLeft = (h2.offsetWidth + gap) + 'px';
       }
     });
-  
-    /********** ΣΥΝΑΡΤΗΣΕΙΣ ΓΙΑ ΤΟ BALLOON OVERLAY **********/
-  
-    // Συνάρτηση για την αριστερή στήλη: 3 σειρές, κάθε μία έχει ύψος 40px και στοιχίζεται κατακόρυφα στο κέντρο
-    function rowZ(element) {
-      let color = element ? (textColors[element.block] || "#CCCCCC") : "#CCCCCC";
-      let zText = element ? `Ζ=${element.number}` : "-";
-      return `<tr style="height:40px;">
-                <td style="vertical-align: middle; text-align:center; font-size:12px; font-weight:bold; color:${color};">
-                  ${zText}
-                </td>
-              </tr>`;
-    }
-  
-    // Συνάρτηση για τη δεξιά στήλη: Εμφανίζει τις υποστιβάδες σε 2 γραμμές (ύψος 20px η καθεμία)
-    function rowSubshells(element) {
+
+    function rowHTMLPair(element, type) {
       if (!element) {
-        return `<tr style="height:20px;">
-                  <td style="text-align:center; font-size:12px;">-</td>
-                </tr>
-                <tr style="height:20px;">
-                  <td style="text-align:center; font-size:12px;">-</td>
-                </tr>`;
+        return `
+          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
+          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
+        `;
       }
+      let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
       let color = textColors[element.block] || "#CCCCCC";
-      return `<tr style="height:20px;">
-                <td style="color:${color}; font-size:12px; text-align:center;">
-                  ${element.subshells || "-"}
-                </td>
-              </tr>
-              <tr style="height:20px;">
-                <td style="color:${color}; font-size:12px; text-align:center;">
-                  ${formatShells(element)}
-                </td>
-              </tr>`;
+      return `
+        <tr style="${borderStyle}">
+          <td style="color:${color}; font-weight:bold; font-size:12px;">Ζ=${element.number}</td>
+          <td style="color:${color}; font-size:12px;">${element.subshells || "-"}</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td style="color:${color}; font-size:12px;">${formatShells(element)}</td>
+        </tr>
+      `;
     }
-  
-    // Τροποποιημένη συνάρτηση για το Balloon Overlay:
-    // Ο κύριος πίνακας έχει 2 στήλες:
-    // • Αριστερή: 3 σειρές (μέσω rowZ) για το προηγούμενο, τρέχον και επόμενο στοιχείο.
-    // • Δεξιά: 6 σειρές (μέσω rowSubshells) που εμφανίζουν τις υποστιβάδες.
-    function showBalloonOverlay(elementNumber) {
-      let currentElement = elements.find(e => e.number == elementNumber);
-      if (!currentElement) return;
-      currentBalloonElement = elementNumber;
-      let prevElement = getPrevElement(currentElement);
-      let nextElement = getNextElement(currentElement);
-      
-      let leftTableHTML = `<table style="border-collapse: collapse; width:100%;">
-                             ${rowZ(prevElement)}
-                             ${rowZ(currentElement)}
-                             ${rowZ(nextElement)}
-                           </table>`;
-      
-      let rightTableHTML = `<table style="border-collapse: collapse; width:100%;">
-                              ${rowSubshells(prevElement)}
-                              ${rowSubshells(currentElement)}
-                              ${rowSubshells(nextElement)}
-                            </table>`;
-      
-      let tableHTML = `<table style="width:100%; border-collapse: collapse;">
-                         <tr>
-                           <td style="vertical-align: middle; width: 30%;">${leftTableHTML}</td>
-                           <td style="vertical-align: top; width: 70%;">${rightTableHTML}</td>
-                         </tr>
-                       </table>`;
-      
-      let overlay = document.getElementById("balloonOverlay");
-      overlay.innerHTML = tableHTML;
-      
-      let cellPos = currentCellPositions[elementNumber];
-      if (!cellPos) return;
-      overlay.style.visibility = "visible";
-      overlay.style.opacity = "0";
-      let overlayRect = overlay.getBoundingClientRect();
-      let overlayWidth = overlayRect.width;
-      let cellRight = cellPos.x + cellPos.width;
-      let screenHalf = window.innerWidth / 2;
-      let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
-      let overlayY = cellPos.y + cellPos.height - 5;
-      overlay.style.left = overlayX + "px";
-      overlay.style.top = overlayY + "px";
-      overlay.style.fontSize = "12px";
-      setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-      sectorInstances.forEach(inst => {
-        if (typeof inst.myRedraw === "function") inst.myRedraw();
-      });
-      updateInfo();
+    function getShift(num, block) {
+      if (currentMode !== "start") return 0;
+      if (block === "p" && num >= 21 && num <= 30) {
+        let effectiveZ = Math.min(currentZ, 30);
+        return (effectiveZ - 20) * 42;
+      }
+      if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
+        let effective = Math.min(currentZ, 70);
+        return (effective - 56) * 42;
+      }
+      return 0;
     }
-  
-    /********** ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ **********/
-  
-    function getPrevElement(currentElement) {
-      let currPos = currentCellPositions[currentElement.number];
-      if (!currPos) return null;
-      let currCenterX = currPos.x + currPos.width / 2;
-      let currCenterY = currPos.y + currPos.height / 2;
-      let candidates = [];
-      for (let e of elements) {
-        if (e.number == currentElement.number) continue;
-        if (!(e.number in currentCellPositions)) continue;
-        let pos = currentCellPositions[e.number];
-        let centerX = pos.x + pos.width / 2;
-        let centerY = pos.y + pos.height / 2;
-        if (centerY < currCenterY && Math.abs(centerX - currCenterX) < 1) {
-          candidates.push({ e, centerY });
+    function getShiftContainer(block) {
+      if (currentMode !== "start") return 0;
+      if (block === "p") {
+        if (currentZ <= 20) return 0;
+        else if (currentZ <= 30) return (currentZ - 20) * 42;
+        else if (currentZ <= 56) return 42 * 10;
+        else if (currentZ <= 70) return 42 * 10 + (currentZ - 56) * 42;
+        else return 42 * 10 + 42 * 14;
+      } else if (block === "d") {
+        if (currentZ < 57) return 0;
+        else if (currentZ <= 70) return (currentZ - 56) * 42;
+        else return 42 * 14;
+      }
+      return 0;
+    }
+    function computeModeRegion() {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      elements.forEach(e => {
+        let num = Number(e.number);
+        if (currentMode === "start") {
+          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
         }
-      }
-      if (candidates.length === 0) return null;
-      candidates.sort((a, b) => b.centerY - a.centerY);
-      return candidates[0].e;
-    }
-  
-    function getNextElement(currentElement) {
-      let currPos = currentCellPositions[currentElement.number];
-      if (!currPos) return null;
-      let currCenterX = currPos.x + currPos.width / 2;
-      let currCenterY = currPos.y + currPos.height / 2;
-      let candidates = [];
-      for (let e of elements) {
-        if (e.number == currentElement.number) continue;
-        if (!(e.number in currentCellPositions)) continue;
-        let pos = currentCellPositions[e.number];
-        let centerX = pos.x + pos.width / 2;
-        let centerY = pos.y + pos.height / 2;
-        if (Math.abs(centerY - currCenterY) < currPos.height * 0.5 && centerX > currCenterX) {
-          candidates.push({ e, centerX });
+        let pos = positions[currentMode][e.number] ||
+                  ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
+        if (pos) {
+          let x = pos.x, y = pos.y;
+          if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
+            x += getShiftContainer(e.block);
+            if (e.block === "p" && num >= 21 && num <= 30)
+              y += getShift(num, e.block);
+            else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
+              y += getShift(num, e.block);
+          }
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x + pos.width);
+          maxY = Math.max(maxY, y + pos.height);
         }
-      }
-      if (candidates.length === 0) return null;
-      candidates.sort((a, b) => a.centerX - b.centerX);
-      return candidates[0].e;
-    }
-  
-    function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
-      return mapping[n] || n;
-    }
-  
-    function formatShells(element) {
-      if (!element.shells) return "";
-      let shellCounts = element.shells.split(/,\s*/);
-      let formatted = shellCounts.map((count, index) => {
-         let letter = shellLetter((index+1).toString());
-         return letter + "(" + count + ")";
       });
-      if (formatted.length > 0) {
-         let last = formatted.pop();
-         last = `<b>${last}</b>`;
-         formatted.push(last);
-      }
-      return formatted.join(", ");
+      return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
-  
     function updateCellsPositions() {
       currentCellPositions = {};
       elements.forEach(e => {
@@ -417,63 +344,6 @@
         };
       });
     }
-  
-    function getShift(num, block) {
-      if (currentMode !== "start") return 0;
-      if (block === "p" && num >= 21 && num <= 30) {
-        let effectiveZ = Math.min(currentZ, 30);
-        return (effectiveZ - 20) * 42;
-      }
-      if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
-        let effective = Math.min(currentZ, 70);
-        return (effective - 56) * 42;
-      }
-      return 0;
-    }
-  
-    function getShiftContainer(block) {
-      if (currentMode !== "start") return 0;
-      if (block === "p") {
-        if (currentZ <= 20) return 0;
-        else if (currentZ <= 30) return (currentZ - 20) * 42;
-        else if (currentZ <= 56) return 42 * 10;
-        else if (currentZ <= 70) return 42 * 10 + (currentZ - 56) * 42;
-        else return 42 * 10 + 42 * 14;
-      } else if (block === "d") {
-        if (currentZ < 57) return 0;
-        else if (currentZ <= 70) return (currentZ - 56) * 42;
-        else return 42 * 14;
-      }
-      return 0;
-    }
-  
-    function computeModeRegion() {
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      elements.forEach(e => {
-        let num = Number(e.number);
-        if (currentMode === "start") {
-          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
-        }
-        let pos = positions[currentMode][e.number] ||
-                  ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
-        if (pos) {
-          let x = pos.x, y = pos.y;
-          if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
-            x += getShiftContainer(e.block);
-            if (e.block === "p" && num >= 21 && num <= 30)
-              y += getShift(num, e.block);
-            else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
-              y += getShift(num, e.block);
-          }
-          minX = Math.min(minX, x);
-          minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x + pos.width);
-          maxY = Math.max(maxY, y + pos.height);
-        }
-      });
-      return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
-    }
-  
     function computeModeRegionUpdated() {
       let keys = Object.keys(currentCellPositions);
       if (keys.length === 0) return null;
@@ -487,7 +357,6 @@
       }
       return { minX, minY, maxX, maxY };
     }
-  
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
@@ -513,14 +382,12 @@
       }
       bg.style.opacity = "1";
     }
-  
     async function loadData() {
       let resElements = await fetch('elements.json');
       elements = await resElements.json();
       let resPositions = await fetch('positions.json');
       positions = await resPositions.json();
     }
-  
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
@@ -544,7 +411,6 @@
         };
       });
     }
-  
     function initGroupsCanvases() {
       new p5(function(p) {
         p.setup = function() {
@@ -629,7 +495,180 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-  
+    function getPrevElement(currentElement) {
+      let currPos = currentCellPositions[currentElement.number];
+      if (!currPos) return null;
+      let currCenterX = currPos.x + currPos.width / 2;
+      let currCenterY = currPos.y + currPos.height / 2;
+      let candidates = [];
+      for (let e of elements) {
+        if (e.number == currentElement.number) continue;
+        if (!(e.number in currentCellPositions)) continue;
+        let pos = currentCellPositions[e.number];
+        let centerX = pos.x + pos.width / 2;
+        let centerY = pos.y + pos.height / 2;
+        if (centerY < currCenterY && Math.abs(centerX - currCenterX) < 1) {
+          candidates.push({ e, centerY });
+        }
+      }
+      if (candidates.length === 0) return null;
+      candidates.sort((a, b) => b.centerY - a.centerY);
+      return candidates[0].e;
+    }
+    function getNextElement(currentElement) {
+      let currPos = currentCellPositions[currentElement.number];
+      if (!currPos) return null;
+      let currCenterX = currPos.x + currPos.width / 2;
+      let currCenterY = currPos.y + currPos.height / 2;
+      let candidates = [];
+      for (let e of elements) {
+        if (e.number == currentElement.number) continue;
+        if (!(e.number in currentCellPositions)) continue;
+        let pos = currentCellPositions[e.number];
+        let centerX = pos.x + pos.width / 2;
+        let centerY = pos.y + pos.height / 2;
+        if (Math.abs(centerY - currCenterY) < currPos.height * 0.5 && centerX > currCenterX) {
+          candidates.push({ e, centerX });
+        }
+      }
+      if (candidates.length === 0) return null;
+      candidates.sort((a, b) => a.centerX - b.centerX);
+      return candidates[0].e;
+    }
+    function getSubshells(element) {
+      if (!element) return [];
+      if (typeof element.subshells === "string") return element.subshells.split(" ");
+      if (Array.isArray(element.subshells)) return element.subshells;
+      return [];
+    }
+    function shellLetter(n) {
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      return mapping[n] || n;
+    }
+    function formatShells(element) {
+      if (!element.shells) return "";
+      let shellCounts = element.shells.split(/,\s*/);
+      let formatted = shellCounts.map((count, index) => {
+         let letter = shellLetter((index+1).toString());
+         return letter + "(" + count + ")";
+      });
+      if (formatted.length > 0) {
+         let last = formatted.pop();
+         last = `<b>${last}</b>`;
+         formatted.push(last);
+      }
+      return formatted.join(", ");
+    }
+    function messageForElement(element) {
+      if(element.block === 'f') {
+        return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
+      } else {
+        let group = parseInt(element.col);
+        if(group === 1) {
+          return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
+        } else if(group === 2) {
+          return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
+        } else if(group === 13) {
+          return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
+        } else if(group >= 3 && group <= 12) {
+          return "Στοιχείο μετάπτωσης";
+        } else if(group === 14) {
+          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
+        } else if(group >= 15 && group <= 17) {
+          return `Θέλει να <strong>πάρετε</strong> ${18 - group} ηλεκτρόνια`;
+        } else if(group === 18) {
+          return "Ευγενές αέριο-Χημικά αδρανές";
+        }
+        return "";
+      }
+    }
+    function switchToCollapsed() {
+      let infoFull = document.getElementById("infoPanelFull");
+      let infoCollapsed = document.getElementById("infoPanelCollapsed");
+      let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
+      let targetLeft = bgRect.right + 20;
+      let targetWidth = window.innerWidth - bgRect.width - 200;
+      let targetTop = positions["collapsed"] && positions["collapsed"]["1"] ? positions["collapsed"]["1"].y : 55;
+      infoFull.style.left = targetLeft + "px";
+      infoFull.style.top = targetTop + "px";
+      infoFull.style.width = targetWidth + "px";
+      infoFull.addEventListener("transitionend", function handler() {
+        infoFull.style.display = "none";
+        infoCollapsed.style.display = "block";
+        infoCollapsed.style.opacity = "1";
+        infoFull.removeEventListener("transitionend", handler);
+      });
+    }
+    function switchToExpanded() {
+      let infoFull = document.getElementById("infoPanelFull");
+      let infoCollapsed = document.getElementById("infoPanelCollapsed");
+      let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
+      let collapsedLeft = bgRect.right + 20;
+      let collapsedWidth = window.innerWidth - bgRect.width - 200;
+      let collapsedTop = positions["collapsed"] && positions["collapsed"]["1"] ? positions["collapsed"]["1"].y : 55;
+      infoFull.style.left = collapsedLeft + "px";
+      infoFull.style.top = collapsedTop + "px";
+      infoFull.style.width = collapsedWidth + "px";
+      infoCollapsed.style.display = "none";
+      infoFull.style.display = "block";
+      let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
+      let targetLeft = 20;
+      let targetWidth = window.innerWidth - 207;
+      let targetTop = btnRect.top;
+      setTimeout(() => {
+        infoFull.style.left = targetLeft + "px";
+        infoFull.style.top = targetTop + "px";
+        infoFull.style.width = targetWidth + "px";
+      }, 10);
+    }
+    function updateInfo() {
+      let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
+      if (!currentElement) return;
+      let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:${textColors[currentElement.block]};">Ζ=${currentElement.number}</span> 
+                      <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
+                        ${currentElement.symbol || ""}</span> 
+                      <span style="font-style: italic;">${currentElement.name || ""}</span>`;
+      let prevElement = getPrevElement(currentElement);
+      let nextElement = getNextElement(currentElement);
+      let subshellsHTML = rowHTMLPair(prevElement, "prev") + rowHTMLPair(currentElement, "current") + rowHTMLPair(nextElement, "next");
+      let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
+      let infoPanelFull = document.getElementById("infoPanelFull");
+      document.getElementById("infoLeft").innerHTML = leftHTML;
+      document.getElementById("infoSubshells").innerHTML = subshellsHTML;
+      document.getElementById("infoRemarks").innerHTML = remarksHTML;
+      infoPanelFull.style.width = (window.innerWidth - 207) + "px";
+      let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
+      infoPanelFull.style.top = btnRect.top + "px";
+      if (currentMode === "collapsed") {
+        let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
+        let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
+        infoPanelCollapsed.style.left = (bgRect.right + 20) + "px";
+        if (positions[currentMode] && positions[currentMode]["1"]) {
+          infoPanelCollapsed.style.top = positions[currentMode]["1"].y + "px";
+        }
+        let collapsedWidth = window.innerWidth - bgRect.width - 200 + 126 - 10;
+        infoPanelCollapsed.style.width = collapsedWidth + "px";
+        infoPanelCollapsed.style.height = "auto";
+        let collapsedHTML = `
+          <div>${leftHTML}</div>
+          <hr>
+          ${rowHTMLPair(currentElement, "current")}
+          <hr>
+          <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
+        `;
+        infoPanelCollapsed.innerHTML = collapsedHTML;
+        adjustSubshellFontSize();
+      }
+    }
+    function adjustSubshellFontSize() {
+      let subshellElem = document.getElementById("infoSubshellsCollapsed");
+      if (!subshellElem) return;
+      let currentFontSize = parseFloat(window.getComputedStyle(subshellElem).fontSize);
+      while (subshellElem.scrollWidth > subshellElem.clientWidth && currentFontSize > 6) {
+        currentFontSize -= 1;
+        subshellElem.style.fontSize = currentFontSize + "px";
+      }
+    }
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -665,7 +704,38 @@
         }
       });
     }
-  
+    function showBalloonOverlay(elementNumber) {
+      let currentElement = elements.find(e => e.number == elementNumber);
+      if (!currentElement) return;
+      currentBalloonElement = elementNumber;
+      let prevElement = getPrevElement(currentElement);
+      let nextElement = getNextElement(currentElement);
+      let tableHTML = `<table style="border-collapse: collapse; width:100%;">`
+                      + rowHTMLPair(prevElement, "prev")
+                      + rowHTMLPair(currentElement, "current")
+                      + rowHTMLPair(nextElement, "next")
+                      + `</table>`;
+      let overlay = document.getElementById("balloonOverlay");
+      overlay.innerHTML = tableHTML;
+      let cellPos = currentCellPositions[elementNumber];
+      if (!cellPos) return;
+      overlay.style.visibility = "visible";
+      overlay.style.opacity = "0";
+      let overlayRect = overlay.getBoundingClientRect();
+      let overlayWidth = overlayRect.width;
+      let cellRight = cellPos.x + cellPos.width;
+      let screenHalf = window.innerWidth / 2;
+      let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
+      let overlayY = cellPos.y + cellPos.height - 5;
+      overlay.style.left = overlayX + "px";
+      overlay.style.top = overlayY + "px";
+      overlay.style.fontSize = "12px";
+      setTimeout(() => { overlay.style.opacity = "1"; }, 10);
+      sectorInstances.forEach(inst => {
+        if (typeof inst.myRedraw === "function") inst.myRedraw();
+      });
+      updateInfo();
+    }
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
@@ -712,7 +782,6 @@
          return null;
       }
     }
-  
     window.initializeSectorsCanvas = function() {
       sectorInstances = [];
       let blocks = ["s", "p", "d", "f"];
@@ -762,7 +831,6 @@
         sectorInstances.push(inst);
       });
     };
-  
     function fillAllAction() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
@@ -846,45 +914,6 @@
         showBalloonOverlay(currentBalloonElement);
       }
     });
-    function switchToCollapsed() {
-      let infoFull = document.getElementById("infoPanelFull");
-      let infoCollapsed = document.getElementById("infoPanelCollapsed");
-      let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
-      let targetLeft = bgRect.right + 20;
-      let targetWidth = window.innerWidth - bgRect.width - 200;
-      let targetTop = positions["collapsed"] && positions["collapsed"]["1"] ? positions["collapsed"]["1"].y : 55;
-      infoFull.style.left = targetLeft + "px";
-      infoFull.style.top = targetTop + "px";
-      infoFull.style.width = targetWidth + "px";
-      infoFull.addEventListener("transitionend", function handler() {
-        infoFull.style.display = "none";
-        infoCollapsed.style.display = "block";
-        infoCollapsed.style.opacity = "1";
-        infoFull.removeEventListener("transitionend", handler);
-      });
-    }
-    function switchToExpanded() {
-      let infoFull = document.getElementById("infoPanelFull");
-      let infoCollapsed = document.getElementById("infoPanelCollapsed");
-      let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
-      let collapsedLeft = bgRect.right + 20;
-      let collapsedWidth = window.innerWidth - bgRect.width - 200;
-      let collapsedTop = positions["collapsed"] && positions["collapsed"]["1"] ? positions["collapsed"]["1"].y : 55;
-      infoFull.style.left = collapsedLeft + "px";
-      infoFull.style.top = collapsedTop + "px";
-      infoFull.style.width = collapsedWidth + "px";
-      infoCollapsed.style.display = "none";
-      infoFull.style.display = "block";
-      let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
-      let targetLeft = 20;
-      let targetWidth = window.innerWidth - 207;
-      let targetTop = btnRect.top;
-      setTimeout(() => {
-        infoFull.style.left = targetLeft + "px";
-        infoFull.style.top = targetTop + "px";
-        infoFull.style.width = targetWidth + "px";
-      }, 10);
-    }
     function initializeCanvases() {
       Object.keys({ s: 1, p: 1, d: 1, f: 1 }).forEach(function(block) {
         new p5(function(p) {
@@ -914,6 +943,101 @@
       });
     }
     window.drawElements = drawElements;
+    function performHitTest(x, y) {
+      let region = computeModeRegionUpdated();
+      if (!region) {
+         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
+         return null;
+      }
+      let regionLeft = region.minX, regionTop = region.minY;
+      if (x < regionLeft || x > region.maxX || y < regionTop) {
+         console.log("Κλικ εκτός περιοχής στοιχείων.");
+         return null;
+      }
+      let relX = x - regionLeft, relY = y - regionTop;
+      let offCanvas = document.getElementById("offscreenCanvas");
+      offCanvas.width = region.maxX - region.minX;
+      offCanvas.height = region.maxY - region.minY;
+      let offCtx = offCanvas.getContext("2d");
+      offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+      for (let key in currentCellPositions) {
+         let pos = currentCellPositions[key];
+         let drawX = pos.x - regionLeft;
+         let drawY = pos.y - regionTop;
+         let num = Number(key);
+         let r = (num * 37) % 256;
+         let g = (num * 67) % 256;
+         let b = (num * 97) % 256;
+         offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+         offCtx.fillRect(drawX, drawY, pos.width, pos.height);
+      }
+      let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
+      if (pixel[3] === 0) {
+         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
+         return null;
+      } else {
+         for (let key in currentCellPositions) {
+            let pos = currentCellPositions[key];
+            let num = Number(key);
+            let r = (num * 37) % 256;
+            let g = (num * 67) % 256;
+            let b = (num * 97) % 256;
+            if (pixel[0] === r && pixel[1] === g && pixel[2] === b) {
+                return key;
+            }
+         }
+         return null;
+      }
+    }
+    window.initializeSectorsCanvas = function() {
+      sectorInstances = [];
+      let blocks = ["s", "p", "d", "f"];
+      blocks.forEach(block => {
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.filter(e => e.block === block).forEach(e => {
+          let num = Number(e.number);
+          if (currentMode === "start") {
+            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          }
+          let pos = positions[currentMode][e.number] ||
+                    ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
+          if (pos) {
+            let yForMin = pos.y, yForMax = pos.y;
+            if (currentMode === "start") {
+              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
+              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
+            }
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, yForMin);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, yForMax + pos.height);
+          }
+        });
+        if (minX === Infinity || minY === Infinity) return;
+        if (currentMode === "start" && (block === "p" || block === "d"))
+          container.style.left = (minX + getShiftContainer(block)) + "px";
+        else
+          container.style.left = minX + "px";
+        container.style.top = minY + "px";
+        container.style.width = (maxX - minX) + "px";
+        container.style.height = (maxY - minY) + "px";
+        let inst = new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+            canvas.parent("canvas" + block.toUpperCase());
+            p.noLoop();
+            drawElements(p, block, minX, minY);
+          };
+          p.myRedraw = function() {
+            p.clear();
+            drawElements(p, block, minX, minY);
+          };
+        });
+        sectorInstances.push(inst);
+      });
+    };
     loadData().then(() => {
       if (currentMode === "expanded" || currentMode === "collapsed") {
         initializeBackgroundCanvas();
@@ -932,56 +1056,6 @@
       }
       updateInfo();
     });
-  
-    function updateInfo() {
-      let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
-      if (!currentElement) return;
-      let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:${textColors[currentElement.block]};">Ζ=${currentElement.number}</span> 
-                      <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
-                        ${currentElement.symbol || ""}</span> 
-                      <span style="font-style: italic;">${currentElement.name || ""}</span>`;
-      let prevElement = getPrevElement(currentElement);
-      let nextElement = getNextElement(currentElement);
-      let subshellsHTML = rowHTMLPair(prevElement, "prev") + rowHTMLPair(currentElement, "current") + rowHTMLPair(nextElement, "next");
-      let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
-      let infoPanelFull = document.getElementById("infoPanelFull");
-      document.getElementById("infoLeft").innerHTML = leftHTML;
-      document.getElementById("infoSubshells").innerHTML = subshellsHTML;
-      document.getElementById("infoRemarks").innerHTML = remarksHTML;
-      infoPanelFull.style.width = (window.innerWidth - 207) + "px";
-      let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
-      infoPanelFull.style.top = btnRect.top + "px";
-      if (currentMode === "collapsed") {
-        let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
-        let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
-        infoPanelCollapsed.style.left = (bgRect.right + 20) + "px";
-        if (positions[currentMode] && positions[currentMode]["1"]) {
-          infoPanelCollapsed.style.top = positions[currentMode]["1"].y + "px";
-        }
-        let collapsedWidth = window.innerWidth - bgRect.width - 200 + 126 - 10;
-        infoPanelCollapsed.style.width = collapsedWidth + "px";
-        infoPanelCollapsed.style.height = "auto";
-        let collapsedHTML = `
-          <div>${leftHTML}</div>
-          <hr>
-          ${rowHTMLPair(currentElement, "current")}
-          <hr>
-          <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
-        `;
-        infoPanelCollapsed.innerHTML = collapsedHTML;
-        adjustSubshellFontSize();
-      }
-    }
-  
-    function adjustSubshellFontSize() {
-      let subshellElem = document.getElementById("infoSubshellsCollapsed");
-      if (!subshellElem) return;
-      let currentFontSize = parseFloat(window.getComputedStyle(subshellElem).fontSize);
-      while (subshellElem.scrollWidth > subshellElem.clientWidth && currentFontSize > 6) {
-        currentFontSize -= 1;
-        subshellElem.style.fontSize = currentFontSize + "px";
-      }
-    }
   </script>
 </body>
 </html>
