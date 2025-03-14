@@ -281,6 +281,7 @@
       });
     }
     
+    // Δημιουργία των group canvases
     function initGroupsCanvases() {
       new p5(function(p) {
         p.setup = function() {
@@ -369,7 +370,7 @@
       });
     }
     
-    // Συνάρτηση initializeSectorsCanvas και εξαγωγή στο global scope
+    // Συνάρτηση για την αρχικοποίηση του canvas για τους τομείς (sectors)
     function initializeSectorsCanvas() {
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -414,84 +415,10 @@
     }
     window.initializeSectorsCanvas = initializeSectorsCanvas;
     
-    // Εξασφαλίζουμε ότι η performHitTest είναι global
-    function performHitTest(x, y) {
-      let region = computeModeRegionUpdated();
-      if (!region) {
-         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
-         return null;
-      }
-      let regionLeft = region.minX, regionTop = region.minY;
-      if (x < regionLeft || x > region.maxX || y < regionTop || y > region.maxY) {
-         console.log("Κλικ εκτός περιοχής στοιχείων.");
-         return null;
-      }
-      let relX = x - regionLeft, relY = y - regionTop;
-      let offCanvas = document.getElementById("offscreenCanvas");
-      offCanvas.width = region.maxX - region.minX;
-      offCanvas.height = region.maxY - region.minY;
-      let offCtx = offCanvas.getContext("2d");
-      offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-      for (let key in currentCellPositions) {
-         let pos = currentCellPositions[key];
-         let drawX = pos.x - regionLeft;
-         let drawY = pos.y - regionTop;
-         let num = Number(key);
-         let r = (num * 37) % 256;
-         let g = (num * 67) % 256;
-         let b = (num * 97) % 256;
-         offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-         offCtx.fillRect(drawX, drawY, pos.width, pos.height);
-      }
-      let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
-      if (pixel[3] === 0) {
-         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
-         return null;
-      } else {
-         for (let key in currentCellPositions) {
-            let pos = currentCellPositions[key];
-            let num = Number(key);
-            let r = (num * 37) % 256;
-            let g = (num * 67) % 256;
-            let b = (num * 97) % 256;
-            if (pixel[0] === r && pixel[1] === g && pixel[2] === b) {
-                return key;
-            }
-         }
-         return null;
-      }
-    }
-    window.performHitTest = performHitTest;
-    
-    // Νέες συναρτήσεις για υποστιβάδες και στιβάδες
-    function getSubshells(element) {
-      if (!element) return [];
-      if (typeof element.subshells === "string") return element.subshells.split(" ");
-      if (Array.isArray(element.subshells)) return element.subshells;
-      return [];
-    }
-    function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
-      return mapping[n] || n;
-    }
-    function formatSubshell(subshell) {
-      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
-      if(match){
-         let principal = match[1];
-         let count = match[2];
-         return shellLetter(principal) + "(" + count + ")";
-      }
-      return subshell;
-    }
-    
-    // Συνάρτηση rowHTML για το balloon overlay (δημιουργεί 2 γραμμές ανά στοιχείο)
+    // Balloon overlay: κάθε στοιχείο θα εμφανίζεται σε μία γραμμή (3 συνολικά: προηγούμενο, τρέχον, επόμενο)
     function rowHTML(element, isCurrent) {
       if (!element) {
         return `<div style="display: table-row;">
-                  <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">-</div>
-                  <div style="display: table-cell; vertical-align: top; padding:2px;">-</div>
-                </div>
-                <div style="display: table-row;">
                   <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">-</div>
                   <div style="display: table-cell; vertical-align: top; padding:2px;">-</div>
                 </div>`;
@@ -511,15 +438,10 @@
       let colorStyle = sectorColors[element.block] ? `color: ${sectorColors[element.block]};` : "";
       return `<div style="display: table-row;">
                 <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">${atomicNumberText}</div>
-                <div style="display: table-cell; vertical-align: top; padding:2px; font-size:11px; line-height:1;">${rawLine}</div>
-              </div>
-              <div style="display: table-row;">
-                <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">${atomicNumberText}</div>
-                <div style="display: table-cell; vertical-align: top; padding:2px; font-size:11px; line-height:1; ${colorStyle}">${shellsLine}</div>
+                <div style="display: table-cell; vertical-align: top; padding:2px; font-size:11px; line-height:1.1;">${rawLine}<br><span style="${colorStyle}">${shellsLine}</span></div>
               </div>`;
     }
     
-    // Εμφάνιση του balloon overlay
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -548,23 +470,60 @@
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
     }
     
+    // Συναρτήσεις για υποστιβάδες και στιβάδες
+    function getSubshells(element) {
+      if (!element) return [];
+      if (typeof element.subshells === "string") return element.subshells.split(" ");
+      if (Array.isArray(element.subshells)) return element.subshells;
+      return [];
+    }
+    function shellLetter(n) {
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      return mapping[n] || n;
+    }
+    function formatSubshell(subshell) {
+      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
+      if(match){
+         let principal = match[1];
+         let count = match[2];
+         return shellLetter(principal) + "(" + count + ")";
+      }
+      return subshell;
+    }
+    
+    // Για ταξινόμηση των στοιχείων βάσει της θέσης τους (για το balloon overlay)
+    function getOrderedElements() {
+      let displayed = elements.filter(e => currentCellPositions[e.number]);
+      displayed.sort((a, b) => {
+        let posA = currentCellPositions[a.number];
+        let posB = currentCellPositions[b.number];
+        if (posA.y === posB.y) {
+          return posA.x - posB.x;
+        }
+        return posA.y - posB.y;
+      });
+      return displayed;
+    }
+    
     function getPrevElement(currentElement) {
-      let prev = elements.find(e => e.col == currentElement.col && e.block == currentElement.block && e.row == currentElement.row - 1);
-      if(prev) return prev;
-      let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row < currentElement.row);
-      if(candidates.length > 0) { candidates.sort((a,b) => b.row - a.row); return candidates[0]; }
+      let ordered = getOrderedElements();
+      let index = ordered.findIndex(e => e.number == currentElement.number);
+      if(index > 0) {
+         return ordered[index - 1];
+      }
       return null;
     }
     
     function getNextElement(currentElement) {
-      let next = elements.find(e => e.col == currentElement.col && e.block == currentElement.block && e.row == currentElement.row + 1);
-      if(next) return next;
-      let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row > currentElement.row);
-      if(candidates.length > 0) { candidates.sort((a,b) => a.row - b.row); return candidates[0]; }
+      let ordered = getOrderedElements();
+      let index = ordered.findIndex(e => e.number == currentElement.number);
+      if(index >= 0 && index < ordered.length - 1) {
+         return ordered[index + 1];
+      }
       return null;
     }
     
-    // Σχεδίαση στοιχείων στο p5 canvas (με stroke 3 για το επιλεγμένο στοιχείο)
+    // Σχεδίαση στοιχείων στο p5 canvas (με stroke 3 για το επιλεγμένο κελί)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -702,6 +661,53 @@
       });
     }
     window.drawElements = drawElements;
+    
+    function performHitTest(x, y) {
+      let region = computeModeRegionUpdated();
+      if (!region) {
+         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
+         return null;
+      }
+      let regionLeft = region.minX, regionTop = region.minY;
+      if (x < regionLeft || x > region.maxX || y < regionTop || y > region.maxY) {
+         console.log("Κλικ εκτός περιοχής στοιχείων.");
+         return null;
+      }
+      let relX = x - regionLeft, relY = y - regionTop;
+      let offCanvas = document.getElementById("offscreenCanvas");
+      offCanvas.width = region.maxX - region.minX;
+      offCanvas.height = region.maxY - region.minY;
+      let offCtx = offCanvas.getContext("2d");
+      offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+      for (let key in currentCellPositions) {
+         let pos = currentCellPositions[key];
+         let drawX = pos.x - regionLeft;
+         let drawY = pos.y - regionTop;
+         let num = Number(key);
+         let r = (num * 37) % 256;
+         let g = (num * 67) % 256;
+         let b = (num * 97) % 256;
+         offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+         offCtx.fillRect(drawX, drawY, pos.width, pos.height);
+      }
+      let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
+      if (pixel[3] === 0) {
+         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
+         return null;
+      } else {
+         for (let key in currentCellPositions) {
+            let pos = currentCellPositions[key];
+            let num = Number(key);
+            let r = (num * 37) % 256;
+            let g = (num * 67) % 256;
+            let b = (num * 97) % 256;
+            if (pixel[0] === r && pixel[1] === g && pixel[2] === b) {
+                return key;
+            }
+         }
+         return null;
+      }
+    }
     
     // Φόρτωση δεδομένων και αρχικοποίηση
     loadData().then(() => {
