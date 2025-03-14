@@ -161,10 +161,10 @@
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
     // Νέα χρώματα για τις γραμματοσειρές, σύμφωνα με τις απαιτήσεις:
     let textColors = { 
-      s: "#8B0000",  // dark red
-      p: "#006400",  // dark green
-      d: "#00008B",  // dark blue
-      f: "#FF8C00"   // dark orange
+      s: "#8B0000",  // σκοτεινό κόκκινο
+      p: "#006400",  // σκοτεινό πράσινο
+      d: "#00008B",  // σκοτεινό μπλε
+      f: "#FF8C00"   // σκοτεινό πορτοκαλί
     };
 
     let elements = [];
@@ -179,16 +179,26 @@
     let currentBalloonElement = null;
     let sectorInstances = [];
 
-    /********************** rowHTML για Balloon Overlay **********************/
-    function rowHTML(element, type) {
-      if (!element) return `<tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>`;
+    /********************** Νέα Συνάρτηση για Balloon Overlay – Δύο γραμμές ανά στοιχείο **********************/
+    function rowHTMLPair(element, type) {
+      if (!element) {
+        return `
+          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
+          <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
+        `;
+      }
       let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
       let color = textColors[element.block] || "#CCCCCC";
       return `
         <tr style="${borderStyle}">
           <td style="color:${color}; font-weight:bold; font-size:12px;">Ζ=${element.number}</td>
           <td style="color:${color}; font-size:12px;">${element.subshells || "-"}</td>
-        </tr>`;
+        </tr>
+        <tr>
+          <td></td>
+          <td style="color:${color}; font-size:12px;">${formatShells(element)}</td>
+        </tr>
+      `;
     }
 
     /********************** Βοηθητικές Συναρτήσεις **********************/
@@ -567,10 +577,8 @@
       
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      let prevStr = `<div style="color:${prevElement ? textColors[prevElement.block] : '#000'};">Ζ=${prevElement ? (prevElement.number + " " + prevElement.subshells) : "-"}</div>`;
-      let currentStr = `<div style="font-weight:bold; color:${textColors[currentElement.block]};">Ζ=${currentElement.number} ${currentElement.subshells}</div>`;
-      let nextStr = `<div style="color:${nextElement ? textColors[nextElement.block] : '#000'};">Ζ=${nextElement ? nextElement.number : ""} ${nextElement ? nextElement.subshells : "-"}</div>`;
-      let subshellsHTML = prevStr + currentStr + nextStr;
+      // Δημιουργούμε ζεύγη γραμμών για κάθε στοιχείο χρησιμοποιώντας τη νέα συνάρτηση rowHTMLPair
+      let subshellsHTML = rowHTMLPair(prevElement, "prev") + rowHTMLPair(currentElement, "current") + rowHTMLPair(nextElement, "next");
       
       let shellsMsgHTML = `<div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
                            <div style="font-style: italic;">${messageForElement(currentElement)}</div>`;
@@ -601,7 +609,7 @@
         let collapsedHTML = `
           <div>${leftHTML}</div>
           <hr>
-          <div id="infoSubshellsCollapsed" style="white-space: nowrap;">${subshellsHTML}</div>
+          ${rowHTMLPair(currentElement, "current")}
           <hr>
           <div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
           <hr>
@@ -666,10 +674,11 @@
       currentBalloonElement = elementNumber;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
+      // Χρησιμοποιούμε τη νέα rowHTMLPair για να παράγουμε 2 γραμμές ανά στοιχείο (6 συνολικά)
       let tableHTML = `<table style="border-collapse: collapse; width:100%;">`
-                      + rowHTML(prevElement, "prev")
-                      + rowHTML(currentElement, "current")
-                      + rowHTML(nextElement, "next")
+                      + rowHTMLPair(prevElement, "prev")
+                      + rowHTMLPair(currentElement, "current")
+                      + rowHTMLPair(nextElement, "next")
                       + `</table>`;
       let overlay = document.getElementById("balloonOverlay");
       overlay.innerHTML = tableHTML;
