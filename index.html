@@ -375,14 +375,17 @@
     
     /* 
      * Επιλογή προηγούμενου/επόμενου στοιχείου:
-     * Ταξινομούμε τα εμφανιζόμενα στοιχεία (βάσει row και col στο currentCellPositions) 
-     * και επιστρέφουμε το προηγούμενο και επόμενο ως προς αυτή τη διάταξη.
+     * Ταξινομούμε τα εμφανιζόμενα στοιχεία βάσει των υπολογισμένων θέσεων (y, μετά x)
+     * και επιστρέφουμε το προηγούμενο και επόμενο ως προς αυτήν την οπτική διάταξη.
      */
     function getDisplayedElements() {
       let displayed = elements.filter(e => currentCellPositions[e.number]);
       displayed.sort((a, b) => {
-        if (a.row === b.row) return a.col - b.col;
-        return a.row - b.row;
+        let posA = currentCellPositions[a.number];
+        let posB = currentCellPositions[b.number];
+        // Ταξινόμηση πρώτα κατά το y και μετά κατά το x
+        if (posA.y !== posB.y) return posA.y - posB.y;
+        return posA.x - posB.x;
       });
       return displayed;
     }
@@ -449,7 +452,7 @@
      * Κάθε γραμμή έχει δύο στήλες:
      * 1η: Ο αριθμός του στοιχείου (Ζ=...) με το χρώμα του τομέα (bold μόνο για το τρέχον).
      * 2η: Δύο γραμμές:
-     *    - Η πρώτη γραμμή εμφανίζει τις υποστιβάδες (subshells) όπως στο elements.json, με monospace bold μόνο για το τρέχον.
+     *    - Η πρώτη γραμμή εμφανίζει τις υποστιβάδες (subshells) όπως στο elements.json, με monospace bold για το τρέχον.
      *    - Η δεύτερη γραμμή εμφανίζει τις στιβάδες (shells) σε μορφή «K(2), L8, M(3)», με μόνο την τελευταία στιβάδα σε bold.
      */
     function rowHTML(element, role) {
@@ -589,13 +592,13 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
       updateCellsPositions();
-      // Με setTimeout εξασφαλίζουμε ότι μετά το toggle (είτε από "Ανάπτυξε" σε "Σύμπτυξε" είτε αντίστροφα)
-      // ανανεώνεται η θέση του επιλεγμένου κελιού και του balloon πάντα
+      // Καθυστερούμε λίγο (π.χ. 150ms) και επανεκτελούμε την updateCellsPositions()
       setTimeout(() => {
+        updateCellsPositions();
         if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
           showBalloonOverlay(currentBalloonElement);
         }
-      }, 100);
+      }, 150);
     });
     
     document.getElementById('nextState').addEventListener('click', function() {
@@ -720,7 +723,7 @@
       }
     }
     
-    // Επισύναψη της συνάρτησης initializeSectorsCanvas στο global scope απευθείας
+    // Επισύναψη της συνάρτησης initializeSectorsCanvas στο global scope
     window.initializeSectorsCanvas = function() {
       sectorInstances = [];
       let blocks = ["s", "p", "d", "f"];
