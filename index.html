@@ -242,21 +242,7 @@
       }
     });
 
-    // Νέα βοηθητική συνάρτηση για τη δημιουργία απλής γραμμής (2 στήλες) για τις υποστιβάδες
-    function rowHTMLSimple(element, addBorder) {
-      let borderStyle = addBorder ? "border-bottom:1px solid #ccc;" : "";
-      if (!element) {
-        return `<tr style="${borderStyle}">
-                  <td style="text-align:center; font-size:12px;">-</td>
-                  <td style="text-align:center; font-size:12px;">-</td>
-                </tr>`;
-      }
-      let color = textColors[element.block] || "#CCCCCC";
-      return `<tr style="${borderStyle}">
-                <td style="color:${color}; font-weight:bold; font-size:12px;">Ζ=${element.number}</td>
-                <td style="color:${color}; font-size:12px;">${element.subshells || "-"}</td>
-              </tr>`;
-    }
+    // Οι βοηθητικές συναρτήσεις παραμένουν αμετάβλητες (rowHTMLPair, getShift, κ.λπ.)
 
     function rowHTMLPair(element, type) {
       if (!element) {
@@ -278,7 +264,7 @@
         </tr>
       `;
     }
-
+    
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -714,12 +700,21 @@
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      // Χρήση του νέου πίνακα με 2 στήλες και 3 σειρές για τις υποστιβάδες
+      // Νέο περιεχόμενο για το "infoSubshells": πίνακας 2 στηλών x 3 σειρών για προηγούμενο, τρέχον, επόμενο
       let subshellsHTML = `
         <table style="border-collapse: collapse; width:100%; font-size:12px;">
-          ${rowHTMLSimple(prevElement, true)}
-          ${rowHTMLSimple(currentElement, true)}
-          ${rowHTMLSimple(nextElement, false)}
+          <tr>
+            <td style="color:${prevElement ? textColors[prevElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${prevElement ? prevElement.number : "-"}</td>
+            <td style="color:${prevElement ? textColors[prevElement.block] : "#CCCCCC"};">${prevElement ? (prevElement.subshells || "-") : "-"}</td>
+          </tr>
+          <tr>
+            <td style="color:${currentElement ? textColors[currentElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
+            <td style="color:${currentElement ? textColors[currentElement.block] : "#CCCCCC"};">${currentElement ? (currentElement.subshells || "-") : "-"}</td>
+          </tr>
+          <tr>
+            <td style="color:${nextElement ? textColors[nextElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${nextElement ? nextElement.number : "-"}</td>
+            <td style="color:${nextElement ? textColors[nextElement.block] : "#CCCCCC"};">${nextElement ? (nextElement.subshells || "-") : "-"}</td>
+          </tr>
         </table>
       `;
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
@@ -743,11 +738,7 @@
         let collapsedHTML = `
           <div>${leftHTML}</div>
           <hr>
-          <table style="border-collapse: collapse; width:100%; font-size:12px;">
-            ${rowHTMLSimple(prevElement, true)}
-            ${rowHTMLSimple(currentElement, true)}
-            ${rowHTMLSimple(nextElement, false)}
-          </table>
+          ${subshellsHTML}
           <hr>
           <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
         `;
