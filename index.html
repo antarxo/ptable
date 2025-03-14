@@ -504,6 +504,11 @@
       updateCellsPositions();
       logHitTestCenter();
       console.log("NextState: currentZ =", currentZ, "extraElements:", extraElements, "showPeriods:", showPeriods);
+      
+      // Εμφάνιση balloon overlay για το στοιχείο με αριθμό currentZ, εφόσον υπάρχει
+      if(currentCellPositions[currentZ]) {
+         showBalloonOverlay(currentZ);
+      }
     });
     
     document.getElementById('reset').addEventListener('click', function() {
@@ -563,8 +568,10 @@
     
     // Ενημερωμένη συνάρτηση εμφάνισης balloon overlay:
     // - Το περιεχόμενο εμφανίζεται οριζόντια σε flex container.
-    // - Η γραμματοσειρά έχει έντονο χαρακτήρα και μέγεθος 11px, με το χρώμα του τομέα και λευκό φόντο.
-    // - Η θέση του overlay: η πάνω αριστερή γωνία του τοποθετείται στην κάτω δεξιά γωνία του κελιού, μετατοπισμένη κατά 5px προς τα πάνω και 5px προς τα αριστερά.
+    // - Η γραμματοσειρά είναι έντονη, μέγεθος 11px, με το χρώμα του τομέα και λευκό φόντο.
+    // - Η θέση του overlay: η πάνω αριστερή γωνία του τοποθετείται στην κάτω δεξιά γωνία του κελιού,
+    //   μετατοπισμένη κατά 5px προς τα πάνω και 5px προς τα αριστερά, εκτός αν το δεξί όριο του κελιού ξεπερνάει το μισό πλάτος της οθόνης,
+    //   οπότε μετατοπίζεται αριστερότερα κατά το πλάτος του overlay + 37.
     function showBalloonOverlay(elementNumber) {
       let elementData = elements.find(e => e.number == elementNumber);
       if (!elementData) return;
@@ -605,16 +612,24 @@
       overlay.style.opacity = "0";
       
       let overlayRect = overlay.getBoundingClientRect();
-      // Θέτουμε τη θέση σύμφωνα με τις νέες προδιαγραφές:
-      // Η πάνω αριστερή γωνία του overlay στην κάτω δεξιά γωνία του κελιού,
-      // μετατοπισμένη κατά 5px προς τα πάνω και 5px προς τα αριστερά.
-      let overlayX = cellPos.x + cellPos.width - 5;
-      let overlayY = cellPos.y + cellPos.height - 5;
+      let overlayWidth = overlayRect.width;
+      let overlayHeight = overlayRect.height;
+      
+      let cellRight = cellPos.x + cellPos.width;
+      let screenHalf = window.innerWidth / 2;
+      let overlayX, overlayY;
+      
+      if (cellRight > screenHalf) {
+        overlayX = cellPos.x + cellPos.width - (overlayWidth + 37);
+      } else {
+        overlayX = cellPos.x + cellPos.width - 5;
+      }
+      overlayY = cellPos.y + cellPos.height - 5;
       
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       
-      // Τέλος, εμφανίζουμε το overlay με εφέ διαφάνειας
+      // Εμφάνιση overlay με εφέ διαφάνειας
       setTimeout(() => {
          overlay.style.opacity = "1";
       }, 10);
