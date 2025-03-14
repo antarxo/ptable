@@ -571,13 +571,13 @@
       }
     }
     
-    // Βοηθητικές συναρτήσεις για εύρεση του "από πάνω" και "του επόμενου" στοιχείου
+    // Βοηθητικές συναρτήσεις για εύρεση στοιχείων "από πάνω" και "διπλανό" (επόμενο)
     function getPrevElement(currentElement) {
       let prev = elements.find(e => e.col == currentElement.col && e.block == currentElement.block && e.row == currentElement.row - 1);
       if(prev) return prev;
       let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row < currentElement.row);
       if(candidates.length > 0) {
-         candidates.sort((a,b) => b.row - a.row);
+         candidates.sort((a, b) => b.row - a.row);
          return candidates[0];
       }
       return null;
@@ -588,20 +588,20 @@
       if(next) return next;
       let candidates = elements.filter(e => e.col == currentElement.col && e.block == currentElement.block && e.row > currentElement.row);
       if(candidates.length > 0) {
-         candidates.sort((a,b) => a.row - b.row);
+         candidates.sort((a, b) => a.row - b.row);
          return candidates[0];
       }
       return null;
     }
     
-    // Συνάρτηση για την επιστροφή των formatted υποστιβάδων
-    function getSubshells(element) {
-      if (!element) return [];
-      if (typeof element.subshells === "string") return element.subshells.split(" ");
-      if (Array.isArray(element.subshells)) return element.subshells;
-      return [];
+    // Συνάρτηση που επιστρέφει τους raw subshells ως string
+    function getRawLine(element, isCurrent) {
+      let subs = getSubshells(element);
+      let text = subs.join(" ");
+      return isCurrent ? "<b>" + text + "</b>" : text;
     }
     
+    // Μετατρέπει την υποστιβάδα στη μορφή LETTER(count)
     function shellLetter(n) {
       let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
       return mapping[n] || n;
@@ -620,34 +620,38 @@
     function getFormattedLine(element, isCurrent) {
       let subs = getSubshells(element);
       let formattedArr = subs.map(subshell => formatSubshell(subshell));
-      if(isCurrent && formattedArr.length > 0) {
+      if(formattedArr.length > 0) {
+         // Σε κάθε περίπτωση, μόνο η τελευταία υποστιβάδα είναι bold για όλα τα στοιχεία
          formattedArr[formattedArr.length - 1] = "<b>" + formattedArr[formattedArr.length - 1] + "</b>";
       }
       return formattedArr.join(" ");
     }
     
     // Δημιουργία μίας γραμμής του πίνακα για ένα στοιχείο.
-    // Εάν το στοιχείο δεν υπάρχει, εμφανίζεται "–" και στις δύο στήλες.
+    // Η πρώτη στήλη: "Ζ=Αριθμός" (για το τρέχον στοιχείο bold, για τα άλλα κανονικά; αν δεν υπάρχει, εμφανίζεται "-").
+    // Η δεύτερη στήλη: δύο γραμμές, μία με τα raw subshells και μία με τα formatted.
     function rowHTML(element, isCurrent) {
       if(!element) {
         return `<div style="display: table-row;">
                   <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">-</div>
-                  <div style="display: table-cell; vertical-align: top; padding:2px;">-</div>
+                  <div style="display: table-cell; vertical-align: top; padding:2px;">
+                    <div style="font-size:11px; line-height:1;">-</div>
+                    <div style="font-size:11px; line-height:1;">-</div>
+                  </div>
                 </div>`;
       }
       let atomicNumber = element.number;
       let leftCell = isCurrent 
          ? `<div style="font-size:11px; font-weight:bold; min-width:50px;">Ζ=${atomicNumber}</div>` 
          : `<div style="font-size:11px; min-width:50px;">Ζ=${atomicNumber}</div>`;
-      let rightCell = `<div style="font-size:11px; line-height:1;">${getFormattedLine(element, isCurrent)}</div>`;
-      return `<div style="display: table-row;">
-                <div style="display: table-cell; vertical-align: top; padding:2px; border-right:1px solid lightgray;">${leftCell}</div>
-                <div style="display: table-cell; vertical-align: top; padding:2px;">${rightCell}</div>
-              </div>`;
+      let rawHTML = `<div style="font-size:11px; line-height:1;">${getRawLine(element, isCurrent)}</div>`;
+      let formattedHTML = `<div style="font-size:11px; line-height:1;">${getFormattedLine(element, isCurrent)}</div>`;
+      let rightCell = `<div style="display: table-cell; vertical-align: top; padding:2px;">${rawHTML}${formattedHTML}</div>`;
+      return `<div style="display: table-row;">${leftCell}${rightCell}</div>`;
     }
     
     // Η κύρια συνάρτηση εμφάνισης του balloon overlay.
-    // Δημιουργεί έναν πίνακα 3 γραμμών: πάνω, τρέχον, επόμενο (χρησιμοποιώντας τις βοηθητικές getPrevElement και getNextElement).
+    // Δημιουργεί έναν πίνακα 3 γραμμών για: το στοιχείο από πάνω, το τρέχον, και το επόμενο (με χρήση getPrevElement και getNextElement).
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
