@@ -64,7 +64,7 @@
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
       font-size: 1em;
     }
-    /* Offscreen canvas για color picking */
+    /* Offscreen canvas */
     #offscreenCanvas { display: none; }
     /* Balloon overlay */
     #balloonOverlay {
@@ -83,7 +83,7 @@
     /* Info Panel Expanded */
     #infoPanelFull {
       position: fixed;
-      top: 0; /* ορίζεται δυναμικά */
+      top: 0; /* θα οριστεί δυναμικά */
       left: 20px; /* σταθερό left = 20px */
       background: #fff;
       border: 2px solid #333;
@@ -141,7 +141,7 @@
     </table>
   </div>
   
-  <!-- Info Panel Collapsed (διατάσσεται κάθετα σε σειρές) -->
+  <!-- Info Panel Collapsed (κατακόρυφη διάταξη) -->
   <div id="infoPanelCollapsed" style="display:none;"></div>
   
   <!-- Button Panel -->
@@ -416,7 +416,7 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-    /* ---------- Συνάρτηση για εύρεση προηγούμενου και επόμενου στοιχείου ---------- */
+    /* -------------------- Συνάρτηση εύρεσης προηγούμενου/επόμενου στοιχείου -------------------- */
     function getPrevElement(currentElement) {
       let currPos = currentCellPositions[currentElement.number];
       if (!currPos) return null;
@@ -510,16 +510,13 @@
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
-      // Εύρεση target τιμών για collapsed (με βάση updateInfo)
       let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
       let targetLeft = bgRect.right + 20;
       let targetWidth = window.innerWidth - bgRect.width - 200;
       let targetTop = positions["collapsed"] && positions["collapsed"]["1"] ? positions["collapsed"]["1"].y : 55;
-      // Ανάθεση νέων τιμών με CSS transition
       infoFull.style.left = targetLeft + "px";
       infoFull.style.top = targetTop + "px";
       infoFull.style.width = targetWidth + "px";
-      // Όταν ολοκληρωθεί η μετάβαση, κρύβουμε το expanded και εμφανίζουμε το collapsed
       infoFull.addEventListener("transitionend", function handler() {
         infoFull.style.display = "none";
         infoCollapsed.style.display = "block";
@@ -530,7 +527,6 @@
     function switchToExpanded() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
-      // Ορίζουμε το expanded panel αρχικά να έχει τις collapsed διαστάσεις
       let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
       let collapsedLeft = bgRect.right + 20;
       let collapsedWidth = window.innerWidth - bgRect.width - 200;
@@ -538,15 +534,12 @@
       infoFull.style.left = collapsedLeft + "px";
       infoFull.style.top = collapsedTop + "px";
       infoFull.style.width = collapsedWidth + "px";
-      // Κρύβουμε το collapsed panel
       infoCollapsed.style.display = "none";
       infoFull.style.display = "block";
-      // Μεταβαίνουμε στις expanded διαστάσεις (πλάτος = pageWidth - 180, left = 20, top βάσει button panel)
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let targetLeft = 20;
       let targetWidth = window.innerWidth - 180;
       let targetTop = btnRect.top;
-      // Μικρή καθυστέρηση για να εφαρμοστούν οι αρχικές τιμές πριν την μετάβαση
       setTimeout(() => {
         infoFull.style.left = targetLeft + "px";
         infoFull.style.top = targetTop + "px";
@@ -558,7 +551,6 @@
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
       
-      // Δημιουργία περιεχομένου (ίδιο για expanded και collapsed)
       let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:${sectorColors[currentElement.block]};">Ζ=${currentElement.number}</span> 
                       <span style="font-size:3em; font-weight:bold; color:${sectorColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
@@ -576,18 +568,17 @@
       
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       
-      // Ενημέρωση expanded panel
+      // Ενημέρωση Expanded Panel
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
       document.getElementById("infoSubshells").innerHTML = subshellsHTML;
       document.getElementById("infoShellsMsg").innerHTML = shellsMsgHTML;
       document.getElementById("infoRemarks").innerHTML = remarksHTML;
-      // Ορισμός expanded πλάτους = (page width - 180)
       infoPanelFull.style.width = (window.innerWidth - 180) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
       
-      // Ενημέρωση collapsed panel
+      // Ενημέρωση Collapsed Panel
       if (currentMode === "collapsed") {
         let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
         let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
@@ -606,12 +597,12 @@
         adjustSubshellFontSize();
       }
     }
-    /* -------------------- Συνάρτηση για προσαρμογή font-size στις υποστιβάδες του collapsed panel -------------------- */
+    /* -------------------- Συνάρτηση προσαρμογής γραμματοσειράς για τις υποστιβάδες collapsed -------------------- */
     function adjustSubshellFontSize() {
       let subshellElem = document.getElementById("infoSubshellsCollapsed");
       if (!subshellElem) return;
       let currentFontSize = parseFloat(window.getComputedStyle(subshellElem).fontSize);
-      while(subshellElem.scrollWidth > subshellElem.clientWidth && currentFontSize > 6) {
+      while (subshellElem.scrollWidth > subshellElem.clientWidth && currentFontSize > 6) {
         currentFontSize -= 0.5;
         subshellElem.style.fontSize = currentFontSize + "px";
       }
@@ -689,12 +680,10 @@
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
-      // Target τιμές για collapsed
       let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
       let targetLeft = bgRect.right + 20;
       let targetWidth = window.innerWidth - bgRect.width - 200;
       let targetTop = positions["collapsed"] && positions["collapsed"]["1"] ? positions["collapsed"]["1"].y : 55;
-      // Μεταβαίνει το expanded panel προς τα target
       infoFull.style.left = targetLeft + "px";
       infoFull.style.top = targetTop + "px";
       infoFull.style.width = targetWidth + "px";
@@ -747,7 +736,6 @@
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
       if (isCollapsed) {
         currentMode = "collapsed";
-        // Ξεκινάμε την μετάβαση: μετακινούμε το expanded panel στις collapsed διαστάσεις
         switchToCollapsed();
       } else {
         currentMode = "expanded";
@@ -761,4 +749,204 @@
         let sectorCanvas = document.getElementById("canvas" + sector);
         let groupCanvas = document.getElementById("canvas" + sector + "_groups");
         groupCanvas.style.left = sectorCanvas.style.left;
-        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) 
+        groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
+      });
+      updateCellsPositions();
+      setTimeout(() => {
+        updateCellsPositions();
+        if (currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+          showBalloonOverlay(currentBalloonElement);
+        }
+        updateInfo();
+      }, 1300);
+    });
+    document.getElementById('nextState').addEventListener('click', function() {
+      if (currentMode !== "start") {
+        console.log("Το κουμπί 'Επόμενο' λειτουργεί μόνο στην κατάσταση 'start'. Κάντε Reset για επαναφορά.");
+        return;
+      }
+      if (currentZ < 118) {
+        currentZ++;
+      } else if (currentZ === 118) {
+        currentZ = 119;
+        extraElements["1"] = true;
+      } else if (currentZ === 119) {
+        currentZ = 120;
+        extraElements["2"] = true;
+      } else if (currentZ === 120) {
+        currentZ = 121;
+        showPeriods = true;
+      } else if (currentZ === 121) {
+        fillAllAction();
+        return;
+      }
+      initializeBackgroundCanvas();
+      window.initializeSectorsCanvas();
+      if (showPeriods) initializePeriodsCanvas();
+      updateCellsPositions();
+      if (currentCellPositions[currentZ]) {
+         showBalloonOverlay(currentZ);
+      }
+      updateInfo();
+    });
+    document.getElementById('reset').addEventListener('click', function() {
+      currentMode = "start";
+      currentZ = 3;
+      extraElements = {};
+      showPeriods = false;
+      location.reload();
+    });
+    window.addEventListener("resize", function(){
+      if (currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+        showBalloonOverlay(currentBalloonElement);
+      }
+    });
+    /* -------------------- Συνάρτηση initializeCanvases (p5) -------------------- */
+    function initializeCanvases() {
+      Object.keys({ s: 1, p: 1, d: 1, f: 1 }).forEach(function(block) {
+        new p5(function(p) {
+          p.setup = function() {
+            let config = { cols: 10, rows: 7 };
+            if (block === "s") config = { cols: 2, rows: 7 };
+            else if (block === "p") config = { cols: 6, rows: 7 };
+            else if (block === "d") config = { cols: 10, rows: 7 };
+            else if (block === "f") config = { cols: 14, rows: 7 };
+            let canvas = p.createCanvas(config.cols * cellSize, config.rows * cellSize);
+            canvas.elt.getContext("2d", { willReadFrequently: true });
+            canvas.parent("canvas" + block.toUpperCase());
+            p.skipNextClick = true;
+            setTimeout(() => { p.skipNextClick = false; }, 100);
+            p.mouseClicked = function(event) {
+              if (p.skipNextClick) return;
+              let globalX = event.clientX;
+              let globalY = event.clientY;
+              let found = performHitTest(globalX, globalY);
+              if (found !== null) {
+                showBalloonOverlay(found);
+              }
+            };
+            window.drawElements(p, block);
+          };
+        });
+      });
+    }
+    window.drawElements = drawElements;
+    /* -------------------- Συνάρτηση Hit Test με offscreen canvas -------------------- */
+    function performHitTest(x, y) {
+      let region = computeModeRegionUpdated();
+      if (!region) {
+         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
+         return null;
+      }
+      let regionLeft = region.minX, regionTop = region.minY;
+      if (x < regionLeft || x > region.maxX || y < regionTop || y > region.maxY) {
+         console.log("Κλικ εκτός περιοχής στοιχείων.");
+         return null;
+      }
+      let relX = x - regionLeft, relY = y - regionTop;
+      let offCanvas = document.getElementById("offscreenCanvas");
+      offCanvas.width = region.maxX - region.minX;
+      offCanvas.height = region.maxY - region.minY;
+      let offCtx = offCanvas.getContext("2d");
+      offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+      for (let key in currentCellPositions) {
+         let pos = currentCellPositions[key];
+         let drawX = pos.x - regionLeft;
+         let drawY = pos.y - regionTop;
+         let num = Number(key);
+         let r = (num * 37) % 256;
+         let g = (num * 67) % 256;
+         let b = (num * 97) % 256;
+         offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+         offCtx.fillRect(drawX, drawY, pos.width, pos.height);
+      }
+      let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
+      if (pixel[3] === 0) {
+         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
+         return null;
+      } else {
+         for (let key in currentCellPositions) {
+            let pos = currentCellPositions[key];
+            let num = Number(key);
+            let r = (num * 37) % 256;
+            let g = (num * 67) % 256;
+            let b = (num * 97) % 256;
+            if (pixel[0] === r && pixel[1] === g && pixel[2] === b) {
+                return key;
+            }
+         }
+         return null;
+      }
+    }
+    /* -------------------- Συνάρτηση initializeSectorsCanvas -------------------- */
+    window.initializeSectorsCanvas = function() {
+      sectorInstances = [];
+      let blocks = ["s", "p", "d", "f"];
+      blocks.forEach(block => {
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.filter(e => e.block === block).forEach(e => {
+          let num = Number(e.number);
+          if (currentMode === "start") {
+            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          }
+          let pos = positions[currentMode][e.number] ||
+                    ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
+          if (pos) {
+            let yForMin = pos.y, yForMax = pos.y;
+            if (currentMode === "start") {
+              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
+              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
+            }
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, yForMin);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, yForMax + pos.height);
+          }
+        });
+        if (minX === Infinity || minY === Infinity) return;
+        if (currentMode === "start" && (block === "p" || block === "d"))
+          container.style.left = (minX + getShiftContainer(block)) + "px";
+        else
+          container.style.left = minX + "px";
+        container.style.top = minY + "px";
+        container.style.width = (maxX - minX) + "px";
+        container.style.height = (maxY - minY) + "px";
+        let inst = new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+            canvas.parent("canvas" + block.toUpperCase());
+            p.noLoop();
+            drawElements(p, block, minX, minY);
+          };
+          p.myRedraw = function() {
+            p.clear();
+            drawElements(p, block, minX, minY);
+          };
+        });
+        sectorInstances.push(inst);
+      });
+    };
+    /* -------------------- Φόρτωση Δεδομένων και Αρχικοποίηση -------------------- */
+    loadData().then(() => {
+      if (currentMode === "expanded" || currentMode === "collapsed") {
+        initializeBackgroundCanvas();
+        window.initializeSectorsCanvas();
+        initializePeriodsCanvas();
+        initGroupsCanvases();
+        initializeCanvases();
+      } else if (currentMode === "start") {
+        initializeBackgroundCanvas();
+        window.initializeSectorsCanvas();
+        initializeCanvases();
+      }
+      updateCellsPositions();
+      if (currentMode === "start" && currentCellPositions[3]) {
+        showBalloonOverlay(3);
+      }
+      updateInfo();
+    });
+  </script>
+</body>
+</html>
