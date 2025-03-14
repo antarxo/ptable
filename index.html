@@ -118,9 +118,12 @@
     let showPeriods = false;
     let cellSize = 40;
     let currentCellPositions = {};
-    let currentBalloonElement = null; // Αποθηκεύει το στοιχείο για το οποίο εμφανίζεται το balloon
-
-    // Βοηθητικές συναρτήσεις μετατόπισης (ίδιες όπως πριν)
+    let currentBalloonElement = null; // Το στοιχείο για το οποίο εμφανίζεται το balloon
+    
+    // Χρώματα τομέα
+    let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
+    
+    // Βοηθητικές συναρτήσεις μετατόπισης, υπολογισμού περιοχής, ενημέρωσης θέσεων, κ.λπ. (ίδιες όπως πριν)
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -264,7 +267,7 @@
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(11);
           p.textStyle(p.BOLD);
-          const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η Ο", "6η Ρ", "7η Q"];
+          const periodLabels = ["1η K", "2η L", "3η M", "4η N", "5η O", "6η Ρ", "7η Q"];
           for (let i = 0; i < 7; i++) {
             p.fill(240);
             p.rect(0, i * 42, 40, 40);
@@ -363,118 +366,49 @@
       });
     }
     
-    function initializeSectorsCanvas() {
-      let blocks = ["s", "p", "d", "f"];
-      blocks.forEach(block => {
-        let container = document.getElementById("canvas" + block.toUpperCase());
-        container.innerHTML = "";
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        elements.filter(e => e.block === block).forEach(e => {
-          let num = Number(e.number);
-          if (currentMode === "start") {
-            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
-          }
-          let pos = positions[currentMode][e.number] ||
-                    ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
-          if (pos) {
-            let yForMin = pos.y, yForMax = pos.y;
-            if (currentMode === "start") {
-              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
-              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
-            }
-            minX = Math.min(minX, pos.x);
-            minY = Math.min(minY, yForMin);
-            maxX = Math.max(maxX, pos.x + pos.width);
-            maxY = Math.max(maxY, yForMax + pos.height);
-          }
-        });
-        if (minX === Infinity || minY === Infinity) return;
-        if (currentMode === "start" && (block === "p" || block === "d"))
-          container.style.left = (minX + getShiftContainer(block)) + "px";
-        else
-          container.style.left = minX + "px";
-        container.style.top = minY + "px";
-        container.style.width = (maxX - minX) + "px";
-        container.style.height = (maxY - minY) + "px";
-        new p5(function(p) {
-          p.setup = function() {
-            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
-            canvas.parent("canvas" + block.toUpperCase());
-            drawElements(p, block, minX, minY);
-          };
-        });
-      });
-    }
+    // --- ΝΕΕΣ Λειτουργίες για τις υποστιβάδες και τις στιβάδες ---
+    // Η getSubshells και formatSubshell έχουν οριστεί παραπάνω.
     
-    // Νέες συναρτήσεις για την εμφάνιση των δύο διαφορετικών μορφών των υποστιβάδων
-    function getRawSubshellLine(element, isCurrent) {
-      let subs = getSubshells(element);
-      if(subs.length === 0) return "";
-      if(isCurrent) {
-        return `<b>${subs.join(" ")}</b>`;
-      } else {
-        let last = subs.pop();
-        return subs.join(" ") + " <b>" + last + "</b>";
-      }
-    }
-    
-    function getFormattedSubshellLine(element, isCurrent) {
-      let subs = getSubshells(element).map(s => formatSubshell(s));
-      if(subs.length === 0) return "";
-      if(isCurrent) {
-        return `<b>${subs.join(" ")}</b>`;
-      } else {
-        let last = subs.pop();
-        return subs.join(" ") + " <b>" + last + "</b>";
-      }
-    }
-    
-    // Τροποποιημένη συνάρτηση για δημιουργία γραμμής του πίνακα (balloon overlay)
+    // Τροποποιημένη συνάρτηση rowHTML που δημιουργεί 2 γραμμές για κάθε στοιχείο (ή "-" αν δεν υπάρχει)
     function rowHTML(element, isCurrent) {
-      if(!element) {
+      if (!element) {
         return `<div style="display: table-row;">
+                  <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">-</div>
+                  <div style="display: table-cell; vertical-align: top; padding:2px;">-</div>
+                </div>
+                <div style="display: table-row;">
                   <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">-</div>
                   <div style="display: table-cell; vertical-align: top; padding:2px;">-</div>
                 </div>`;
       }
-      let atomicNumber = element.number;
-      let leftCell = isCurrent 
-         ? `<div style="font-size:11px; font-weight:bold; min-width:50px;">Ζ=${atomicNumber}</div>` 
-         : `<div style="font-size:11px; min-width:50px;">Ζ=${atomicNumber}</div>`;
-      let rightCell = `<div style="font-size:11px; line-height:1;">
-                         ${getRawSubshellLine(element, isCurrent)}<br/>
-                         ${getFormattedSubshellLine(element, isCurrent)}
-                       </div>`;
+      let atomicNumberText = isCurrent ? `<b>Ζ=${element.number}</b>` : `Ζ=${element.number}`;
+      let subs = getSubshells(element);
+      let rawLine = "";
+      if (subs.length > 0) {
+        if (isCurrent) {
+          rawLine = `<b>${subs.join(" ")}</b>`;
+        } else {
+          rawLine = subs.slice(0, subs.length - 1).join(" ") + " <b>" + subs[subs.length - 1] + "</b>";
+        }
+      }
+      let shells = subs.map(s => formatSubshell(s));
+      let shellsLine = "";
+      if (shells.length > 0) {
+        shellsLine = shells.slice(0, shells.length - 1).join(" ") + " <b>" + shells[shells.length - 1] + "</b>";
+      }
+      let colorStyle = sectorColors[element.block] ? `color: ${sectorColors[element.block]};` : "";
+      
       return `<div style="display: table-row;">
-                <div style="display: table-cell; vertical-align: top; padding:2px; border-right:1px solid lightgray;">${leftCell}</div>
-                <div style="display: table-cell; vertical-align: top; padding:2px;">${rightCell}</div>
+                <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">${atomicNumberText}</div>
+                <div style="display: table-cell; vertical-align: top; padding:2px; font-size:11px; line-height:1;">${rawLine}</div>
+              </div>
+              <div style="display: table-row;">
+                <div style="display: table-cell; vertical-align: top; padding:2px; min-width:50px; border-right:1px solid lightgray;">${atomicNumberText}</div>
+                <div style="display: table-cell; vertical-align: top; padding:2px; font-size:11px; line-height:1; ${colorStyle}">${shellsLine}</div>
               </div>`;
     }
     
-    // Υπόλοιπες βοηθητικές συναρτήσεις
-    function getSubshells(element) {
-      if (!element) return [];
-      if (typeof element.subshells === "string") return element.subshells.split(" ");
-      if (Array.isArray(element.subshells)) return element.subshells;
-      return [];
-    }
-    
-    function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
-      return mapping[n] || n;
-    }
-    
-    function formatSubshell(subshell) {
-      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
-      if(match){
-         let principal = match[1];
-         let count = match[2];
-         return shellLetter(principal) + "(" + count + ")";
-      }
-      return subshell;
-    }
-    
-    // Τροποποιημένη συνάρτηση για την εμφάνιση του balloon overlay
+    // Εμφάνιση του balloon overlay
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -497,16 +431,10 @@
       overlay.style.opacity = "0";
       let overlayRect = overlay.getBoundingClientRect();
       let overlayWidth = overlayRect.width;
-      let overlayHeight = overlayRect.height;
       let cellRight = cellPos.x + cellPos.width;
       let screenHalf = window.innerWidth / 2;
-      let overlayX, overlayY;
-      if (cellRight > screenHalf) {
-         overlayX = cellPos.x + cellPos.width - (overlayWidth + 22);
-      } else {
-         overlayX = cellPos.x + cellPos.width - 5;
-      }
-      overlayY = cellPos.y + cellPos.height - 5;
+      let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
+      let overlayY = cellPos.y + cellPos.height - 5;
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       
@@ -535,7 +463,7 @@
       return null;
     }
     
-    // Τροποποιημένη συνάρτηση σχεδίασης στοιχείων για τα canvases
+    // Σχεδίαση στοιχείων στο p5 canvas (με έμφαση στο περίγραμμα για το κλικαρισμένο στοιχείο)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -554,7 +482,6 @@
             else if ((block === "p" || block === "d") && num >= 57 && num <= 70)
               relativeY += getShift(num, block);
           }
-          // Εάν το στοιχείο είναι επιλεγμένο, σχεδιάζεται περίγραμμα με stroke 3
           if (currentBalloonElement == e.number) {
               p.strokeWeight(3);
               p.stroke(0);
@@ -582,9 +509,7 @@
       initializePeriodsCanvas();
       initGroupsCanvases();
       document.getElementById('toggleFBlock').disabled = false;
-      console.log("FillAll: currentZ set to", currentZ, "- πλήρης εμφάνιση (expanded)");
       updateCellsPositions();
-      logHitTestCenter();
     }
     
     document.getElementById('fillAll').addEventListener('click', function() {
@@ -603,9 +528,7 @@
         groupCanvas.style.left = sectorCanvas.style.left;
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
-      console.log("ToggleFBlock: Mode changed to", currentMode);
       updateCellsPositions();
-      logHitTestCenter();
       if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
         showBalloonOverlay(currentBalloonElement);
       }
@@ -635,8 +558,6 @@
       initializeSectorsCanvas();
       if (showPeriods) initializePeriodsCanvas();
       updateCellsPositions();
-      logHitTestCenter();
-      console.log("NextState: currentZ =", currentZ, "extraElements:", extraElements, "showPeriods:", showPeriods);
       if(currentCellPositions[currentZ]) {
          showBalloonOverlay(currentZ);
       }
@@ -650,64 +571,11 @@
       location.reload();
     });
     
-    function logHitTestCenter() {
-      let region = computeModeRegionUpdated();
-      if (region) {
-        let centerX = (region.minX + region.maxX) / 2;
-        let centerY = (region.minY + region.maxY) / 2;
-        let found = performHitTest(centerX, centerY);
-        if(found !== null){
-          console.log("Clicked element:", found);
-        }
+    window.addEventListener("resize", function(){
+      if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+        showBalloonOverlay(currentBalloonElement);
       }
-    }
-    
-    function performHitTest(x, y) {
-      let region = computeModeRegionUpdated();
-      if (!region) {
-         console.log("Δεν εμφανίζονται στοιχεία στο τρέχον mode.");
-         return null;
-      }
-      let regionLeft = region.minX, regionTop = region.minY;
-      if (x < regionLeft || x > region.maxX || y < regionTop || y > region.maxY) {
-         console.log("Κλικ εκτός περιοχής στοιχείων.");
-         return null;
-      }
-      let relX = x - regionLeft, relY = y - regionTop;
-      let offCanvas = document.getElementById("offscreenCanvas");
-      offCanvas.width = region.maxX - region.minX;
-      offCanvas.height = region.maxY - region.minY;
-      let offCtx = offCanvas.getContext("2d");
-      offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-      for (let key in currentCellPositions) {
-         let pos = currentCellPositions[key];
-         let drawX = pos.x - regionLeft;
-         let drawY = pos.y - regionTop;
-         let num = Number(key);
-         let r = (num * 37) % 256;
-         let g = (num * 67) % 256;
-         let b = (num * 97) % 256;
-         offCtx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-         offCtx.fillRect(drawX, drawY, pos.width, pos.height);
-      }
-      let pixel = offCtx.getImageData(relX, relY, 1, 1).data;
-      if (pixel[3] === 0) {
-         console.log("Δεν ανιχνεύτηκε στοιχείο στο σημείο (" + x + ", " + y + ") μέσω color picking.");
-         return null;
-      } else {
-         for (let key in currentCellPositions) {
-            let pos = currentCellPositions[key];
-            let num = Number(key);
-            let r = (num * 37) % 256;
-            let g = (num * 67) % 256;
-            let b = (num * 97) % 256;
-            if (pixel[0] === r && pixel[1] === g && pixel[2] === b) {
-                return key;
-            }
-         }
-         return null;
-      }
-    }
+    });
     
     function initializeCanvases() {
       Object.keys({ s: 1, p: 1, d: 1, f: 1 }).forEach(function(block) {
@@ -729,7 +597,6 @@
               let globalY = event.clientY;
               let found = performHitTest(globalX, globalY);
               if(found !== null){
-                console.log("Clicked element:", found);
                 showBalloonOverlay(found);
               }
             };
@@ -738,7 +605,6 @@
         });
       });
     }
-    
     window.drawElements = drawElements;
     
     loadData().then(() => {
@@ -754,7 +620,6 @@
         initializeCanvases();
       }
       updateCellsPositions();
-      console.log("Data loaded and canvases initialized.");
       if (currentMode === "start" && currentCellPositions[3]) {
         showBalloonOverlay(3);
       }
