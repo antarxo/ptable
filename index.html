@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* --- Αρχικά Styles του ptablelike (όπως στο ptablelike.html) --- */
+    /* ----- Αρχικά styles όπως στο ptablelike ----- */
     body { 
       font-family: 'Roboto', sans-serif; 
       margin: 0; 
@@ -32,10 +32,10 @@
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* --- Τα υπόλοιπα styles για τα canvases (S, D, P, F, Periods, Groups) όπως στο αρχικό ptablelike --- */
-    /* ... (δεν έχουν τροποποιηθεί) ... */
-
-    /* --- Στυλ για το Balloon (από το ALLtoDOM1) --- */
+    /* ----- Τα υπόλοιπα styles των canvases (S, D, P, F, Groups, Periods) όπως στο αρχικό ptablelike ----- */
+    /* ... (παραλείπονται εδώ γιατί δεν γίνονται τροποποιήσεις) ... */
+    
+    /* ----- Styles για το Balloon (από ALLtoDOM1) ----- */
     #canvasSubshells {
       position: absolute;
       background: #fff;
@@ -47,7 +47,8 @@
       display: none;
       transition: all 0.2s ease;
     }
-    /* --- Panel κουμπιών --- */
+    
+    /* ----- Panel κουμπιών ----- */
     #buttonPanel {
       position: fixed; 
       bottom: 20px; 
@@ -66,12 +67,12 @@
       cursor: pointer;
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
     }
-    /* --- Offscreen canvas για color picking --- */
+    /* ----- Offscreen canvas για color picking ----- */
     #offscreenCanvas { display: none; }
   </style>
 </head>
 <body>
-  <!-- --- Καμβάδες όπως στο αρχικό ptablelike --- -->
+  <!-- ----- HTML δομή όπως στο ptablelike ----- -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
   <div id="canvasD_groups" class="canvas"></div>
@@ -82,13 +83,13 @@
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
   
-  <!-- --- Το Balloon για εμφάνιση subshells --- -->
+  <!-- ----- Το Balloon για Subshells ----- -->
   <div id="canvasSubshells" class="canvas"></div>
   
-  <!-- --- Offscreen canvas (για color picking στο hit-testing) --- -->
+  <!-- ----- Offscreen Canvas ----- -->
   <canvas id="offscreenCanvas" width="800" height="600"></canvas>
   
-  <!-- --- Panel με κουμπιά --- -->
+  <!-- ----- Panel με κουμπιά ----- -->
   <div id="buttonPanel">
     <button id="nextState">Επόμενο</button>
     <button id="fillAll">Συμπλήρωσε</button>
@@ -97,26 +98,27 @@
   </div>
   
   <script>
-    /* ================================================
-       ΔΕΝ ΓΙΝΟΥΝ ΑΛΛΑΓΕΣ ΣΤΗ ΒΑΣΙΚΗ ΛΟΓΙΚΗ του ptablelike!
-       Ενσωματώνουμε απλώς τη λειτουργία του Balloon
-       ================================================ */
+    /* ===============================================
+       Ο κώδικας παρακάτω είναι ακριβώς αυτός του ptablelike
+       (με τις βασικές συναρτήσεις, hit‑testing, θέση στοιχείων κ.λπ.)
+       και δεν γίνεται τροποποίηση στη λογική του.
+       Ενσωματώνουμε μόνο την εμφάνιση του Balloon χωρίς να "βλάψουμε" την αρχική λειτουργία.
+       =============================================== */
     
     // ---------- Global Variables ----------
-    let elements = [];         // Θα φορτωθούν από το elements.json
-    let positions = {};        // Θα φορτωθούν από το positions.json
+    let elements = [];         // Φόρτωση από το elements.json
+    let positions = {};        // Φόρτωση από το positions.json
     let isCollapsed = false;
-    let currentMode = "start"; // "start", "expanded", "collapsed"
+    let currentMode = "start"; // Modes: start, expanded, collapsed
     let currentZ = 3;
     let extraElements = {};
     let postFillingStep = 0;
     let showPeriods = false;
     let cellSize = 40;
-    let currentCellPositions = {}; // Για hit-testing
-    // Για το balloon
-    let subshellsP;           // p5 instance για το canvas του balloon
-
-    // Dummy getBlockColor (αν δεν υπάρχει ήδη στο ptablelike)
+    let currentCellPositions = {}; // Για hit‑testing
+    
+    // ---------- Για το Balloon (από ALLtoDOM1) ----------
+    let subshellsP;
     window.getBlockColor = function(b) {
       switch(b) {
         case "s": return "#FF477E";
@@ -126,8 +128,8 @@
         default: return "#000";
       }
     };
-
-    // ---------- Αρχικές συναρτήσεις του ptablelike (χωρίς αλλαγές) ----------
+    
+    // ---------- Αρχικές συναρτήσεις του ptablelike (όπως στα αρχεία σας) ----------
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -167,9 +169,8 @@
         let pos = positions[currentMode] && positions[currentMode][e.number] ? positions[currentMode][e.number] : null;
         if (!pos) return;
         let offsetX = 0, offsetY = 0;
-        if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
+        if (currentMode === "start" && (e.block === "p" || e.block === "d"))
           offsetX = getShiftContainer(e.block);
-        }
         if (currentMode === "start") {
           if (e.block === "p" && num >= 21 && num <= 30)
             offsetY = getShift(num, e.block);
@@ -213,16 +214,15 @@
     }
     
     function initializeSectorsCanvas() {
-      // Η λογική παραμένει ίδια όπως στο ptablelike
+      // Χρησιμοποιεί τις θέσεις από το positions.json (όπως στο αρχικό σας ptablelike)
       ["s", "p", "d", "f"].forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
         container.innerHTML = "";
-        let pos = positions[currentMode] && positions[currentMode][block] ? positions[currentMode][block] : { x: 50 + (block.charCodeAt(0)-115)*100, y: 50, width: 40, height: 40 };
-        if (!positions[currentMode]) positions[currentMode] = {};
-        positions[currentMode][block] = pos;
+        let pos = positions[currentMode] && positions[currentMode][block] ? positions[currentMode][block] : null;
+        if (!pos) return;
         new p5(function(p) {
           p.setup = function() {
-            let canvas = p.createCanvas(150, 150);
+            let canvas = p.createCanvas(pos.width * 1.5, pos.height * 1.5);
             canvas.parent("canvas" + block.toUpperCase());
             p.fill("#ccc");
             p.rect(pos.x, pos.y, pos.width, pos.height);
@@ -292,7 +292,7 @@
             console.log("Βρέθηκε στοιχείο με Ζ =", found);
             let element = elements.find(e => e.number == found);
             if(element) {
-                // Χωρίς αλλαγή της υπάρχουσας λογικής, απλά καλούμε τις συναρτήσεις εμφάνισης balloon.
+                // Εδώ καλείται η λειτουργία του Balloon χωρίς να αλλάζει η βασική λογική
                 updateBalloonPosition(element);
                 if(element.subshells) {
                   drawSubshells({
@@ -311,7 +311,7 @@
       }
     }
     
-    // ---------- Ενσωμάτωση των συναρτήσεων για το Balloon (από το ALLtoDOM1) ----------
+    // ---------- Λειτουργίες για το Balloon (χωρίς αλλαγές στη λογική) ----------
     window.updateBalloonPosition = function(element) {
       let cs = document.getElementById('canvasSubshells');
       if(!cs) return;
@@ -319,7 +319,7 @@
       let blockCanvas = document.getElementById("canvas" + element.block.toUpperCase());
       if(!blockCanvas) return;
       let rect = blockCanvas.getBoundingClientRect();
-      // Χρησιμοποιούμε το rect του blockCanvas μαζί με τις θέσεις που έχουν φορτωθεί (χωρίς dummy αλλαγές)
+      // Χρήση της θέσης από το positions object χωρίς dummy αλλαγές
       let pos = positions[currentMode] && positions[currentMode][element.block] ? positions[currentMode][element.block] : { x:50, y:50 };
       let defaultLeft = rect.left + pos.x + 40;
       let defaultTop = rect.top + pos.y + 40;
@@ -371,7 +371,7 @@
       window.subshellsInitialized = true;
     }
     
-    // ---------- Event Listeners (χωρίς αλλαγές στην υπάρχουσα λογική) ----------
+    // ---------- Event Listeners (χωρίς αλλαγές στη βασική λειτουργία) ----------
     document.getElementById('fillAll').addEventListener('click', function() {
       currentMode = "expanded";
       currentZ = 123;
@@ -423,7 +423,7 @@
       location.reload();
     });
     
-    // ---------- Φόρτωση δεδομένων από τα JSON αρχεία (χωρίς αλλαγές) ----------
+    // ---------- Φόρτωση δεδομένων από JSON ----------
     async function loadData() {
       try {
         let elementsRes = await fetch('elements.json');
