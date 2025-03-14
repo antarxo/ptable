@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Περιοδικός Πίνακας με Info Panels & Balloon Overlay</title>
+  <title>Περιοδικός Πίνακας – Χωρίς Περιγράμματα σε Balloon & Info Panels</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -66,11 +66,12 @@
     }
     /* Offscreen canvas για color picking */
     #offscreenCanvas { display: none; }
-    /* Balloon overlay (επαναφέρουμε την εμφάνιση όπως στο βασικό αρχείο) */
+    /* Balloon overlay – χωρίς περιγράμματα κελιών (χωρίς επιπλέον γραμμές) */
     #balloonOverlay {
       position: absolute;
       background: white;
-      border: 1px solid rgba(0,0,0,0.2);
+      /* Αφαιρούμε το border που δημιουργούσε περιγράμματα */
+      /* border: 1px solid rgba(0,0,0,0.2); */
       box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
       padding: 6px 8px;
       border-radius: 5px;
@@ -80,7 +81,7 @@
       transition: opacity 0.3s ease;
       pointer-events: none;
     }
-    /* Info Panels styling (με βάση το ALLtoDOM1.html) */
+    /* Info Panels styling – χωρίς περιγράμματα κελιών στους πίνακες */
     #infoPanelFull, #infoPanelCollapsed {
       background: #fff;
       border: 2px solid #333;
@@ -93,7 +94,7 @@
       text-align: left;
       opacity: 1;
     }
-    /* Full mode (Ανάπτυξε) – τοποθετείται στο κάτω αριστερό μέρος */
+    /* Full mode (Ανάπτυξε) – info panel στο κάτω αριστερό μέρος */
     #infoPanelFull {
       left: 20px;
       bottom: 20px;
@@ -106,16 +107,10 @@
       bottom: 20px;
       width: calc(100vw - 200px);
     }
-    /* Table styling για τα info panels */
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-    td {
-      border: 1px solid lightgray;
-      padding: 2px;
-      font-size: 11px;
-      line-height: 1.1;
+    /* Επιβάλλουμε στον πίνακα μέσα στα info panels να μην εμφανίζονται περιγράμματα */
+    #infoPanelFull table, #infoPanelFull td,
+    #infoPanelCollapsed table, #infoPanelCollapsed td {
+      border: none !important;
     }
   </style>
 </head>
@@ -168,7 +163,7 @@
     let showPeriods = false;
     let cellSize = 40;
     let currentCellPositions = {};
-    let currentBalloonElement = null; // Το επιλεγμένο κελί μέσω balloon overlay
+    let currentBalloonElement = null; // Το επιλεγμένο κελί μέσω του balloon overlay
     let sectorInstances = []; // p5 instances για τους καμβάδες τομέα
 
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
@@ -407,7 +402,7 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-    /* ---------- Συνάρτηση για την εύρεση του προηγούμενου και επόμενου στοιχείου ---------- */
+    /* ---------- Συνάρτηση για εύρεση προηγούμενου και επόμενου στοιχείου ---------- */
     function getPrevElement(currentElement) {
       let currPos = currentCellPositions[currentElement.number];
       if (!currPos) return null;
@@ -473,11 +468,11 @@
       }
       return formatted.join(", ");
     }
-    /* -------------------- Συνάρτηση rowHTML (ακριβώς όπως στο βασικό αρχείο) -------------------- */
+    /* -------------------- Συνάρτηση rowHTML (όπως στο βασικό αρχείο, χωρίς περιγράμματα) -------------------- */
     function rowHTML(element, role) {
       if (!element) {
         return `<tr style="color: #000;">
-                  <td style="padding: 2px; min-width:50px; border-right:1px solid lightgray;">-</td>
+                  <td style="padding: 2px; min-width:50px;">-</td>
                   <td style="padding: 2px; font-size:11px; line-height:1.1;">
                     <div>-</div><div>-</div>
                   </td>
@@ -485,20 +480,17 @@
       }
       let color = sectorColors[element.block] || "#000";
       let atomicHTML = (role === "current") ? `<b>Ζ=${element.number}</b>` : `Ζ=${element.number}`;
-      
       let subs = getSubshells(element);
       let subsLine = subs.join(" ");
       if (role === "current") {
         subsLine = `<b style="font-family: monospace;">${subsLine}</b>`;
       }
-      
       let shellsLine = "";
       if (element.shells) {
         shellsLine = formatShells(element);
       }
-      
       return `<tr style="color: ${color};">
-                <td style="padding: 2px; min-width:50px; border-right:1px solid lightgray;">${atomicHTML}</td>
+                <td style="padding: 2px; min-width:50px;">${atomicHTML}</td>
                 <td style="padding: 2px; font-size:11px; line-height:1.1;">
                   <div>${subsLine}</div>
                   <div>${shellsLine}</div>
@@ -532,7 +524,7 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-      // Ενημέρωση περιγραμμάτων στους καμβάδες τομέα
+      // Ανανεώνουμε τους καμβάδες τομέα
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
