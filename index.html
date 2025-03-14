@@ -142,13 +142,6 @@
       transition: all 0.5s ease;
       opacity: 1;
     }
-    
-    /* Ο νέος κανόνας για να αποκρύψει τις στιβάδες (δηλ. τις δεύτερες σειρές κάθε ζεύγους)
-       μόνο στο infoPanelFull */
-    #infoPanelFull #infoSubshells > tr:nth-child(2n) {
-      display: none;
-    }
-    
   </style>
 </head>
 <body>
@@ -248,25 +241,35 @@
       }
     });
 
-    function rowHTMLPair(element, type) {
+    // Ενημερωμένη συνάρτηση rowHTMLPair που δέχεται παράμετρο showShells
+    function rowHTMLPair(element, type, showShells = true) {
       if (!element) {
-        return `
+        return showShells
+          ? `
           <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
           <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
-        `;
+        `
+          : `<tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>`;
       }
       let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
       let color = textColors[element.block] || "#CCCCCC";
-      return `
+      let firstRow = `
         <tr style="${borderStyle}">
           <td style="color:${color}; font-weight:bold; font-size:12px;">Ζ=${element.number}</td>
           <td style="color:${color}; font-size:12px;">${element.subshells || "-"}</td>
         </tr>
+      `;
+      if (showShells) {
+        let secondRow = `
         <tr>
           <td></td>
           <td style="color:${color}; font-size:12px;">${formatShells(element)}</td>
         </tr>
-      `;
+        `;
+        return firstRow + secondRow;
+      } else {
+        return firstRow;
+      }
     }
 
     function getShift(num, block) {
@@ -589,7 +592,7 @@
       }
     }
     
-    // Νέα υλοποίηση της showBalloonOverlay:
+    // Η συνάρτηση showBalloonOverlay δεν αλλάζει – χρησιμοποιεί την rowHTMLPair με το προεπιλεγμένο showShells=true
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -695,6 +698,7 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
+    // Ενημερωμένη updateInfo: για τους πίνακες πληροφοριών καλούμε rowHTMLPair με showShells=false ώστε να μην εμφανίζονται οι στιβάδες.
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -704,7 +708,7 @@
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      let subshellsHTML = rowHTMLPair(prevElement, "prev") + rowHTMLPair(currentElement, "current") + rowHTMLPair(nextElement, "next");
+      let subshellsHTML = rowHTMLPair(prevElement, "prev", false) + rowHTMLPair(currentElement, "current", false) + rowHTMLPair(nextElement, "next", false);
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
@@ -726,7 +730,7 @@
         let collapsedHTML = `
           <div>${leftHTML}</div>
           <hr>
-          ${rowHTMLPair(currentElement, "current")}
+          ${rowHTMLPair(currentElement, "current", false)}
           <hr>
           <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
         `;
