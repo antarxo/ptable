@@ -240,7 +240,6 @@
     });
 
     function rowHTMLPair(element, type) {
-      // Η συνάρτηση αυτή χρησιμοποιείται για το info panel και όχι για το balloon.
       if (!element) {
         return `
           <tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>
@@ -581,7 +580,8 @@
       }
     }
     
-    // --- Νέα υλοποίηση της showBalloonOverlay με δομή MsWord πίνακα ---
+    // --- Νέα υλοποίηση της showBalloonOverlay με πίνακα 2 στηλών, 6 σειρών ---
+    // Στις δύο πρώτες ομάδες (προηγούμενο και τρέχον) ορίζουμε το border-bottom στα κελιά και στις δύο στήλες
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -603,18 +603,18 @@
       let tableHTML = `
       <table style="border-collapse: collapse; width:100%; font-size:12px;">
         <tr>
-          <td rowspan="2" style="color:${prevColor}; font-weight:bold; border-bottom:1px solid #ccc;">Ζ=${prevElement ? prevElement.number : "-"}</td>
+          <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prevElement ? prevElement.number : "-"}</td>
           <td style="color:${prevColor};">${prevSubshells}</td>
         </tr>
         <tr>
-          <td style="color:${prevColor};">${prevShells}</td>
+          <td style="color:${prevColor}; border-bottom:1px solid #ccc;">${prevShells}</td>
         </tr>
         <tr>
-          <td rowspan="2" style="color:${currColor}; font-weight:bold; border-bottom:1px solid #ccc;">Ζ=${currentElement ? currentElement.number : "-"}</td>
+          <td rowspan="2" style="color:${currColor}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
           <td style="color:${currColor};">${currSubshells}</td>
         </tr>
         <tr>
-          <td style="color:${currColor};">${currShells}</td>
+          <td style="color:${currColor}; border-bottom:1px solid #ccc;">${currShells}</td>
         </tr>
         <tr>
           <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${nextElement ? nextElement.number : "-"}</td>
@@ -768,9 +768,6 @@
           p.text(e.number, relativeX + pos.width / 2, relativeY + pos.height / 2);
         }
       });
-    }
-    function showBalloonOverlayOld(elementNumber) {
-      // Παλαιά υλοποίηση (μη χρησιμοποιούμενη πλέον)
     }
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
