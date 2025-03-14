@@ -576,7 +576,7 @@
       });
       updateCellsPositions();
       // Με setTimeout εξασφαλίζουμε ότι μετά το toggle (είτε από "Ανάπτυξε" σε "Σύμπτυξε" είτε αντίστροφα)
-      // αναζητείται ξανά η θέση του επιλεγμένου κελιού και του balloon
+      // ανανεώνεται η θέση του επιλεγμένου κελιού και του balloon πάντα
       setTimeout(() => {
         if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
           showBalloonOverlay(currentBalloonElement);
