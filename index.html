@@ -112,6 +112,7 @@
       border-radius: 5px;
       z-index: 150;
       visibility: hidden;
+      /* Αρχική τιμή opacity */
       opacity: 0;
       transition: opacity 0.3s ease;
       pointer-events: none;
@@ -142,6 +143,12 @@
       transition: all 0.5s ease;
       opacity: 1;
     }
+    
+    /* Ο νέος κανόνας για να αποκρύψει τις στιβάδες (τη δεύτερη σειρά κάθε ζεύγους) */
+    #infoSubshells tr:nth-child(2n) {
+      display: none;
+    }
+    
   </style>
 </head>
 <body>
@@ -241,8 +248,6 @@
       }
     });
 
-    // Οι βοηθητικές συναρτήσεις παραμένουν όπως στο αρχικό (π.χ. rowHTMLPair, getShift, getShiftContainer, κ.λπ.)
-
     function rowHTMLPair(element, type) {
       if (!element) {
         return `
@@ -263,7 +268,7 @@
         </tr>
       `;
     }
-    
+
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -584,7 +589,8 @@
       }
     }
     
-    // Η showBalloonOverlay παραμένει όπως ήταν (δείχνει έναν πίνακα με τις υποστιβάδες και τις στιβάδες)
+    // Νέα υλοποίηση της showBalloonOverlay:
+    // Ο πίνακας έχει 2 στήλες και 6 σειρές, με τις δύο πρώτες ομάδες να έχουν border-bottom στα κελιά και στις δύο στήλες.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -633,6 +639,7 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       overlay.style.visibility = "visible";
+      // Εδώ θέτουμε opacity 0.96 (96%)
       overlay.style.opacity = "0";
       setTimeout(() => { overlay.style.opacity = "0.96"; }, 10);
       let overlayRect = overlay.getBoundingClientRect();
@@ -650,7 +657,7 @@
       updateInfo();
     }
     
-    // Οι συναρτήσεις μεταβάσεων για τα info panels παραμένουν ως έχουν.
+    // Απλοποιημένες συναρτήσεις αλλαγής κατάστασης των info panels, χωρίς transitionend event.
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -660,6 +667,8 @@
       let targetTop = positions["collapsed"] && positions["collapsed"]["1"] ? positions["collapsed"]["1"].y : 55;
       infoFull.style.left = targetLeft + "px";
       infoFull.style.top = targetTop + "px";
+      infoFull.style.width = targetWidth + "px";
+      // Αφού ολοκληρωθεί η μετάβαση (π.χ. μετά από 500ms) εναλλάσσουμε την προβολή
       setTimeout(() => {
         infoFull.style.display = "none";
         infoCollapsed.style.display = "block";
@@ -678,6 +687,7 @@
       infoFull.style.width = collapsedWidth + "px";
       infoCollapsed.style.display = "none";
       infoFull.style.display = "block";
+      // Θέτουμε opacity στο expanded ώστε να εμφανιστεί
       infoFull.style.opacity = "1";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       let targetLeft = 20;
@@ -689,8 +699,6 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
-    // Εδώ γίνεται η τροποποίηση που ζητήθηκε για το "infoSubshells":
-    // Αντί να εμφανίζονται και οι στιβάδες (που δινόταν με τη συνάρτηση formatShells), εμφανίζεται μόνο το πεδίο element.subshells.
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -700,23 +708,7 @@
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-      // Ο πίνακας που εμφανίζει _μόνο_ τις υποστιβάδες:
-      let subshellsHTML = `
-        <table style="border-collapse: collapse; width:100%; font-size:12px;">
-          <tr>
-            <td style="color:${prevElement ? textColors[prevElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${prevElement ? prevElement.number : "-"}</td>
-            <td style="color:${prevElement ? textColors[prevElement.block] : "#CCCCCC"};">${prevElement ? (prevElement.subshells || "-") : "-"}</td>
-          </tr>
-          <tr>
-            <td style="color:${currentElement ? textColors[currentElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
-            <td style="color:${currentElement ? textColors[currentElement.block] : "#CCCCCC"};">${currentElement ? (currentElement.subshells || "-") : "-"}</td>
-          </tr>
-          <tr>
-            <td style="color:${nextElement ? textColors[nextElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${nextElement ? nextElement.number : "-"}</td>
-            <td style="color:${nextElement ? textColors[nextElement.block] : "#CCCCCC"};">${nextElement ? (nextElement.subshells || "-") : "-"}</td>
-          </tr>
-        </table>
-      `;
+      let subshellsHTML = rowHTMLPair(prevElement, "prev") + rowHTMLPair(currentElement, "current") + rowHTMLPair(nextElement, "next");
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
@@ -738,20 +730,7 @@
         let collapsedHTML = `
           <div>${leftHTML}</div>
           <hr>
-          <table style="border-collapse: collapse; width:100%; font-size:12px;">
-            <tr>
-              <td style="color:${prevElement ? textColors[prevElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${prevElement ? prevElement.number : "-"}</td>
-              <td style="color:${prevElement ? textColors[prevElement.block] : "#CCCCCC"};">${prevElement ? (prevElement.subshells || "-") : "-"}</td>
-            </tr>
-            <tr>
-              <td style="color:${currentElement ? textColors[currentElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
-              <td style="color:${currentElement ? textColors[currentElement.block] : "#CCCCCC"};">${currentElement ? (currentElement.subshells || "-") : "-"}</td>
-            </tr>
-            <tr>
-              <td style="color:${nextElement ? textColors[nextElement.block] : "#CCCCCC"}; font-weight:bold;">Ζ=${nextElement ? nextElement.number : "-"}</td>
-              <td style="color:${nextElement ? textColors[nextElement.block] : "#CCCCCC"};">${nextElement ? (nextElement.subshells || "-") : "-"}</td>
-            </tr>
-          </table>
+          ${rowHTMLPair(currentElement, "current")}
           <hr>
           <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
         `;
