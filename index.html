@@ -123,7 +123,7 @@
     // Χρώματα τομέα
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
     
-    // Βοηθητικές συναρτήσεις μετατόπισης, υπολογισμού περιοχής, ενημέρωσης θέσεων, κ.λπ. (ίδιες όπως πριν)
+    // Βοηθητικές συναρτήσεις μετατόπισης, υπολογισμού περιοχής, ενημέρωσης θέσεων, κ.λπ.
     function getShift(num, block) {
       if (currentMode !== "start") return 0;
       if (block === "p" && num >= 21 && num <= 30) {
@@ -366,8 +366,74 @@
       });
     }
     
+    // Εξασφαλίζουμε ότι η initializeSectorsCanvas είναι στο global scope
+    function initializeSectorsCanvas() {
+      let blocks = ["s", "p", "d", "f"];
+      blocks.forEach(block => {
+        let container = document.getElementById("canvas" + block.toUpperCase());
+        container.innerHTML = "";
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        elements.filter(e => e.block === block).forEach(e => {
+          let num = Number(e.number);
+          if (currentMode === "start") {
+            if ((num < 3 && !extraElements[num]) || num > currentZ) return;
+          }
+          let pos = positions[currentMode][e.number] ||
+                    ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
+          if (pos) {
+            let yForMin = pos.y, yForMax = pos.y;
+            if (currentMode === "start") {
+              if (block === "p" && num >= 21 && num <= 30) yForMax += getShift(num, block);
+              else if ((block === "p" || block === "d") && num >= 57 && num <= 70) yForMax += getShift(num, block);
+            }
+            minX = Math.min(minX, pos.x);
+            minY = Math.min(minY, yForMin);
+            maxX = Math.max(maxX, pos.x + pos.width);
+            maxY = Math.max(maxY, yForMax + pos.height);
+          }
+        });
+        if (minX === Infinity || minY === Infinity) return;
+        if (currentMode === "start" && (block === "p" || block === "d"))
+          container.style.left = (minX + getShiftContainer(block)) + "px";
+        else
+          container.style.left = minX + "px";
+        container.style.top = minY + "px";
+        container.style.width = (maxX - minX) + "px";
+        container.style.height = (maxY - minY) + "px";
+        new p5(function(p) {
+          p.setup = function() {
+            let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
+            canvas.parent("canvas" + block.toUpperCase());
+            drawElements(p, block, minX, minY);
+          };
+        });
+      });
+    }
+    // Εξασφαλίζουμε ότι η initializeSectorsCanvas είναι διαθέσιμη global
+    window.initializeSectorsCanvas = initializeSectorsCanvas;
+    
     // --- ΝΕΕΣ Λειτουργίες για τις υποστιβάδες και τις στιβάδες ---
-    // Η getSubshells και formatSubshell έχουν οριστεί παραπάνω.
+    function getSubshells(element) {
+      if (!element) return [];
+      if (typeof element.subshells === "string") return element.subshells.split(" ");
+      if (Array.isArray(element.subshells)) return element.subshells;
+      return [];
+    }
+    
+    function shellLetter(n) {
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      return mapping[n] || n;
+    }
+    
+    function formatSubshell(subshell) {
+      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
+      if(match){
+         let principal = match[1];
+         let count = match[2];
+         return shellLetter(principal) + "(" + count + ")";
+      }
+      return subshell;
+    }
     
     // Τροποποιημένη συνάρτηση rowHTML που δημιουργεί 2 γραμμές για κάθε στοιχείο (ή "-" αν δεν υπάρχει)
     function rowHTML(element, isCurrent) {
