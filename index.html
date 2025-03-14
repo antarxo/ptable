@@ -1,23 +1,19 @@
 <!DOCTYPE html>
 <html lang="el">
   <head>
-    <!-- Χαρακτηριστικά κεφαλίδας και φόρτωση εξωτερικών πόρων -->
     <meta charset="UTF-8">
-    <title>Περιοδικός Πίνακας – Info Panel Transitions (Extended Version)</title>
+    <title>Περιοδικός Πίνακας – Info Panel Transitions (Extended Balloon Overlay)</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    
     <style>
-      /* --- Στυλ για τον τίτλο και το overlay --- */
-      
-      /* Overlay τίτλου: τοποθετείται στο πάνω μέρος, κεντραρισμένο */
+      /* Στυλ για τον τίτλο */
       #pageTitleOverlay {
         position: fixed;
         top: 5px;
         left: 50%;
         transform: translateX(-50%);
         background: white;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.9);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.9);
         padding: 5px 10px;
         z-index: 999;
         display: flex;
@@ -25,8 +21,6 @@
         gap: 10px;
         white-space: nowrap;
       }
-      
-      /* Στυλ τίτλων μέσα στο overlay */
       #pageTitleOverlay h1,
       #pageTitleOverlay h2 {
         margin: 0;
@@ -44,17 +38,13 @@
         font-size: 11px;
         color: #333;
       }
-      
-      /* Βασικό στυλ σώματος */
       body {
         font-family: 'Roboto', sans-serif;
         margin: 0;
         overflow: hidden;
         background: #f7f7f7;
-        padding-top: 60px; /* Για να μην καλύπτεται ο τίτλος */
+        padding-top: 60px;
       }
-      
-      /* Στυλ καμβάδων: ο κάθε καμβάς τοποθετείται απόλυτα */
       .canvas {
         position: absolute;
         background: transparent;
@@ -65,8 +55,6 @@
         filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
         overflow: visible;
       }
-      
-      /* Στυλ για το background του πίνακα */
       #canvasTableBackground {
         position: absolute;
         background: white;
@@ -76,23 +64,18 @@
         opacity: 1;
         transition: all 0.5s ease-in-out;
       }
-      
-      /* Ομαδοποιημένοι καμβάδες (για τις ομάδες στοιχείων) */
-      #canvasS_groups, 
-      #canvasD_groups, 
-      #canvasP_groups {
+      /* Group canvases */
+      #canvasS_groups, #canvasD_groups, #canvasP_groups {
         position: absolute;
         z-index: 60;
       }
-      
-      /* Καμβάδες για τους τομείς (μέρη του πίνακα) */
+      /* Sector canvases */
       #canvasS { z-index: 10; }
       #canvasF { z-index: 20; }
       #canvasD { z-index: 30; }
       #canvasP { z-index: 40; }
       #canvasPeriods { z-index: 50; }
-      
-      /* Panel κουμπιών στο κάτω δεξί μέρος της οθόνης */
+      /* Panel κουμπιών */
       #buttonPanel {
         position: fixed;
         bottom: 20px;
@@ -112,11 +95,12 @@
         box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
         font-size: 1em;
       }
-      
-      /* Offscreen canvas (για τεχνική επεξεργασία, όπως το color picking) */
+      /* Offscreen canvas */
       #offscreenCanvas { display: none; }
-      
-      /* Νέο layout για το Balloon Overlay: εμφανίζει το περιεχόμενο σε κελιά */
+      /* Νέο layout για το Balloon Overlay:
+         - Ένας πίνακας με 2 στήλες και 6 σειρές.
+         - Στην πρώτη στήλη, συγχωνεύονται ανα 2 σειρές (rowspan="2") για κάθε στοιχείο.
+      */
       #balloonOverlay {
         position: absolute;
         background: white;
@@ -130,8 +114,7 @@
         pointer-events: none;
         font-size: 12px;
       }
-      
-      /* Στυλ για τα Panels πληροφοριών */
+      /* Panels πληροφοριών */
       #infoPanelFull {
         position: fixed;
         top: 0;
@@ -157,7 +140,7 @@
     </style>
   </head>
   <body>
-    <!-- Overlay για τον τίτλο του πίνακα -->
+    <!-- Overlay για τον τίτλο -->
     <div id="pageTitleOverlay">
       <h1>
         Διαδραστική Συμπλήρωση του 
@@ -178,7 +161,7 @@
       <h2>2025, Created by Antonios Archontoulis, Greece</h2>
     </div>
     
-    <!-- Διάφοροι καμβάδες για τη σχεδίαση του πίνακα -->
+    <!-- Καμβάδες -->
     <div id="canvasTableBackground"></div>
     <div id="canvasS_groups" class="canvas"></div>
     <div id="canvasD_groups" class="canvas"></div>
@@ -189,7 +172,7 @@
     <div id="canvasP" class="canvas"></div>
     <div id="canvasF" class="canvas"></div>
     
-    <!-- Balloon Overlay με νέο layout (διαχωρισμός σε κελιά) -->
+    <!-- Balloon Overlay με νέο layout -->
     <div id="balloonOverlay"></div>
     
     <!-- Panels πληροφοριών -->
@@ -220,130 +203,118 @@
       <button id="reset">Reset</button>
     </div>
     
-    <!-- Offscreen Canvas για τεχνικές λειτουργίες -->
+    <!-- Offscreen Canvas -->
     <canvas id="offscreenCanvas" width="800" height="600"></canvas>
     
     <script>
       /************** Global Variables & Configuration **************/
-      
-      // Ορισμοί βασικών χρωματικών τιμών για τους τομείς
       let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       let textColors = { s: "#8B0000", p: "#006400", d: "#00008B", f: "#FF8C00" };
-      
-      // Λίστες δεδομένων στοιχείων και θέσεων (θα φορτωθούν από αρχεία JSON)
       let elements = [];
       let positions = {};
-      
-      // Λειτουργικά flags και μεταβλητές για τον πίνακα
       let isCollapsed = false;
       let currentMode = "start";
       let currentZ = 3;
       let extraElements = {};
       let showPeriods = false;
       let cellSize = 40;
-      
-      // Αντικείμενο που θα κρατά τις θέσεις των κελιών (μετά από υπολογισμούς)
       let currentCellPositions = {};
-      
-      // Το στοιχείο για το οποίο εμφανίζεται το balloon overlay
       let currentBalloonElement = null;
-      
-      // Συστατικά (instances) για τις σχεδιαστικές λειτουργίες με p5.js
       let sectorInstances = [];
       
-      // Ενημέρωση του padding του τίτλου μετά τη φόρτωση της σελίδας
       window.addEventListener('load', function(){
         const h2 = document.querySelector('#pageTitleOverlay h2');
         const h1 = document.querySelector('#pageTitleOverlay h1');
         const gap = 5;
-        if (h2 && h1) {
+        if(h2 && h1) {
           h1.style.paddingLeft = (h2.offsetWidth + gap) + 'px';
         }
       });
       
       /************** ΝΕΑ ΛΟΓΙΚΗ ΓΙΑ ΤΟ BALLOON OVERLAY **************/
-      
-      /* 
-         Η συνάρτηση createBalloonContent δημιουργεί το περιεχόμενο του balloon overlay.
-         Το αποτέλεσμα είναι ένας πίνακας (table) με δύο στήλες:
-         - Η πρώτη στήλη εμφανίζει το "Ζ=" και τον αριθμό του στοιχείου.
-         - Η δεύτερη στήλη εμφανίζει τις υποστιβάδες και την μορφοποίηση τους.
-         Ο πίνακας περιέχει τρεις γραμμές: για το προηγούμενο, το τρέχον και το επόμενο στοιχείο.
-      */
+      // Η createBalloonContent παράγει έναν πίνακα 2 στηλών, 6 σειρών,
+      // όπου στην πρώτη στήλη συγχωνεύονται ανα 2 σειρές (rowspan="2").
       function createBalloonContent(elementNumber) {
         let currentElement = elements.find(e => e.number == elementNumber);
         if (!currentElement) return "";
-  
-        // Εύρεση του προηγούμενου και επόμενου στοιχείου με βάση κάποιους κανόνες (υπάρχει ήδη υλοποίηση)
         let prevElement = getPrevElement(currentElement);
         let nextElement = getNextElement(currentElement);
   
-        // Βοηθητική συνάρτηση για τη δημιουργία μιας γραμμής (row) του πίνακα
-        function createRow(elem) {
-          // Δημιουργία κελιού για το "Ζ=" του στοιχείου
-          let zCell = elem ? `<td style="padding:4px; border:1px solid #ccc; text-align:center;">Ζ=${elem.number}</td>` 
-                           : `<td style="padding:4px; border:1px solid #ccc; text-align:center;">-</td>`;
-          // Δημιουργία κελιού για τις υποστιβάδες και τη μορφοποίησή τους
-          let subshellCell = elem ? `<td style="padding:4px; border:1px solid #ccc; text-align:center;">${elem.subshells || "-"} ${formatShells(elem)}</td>` 
-                                  : `<td style="padding:4px; border:1px solid #ccc; text-align:center;">-</td>`;
-          return `<tr>${zCell}${subshellCell}</tr>`;
-        }
+        // Κατασκευή περιεχομένων για κάθε στοιχείο
+        let prevLeft = prevElement ? "Ζ=" + prevElement.number : "-";
+        let prevRight1 = prevElement ? (prevElement.subshells || "-") : "-";
+        let prevRight2 = prevElement ? formatShells(prevElement) : "-";
   
-        // Δημιουργία πλήρους πίνακα με 3 γραμμές
+        let currentLeft = currentElement ? "Ζ=" + currentElement.number : "-";
+        let currentRight1 = currentElement ? (currentElement.subshells || "-") : "-";
+        let currentRight2 = currentElement ? formatShells(currentElement) : "-";
+  
+        let nextLeft = nextElement ? "Ζ=" + nextElement.number : "-";
+        let nextRight1 = nextElement ? (nextElement.subshells || "-") : "-";
+        let nextRight2 = nextElement ? formatShells(nextElement) : "-";
+  
+        // Δημιουργία πίνακα με 6 σειρές:
+        // - Στην πρώτη στήλη: οι πρώτες δύο σειρές συγχωνεύονται για το προηγούμενο στοιχείο,
+        //   οι επόμενες δύο για το τρέχον και οι τελευταίες δύο για το επόμενο.
+        // - Στη δεύτερη στήλη: κάθε γραμμή εμφανίζει ξεχωριστά μια πληροφορία.
         let tableHTML = `
           <table style="width:100%; border-collapse:collapse;">
-            ${createRow(prevElement)}
-            ${createRow(currentElement)}
-            ${createRow(nextElement)}
+            <tr>
+              <td rowspan="2" style="padding:4px; border:1px solid #ccc; text-align:center; vertical-align:middle;">${prevLeft}</td>
+              <td style="padding:4px; border:1px solid #ccc; text-align:center;">${prevRight1}</td>
+            </tr>
+            <tr>
+              <td style="padding:4px; border:1px solid #ccc; text-align:center;">${prevRight2}</td>
+            </tr>
+            <tr>
+              <td rowspan="2" style="padding:4px; border:1px solid #ccc; text-align:center; vertical-align:middle;">${currentLeft}</td>
+              <td style="padding:4px; border:1px solid #ccc; text-align:center;">${currentRight1}</td>
+            </tr>
+            <tr>
+              <td style="padding:4px; border:1px solid #ccc; text-align:center;">${currentRight2}</td>
+            </tr>
+            <tr>
+              <td rowspan="2" style="padding:4px; border:1px solid #ccc; text-align:center; vertical-align:middle;">${nextLeft}</td>
+              <td style="padding:4px; border:1px solid #ccc; text-align:center;">${nextRight1}</td>
+            </tr>
+            <tr>
+              <td style="padding:4px; border:1px solid #ccc; text-align:center;">${nextRight2}</td>
+            </tr>
           </table>
         `;
         return tableHTML;
       }
-      
-      // Συνάρτηση που εμφανίζει το balloon overlay χρησιμοποιώντας το περιεχόμενο που παράγει η createBalloonContent
+  
+      // Η showBalloonOverlay καλεί τη createBalloonContent και το εμφανίζει
       function showBalloonOverlay(elementNumber) {
         currentBalloonElement = elementNumber;
         let content = createBalloonContent(elementNumber);
         let overlay = document.getElementById("balloonOverlay");
         overlay.innerHTML = content;
   
-        // Λήψη θέσης του αντίστοιχου κελιού
         let cellPos = currentCellPositions[elementNumber];
         if (!cellPos) return;
-  
-        // Τοποθέτηση του overlay δίπλα στο κελί
         overlay.style.visibility = "visible";
         overlay.style.opacity = "0";
-  
-        // Υπολογισμός θέσης overlay βάσει της θέσης του κελιού
         let overlayRect = overlay.getBoundingClientRect();
         let overlayWidth = overlayRect.width;
         let cellRight = cellPos.x + cellPos.width;
         let screenHalf = window.innerWidth / 2;
-        let overlayX = (cellRight > screenHalf) 
-                        ? (cellPos.x + cellPos.width - (overlayWidth + 22))
-                        : (cellPos.x + cellPos.width - 5);
+        let overlayX = (cellRight > screenHalf)
+            ? (cellPos.x + cellPos.width - (overlayWidth + 22))
+            : (cellPos.x + cellPos.width - 5);
         let overlayY = cellPos.y + cellPos.height - 5;
-  
         overlay.style.left = overlayX + "px";
         overlay.style.top = overlayY + "px";
         overlay.style.fontSize = "12px";
-  
-        // Μικρή καθυστέρηση για ομαλή μετάβαση της ορατότητας
         setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-  
-        // Ανασχεδίαση των καμβάδων αν χρειαστεί
         sectorInstances.forEach(inst => {
           if (typeof inst.myRedraw === "function") inst.myRedraw();
         });
-  
-        // Ενημέρωση του info panel
         updateInfo();
       }
       
       /************** ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ **************/
-  
-      // Συνάρτηση εύρεσης του προηγούμενου στοιχείου βάσει της θέσης του (μέσω center coordinates)
       function getPrevElement(currentElement) {
         let currPos = currentCellPositions[currentElement.number];
         if (!currPos) return null;
@@ -365,7 +336,6 @@
         return candidates[0].e;
       }
   
-      // Συνάρτηση εύρεσης του επόμενου στοιχείου βάσει της θέσης του
       function getNextElement(currentElement) {
         let currPos = currentCellPositions[currentElement.number];
         if (!currPos) return null;
@@ -387,7 +357,6 @@
         return candidates[0].e;
       }
   
-      // Συνάρτηση για τη μορφοποίηση των υποστιβάδων ενός στοιχείου
       function shellLetter(n) {
         let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
         return mapping[n] || n;
@@ -397,7 +366,7 @@
         if (!element.shells) return "";
         let shellCounts = element.shells.split(/,\s*/);
         let formatted = shellCounts.map((count, index) => {
-          let letter = shellLetter((index + 1).toString());
+          let letter = shellLetter((index+1).toString());
           return letter + "(" + count + ")";
         });
         if (formatted.length > 0) {
@@ -408,7 +377,6 @@
         return formatted.join(", ");
       }
   
-      // Συνάρτηση που υπολογίζει και ενημερώνει τις θέσεις των κελιών με βάση τις διαθέσιμες θέσεις από το positions.json
       function updateCellsPositions() {
         currentCellPositions = {};
         elements.forEach(e => {
@@ -438,7 +406,6 @@
         });
       }
   
-      // Συνάρτηση υπολογισμού μετατόπισης για συγκεκριμένα στοιχεία
       function getShift(num, block) {
         if (currentMode !== "start") return 0;
         if (block === "p" && num >= 21 && num <= 30) {
@@ -452,7 +419,6 @@
         return 0;
       }
   
-      // Συνάρτηση υπολογισμού μετατόπισης για ολόκληρο το container ενός τομέα
       function getShiftContainer(block) {
         if (currentMode !== "start") return 0;
         if (block === "p") {
@@ -469,7 +435,6 @@
         return 0;
       }
   
-      // Συνάρτηση που υπολογίζει τα όρια (region) του πίνακα με βάση τις θέσεις των κελιών
       function computeModeRegion() {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         elements.forEach(e => {
@@ -497,7 +462,6 @@
         return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
       }
   
-      // Συνάρτηση ενημέρωσης των ορίων βάσει των θέσεων των κελιών
       function computeModeRegionUpdated() {
         let keys = Object.keys(currentCellPositions);
         if (keys.length === 0) return null;
@@ -512,7 +476,6 @@
         return { minX, minY, maxX, maxY };
       }
   
-      // Συνάρτηση αρχικοποίησης του background του πίνακα με βάση τα όρια
       function initializeBackgroundCanvas() {
         let bg = document.getElementById("canvasTableBackground");
         let margin = 20;
@@ -539,7 +502,6 @@
         bg.style.opacity = "1";
       }
   
-      // Συνάρτηση φόρτωσης δεδομένων από αρχεία JSON (elements και positions)
       async function loadData() {
         let resElements = await fetch('elements.json');
         elements = await resElements.json();
@@ -547,7 +509,6 @@
         positions = await resPositions.json();
       }
   
-      // Συνάρτηση αρχικοποίησης του καμβά για τις περιόδους
       function initializePeriodsCanvas() {
         new p5(function(p) {
           p.setup = function() {
@@ -572,7 +533,6 @@
         });
       }
   
-      // Συνάρτηση αρχικοποίησης των καμβάδων για τις ομάδες στοιχείων (S, D, P)
       function initGroupsCanvases() {
         new p5(function(p) {
           p.setup = function() {
@@ -650,7 +610,6 @@
             }
           };
         });
-        // Τοποθέτηση των καμβάδων ομάδων πάνω από τους αντίστοιχους τομείς
         ["S", "D", "P"].forEach(sector => {
           let sectorCanvas = document.getElementById("canvas" + sector);
           let groupCanvas = document.getElementById("canvas" + sector + "_groups");
@@ -659,7 +618,6 @@
         });
       }
   
-      // Συνάρτηση ενημέρωσης του info panel με βάση το επιλεγμένο στοιχείο
       function updateInfo() {
         let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
         if (!currentElement) return;
@@ -667,8 +625,6 @@
                         <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
                           ${currentElement.symbol || ""}</span> 
                         <span style="font-style: italic;">${currentElement.name || ""}</span>`;
-  
-        // Δημιουργία γραμμών για το info panel με χρήση βοηθητικής συνάρτησης
         function createInfoRow(elem) {
           let zText = elem ? `Ζ=${elem.number}` : "-";
           let subshell = elem ? (elem.subshells || "-") + " " + formatShells(elem) : "-";
@@ -677,21 +633,17 @@
                     <td style="padding:4px; border:1px solid #ccc; text-align:center;">${subshell}</td>
                   </tr>`;
         }
-  
         let subshellsHTML = createInfoRow(getPrevElement(currentElement)) +
                             createInfoRow(currentElement) +
                             createInfoRow(getNextElement(currentElement));
         let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
-  
         let infoPanelFull = document.getElementById("infoPanelFull");
         document.getElementById("infoLeft").innerHTML = leftHTML;
         document.getElementById("infoSubshells").innerHTML = subshellsHTML;
         document.getElementById("infoRemarks").innerHTML = remarksHTML;
-  
         infoPanelFull.style.width = (window.innerWidth - 207) + "px";
         let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
         infoPanelFull.style.top = btnRect.top + "px";
-  
         if (currentMode === "collapsed") {
           let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
           let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
@@ -713,7 +665,6 @@
         }
       }
   
-      // Συνάρτηση που ενεργοποιείται όταν ο χρήστης πατήσει το κουμπί "Συμπλήρωσε"
       function fillAllAction() {
         document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
         currentMode = "expanded";
@@ -726,12 +677,9 @@
         updateCellsPositions();
         updateInfo();
       }
-  
-      // Εκχώρηση event listeners στα κουμπιά
       document.getElementById('fillAll').addEventListener('click', function() { fillAllAction(); });
       document.getElementById('reset').addEventListener('click', function() { location.reload(); });
   
-      // Συνάρτηση αρχικοποίησης των καμβάδων για τους τομείς
       window.initializeSectorsCanvas = function() {
         sectorInstances = [];
         let blocks = ["s", "p", "d", "f"];
@@ -782,7 +730,6 @@
         });
       };
   
-      // Συνάρτηση σχεδίασης στοιχείων για κάθε τομέα στον αντίστοιχο καμβά
       function drawElements(p, block, containerLeft, containerTop) {
         let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
         elements.filter(e => e.block === block).forEach(e => {
@@ -819,7 +766,6 @@
         });
       }
   
-      // Φόρτωση δεδομένων και αρχικοποίηση της εφαρμογής
       loadData().then(() => {
         updateCellsPositions();
         initializeBackgroundCanvas();
