@@ -66,7 +66,7 @@
     }
     /* Offscreen canvas για color picking */
     #offscreenCanvas { display: none; }
-    /* Balloon overlay */
+    /* Balloon overlay (επαναφέρουμε την εμφάνιση όπως στο βασικό αρχείο) */
     #balloonOverlay {
       position: absolute;
       background: white;
@@ -162,13 +162,13 @@
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    let currentMode = "start"; // Μπορεί να πάρει τιμές: "start", "expanded", "collapsed"
+    let currentMode = "start"; // "start", "expanded", "collapsed"
     let currentZ = 3;
     let extraElements = {};  
     let showPeriods = false;
     let cellSize = 40;
     let currentCellPositions = {};
-    let currentBalloonElement = null; // Το επιλεγμένο κελί (μέσω του balloon)
+    let currentBalloonElement = null; // Το επιλεγμένο κελί μέσω balloon overlay
     let sectorInstances = []; // p5 instances για τους καμβάδες τομέα
 
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
@@ -294,8 +294,7 @@
       bg.style.opacity = "1";
     }
     async function loadData() {
-      // Φόρτωση των αρχείων elements.json και positions.json
-      // (Σε αυτήν την έκδοση, αν δεν υπάρχουν, μπορείτε να συμπληρώσετε dummy δεδομένα)
+      // Φόρτωση αρχείων elements.json και positions.json
       let resElements = await fetch('elements.json');
       elements = await resElements.json();
       let resPositions = await fetch('positions.json');
@@ -408,10 +407,7 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-    /* -------------------- Συνάρτηση για την εύρεση του προηγούμενου και επόμενου στοιχείου --------------------
-       getPrevElement: Βρίσκει το κελί που βρίσκεται ακριβώς πάνω (με διαφορά centerX < 1 pixel)
-       getNextElement: Βρίσκει το κελί που βρίσκεται στα δεξιά στη ίδια γραμμή.
-    ----------------------------------------------------------------------------------------------- */
+    /* ---------- Συνάρτηση για την εύρεση του προηγούμενου και επόμενου στοιχείου ---------- */
     function getPrevElement(currentElement) {
       let currPos = currentCellPositions[currentElement.number];
       if (!currPos) return null;
@@ -477,37 +473,39 @@
       }
       return formatted.join(", ");
     }
-    /* -------------------- Συνάρτηση rowHTML για το balloon overlay και τους info πίνακες -------------------- */
+    /* -------------------- Συνάρτηση rowHTML (ακριβώς όπως στο βασικό αρχείο) -------------------- */
     function rowHTML(element, role) {
       if (!element) {
         return `<tr style="color: #000;">
-                  <td style="min-width:50px; border-right:1px solid lightgray;">-</td>
-                  <td>
-                    <div>-</div>
-                    <div>-</div>
+                  <td style="padding: 2px; min-width:50px; border-right:1px solid lightgray;">-</td>
+                  <td style="padding: 2px; font-size:11px; line-height:1.1;">
+                    <div>-</div><div>-</div>
                   </td>
                 </tr>`;
       }
       let color = sectorColors[element.block] || "#000";
       let atomicHTML = (role === "current") ? `<b>Ζ=${element.number}</b>` : `Ζ=${element.number}`;
+      
       let subs = getSubshells(element);
       let subsLine = subs.join(" ");
       if (role === "current") {
         subsLine = `<b style="font-family: monospace;">${subsLine}</b>`;
       }
+      
       let shellsLine = "";
       if (element.shells) {
         shellsLine = formatShells(element);
       }
+      
       return `<tr style="color: ${color};">
-                <td style="min-width:50px; border-right:1px solid lightgray;">${atomicHTML}</td>
-                <td>
+                <td style="padding: 2px; min-width:50px; border-right:1px solid lightgray;">${atomicHTML}</td>
+                <td style="padding: 2px; font-size:11px; line-height:1.1;">
                   <div>${subsLine}</div>
                   <div>${shellsLine}</div>
                 </td>
               </tr>`;
     }
-    /* -------------------- Συνάρτηση για εμφάνιση του balloon overlay -------------------- */
+    /* -------------------- Συνάρτηση εμφάνισης του balloon overlay -------------------- */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -534,15 +532,13 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
-      // Ανανεώνουμε τους καμβάδες τομέα
+      // Ενημέρωση περιγραμμάτων στους καμβάδες τομέα
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
     }
-    /* -------------------- Συνάρτηση μορφοποίησης πληροφοριών για τους πίνακες (Info Panels) -------------------- */
+    /* -------------------- Συνάρτηση ενημέρωσης των Info Panels -------------------- */
     function updateInfoTables() {
-      // Σε πραγματική χρήση το τρέχον στοιχείο καθορίζεται από το currentZ ή με κλικ.
-      // Εδώ ως δείγμα επιλέγουμε το στοιχείο με number που αντιστοιχεί στο currentBalloonElement ή, αν δεν υπάρχει, το 3.
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
       let prevElement = getPrevElement(currentElement);
@@ -550,7 +546,6 @@
       let tableRows = rowHTML(prevElement, "prev") +
                       rowHTML(currentElement, "current") +
                       rowHTML(nextElement, "next");
-      // Ανάλογα με το mode εμφανίζουμε τον αντίστοιχο πίνακα
       if (currentMode === "expanded") {
          document.getElementById("infoPanelFull").style.display = "block";
          document.getElementById("infoPanelCollapsed").style.display = "none";
@@ -600,7 +595,7 @@
         }
       });
     }
-    /* -------------------- Συνάρτηση fillAllAction για μετάβαση στο expanded mode -------------------- */
+    /* -------------------- Συνάρτηση fillAllAction -------------------- */
     function fillAllAction() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
