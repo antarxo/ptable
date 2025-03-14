@@ -374,10 +374,9 @@
     }
     
     /* 
-     * ΝΕΕΣ συναρτήσεις επιλογής προηγούμενου/επόμενου στοιχείου:
-     * Αντί για απλή σύγκριση row και col, φιλτράρουμε τα εμφανιζόμενα στοιχεία
-     * (δηλαδή εκείνα που έχουν θέση στο currentCellPositions), ταξινομούμε με βάση row και col,
-     * και επιστρέφουμε το προηγούμενο/επόμενο στοιχείο.
+     * Επιλογή προηγούμενου/επόμενου στοιχείου:
+     * Ταξινομούμε τα εμφανιζόμενα στοιχεία (βάσει row και col στο currentCellPositions) 
+     * και επιστρέφουμε το προηγούμενο και επόμενο ως προς αυτή τη διάταξη.
      */
     function getDisplayedElements() {
       let displayed = elements.filter(e => currentCellPositions[e.number]);
@@ -402,7 +401,8 @@
     
     /* 
      * Συνάρτηση formatSubshell:
-     * Εμφανίζει το subshell σε μορφή "K(2)" για κύριο κβάντο ≠2, και για κύριο 2 χωρίς παρένθεση (π.χ. L8).
+     * Εμφανίζει το subshell σε μορφή "K(2)" για κύριο κβάντο ≠2, 
+     * και για κύριο 2 χωρίς παρένθεση (π.χ. L8).
      */
     function formatSubshell(subshell) {
       let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
@@ -432,8 +432,8 @@
      * Κάθε γραμμή έχει δύο στήλες:
      * 1η: Ο αριθμός του στοιχείου (Ζ=...) με το χρώμα του τομέα (bold μόνο για το τρέχον).
      * 2η: Δύο γραμμές:
-     *    - Πρώτη: Οι υποστιβάδες (subshells) όπως στο elements.json, με monospace bold μόνο για το τρέχον.
-     *    - Δεύτερη: Οι στιβάδες (shells) σε μορφή "K(2), L8, M(3)", με μόνο το τελευταίο στοιχείο bold.
+     *    - Η πρώτη γραμμή εμφανίζει τις υποστιβάδες (subshells) όπως στο elements.json, με monospace bold μόνο για το τρέχον.
+     *    - Η δεύτερη γραμμή εμφανίζει τις στιβάδες (shells) σε μορφή "K(2), L8, M(3)", με μόνο το τελευταίο bold.
      */
     function rowHTML(element, role) {
       if (!element) {
@@ -474,9 +474,9 @@
      * Εμφάνιση του balloon overlay:
      * Δημιουργείται ένας πίνακας (<table>) με 3 γραμμές: προηγούμενο, τρέχον, επόμενο.
      * Στη λειτουργία "Επόμενο" το τρέχον κελί επισημαίνεται.
-     * Με κάθε αλλαγή (είτε μέσω κλικ είτε μέσω toggle μεταξύ expanded/collapsed), 
-     * καλείται το redraw στα p5 instances ώστε το περίγραμμα να ενημερώνεται.
-     * Επιπλέον, με setTimeout εξασφαλίζουμε ότι η θέση του επιλεγμένου κελιού αναζητείται ξανά μετά την αλλαγή.
+     * Επίσης, όταν γίνεται toggle μεταξύ "Ανάπτυξε" και "Σύμπτυξε", με setTimeout εξασφαλίζουμε ότι
+     * η θέση του επιλεγμένου κελιού και του balloon ανανεώνονται αυτόματα.
+     * Τέλος, ενημερώνονται και τα περίγραμμα στα p5 canvases μέσω της κλήσης inst.myRedraw().
      */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
@@ -510,7 +510,7 @@
       });
     }
     
-    // Σχεδίαση στοιχείων στο p5 canvas (έντονο περίγραμμα (stroke 3) για το επιλεγμένο κελί)
+    // Σχεδίαση στοιχείων στο p5 canvas (εντονο περίγραμμα (stroke 3) για το επιλεγμένο κελί)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -575,7 +575,8 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
       updateCellsPositions();
-      // Με setTimeout εξασφαλίζουμε ότι μετά το toggle αναζητείται ξανά η θέση του επιλεγμένου κελιού
+      // Με setTimeout εξασφαλίζουμε ότι μετά το toggle (είτε από "Ανάπτυξε" σε "Σύμπτυξε" είτε αντίστροφα)
+      // αναζητείται ξανά η θέση του επιλεγμένου κελιού και του balloon
       setTimeout(() => {
         if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
           showBalloonOverlay(currentBalloonElement);
