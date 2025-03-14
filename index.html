@@ -374,41 +374,70 @@
     }
     
     /* 
-     * Διαχείριση προηγούμενου & επόμενου στοιχείου:
-     * Ταξινομούμε τα εμφανιζόμενα στοιχεία βάσει των υπολογισμένων θέσεων (πρώτα κατά y και μετά κατά x)
-     * ώστε για το τρέχον στοιχείο, π.χ. Ζ=11, το προηγούμενο (στο πάνω μέρος) να είναι το στοιχείο 3
-     * και το επόμενο (δίπλα) να είναι το στοιχείο 12.
+     * Συναρτήσεις για την εύρεση του προηγούμενου και επόμενου στοιχείου βάσει γεωμετρικών θέσεων:
+     *
+     * getPrevElement(currentElement):
+     *   - Υπολογίζει το κέντρο του τρέχοντος κελιού.
+     *   - Βρίσκει όλα τα άλλα κελιά που βρίσκονται πάνω (δηλαδή με κέντρο y μικρότερο) και έχουν οριζόντια σχεδόν την ίδια θέση (μικρή διαφορά στο x).
+     *   - Επιλέγει εκείνο με το μεγαλύτερο y (δηλαδή το πλησιέστερο πάνω).
+     *
+     * getNextElement(currentElement):
+     *   - Υπολογίζει το κέντρο του τρέχοντος κελιού.
+     *   - Βρίσκει όλα τα κελιά στη ίδια γραμμή (με πολύ μικρή διαφορά στο y) που βρίσκονται δεξιά (με κέντρο x μεγαλύτερο).
+     *   - Επιλέγει εκείνο με το μικρότερο x (δηλαδή το πλησιέστερο στα δεξιά).
      */
-    function getDisplayedElements() {
-      let displayed = elements.filter(e => currentCellPositions[e.number]);
-      displayed.sort((a, b) => {
-        let posA = currentCellPositions[a.number];
-        let posB = currentCellPositions[b.number];
-        if (posA.y !== posB.y) return posA.y - posB.y;
-        return posA.x - posB.x;
-      });
-      return displayed;
-    }
-    
     function getPrevElement(currentElement) {
-      let displayed = getDisplayedElements();
-      let index = displayed.findIndex(e => e.number == currentElement.number);
-      return (index > 0) ? displayed[index - 1] : null;
+      let currPos = currentCellPositions[currentElement.number];
+      if (!currPos) return null;
+      let currCenterX = currPos.x + currPos.width / 2;
+      let currCenterY = currPos.y + currPos.height / 2;
+      let candidates = [];
+      for (let e of elements) {
+        if (e.number == currentElement.number) continue;
+        if (!(e.number in currentCellPositions)) continue;
+        let pos = currentCellPositions[e.number];
+        let centerX = pos.x + pos.width / 2;
+        let centerY = pos.y + pos.height / 2;
+        // Ελέγχουμε αν το κελί βρίσκεται πάνω (centerY μικρότερο) και οριζόντια σχεδόν στο ίδιο επίπεδο (π.χ. διαφορά μικρότερη από το πλάτος του κελιού)
+        if (centerY < currCenterY && Math.abs(centerX - currCenterX) < pos.width * 1.2) {
+          candidates.push({ e, centerY });
+        }
+      }
+      if (candidates.length === 0) return null;
+      // Επιλέγουμε το κελί με το μεγαλύτερο centerY από αυτά (δηλαδή το πλησιέστερο πάνω)
+      candidates.sort((a, b) => b.centerY - a.centerY);
+      return candidates[0].e;
     }
     
     function getNextElement(currentElement) {
-      let displayed = getDisplayedElements();
-      let index = displayed.findIndex(e => e.number == currentElement.number);
-      return (index < displayed.length - 1) ? displayed[index + 1] : null;
+      let currPos = currentCellPositions[currentElement.number];
+      if (!currPos) return null;
+      let currCenterX = currPos.x + currPos.width / 2;
+      let currCenterY = currPos.y + currPos.height / 2;
+      let candidates = [];
+      for (let e of elements) {
+        if (e.number == currentElement.number) continue;
+        if (!(e.number in currentCellPositions)) continue;
+        let pos = currentCellPositions[e.number];
+        let centerX = pos.x + pos.width / 2;
+        let centerY = pos.y + pos.height / 2;
+        // Ελέγχουμε αν το κελί βρίσκεται στην ίδια γραμμή (διαφορά στο y μικρή) και δεξιά
+        if (Math.abs(centerY - currCenterY) < currPos.height * 0.5 && centerX > currCenterX) {
+          candidates.push({ e, centerX });
+        }
+      }
+      if (candidates.length === 0) return null;
+      candidates.sort((a, b) => a.centerX - b.centerX);
+      return candidates[0].e;
     }
     
     /* 
-     * Συνάρτηση formatSubshell:
+     * Συνάρτηση μορφοποίησης του subshell:
      * Εμφανίζει το subshell σε μορφή "K(2)" για κύριο κβάντο ≠2, και για κύριο 2 χωρίς παρένθεση (π.χ. L8).
      */
     function formatSubshell(subshell) {
       let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
-      if(match){
+      if (match) {
          let principal = match[1];
          let count = match[2];
          let letter = shellLetter(principal);
@@ -429,8 +458,7 @@
       return [];
     }
     
-    // Νέα συνάρτηση μορφοποίησης των στιβάδων: κάθε στοιχείο εμφανίζει πάντα την τιμή μέσα σε παρένθεση,
-    // και μόνο η τελευταία στιβάδα εμφανίζεται με bold.
+    // Μορφοποίηση των στιβάδων: κάθε τιμή εμφανίζεται μέσα σε παρένθεση, και μόνο η τελευταία γίνεται bold.
     function formatShells(element) {
       if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
@@ -452,7 +480,7 @@
      * 1η: Ο αριθμός του στοιχείου (Ζ=...) με το χρώμα του τομέα (bold μόνο για το τρέχον).
      * 2η: Δύο γραμμές:
      *    - Η πρώτη γραμμή εμφανίζει τις υποστιβάδες (subshells) όπως στο elements.json, με monospace bold για το τρέχον.
-     *    - Η δεύτερη γραμμή εμφανίζει τις στιβάδες (shells) σε μορφή «Κ(2), L(8), M(5)», με μόνο την τελευταία στιβάδα σε bold.
+     *    - Η δεύτερη γραμμή εμφανίζει τις στιβάδες (shells) σε μορφή "Κ(2), L(8), M(5)", με μόνο την τελευταία σε bold.
      */
     function rowHTML(element, role) {
       if (!element) {
@@ -468,7 +496,7 @@
       
       let subs = getSubshells(element);
       let subsLine = subs.join(" ");
-      if(role === "current"){
+      if (role === "current") {
         subsLine = `<b style="font-family: monospace;">${subsLine}</b>`;
       }
       
@@ -490,9 +518,7 @@
      * Εμφάνιση του balloon overlay:
      * Δημιουργείται ένας πίνακας (<table>) με 3 γραμμές: προηγούμενο, τρέχον, επόμενο.
      * Στη λειτουργία "Επόμενο" το τρέχον κελί επισημαίνεται.
-     * Επίσης, όταν γίνεται toggle μεταξύ "Ανάπτυξε" και "Σύμπτυξε", με setTimeout εξασφαλίζουμε ότι
-     * η θέση του επιλεγμένου κελιού και του balloon ανανεώνονται αυτόματα πάντα.
-     * Τέλος, ενημερώνονται και τα περίγραμμα στα p5 canvases μέσω της κλήσης inst.myRedraw().
+     * Όταν γίνεται toggle μεταξύ "Ανάπτυξε" και "Σύμπτυξε", με καθυστέρηση 1300ms, ενημερώνεται η θέση του balloon.
      */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
@@ -594,7 +620,7 @@
       // Με καθυστέρηση 1300ms για το toggle ώστε να ενημερώνεται σωστά η νέα θέση
       setTimeout(() => {
         updateCellsPositions();
-        if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+        if (currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
           showBalloonOverlay(currentBalloonElement);
         }
       }, 1300);
@@ -625,7 +651,7 @@
       if (showPeriods) initializePeriodsCanvas();
       updateCellsPositions();
       // Στη λειτουργία "Επόμενο" το τρέχον κελί επισημαίνεται
-      if(currentCellPositions[currentZ]) {
+      if (currentCellPositions[currentZ]) {
          showBalloonOverlay(currentZ);
       }
     });
@@ -639,7 +665,7 @@
     });
     
     window.addEventListener("resize", function(){
-      if(currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
+      if (currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
         showBalloonOverlay(currentBalloonElement);
       }
     });
@@ -663,7 +689,7 @@
               let globalX = event.clientX;
               let globalY = event.clientY;
               let found = performHitTest(globalX, globalY);
-              if(found !== null){
+              if (found !== null) {
                 // Με κλικ αλλάζει το περίγραμμα στο κελί που έγινε κλικ
                 showBalloonOverlay(found);
               }
