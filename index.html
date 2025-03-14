@@ -118,7 +118,10 @@
     let showPeriods = false;
     let cellSize = 40;
     let currentCellPositions = {};
-    let currentBalloonElement = null; // Το στοιχείο για το οποίο εμφανίζεται το balloon
+    let currentBalloonElement = null; // Το επιλεγμένο κελί (μέσω του balloon)
+    
+    // Για ανανέωση των καμβάδων τομέα
+    let sectorInstances = [];
 
     // Χρώματα τομέα
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
@@ -372,9 +375,9 @@
     
     /* 
      * ΝΕΕΣ συναρτήσεις επιλογής προηγούμενου/επόμενου στοιχείου:
-     * - Για το προηγούμενο: αναζητούμε το στοιχείο στην ίδια στήλη (col) με row = (τρέχον row - 1).
-     * - Για το επόμενο: αναζητούμε το στοιχείο στην ίδια σειρά (row) με col = (τρέχον col + 1).
-     * (Σύμφωνα με το παράδειγμα: για τρέχον το 11, προηγούμενο το 3 και επόμενο το 12)
+     * - Για το προηγούμενο: στοιχείο της ίδιας στήλης με row = (τρέχον row - 1).
+     * - Για το επόμενο: στοιχείο της ίδιας σειράς με col = (τρέχον col + 1).
+     * (Παράδειγμα: για τρέχον το 11, προηγούμενο το 3 και επόμενο το 12)
      */
     function getPrevElement(currentElement) {
       let prev = elements.find(e => e.col == currentElement.col && e.row == currentElement.row - 1);
@@ -387,15 +390,41 @@
     }
     
     /* 
+     * Συνάρτηση formatSubshell:
+     * Εξάγει τον αριθμό (π.χ. "1" από "1s2") και τον αριθμό ηλεκτρονίων.
+     * Για παράδειγμα: "1s2" → "K(2)", "2p6" → "L6" (δηλαδή χωρίς παρένθεση για τον 2ο κύριο κβάντο)
+     */
+    function formatSubshell(subshell) {
+      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
+      if(match){
+         let principal = match[1];
+         let count = match[2];
+         let letter = shellLetter(principal);
+         // Για το κύριο 2, εμφανίζεται χωρίς παρένθεση (π.χ. L8), αλλιώς με παρένθεση
+         return (principal === "2") ? letter + count : letter + "(" + count + ")";
+      }
+      return subshell;
+    }
+    
+    function shellLetter(n) {
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      return mapping[n] || n;
+    }
+    
+    function getSubshells(element) {
+      if (!element) return [];
+      if (typeof element.subshells === "string") return element.subshells.split(" ");
+      if (Array.isArray(element.subshells)) return element.subshells;
+      return [];
+    }
+    
+    /* 
      * Δημιουργία HTML για κάθε γραμμή στο balloon overlay.
-     * Κάθε γραμμή αντιστοιχεί σε ένα στοιχείο (προηγούμενο, τρέχον, επόμενο).
-     * Η πρώτη στήλη (atomic) εμφανίζει "Ζ=<αριθμός>" στα χρώματα του τομέα,
-     * με μόνο το τρέχον να εμφανίζεται με bold.
-     * Στη δεύτερη στήλη:
-     *  - Η πρώτη γραμμή εμφανίζει τις υποστιβάδες (subshells). Για το τρέχον στοιχείο,
-     *    εμφανίζονται με bold και σε μονοδιάστατη γραμματοσειρά.
-     *  - Η δεύτερη γραμμή εμφανίζει τις στιβάδες (shells) σε μορφή "K(2), L8, M(3)",
-     *    με μόνο το τελευταίο bold.
+     * Κάθε γραμμή έχει δύο στήλες:
+     * 1η: Ο αριθμός του στοιχείου (Ζ=...) με το χρώμα του τομέα, bold μόνο για το τρέχον.
+     * 2η: Δύο γραμμές:
+     *    - Πρώτη: Οι υποστιβάδες (subshells). Για το τρέχον στοιχείο, εμφανίζονται με bold και monospace.
+     *    - Δεύτερη: Οι στιβάδες (shells) στη μορφή "K(2), L8, M(3)" με bold μόνο την τελευταία.
      */
     function rowHTML(element, role) {
       if (!element) {
@@ -407,16 +436,14 @@
                 </tr>`;
       }
       let color = sectorColors[element.block] || "#000";
-      // Στην πρώτη στήλη: bold μόνο αν είναι το τρέχον
       let atomicHTML = (role === "current") ? `<b>Ζ=${element.number}</b>` : `Ζ=${element.number}`;
       
-      // Δεύτερη στήλη, πρώτη γραμμή: υποστιβάδες (subshells)
       let subs = getSubshells(element);
       let subsLine = subs.join(" ");
       if(role === "current"){
         subsLine = `<b style="font-family: monospace;">${subsLine}</b>`;
       }
-      // Δεύτερη στήλη, δεύτερη γραμμή: στιβάδες (shells) σε μορφή "K(2), L8, M(3)"
+      
       let shells = subs.map(s => formatSubshell(s));
       let shellsLine = "";
       if(shells.length > 0){
@@ -436,8 +463,9 @@
     
     /* 
      * Εμφάνιση του balloon overlay:
-     * Δημιουργείται ένας πίνακας (<table>) με τρεις γραμμές, κάθε μία για (προηγούμενο, τρέχον, επόμενο).
+     * Δημιουργείται ένας πίνακας (<table>) με 3 γραμμές: προηγούμενο, τρέχον, επόμενο.
      * Στη λειτουργία "Επόμενο" το τρέχον κελί (και όχι το προηγούμενο) επισημαίνεται.
+     * Με κάθε αλλαγή (μέσω κλικ ή εναλλαγής collapsed/expanded) καλείται το redraw στα p5 instances ώστε το περίγραμμα να ενημερώνεται.
      */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
@@ -465,9 +493,13 @@
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
+      // Ενημέρωση περιγραμμάτων στα canvases:
+      sectorInstances.forEach(inst => {
+        if (typeof inst.myRedraw === "function") inst.myRedraw();
+      });
     }
     
-    // Σχεδίαση στοιχείων στο p5 canvas με έντονο περίγραμμα (stroke 3) για το επιλεγμένο κελί.
+    // Σχεδίαση στοιχείων στο p5 canvas (έντονο περίγραμμα stroke 3 για το επιλεγμένο κελί)
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -597,7 +629,7 @@
               let globalY = event.clientY;
               let found = performHitTest(globalX, globalY);
               if(found !== null){
-                // Με κλικ αλλάζει το περίγραμμα στο κελί που έγινε κλικ.
+                // Με κλικ αλλάζει το περίγραμμα στο κελί που έγινε κλικ
                 showBalloonOverlay(found);
               }
             };
@@ -655,29 +687,22 @@
       }
     }
     
-    // Συναρτήσεις για υποστιβάδες και στιβάδες
+    // Συνάρτησεις για υποστιβάδες και στιβάδες
     function getSubshells(element) {
       if (!element) return [];
       if (typeof element.subshells === "string") return element.subshells.split(" ");
       if (Array.isArray(element.subshells)) return element.subshells;
       return [];
     }
+    
     function shellLetter(n) {
       let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
       return mapping[n] || n;
     }
-    function formatSubshell(subshell) {
-      let match = subshell.match(/^(\d+)[a-zA-Z]+(\d+)/);
-      if(match){
-         let principal = match[1];
-         let count = match[2];
-         return shellLetter(principal) + "(" + count + ")";
-      }
-      return subshell;
-    }
     
-    // Σύνδεση της συνάρτησης initializeSectorsCanvas στο global scope για να αποφεύγονται θέματα scope.
+    // Σύνδεση της συνάρτησης initializeSectorsCanvas στο global scope για θέματα scope
     function initializeSectorsCanvas() {
+      sectorInstances = [];
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
         let container = document.getElementById("canvas" + block.toUpperCase());
@@ -710,13 +735,19 @@
         container.style.top = minY + "px";
         container.style.width = (maxX - minX) + "px";
         container.style.height = (maxY - minY) + "px";
-        new p5(function(p) {
+        let inst = new p5(function(p) {
           p.setup = function() {
             let canvas = p.createCanvas(parseInt(container.style.width), parseInt(container.style.height));
             canvas.parent("canvas" + block.toUpperCase());
+            p.noLoop();
+            drawElements(p, block, minX, minY);
+          };
+          p.myRedraw = function() {
+            p.clear();
             drawElements(p, block, minX, minY);
           };
         });
+        sectorInstances.push(inst);
       });
     }
     window.initializeSectorsCanvas = initializeSectorsCanvas;
