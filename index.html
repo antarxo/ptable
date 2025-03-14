@@ -378,13 +378,13 @@
      *
      * getPrevElement(currentElement):
      *   - Υπολογίζει το κέντρο του τρέχοντος κελιού.
-     *   - Βρίσκει όλα τα άλλα κελιά που βρίσκονται πάνω (δηλαδή με κέντρο y μικρότερο) και έχουν οριζόντια σχεδόν την ίδια θέση (μικρή διαφορά στο x).
-     *   - Επιλέγει εκείνο με το μεγαλύτερο y (δηλαδή το πλησιέστερο πάνω).
+     *   - Βρίσκει όλα τα άλλα κελιά που βρίσκονται πάνω και έχουν ακριβώς την ίδια οριζόντια τοποθέτηση.
+     *   - Επιλέγει το κελί που βρίσκεται ακριβώς από πάνω.
      *
      * getNextElement(currentElement):
      *   - Υπολογίζει το κέντρο του τρέχοντος κελιού.
-     *   - Βρίσκει όλα τα κελιά στη ίδια γραμμή (με πολύ μικρή διαφορά στο y) που βρίσκονται δεξιά (με κέντρο x μεγαλύτερο).
-     *   - Επιλέγει εκείνο με το μικρότερο x (δηλαδή το πλησιέστερο στα δεξιά).
+     *   - Βρίσκει όλα τα κελιά στη ίδια γραμμή που βρίσκονται δεξιά.
+     *   - Επιλέγει εκείνο με το μικρότερο κέντρο x (δηλαδή το πλησιέστερο στα δεξιά).
      */
     function getPrevElement(currentElement) {
       let currPos = currentCellPositions[currentElement.number];
@@ -398,13 +398,13 @@
         let pos = currentCellPositions[e.number];
         let centerX = pos.x + pos.width / 2;
         let centerY = pos.y + pos.height / 2;
-        // Ελέγχουμε αν το κελί βρίσκεται πάνω (centerY μικρότερο) και οριζόντια σχεδόν στο ίδιο επίπεδο (π.χ. διαφορά μικρότερη από το πλάτος του κελιού)
-        if (centerY < currCenterY && Math.abs(centerX - currCenterX) < pos.width * 1.2) {
+        // Έλεγχος: το κελί πρέπει να βρίσκεται πάνω και ακριβώς στην ίδια οριζόντια γραμμή (διαφορά < 1 pixel)
+        if (centerY < currCenterY && Math.abs(centerX - currCenterX) < 1) {
           candidates.push({ e, centerY });
         }
       }
       if (candidates.length === 0) return null;
-      // Επιλέγουμε το κελί με το μεγαλύτερο centerY από αυτά (δηλαδή το πλησιέστερο πάνω)
+      // Επιλογή του στοιχείου που είναι πλησιέστερα πάνω (με το μεγαλύτερο centerY)
       candidates.sort((a, b) => b.centerY - a.centerY);
       return candidates[0].e;
     }
@@ -421,7 +421,7 @@
         let pos = currentCellPositions[e.number];
         let centerX = pos.x + pos.width / 2;
         let centerY = pos.y + pos.height / 2;
-        // Ελέγχουμε αν το κελί βρίσκεται στην ίδια γραμμή (διαφορά στο y μικρή) και δεξιά
+        // Ελέγχουμε αν το κελί βρίσκεται στην ίδια γραμμή (μικρή διαφορά στο y) και δεξιά
         if (Math.abs(centerY - currCenterY) < currPos.height * 0.5 && centerX > currCenterX) {
           candidates.push({ e, centerX });
         }
