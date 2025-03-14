@@ -79,11 +79,11 @@
       transition: opacity 0.3s ease;
       pointer-events: none;
     }
-    /* Info Panel για Expanded (ίδιος όπως πριν) */
+    /* Info Panel για Expanded */
     #infoPanelFull {
       position: fixed;
       top: 0; /* το top ορίζεται δυναμικά σύμφωνα με το button panel */
-      left: 0;
+      left: 20px; /* νέο left = 20px */
       background: #fff;
       border: 2px solid #333;
       border-radius: 8px;
@@ -92,7 +92,7 @@
       z-index: 40;
       transition: top 0.8s ease, width 0.8s ease;
     }
-    /* Info Panel για Collapsed - θα εμφανίζεται μόνο σε collapsed κατάσταση */
+    /* Info Panel για Collapsed */
     #infoPanelCollapsed {
       position: fixed;
       background: #fff;
@@ -171,14 +171,14 @@
 
     /********************** Συνάρτηση για τη δημιουργία HTML γραμμής στο balloon overlay **********************/
     function rowHTML(element, type) {
-      if (!element) return `<tr><td colspan="2" style="text-align:center;">-</td></tr>`;
-      // Εμφανίζουμε οριζόντια διαχωριστική γραμμή στις σειρές prev και current
+      if (!element) return `<tr><td colspan="2" style="text-align:center; font-size:12px;">-</td></tr>`;
+      // Εμφανίζουμε οριζόντια διαχωριστική γραμμή στις σειρές "prev" και "current"
       let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
       let color = sectorColors[element.block] || "#CCCCCC";
       return `
         <tr style="${borderStyle}">
-          <td style="color:${color}; font-weight:bold;">Ζ=${element.number}</td>
-          <td>${element.subshells || "-"}</td>
+          <td style="color:${color}; font-weight:bold; font-size:12px;">Ζ=${element.number}</td>
+          <td style="color:${color}; font-size:12px;">${element.subshells || "-"}</td>
         </tr>`;
     }
 
@@ -511,15 +511,17 @@
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
       
-      // Δημιουργούμε το περιεχόμενο όπως στον expanded πίνακα
-      let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:black;">Ζ=${currentElement.number}</span> 
+      // Δημιουργούμε το περιεχόμενο (ίδιο για Expanded και Collapsed)
+      let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:${sectorColors[currentElement.block]};">Ζ=${currentElement.number}</span> 
                       <span style="font-size:3em; font-weight:bold; color:${sectorColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
       
-      let prevStr = `<div style="color:${sectorColors[getPrevElement(currentElement)?.block] || ''};">Ζ=${getPrevElement(currentElement) ? (getPrevElement(currentElement).number + " " + getPrevElement(currentElement).subshells) : "-"}</div>`;
+      let prevElement = getPrevElement(currentElement);
+      let nextElement = getNextElement(currentElement);
+      let prevStr = `<div style="color:${prevElement ? sectorColors[prevElement.block] : '#000'};">Ζ=${prevElement ? (prevElement.number + " " + prevElement.subshells) : "-"}</div>`;
       let currentStr = `<div style="font-weight:bold; color:${sectorColors[currentElement.block]};">Ζ=${currentElement.number} ${currentElement.subshells}</div>`;
-      let nextStr = `<div style="color:${sectorColors[getNextElement(currentElement)?.block] || ''};">Ζ=${getNextElement(currentElement) ? getNextElement(currentElement).number : ""} ${getNextElement(currentElement) ? getNextElement(currentElement).subshells : "-"}</div>`;
+      let nextStr = `<div style="color:${nextElement ? sectorColors[nextElement.block] : '#000'};">Ζ=${nextElement ? nextElement.number : ""} ${nextElement ? nextElement.subshells : "-"}</div>`;
       let subshellsHTML = prevStr + currentStr + nextStr;
       
       let shellsMsgHTML = `<div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
@@ -548,11 +550,11 @@
         if (positions[currentMode] && positions[currentMode]["1"]) {
           infoPanelCollapsed.style.top = positions[currentMode]["1"].y + "px";
         }
-        // Το πλάτος του collapsed panel ορίζεται ώστε το δεξί του όριο να έχει 20px περιθώριο από το άκρο της σελίδας
+        // Το πλάτος ορίζεται ώστε το δεξί του όριο να έχει 20px περιθώριο από το άκρο της σελίδας
         let collapsedWidth = window.innerWidth - (bgRect.right + 20) - 20;
         infoPanelCollapsed.style.width = collapsedWidth + "px";
         infoPanelCollapsed.style.height = "auto";
-        // Διάταξη σε κάθετη λίστα
+        // Διάταξη σε κάθετες σειρές
         let collapsedHTML = `<div>${leftHTML}</div>
                              <div>${subshellsHTML}</div>
                              <div>${shellsMsgHTML}</div>
@@ -622,6 +624,8 @@
       let overlayY = cellPos.y + cellPos.height - 5;
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
+      // Μειώνουμε το μέγεθος της γραμματοσειράς στο balloon κατά 1 (π.χ. 12px αντί για 13px)
+      overlay.style.fontSize = "12px";
       setTimeout(() => { overlay.style.opacity = "1"; }, 10);
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
