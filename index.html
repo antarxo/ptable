@@ -586,13 +586,20 @@
         if (positions[currentMode] && positions[currentMode]["1"]) {
           infoPanelCollapsed.style.top = positions[currentMode]["1"].y + "px";
         }
-        let collapsedWidth = window.innerWidth - bgRect.width - 200;
+        let collapsedWidth = window.innerWidth - bgRect.width - 200 + 126;
         infoPanelCollapsed.style.width = collapsedWidth + "px";
         infoPanelCollapsed.style.height = "auto";
-        let collapsedHTML = `<div>${leftHTML}</div>
-                             <div id="infoSubshellsCollapsed">${subshellsHTML}</div>
-                             <div>${shellsMsgHTML}</div>
-                             <div>${remarksHTML}</div>`;
+        let collapsedHTML = `
+          <div>${leftHTML}</div>
+          <hr>
+          <div id="infoSubshellsCollapsed">${subshellsHTML}</div>
+          <hr>
+          <div><strong>Στιβάδες:</strong> ${formatShells(currentElement)}</div>
+          <hr>
+          <div style="font-style: italic;">${messageForElement(currentElement)}</div>
+          <hr>
+          <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
+        `;
         infoPanelCollapsed.innerHTML = collapsedHTML;
         adjustSubshellFontSize();
       }
@@ -839,7 +846,7 @@
          return null;
       }
       let regionLeft = region.minX, regionTop = region.minY;
-      if (x < regionLeft || x > region.maxX || y < regionTop || y > region.maxY) {
+      if (x < regionLeft || x > region.maxX || y < regionTop) {
          console.log("Κλικ εκτός περιοχής στοιχείων.");
          return null;
       }
