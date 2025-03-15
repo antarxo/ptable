@@ -186,14 +186,9 @@
       <tr>
         <td id="infoLeft" style="width:200px;"></td>
         <td id="infoRight">
-          <table style="width:100%; border-collapse:collapse;">
-            <tr>
-              <td id="infoSubshells" style="width:70%;"></td>
-            </tr>
-            <tr>
-              <td colspan="2" id="infoRemarks"></td>
-            </tr>
-          </table>
+          <!-- Εδώ θα δημιουργηθεί δυναμικά ο πίνακας των υποστιβάδων/στιβαδών -->
+          <div id="infoSubshells"></div>
+          <div id="infoRemarks"></div>
         </td>
       </tr>
     </table>
@@ -241,7 +236,7 @@
       }
     });
 
-    // Ενημερωμένη συνάρτηση rowHTMLPair που δέχεται παράμετρο showShells
+    // Παλιός κώδικας rowHTMLPair (παραμένει για χρήση στο balloon, αν χρειαστεί)
     function rowHTMLPair(element, type, showShells = true) {
       if (!element) {
         return showShells
@@ -263,13 +258,34 @@
         let secondRow = `
         <tr>
           <td></td>
-          <td style="color:${color}; font-size:12px;">${formatShells(element)}</td>
+          <td style="color:${color}; font-size:12px;">${formatShells(element, true)}</td>
         </tr>
         `;
         return firstRow + secondRow;
       } else {
         return firstRow;
       }
+    }
+
+    // Τροποποιημένη formatShells που, όταν isCurrent=true, κάνει bold την τελευταία στιβάδα
+    function formatShells(element, isCurrent = false) {
+      if (!element.shells) return "";
+      let shellCounts = element.shells.split(/,\s*/);
+      let formatted = shellCounts.map((count, index) => {
+         let letter = shellLetter((index+1).toString());
+         return letter + "(" + count + ")";
+      });
+      if (isCurrent && formatted.length > 0) {
+         let last = formatted.pop();
+         last = `<b>${last}</b>`;
+         formatted.push(last);
+      }
+      return formatted.join(", ");
+    }
+
+    function shellLetter(n) {
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      return mapping[n] || n;
     }
 
     function getShift(num, block) {
@@ -504,6 +520,51 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
+    // Νέα βοηθητική συνάρτηση που δημιουργεί τον πίνακα των υποστιβάδων/στιβαδών για τα info panels
+    function buildInfoPanelTable(currentElement) {
+      // Λαμβάνουμε το προηγούμενο, τρέχον και επόμενο στοιχείο
+      let prev = getPrevElement(currentElement);
+      let curr = currentElement;
+      let next = getNextElement(currentElement);
+      function buildRow(element) {
+         if (!element) {
+           return `<tr>
+              <td style="white-space: nowrap; text-align:left;">-</td>
+              <td style="white-space: nowrap; text-align:left;">-</td>
+           </tr>`;
+         } else {
+           let leftContent = `Ζ=${element.number} ${element.subshells || "-"}`;
+           // Για όλες τις γραμμές, η τελευταία στιβάδα θα εμφανίζεται με bold και προστίθεται μήνυμα
+           let shellsContent = formatShells(element, true);
+           shellsContent += ` <span style="margin-left:5px;">${messageForElement(element)}</span>`;
+           return `<tr>
+              <td style="white-space: nowrap; text-align:left;">${leftContent}</td>
+              <td style="white-space: nowrap; text-align:left;">${shellsContent}</td>
+           </tr>`;
+         }
+      }
+      let rows = buildRow(prev) + buildRow(curr) + buildRow(next);
+      // Στο expanded view, οι στήλες θα έχουν 65% και 35%, αλλιώς 70%-30%
+      let leftWidth = (currentMode === "expanded") ? "65%" : "70%";
+      let rightWidth = (currentMode === "expanded") ? "35%" : "30%";
+      return `<table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+         <colgroup>
+            <col style="width: ${leftWidth};">
+            <col style="width: ${rightWidth};">
+         </colgroup>
+         ${rows}
+      </table>`;
+    }
+    // Συνάρτηση για σταδιακή μείωση του μεγέθους γραμματοσειράς ώστε να μην γίνεται αναδίπλωση
+    function adjustFontSize(container, maxFontSize) {
+      let fontSize = maxFontSize;
+      container.style.fontSize = fontSize + "px";
+      // Ελέγχουμε αν το περιεχόμενο υπερβαίνει το πλάτος του container
+      while (container.scrollWidth > container.clientWidth && fontSize > 8) {
+         fontSize -= 0.5;
+         container.style.fontSize = fontSize + "px";
+      }
+    }
     function getPrevElement(currentElement) {
       let currPos = currentCellPositions[currentElement.number];
       if (!currPos) return null;
@@ -550,24 +611,6 @@
       if (Array.isArray(element.subshells)) return element.subshells;
       return [];
     }
-    function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
-      return mapping[n] || n;
-    }
-    function formatShells(element) {
-      if (!element.shells) return "";
-      let shellCounts = element.shells.split(/,\s*/);
-      let formatted = shellCounts.map((count, index) => {
-         let letter = shellLetter((index+1).toString());
-         return letter + "(" + count + ")";
-      });
-      if (formatted.length > 0) {
-         let last = formatted.pop();
-         last = `<b>${last}</b>`;
-         formatted.push(last);
-      }
-      return formatted.join(", ");
-    }
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -591,26 +634,22 @@
         return "";
       }
     }
-    
-    // Η συνάρτηση showBalloonOverlay δεν αλλάζει – χρησιμοποιεί την rowHTMLPair με το προεπιλεγμένο showShells=true
+    // Η showBalloonOverlay παραμένει ως είχε, χρησιμοποιώντας την παλαιά rowHTMLPair για το balloon
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
       currentBalloonElement = elementNumber;
       let prevElement = getPrevElement(currentElement);
       let nextElement = getNextElement(currentElement);
-
       let prevColor = prevElement ? (textColors[prevElement.block] || "#CCCCCC") : "#CCCCCC";
       let currColor = currentElement ? (textColors[currentElement.block] || "#CCCCCC") : "#CCCCCC";
       let nextColor = nextElement ? (textColors[nextElement.block] || "#CCCCCC") : "#CCCCCC";
-
       let prevSubshells = prevElement ? (prevElement.subshells || "-") : "-";
-      let prevShells = prevElement ? formatShells(prevElement) : "-";
+      let prevShells = prevElement ? formatShells(prevElement, true) : "-";
       let currSubshells = currentElement ? (currentElement.subshells || "-") : "-";
-      let currShells = currentElement ? formatShells(currentElement) : "-";
+      let currShells = currentElement ? formatShells(currentElement, true) : "-";
       let nextSubshells = nextElement ? (nextElement.subshells || "-") : "-";
-      let nextShells = nextElement ? formatShells(nextElement) : "-";
-
+      let nextShells = nextElement ? formatShells(nextElement, true) : "-";
       let tableHTML = `
       <table style="border-collapse: collapse; width:100%; font-size:12px;">
         <tr>
@@ -658,7 +697,7 @@
       updateInfo();
     }
     
-    // Απλοποιημένες συναρτήσεις αλλαγής κατάστασης των info panels
+    // Οι συναρτήσεις για αλλαγή κατάστασης των info panels παραμένουν όπως ήταν
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -698,7 +737,7 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
-    // Ενημερωμένη updateInfo: για τους πίνακες πληροφοριών καλούμε rowHTMLPair με showShells=false ώστε να μην εμφανίζονται οι στιβάδες.
+    // Νέα updateInfo: δημιουργεί το info panel με δύο στήλες για τα στοιχεία των υποστιβάδων/στιβαδών.
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -706,9 +745,8 @@
                       <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
-      let prevElement = getPrevElement(currentElement);
-      let nextElement = getNextElement(currentElement);
-      let subshellsHTML = rowHTMLPair(prevElement, "prev", false) + rowHTMLPair(currentElement, "current", false) + rowHTMLPair(nextElement, "next", false);
+      // Αντί για το παλιό rowHTMLPair, δημιουργούμε τον πίνακα με τις δύο στήλες:
+      let subshellsHTML = buildInfoPanelTable(currentElement);
       let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
@@ -717,6 +755,8 @@
       infoPanelFull.style.width = (window.innerWidth - 207) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
+      // Εφαρμόζουμε τη μείωση του font-size στο infoSubshells ώστε να μην γίνει αναδίπλωση
+      adjustFontSize(document.getElementById("infoSubshells"), 12);
       if (currentMode === "collapsed") {
         let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
         let bgRect = document.getElementById("canvasTableBackground").getBoundingClientRect();
@@ -730,11 +770,12 @@
         let collapsedHTML = `
           <div>${leftHTML}</div>
           <hr>
-          ${rowHTMLPair(currentElement, "current", false)}
+          ${buildInfoPanelTable(currentElement)}
           <hr>
           <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
         `;
         infoPanelCollapsed.innerHTML = collapsedHTML;
+        adjustFontSize(document.getElementById("infoPanelCollapsed"), 12);
       }
     }
     function drawElements(p, block, containerLeft, containerTop) {
