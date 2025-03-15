@@ -606,16 +606,20 @@
         return "";
       }
     }
-    /* ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με τη νέα λογική τοποθέτησης και κατασκευή περιεχομένου */
+    /* ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay, ενσωματωμένη στον κώδικα */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
+      currentBalloonElement = elementNumber;
       
       let prev = getPrevElement(currentElement);
+      let curr = currentElement;
       let next = getNextElement(currentElement);
+      
       let prevColor = prev ? (textColors[prev.block] || "#CCCCCC") : "#CCCCCC";
       let currColor = currentElement ? (textColors[currentElement.block] || "#CCCCCC") : "#CCCCCC";
       let nextColor = next ? (textColors[next.block] || "#CCCCCC") : "#CCCCCC";
+      
       let prevSubshells = prev ? (prev.subshells || "-") : "-";
       let prevShells = prev ? formatShells(prev, true) : "-";
       let currSubshells = currentElement ? (currentElement.subshells || "-") : "-";
@@ -660,25 +664,36 @@
       let anchorX = cellPos.x + cellPos.width - 8;
       let anchorY = cellPos.y + cellPos.height - 8;
       
-      overlay.style.left = anchorX + "px";
-      overlay.style.top = anchorY + "px";
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
+      overlay.style.left = anchorX + "px";
+      overlay.style.top = anchorY + "px";
       
       setTimeout(() => {
-        let overlayRect = overlay.getBoundingClientRect();
-        
-        if ((cellPos.x + cellPos.width) > window.innerWidth / 2) {
-          anchorX = anchorX - (overlayRect.width + 16);
-        }
-        
-        if ((cellPos.y + cellPos.height) > window.innerHeight / 2) {
-          anchorY = anchorY - (overlayRect.height + 16);
-        }
-        
-        overlay.style.left = anchorX + "px";
-        overlay.style.top = anchorY + "px";
         overlay.style.opacity = "0.96";
+        let overlayRect = overlay.getBoundingClientRect();
+        let finalX = anchorX;
+        let finalY = anchorY;
+        
+        if (cellPos.x + cellPos.width > window.innerWidth / 2) {
+          finalX = anchorX - (overlayRect.width + 16);
+        }
+        
+        if (currentMode === "expanded") {
+          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
+          if (overlayRect.top < infoPanelRect.bottom) {
+            finalY = anchorY - (overlayRect.height + 16);
+          }
+        }
+        
+        overlay.style.left = finalX + "px";
+        overlay.style.top = finalY + "px";
+        overlay.style.fontSize = "13px";
+        
+        sectorInstances.forEach(inst => {
+          if (typeof inst.myRedraw === "function") inst.myRedraw();
+        });
+        updateInfo();
       }, 10);
     }
     function switchToCollapsed() {
@@ -800,8 +815,9 @@
           if (currentMode === "start") {
             if (block === "p" && num >= 21 && num <= 30)
               relativeY += getShift(num, block);
-            else if ((block === "p" || block === "d") && num >= 57 && num <= 70)
-              relativeY += getShift(num, block);
+            else if (block === "p" || block === "d")
+              if(num >= 57 && num <= 70)
+                relativeY += getShift(num, block);
           }
           if (currentBalloonElement == e.number) {
               p.strokeWeight(3);
