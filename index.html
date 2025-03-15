@@ -200,7 +200,6 @@
 
   <script>
     /****************** Global Variables & Configuration ******************/
-    // Αρχική τιμή: currentZ = 3 για εμφάνιση μόνο του στοιχείου 3.
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
     let textColors = { s: "#8B0000", p: "#006400", d: "#00008B", f: "#FF8C00" };
     let elements = [];
@@ -224,7 +223,6 @@
       }
     });
 
-    // rowHTMLPair (μόνο για το balloon, αφήνεται ως έχει)
     function rowHTMLPair(element, type, showShells = true) {
       if (!element) {
         return showShells
@@ -255,7 +253,6 @@
       }
     }
 
-    // formatShells: εμφανίζει τα στοιχεία οριζόντια με σταθερό πλάτος 40px και προσθέτει margin-right 6px.
     function formatShells(element, isCurrent = false) {
       if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
@@ -271,7 +268,6 @@
       return formatted.join("");
     }
 
-    // shellLetter: συμπεριλαμβάνει το "7" ως "Q"
     function shellLetter(n) {
       let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P", "7": "Q" };
       return mapping[n] || n;
@@ -509,8 +505,6 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-    // buildInfoPanelTable για τον expanded πίνακα: 4 στήλες (Ζ, υποστιβάδες, στοιβάδες, μήνυμα)
-    // Οι υποστιβάδες, οι στοιβάδες και τα μηνύματα στοιχίζονται αριστερά με font-size 14px.
     function buildInfoPanelTable(currentElement) {
       let prev = getPrevElement(currentElement);
       let curr = currentElement;
@@ -518,10 +512,10 @@
       function buildRow(element) {
          if (!element) {
            return `<tr>
-                    <td style="white-space: nowrap; text-align:left; font-size:16px;">-</td>
-                    <td style="white-space: nowrap; text-align:left; font-size:14px;">-</td>
-                    <td style="white-space: nowrap; text-align:left; font-size:14px;">-</td>
-                    <td style="white-space: nowrap; text-align:left; font-size:14px;">-</td>
+                    <td colspan="2" style="text-align:center; font-size:16px;">-</td>
+                   </tr>
+                   <tr>
+                    <td colspan="2" style="text-align:center; font-size:16px;">-</td>
                    </tr>`;
          } else {
            let color = textColors[element.block] || "#CCCCCC";
@@ -537,10 +531,10 @@
                    </tr>`;
          }
       }
-      let rows = buildRow(prev) + buildRow(curr) + buildRow(next);
-      return `<table style="width:100%; border-collapse:collapse;">${rows}</table>`;
+      let gapRow = `<tr style="height:4px;"><td colspan="4"></td></tr>`;
+      let rows = buildRow(prev) + gapRow + buildRow(curr) + gapRow + buildRow(next);
+      return `<table style="width:100%; border-collapse:collapse; line-height:1;">${rows}</table>`;
     }
-    // adjustFontSize: default μέγεθος 16px, μείωση κατά 1px βήμα.
     function adjustFontSize(container, maxFontSize) {
       let fontSize = maxFontSize;
       container.style.fontSize = fontSize + "px";
@@ -595,7 +589,6 @@
       if (Array.isArray(element.subshells)) return element.subshells;
       return [];
     }
-    // messageForElement: η λέξη "πάρετε" αντικαθίσταται με "πάρει"
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -619,7 +612,6 @@
         return "";
       }
     }
-    // showBalloonOverlay: ορίζει το font-size στο 13px, και αν το balloon σε expanded mode επικαλύπτει τον info panel, μετατοπίζεται ψηλότερα κατά το ύψος του balloon + 22 pixels.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -636,8 +628,10 @@
       let currShells = currentElement ? formatShells(currentElement, true) : "-";
       let nextSubshells = next ? (next.subshells || "-") : "-";
       let nextShells = next ? formatShells(next, true) : "-";
+      
+      // Πίνακας του balloon με μειωμένο line-height και gap 4px μεταξύ των στιβάδων
       let tableHTML = `
-      <table style="border-collapse: collapse; width:100%; font-size:13px;">
+      <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
         <tr>
           <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prev ? prev.number : "-"}</td>
           <td style="color:${prevColor}; text-align:left;">${prevSubshells}</td>
@@ -645,6 +639,7 @@
         <tr>
           <td style="color:${prevColor}; border-bottom:1px solid #ccc; text-align:left;">${prevShells}</td>
         </tr>
+        <tr style="height:4px;"><td colspan="2"></td></tr>
         <tr>
           <td rowspan="2" style="color:${currColor}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
           <td style="color:${currColor}; text-align:left;">${currSubshells}</td>
@@ -652,6 +647,7 @@
         <tr>
           <td style="color:${currColor}; border-bottom:1px solid #ccc; text-align:left;">${currShells}</td>
         </tr>
+        <tr style="height:4px;"><td colspan="2"></td></tr>
         <tr>
           <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${next ? next.number : "-"}</td>
           <td style="color:${nextColor}; text-align:left;">${nextSubshells}</td>
@@ -661,6 +657,7 @@
         </tr>
       </table>
       `;
+      
       let overlay = document.getElementById("balloonOverlay");
       overlay.innerHTML = tableHTML;
       let cellPos = currentCellPositions[elementNumber];
@@ -674,11 +671,11 @@
       let screenHalf = window.innerWidth / 2;
       let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
       let overlayY = cellPos.y + cellPos.height - 5;
-      // Έλεγχος για overlap με τον expanded info panel: μετατόπιση ψηλότερα κατά (overlay height + 22)
-      if(currentMode === "expanded") {
+      // Αν το balloon σε expanded mode επικαλύπτει τον info panel, μετατοπίζεται προς τα κάτω κατά (ύψος balloon + 22px)
+      if (currentMode === "expanded") {
          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
-         if(overlayRect.top < infoPanelRect.bottom) {
-           overlayY = infoPanelRect.top - overlayRect.height - 22;
+         if (overlayRect.top < infoPanelRect.bottom) {
+           overlayY = overlayY + overlayRect.height + 22;
          }
       }
       overlay.style.left = overlayX + "px";
@@ -689,8 +686,6 @@
       });
       updateInfo();
     }
-
-    // switchToCollapsed και switchToExpanded παραμένουν ως έχουν.
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -730,17 +725,13 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
-    // updateInfo: για τον expanded πίνακα χρησιμοποιούμε buildInfoPanelTable (4 στήλες)
-    // και για τον collapsed χρησιμοποιούμε το ίδιο leftHTML για βασική πληροφορία.
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
-      // Χρησιμοποιούμε την ίδια leftHTML και για collapsed ώστε το σύμβολο να έχει ίδια μορφοποίηση.
       let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:${textColors[currentElement.block]};">Ζ=${currentElement.number}</span> 
                       <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
                       <span style="font-style: italic; color:${textColors[currentElement.block]};">${currentElement.name || ""}</span>`;
-      // Expanded view: 4-στήλινος πίνακας
       let subshellsHTML = buildInfoPanelTable(currentElement);
       let remarksHTML = `<div style="text-align:center; font-style:italic; margin-top:10px; font-size:14px;">${currentElement.remarks || ""}</div>`;
       let infoPanelFull = document.getElementById("infoPanelFull");
@@ -763,8 +754,6 @@
         infoPanelCollapsed.style.width = collapsedWidth + "px";
         infoPanelCollapsed.style.height = "auto";
         
-        // Collapsed view:
-        // Χρησιμοποιούμε την ίδια βασική πληροφορία (leftHTML) για το σύμβολο και τα στοιχεία.
         let basicInfo = leftHTML;
         let prev = getPrevElement(currentElement);
         let curr = currentElement;
