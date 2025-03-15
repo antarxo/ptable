@@ -6,14 +6,13 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Στυλ για τον τίτλο με στρογγυλές γωνίες και σκιά κάτω & δεξιά */
+    /* Στυλ για τον τίτλο με στρογγυλές γωνίες και σκιά */
     #pageTitleOverlay {
       position: fixed;
       top: 5px;
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      /* Σκιά με μετατόπιση 4px δεξιά και 4px κάτω, με διαθλαστικότητα 8px */
       box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
       padding: 5px 10px;
       z-index: 999;
@@ -25,7 +24,6 @@
     }
     #pageTitleOverlay h1,
     #pageTitleOverlay h2 {
-      display: inline-block;
       margin: 0;
       white-space: nowrap;
     }
@@ -228,27 +226,21 @@
     function rowHTMLPair(element, type, showShells = true) {
       if (!element) {
         return showShells
-          ? `
-          <tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>
-          <tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>
-        `
+          ? `<tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>
+             <tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>`
           : `<tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>`;
       }
       let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
       let color = textColors[element.block] || "#CCCCCC";
-      let firstRow = `
-        <tr style="${borderStyle}">
-          <td style="color:${color}; font-weight:bold; font-size:16px;">Ζ=${element.number}</td>
-          <td style="color:${color}; font-size:16px;">${element.subshells || "-"}</td>
-        </tr>
-      `;
+      let firstRow = `<tr style="${borderStyle}">
+                        <td style="color:${color}; font-weight:bold; font-size:16px;">Ζ=${element.number}</td>
+                        <td style="color:${color}; font-size:16px;">${element.subshells || "-"}</td>
+                      </tr>`;
       if (showShells) {
-        let secondRow = `
-        <tr>
-          <td></td>
-          <td style="color:${color}; font-size:16px;">${formatShells(element, true)}</td>
-        </tr>
-        `;
+        let secondRow = `<tr>
+                           <td></td>
+                           <td style="color:${color}; font-size:16px;">${formatShells(element, true)}</td>
+                         </tr>`;
         return firstRow + secondRow;
       } else {
         return firstRow;
