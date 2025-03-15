@@ -200,13 +200,14 @@
 
   <script>
     /****************** Global Variables & Configuration ******************/
+    // Αρχική τιμή: currentZ = 3 για εμφάνιση μόνο του στοιχείου 3 στην αρχή.
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
     let textColors = { s: "#8B0000", p: "#006400", d: "#00008B", f: "#FF8C00" };
     let elements = [];
     let positions = {};
     let isCollapsed = false;
     let currentMode = "start";
-    let currentZ = 40;
+    let currentZ = 3;
     let extraElements = {};
     let showPeriods = false;
     let cellSize = 40;
@@ -223,7 +224,7 @@
       }
     });
 
-    // rowHTMLPair (χρησιμοποιείται μόνο στο balloon, αφήνεται ως έχει)
+    // rowHTMLPair (μόνο για το balloon, αφήνεται ως έχει)
     function rowHTMLPair(element, type, showShells = true) {
       if (!element) {
         return showShells
@@ -254,13 +255,13 @@
       }
     }
 
-    // formatShells: εμφανίζει τα στοιχεία οριζόντια με σταθερό πλάτος 40px και προσθέτει margin-right για ίσα διαστήματα.
+    // formatShells: εμφανίζει τα στοιχεία οριζόντια με σταθερό πλάτος 40px και margin-right για ίσα διαστήματα.
     function formatShells(element, isCurrent = false) {
       if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
       let formatted = shellCounts.map((count, index) => {
          let letter = shellLetter((index+1).toString());
-         return `<span style="display:inline-block; width:40px; text-align:center; margin-right:5px;">${letter}(${count})</span>`;
+         return `<span style="display:inline-block; width:40px; text-align:left; margin-right:5px;">${letter}(${count})</span>`;
       });
       if (isCurrent && formatted.length > 0) {
          let last = formatted.pop();
@@ -509,7 +510,7 @@
       });
     }
     // buildInfoPanelTable για τον expanded πίνακα: 4 στήλες (Ζ, υποστιβάδες, στοιβάδες, μήνυμα)
-    // Εδώ οι υποστιβάδες, οι στοιβάδες και τα μηνύματα στοιχίζονται αριστερά και με font-size 14px.
+    // Οι υποστιβάδες, οι στοιβάδες και τα μηνύματα στοιχίζονται αριστερά και το font-size τους είναι 14px.
     function buildInfoPanelTable(currentElement) {
       let prev = getPrevElement(currentElement);
       let curr = currentElement;
@@ -594,7 +595,7 @@
       if (Array.isArray(element.subshells)) return element.subshells;
       return [];
     }
-    // messageForElement: η λέξη "πάρετε" έχει αντικατασταθεί με "πάρει"
+    // messageForElement: η λέξη "πάρετε" αντικαθίσταται με "πάρει"
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -618,7 +619,7 @@
         return "";
       }
     }
-    // showBalloonOverlay: ορίζει το font-size στο 13px
+    // showBalloonOverlay: ορίζει το font-size στο 13px και αν το balloon επικαλύπτει τον expanded πίνακα μετατοπίζεται ψηλότερα.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -673,6 +674,11 @@
       let screenHalf = window.innerWidth / 2;
       let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
       let overlayY = cellPos.y + cellPos.height - 5;
+      // Έλεγχος για επικάλυψη με τον expanded πίνακα: μετατόπιση ψηλότερα κατά (overlay height + 22)
+      let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
+      if(currentMode === "expanded" && (overlayY + overlayRect.height) > infoPanelRect.top) {
+         overlayY = infoPanelRect.top - overlayRect.height - 22;
+      }
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       overlay.style.fontSize = "13px";
