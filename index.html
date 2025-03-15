@@ -108,7 +108,7 @@
       opacity: 0;
       transition: opacity 0.3s ease;
       pointer-events: none;
-      font-size: 12px;
+      font-size: 13px;
     }
     /* Info Panels */
     #infoPanelFull {
@@ -223,7 +223,7 @@
       }
     });
 
-    // rowHTMLPair (χρησιμοποιείται μόνο για το balloon, αφήνεται ως έχει)
+    // rowHTMLPair (χρησιμοποιείται μόνο στο balloon, αφήνεται ως έχει)
     function rowHTMLPair(element, type, showShells = true) {
       if (!element) {
         return showShells
@@ -508,7 +508,8 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-    // Νέα buildInfoPanelTable για τον expanded πίνακα με 4 στήλες: Ζ, υποστιβάδες, στοιβάδες, μήνυμα.
+    // buildInfoPanelTable για τον expanded πίνακα: 4 στήλες (Ζ, υποστιβάδες, στοιβάδες, μήνυμα).
+    // Αφαιρέθηκε το table-layout:fixed ώστε να μην προκαλείται περίσσεια κενών.
     function buildInfoPanelTable(currentElement) {
       let prev = getPrevElement(currentElement);
       let curr = currentElement;
@@ -536,9 +537,9 @@
          }
       }
       let rows = buildRow(prev) + buildRow(curr) + buildRow(next);
-      return `<table style="width:100%; border-collapse:collapse; table-layout:fixed;">${rows}</table>`;
+      return `<table style="width:100%; border-collapse:collapse;">${rows}</table>`;
     }
-    // adjustFontSize: default μέγεθος 16px, μείωση κατά 1px βήμα
+    // adjustFontSize: default μέγεθος 16px, μείωση κατά 1px βήμα.
     function adjustFontSize(container, maxFontSize) {
       let fontSize = maxFontSize;
       container.style.fontSize = fontSize + "px";
@@ -616,26 +617,27 @@
         return "";
       }
     }
-    // showBalloonOverlay παραμένει παρόμοια, με font-size στο 16px
+    // showBalloonOverlay: ορίζουμε το font-size στο 13px.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
       currentBalloonElement = elementNumber;
-      let prevElement = getPrevElement(currentElement);
-      let nextElement = getNextElement(currentElement);
-      let prevColor = prevElement ? (textColors[prevElement.block] || "#CCCCCC") : "#CCCCCC";
+      let prev = getPrevElement(currentElement);
+      let curr = currentElement;
+      let next = getNextElement(currentElement);
+      let prevColor = prev ? (textColors[prev.block] || "#CCCCCC") : "#CCCCCC";
       let currColor = currentElement ? (textColors[currentElement.block] || "#CCCCCC") : "#CCCCCC";
-      let nextColor = nextElement ? (textColors[nextElement.block] || "#CCCCCC") : "#CCCCCC";
-      let prevSubshells = prevElement ? (prevElement.subshells || "-") : "-";
-      let prevShells = prevElement ? formatShells(prevElement, true) : "-";
+      let nextColor = next ? (textColors[next.block] || "#CCCCCC") : "#CCCCCC";
+      let prevSubshells = prev ? (prev.subshells || "-") : "-";
+      let prevShells = prev ? formatShells(prev, true) : "-";
       let currSubshells = currentElement ? (currentElement.subshells || "-") : "-";
       let currShells = currentElement ? formatShells(currentElement, true) : "-";
-      let nextSubshells = nextElement ? (nextElement.subshells || "-") : "-";
-      let nextShells = nextElement ? formatShells(nextElement, true) : "-";
+      let nextSubshells = next ? (next.subshells || "-") : "-";
+      let nextShells = next ? formatShells(next, true) : "-";
       let tableHTML = `
-      <table style="border-collapse: collapse; width:100%; font-size:16px;">
+      <table style="border-collapse: collapse; width:100%; font-size:13px;">
         <tr>
-          <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prevElement ? prevElement.number : "-"}</td>
+          <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prev ? prev.number : "-"}</td>
           <td style="color:${prevColor};">${prevSubshells}</td>
         </tr>
         <tr>
@@ -649,7 +651,7 @@
           <td style="color:${currColor}; border-bottom:1px solid #ccc;">${currShells}</td>
         </tr>
         <tr>
-          <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${nextElement ? nextElement.number : "-"}</td>
+          <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${next ? next.number : "-"}</td>
           <td style="color:${nextColor};">${nextSubshells}</td>
         </tr>
         <tr>
@@ -672,15 +674,14 @@
       let overlayY = cellPos.y + cellPos.height - 5;
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
-      overlay.style.fontSize = "16px";
+      overlay.style.fontSize = "13px";
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
       updateInfo();
     }
 
-    // Αλλαγές για τα Info Panels: 
-    // switchToCollapsed και switchToExpanded παραμένουν ως προηγούμενα.
+    // switchToCollapsed και switchToExpanded παραμένουν όπως προηγουμένως.
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -739,6 +740,7 @@
       infoPanelFull.style.width = (window.innerWidth - 207) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
+      // Εφαρμόζουμε δυναμική προσαρμογή στο περιεχόμενο (εκτός remarks και του συμβόλου)
       adjustFontSize(document.getElementById("infoSubshells"), 16);
       
       if (currentMode === "collapsed") {
@@ -752,20 +754,24 @@
         infoPanelCollapsed.style.width = collapsedWidth + "px";
         infoPanelCollapsed.style.height = "auto";
         
-        // Collapsed view:
+        // Για collapsed view:
         // 1. Βασική πληροφορία
         let basicInfo = `<div style="text-align:center; font-size:16px; color:${textColors[currentElement.block]};">
                            Ζ=${currentElement.number} ${currentElement.symbol || ""} ${currentElement.name || ""}
                          </div>`;
-        // 2. Υποστιβάδες: κάθε στοιχείο (προηγούμενο, τρέχον, επόμενο) σε ξεχωριστή γραμμή, χωρίς τίτλους.
+        // Ορισμός μεταβλητών για υποστιβάδες, στοιβάδες και μηνύματα
+        let prev = getPrevElement(currentElement);
+        let curr = currentElement;
+        let next = getNextElement(currentElement);
+        // 2. Υποστιβάδες: κάθε στοιχείο σε ξεχωριστή γραμμή, χωρίς τίτλους.
         let prevSubshell = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">${prev.subshells || "-"}</div>` : `<div style="text-align:center;">-</div>`;
         let currSubshell = `<div style="text-align:center; color:${textColors[curr.block]};">${curr.subshells || "-"}</div>`;
         let nextSubshell = next ? `<div style="text-align:center; color:${textColors[next.block]};">${next.subshells || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        // 3. Στιβάδες: χρησιμοποιούμε το formatShells για κάθε στοιχείο
+        // 3. Στιβάδες: χρησιμοποιούμε formatShells για κάθε στοιχείο.
         let prevStacks = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">${formatShells(prev, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
         let currStacks = `<div style="text-align:center; color:${textColors[curr.block]};">${formatShells(curr, true) || "-"}</div>`;
         let nextStacks = next ? `<div style="text-align:center; color:${textColors[next.block]};">${formatShells(next, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        // 4. Μηνύματα: κάθε στοιχείο σε ξεχωριστή γραμμή
+        // 4. Μηνύματα: κάθε στοιχείο σε ξεχωριστή γραμμή.
         let prevMsg = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">${messageForElement(prev) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
         let currMsg = `<div style="text-align:center; color:${textColors[curr.block]};">${messageForElement(curr) || "-"}</div>`;
         let nextMsg = next ? `<div style="text-align:center; color:${textColors[next.block]};">${messageForElement(next) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
