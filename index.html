@@ -606,99 +606,45 @@
         return "";
       }
     }
-    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με τοποθέτηση στην κάτω δεξιά γωνία του κελιού
-    // όπου το πάνω αριστερό σημείο του overlay βρίσκεται 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
-    // Σε περίπτωση επικαλύψεων (π.χ. σε expanded mode) γίνονται προσαρμογές με επικαλύψεις των 8×8px.
+    /* ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με τη νέα λογική τοποθέτησης */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
-      currentBalloonElement = elementNumber;
-      let prev = getPrevElement(currentElement);
-      let curr = currentElement;
-      let next = getNextElement(currentElement);
-      let prevColor = prev ? (textColors[prev.block] || "#CCCCCC") : "#CCCCCC";
-      let currColor = currentElement ? (textColors[currentElement.block] || "#CCCCCC") : "#CCCCCC";
-      let nextColor = next ? (textColors[next.block] || "#CCCCCC") : "#CCCCCC";
-      let prevSubshells = prev ? (prev.subshells || "-") : "-";
-      let prevShells = prev ? formatShells(prev, true) : "-";
-      let currSubshells = currentElement ? (currentElement.subshells || "-") : "-";
-      let currShells = currentElement ? formatShells(currentElement, true) : "-";
-      let nextSubshells = next ? (next.subshells || "-") : "-";
-      let nextShells = next ? formatShells(next, true) : "-";
-      
-      // Δημιουργία πίνακα περιεχομένου του overlay
-      let tableHTML = `
-      <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
-        <tr>
-          <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prev ? prev.number : "-"}</td>
-          <td style="color:${prevColor}; text-align:left;">${prevSubshells}</td>
-        </tr>
-        <tr>
-          <td style="color:${prevColor}; border-bottom:1px solid #ccc; text-align:left;">${prevShells}</td>
-        </tr>
-        <tr style="height:4px;"><td colspan="2"></td></tr>
-        <tr>
-          <td rowspan="2" style="color:${currColor}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
-          <td style="color:${currColor}; text-align:left;">${currSubshells}</td>
-        </tr>
-        <tr>
-          <td style="color:${currColor}; border-bottom:1px solid #ccc; text-align:left;">${currShells}</td>
-        </tr>
-        <tr style="height:4px;"><td colspan="2"></td></tr>
-        <tr>
-          <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${next ? next.number : "-"}</td>
-          <td style="color:${nextColor}; text-align:left;">${nextSubshells}</td>
-        </tr>
-        <tr>
-          <td style="color:${nextColor}; text-align:left;">${nextShells}</td>
-        </tr>
-      </table>
-      `;
-      
-      let overlay = document.getElementById("balloonOverlay");
-      overlay.innerHTML = tableHTML;
       
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Αρχική τοποθέτηση: το overlay τοποθετείται έτσι ώστε το πάνω αριστερό σημείο του να βρίσκεται
-      // 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
+      // Υπολογισμός της κάτω δεξιάς γωνίας του κελιού και εφαρμογή offset (8px σε top και left)
       let anchorX = cellPos.x + cellPos.width - 8;
       let anchorY = cellPos.y + cellPos.height - 8;
       
-      overlay.style.visibility = "visible";
-      overlay.style.opacity = "0";
+      let overlay = document.getElementById("balloonOverlay");
       overlay.style.left = anchorX + "px";
       overlay.style.top = anchorY + "px";
+      overlay.style.visibility = "visible";
+      overlay.style.opacity = "0";
       
-      // Μετά από 10ms, προσαρμόζουμε τη θέση για αποφυγή επικαλύψεων με τα κρίσιμα στοιχεία
+      // Αρχική τοποθέτηση: το overlay τοποθετείται "κολλημένο" στο συγκεκριμένο σημείο
       setTimeout(() => {
-        overlay.style.opacity = "0.96";
         let overlayRect = overlay.getBoundingClientRect();
-        let finalX = anchorX;
-        let finalY = anchorY;
         
-        // Εάν το overlay εκτείνεται πέρα από το μισό πλάτος της οθόνης, μετατόπιση προς τα αριστερά
-        if (cellPos.x + cellPos.width > window.innerWidth / 2) {
-          finalX = anchorX - (overlayRect.width + 16);
+        // Έλεγχος για οριζόντια μετατόπιση:
+        // Αν η δεξιά κάτω γωνία του κελιού (cellPos.x + cellPos.width) εκτείνεται πέρα από το μισό πλάτος της οθόνης,
+        // μετατοπίζουμε το overlay προς τα αριστερά (αφαιρούμε το πλάτος του overlay + επιπλέον offset 16px)
+        if ((cellPos.x + cellPos.width) > window.innerWidth / 2) {
+          anchorX = anchorX - (overlayRect.width + 16);
         }
         
-        // Σε expanded mode: εάν το overlay επικαλύπτει το info panel, μετατόπιση προς τα πάνω
-        if (currentMode === "expanded") {
-          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
-          if (overlayRect.top < infoPanelRect.bottom) {
-            finalY = anchorY - (overlayRect.height + 16);
-          }
+        // Έλεγχος για κατακόρυφη μετατόπιση:
+        // Αν η δεξιά κάτω γωνία του κελιού (cellPos.y + cellPos.height) εκτείνεται κάτω από το μισό ύψος της οθόνης,
+        // μετατοπίζουμε το overlay προς τα πάνω (αφαιρούμε το ύψος του overlay + επιπλέον offset 16px)
+        if ((cellPos.y + cellPos.height) > window.innerHeight / 2) {
+          anchorY = anchorY - (overlayRect.height + 16);
         }
         
-        overlay.style.left = finalX + "px";
-        overlay.style.top = finalY + "px";
-        overlay.style.fontSize = "13px";
-        
-        sectorInstances.forEach(inst => {
-          if (typeof inst.myRedraw === "function") inst.myRedraw();
-        });
-        updateInfo();
+        overlay.style.left = anchorX + "px";
+        overlay.style.top = anchorY + "px";
+        overlay.style.opacity = "0.96";
       }, 10);
     }
     function switchToCollapsed() {
