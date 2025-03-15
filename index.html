@@ -219,7 +219,7 @@
     let positions = {};
     let isCollapsed = false;
     let currentMode = "start"; 
-    let currentZ = 3;
+    let currentZ = 40;
     let extraElements = {};  
     let showPeriods = false;
     let cellSize = 40;
@@ -267,24 +267,25 @@
       }
     }
 
-    // Τροποποιημένη formatShells που, όταν isCurrent=true, κάνει bold την τελευταία στιβάδα
+    // Τροποποιημένη formatShells που τοποθετεί κάθε στοιχείο μέσα σε span με σταθερό πλάτος
     function formatShells(element, isCurrent = false) {
       if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
       let formatted = shellCounts.map((count, index) => {
          let letter = shellLetter((index+1).toString());
-         return letter + "(" + count + ")";
+         return `<span style="display:inline-block; width:40px; text-align:center;">${letter}(${count})</span>`;
       });
       if (isCurrent && formatted.length > 0) {
          let last = formatted.pop();
          last = `<b>${last}</b>`;
          formatted.push(last);
       }
-      return formatted.join(", ");
+      return formatted.join("");
     }
 
+    // Τροποποιημένη shellLetter ώστε να συμπεριλαμβάνει το "7" ως "Q"
     function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P" };
+      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P", "7": "Q" };
       return mapping[n] || n;
     }
 
@@ -522,46 +523,46 @@
     }
     // Νέα βοηθητική συνάρτηση που δημιουργεί τον πίνακα των υποστιβάδων/στιβαδών για τα info panels
     function buildInfoPanelTable(currentElement) {
-      // Λαμβάνουμε το προηγούμενο, τρέχον και επόμενο στοιχείο
       let prev = getPrevElement(currentElement);
       let curr = currentElement;
       let next = getNextElement(currentElement);
       function buildRow(element) {
          if (!element) {
            return `<tr>
-              <td style="white-space: nowrap; text-align:left;">-</td>
-              <td style="white-space: nowrap; text-align:left;">-</td>
-           </tr>`;
+                      <td style="white-space: nowrap; text-align:left;">-</td>
+                      <td style="white-space: nowrap; text-align:center;">-</td>
+                      <td style="white-space: nowrap; text-align:left;">-</td>
+                   </tr>`;
          } else {
-           let leftContent = `Ζ=${element.number} ${element.subshells || "-"}`;
-           // Για όλες τις γραμμές, η τελευταία στιβάδα θα εμφανίζεται με bold και προστίθεται μήνυμα
+           let numberContent = `Ζ=${element.number}`;
            let shellsContent = formatShells(element, true);
-           shellsContent += ` <span style="margin-left:5px;">${messageForElement(element)}</span>`;
+           let message = messageForElement(element);
            return `<tr>
-              <td style="white-space: nowrap; text-align:left;">${leftContent}</td>
-              <td style="white-space: nowrap; text-align:left;">${shellsContent}</td>
-           </tr>`;
+                      <td style="white-space: nowrap; text-align:left;">${numberContent}</td>
+                      <td style="white-space: nowrap; text-align:center;">${shellsContent}</td>
+                      <td style="white-space: nowrap; text-align:left;">${message}</td>
+                   </tr>`;
          }
       }
       let rows = buildRow(prev) + buildRow(curr) + buildRow(next);
-      // Στο expanded view, οι στήλες θα έχουν 65% και 35%, αλλιώς 70%-30%
-      let leftWidth = (currentMode === "expanded") ? "65%" : "70%";
-      let rightWidth = (currentMode === "expanded") ? "35%" : "30%";
+      let col1 = (currentMode === "expanded") ? "40%" : "45%";
+      let col2 = (currentMode === "expanded") ? "40%" : "35%";
+      let col3 = (currentMode === "expanded") ? "20%" : "20%";
       return `<table style="width:100%; border-collapse:collapse; table-layout:fixed;">
          <colgroup>
-            <col style="width: ${leftWidth};">
-            <col style="width: ${rightWidth};">
+           <col style="width: ${col1};">
+           <col style="width: ${col2};">
+           <col style="width: ${col3};">
          </colgroup>
          ${rows}
       </table>`;
     }
-    // Συνάρτηση για σταδιακή μείωση του μεγέθους γραμματοσειράς ώστε να μην γίνεται αναδίπλωση
+    // Συνάρτηση για σταδιακή μείωση του μεγέθους γραμματοσειράς ώστε να μην γίνεται αναδίπλωση (μείωση κατά 1px το βήμα)
     function adjustFontSize(container, maxFontSize) {
       let fontSize = maxFontSize;
       container.style.fontSize = fontSize + "px";
-      // Ελέγχουμε αν το περιεχόμενο υπερβαίνει το πλάτος του container
       while (container.scrollWidth > container.clientWidth && fontSize > 8) {
-         fontSize -= 0.5;
+         fontSize -= 1;
          container.style.fontSize = fontSize + "px";
       }
     }
@@ -634,7 +635,7 @@
         return "";
       }
     }
-    // Η showBalloonOverlay παραμένει ως είχε, χρησιμοποιώντας την παλαιά rowHTMLPair για το balloon
+    // Η showBalloonOverlay παραμένει όπως ήταν, χρησιμοποιώντας την παλαιά rowHTMLPair για το balloon
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -697,7 +698,7 @@
       updateInfo();
     }
     
-    // Οι συναρτήσεις για αλλαγή κατάστασης των info panels παραμένουν όπως ήταν
+    // Συναρτήσεις αλλαγής κατάστασης των info panels
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -737,7 +738,7 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
-    // Νέα updateInfo: δημιουργεί το info panel με δύο στήλες για τα στοιχεία των υποστιβάδων/στιβαδών.
+    // Νέα updateInfo που ενημερώνει τα info panels με τις νέες διατάξεις και στυλιστικές αλλαγές
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -745,9 +746,9 @@
                       <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
                       <span style="font-style: italic;">${currentElement.name || ""}</span>`;
-      // Αντί για το παλιό rowHTMLPair, δημιουργούμε τον πίνακα με τις δύο στήλες:
+      // Για τον Expanded πίνακα: χρησιμοποιούμε τον αναδιαμορφωμένο πίνακα με 3 στήλες
       let subshellsHTML = buildInfoPanelTable(currentElement);
-      let remarksHTML = `<div style="text-align:left; margin-top:10px;">${currentElement.remarks || ""}</div>`;
+      let remarksHTML = `<div style="text-align:center; font-style:italic; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       let infoPanelFull = document.getElementById("infoPanelFull");
       document.getElementById("infoLeft").innerHTML = leftHTML;
       document.getElementById("infoSubshells").innerHTML = subshellsHTML;
@@ -755,7 +756,6 @@
       infoPanelFull.style.width = (window.innerWidth - 207) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
-      // Εφαρμόζουμε τη μείωση του font-size στο infoSubshells ώστε να μην γίνει αναδίπλωση
       adjustFontSize(document.getElementById("infoSubshells"), 12);
       if (currentMode === "collapsed") {
         let infoPanelCollapsed = document.getElementById("infoPanelCollapsed");
@@ -770,9 +770,13 @@
         let collapsedHTML = `
           <div>${leftHTML}</div>
           <hr>
-          ${buildInfoPanelTable(currentElement)}
+          <div style="text-align:center;">Υποστιβάδες: ${currentElement.subshells || "-"}</div>
           <hr>
-          <div style="font-style: italic; text-align: center;">${currentElement.remarks || ""}</div>
+          <div style="text-align:center;">Στοιβάδες: ${formatShells(currentElement, true) || "-"}</div>
+          <hr>
+          <div style="text-align:center;">Μήνυμα: ${messageForElement(currentElement) || "-"}</div>
+          <hr>
+          <div style="text-align:center; font-style:italic;">${currentElement.remarks || ""}</div>
         `;
         infoPanelCollapsed.innerHTML = collapsedHTML;
         adjustFontSize(document.getElementById("infoPanelCollapsed"), 12);
