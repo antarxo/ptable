@@ -200,7 +200,7 @@
 
   <script>
     /****************** Global Variables & Configuration ******************/
-    // Αρχική τιμή: currentZ = 3 για εμφάνιση μόνο του στοιχείου 3 στην αρχή.
+    // Αρχική τιμή: currentZ = 3 για εμφάνιση μόνο του στοιχείου 3.
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
     let textColors = { s: "#8B0000", p: "#006400", d: "#00008B", f: "#FF8C00" };
     let elements = [];
@@ -255,13 +255,13 @@
       }
     }
 
-    // formatShells: εμφανίζει τα στοιχεία οριζόντια με σταθερό πλάτος 40px και margin-right για ίσα διαστήματα.
+    // formatShells: εμφανίζει τα στοιχεία οριζόντια με σταθερό πλάτος 40px και προσθέτει margin-right 6px.
     function formatShells(element, isCurrent = false) {
       if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
       let formatted = shellCounts.map((count, index) => {
          let letter = shellLetter((index+1).toString());
-         return `<span style="display:inline-block; width:40px; text-align:left; margin-right:5px;">${letter}(${count})</span>`;
+         return `<span style="display:inline-block; width:40px; text-align:left; margin-right:6px;">${letter}(${count})</span>`;
       });
       if (isCurrent && formatted.length > 0) {
          let last = formatted.pop();
@@ -510,7 +510,7 @@
       });
     }
     // buildInfoPanelTable για τον expanded πίνακα: 4 στήλες (Ζ, υποστιβάδες, στοιβάδες, μήνυμα)
-    // Οι υποστιβάδες, οι στοιβάδες και τα μηνύματα στοιχίζονται αριστερά και το font-size τους είναι 14px.
+    // Οι υποστιβάδες, οι στοιβάδες και τα μηνύματα στοιχίζονται αριστερά με font-size 14px.
     function buildInfoPanelTable(currentElement) {
       let prev = getPrevElement(currentElement);
       let curr = currentElement;
@@ -619,7 +619,7 @@
         return "";
       }
     }
-    // showBalloonOverlay: ορίζει το font-size στο 13px και αν το balloon επικαλύπτει τον expanded πίνακα μετατοπίζεται ψηλότερα.
+    // showBalloonOverlay: ορίζει το font-size στο 13px, και αν το balloon σε expanded mode επικαλύπτει τον info panel, μετατοπίζεται ψηλότερα κατά το ύψος του balloon + 22 pixels.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -674,10 +674,12 @@
       let screenHalf = window.innerWidth / 2;
       let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
       let overlayY = cellPos.y + cellPos.height - 5;
-      // Έλεγχος για επικάλυψη με τον expanded πίνακα: μετατόπιση ψηλότερα κατά (overlay height + 22)
-      let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
-      if(currentMode === "expanded" && (overlayY + overlayRect.height) > infoPanelRect.top) {
-         overlayY = infoPanelRect.top - overlayRect.height - 22;
+      // Έλεγχος για overlap με τον expanded info panel: μετατόπιση ψηλότερα κατά (overlay height + 22)
+      if(currentMode === "expanded") {
+         let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
+         if(overlayRect.top < infoPanelRect.bottom) {
+           overlayY = infoPanelRect.top - overlayRect.height - 22;
+         }
       }
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
@@ -728,11 +730,12 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
-    // updateInfo: για τον expanded πίνακα χρησιμοποιούμε buildInfoPanelTable (4 στήλες) και για τον collapsed
-    // δημιουργούμε κάθε στοιχείο σε ξεχωριστή γραμμή με οριζόντιες διαχωριστικές γραμμές.
+    // updateInfo: για τον expanded πίνακα χρησιμοποιούμε buildInfoPanelTable (4 στήλες)
+    // και για τον collapsed χρησιμοποιούμε το ίδιο leftHTML για βασική πληροφορία.
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
+      // Χρησιμοποιούμε την ίδια leftHTML και για collapsed ώστε το σύμβολο να έχει ίδια μορφοποίηση.
       let leftHTML = `<span style="font-size:1.3em; font-weight:bold; color:${textColors[currentElement.block]};">Ζ=${currentElement.number}</span> 
                       <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
@@ -747,7 +750,6 @@
       infoPanelFull.style.width = (window.innerWidth - 207) + "px";
       let btnRect = document.getElementById("buttonPanel").getBoundingClientRect();
       infoPanelFull.style.top = btnRect.top + "px";
-      // Εφαρμόζουμε δυναμική προσαρμογή στο περιεχόμενο (εκτός remarks και του συμβόλου)
       adjustFontSize(document.getElementById("infoSubshells"), 16);
       
       if (currentMode === "collapsed") {
@@ -762,27 +764,20 @@
         infoPanelCollapsed.style.height = "auto";
         
         // Collapsed view:
-        // 1. Βασική πληροφορία (ίδια μορφοποίηση με τον expanded)
-        let basicInfo = `<div style="text-align:center; font-size:16px; color:${textColors[currentElement.block]};">
-                           Ζ=${currentElement.number} ${currentElement.symbol || ""} ${currentElement.name || ""}
-                         </div>`;
-        // Ορισμός μεταβλητών για υποστιβάδες, στιβάδες και μηνύματα
+        // Χρησιμοποιούμε την ίδια βασική πληροφορία (leftHTML) για το σύμβολο και τα στοιχεία.
+        let basicInfo = leftHTML;
         let prev = getPrevElement(currentElement);
         let curr = currentElement;
         let next = getNextElement(currentElement);
-        // 2. Υποστιβάδες: κάθε στοιχείο σε ξεχωριστή γραμμή, αριστερά στοιχισμένες, font-size 14px.
         let prevSubshell = prev ? `<div style="text-align:left; font-size:14px; color:${textColors[prev.block]};">${prev.subshells || "-"}</div>` : `<div style="text-align:left; font-size:14px;">-</div>`;
         let currSubshell = `<div style="text-align:left; font-size:14px; color:${textColors[curr.block]};">${curr.subshells || "-"}</div>`;
         let nextSubshell = next ? `<div style="text-align:left; font-size:14px; color:${textColors[next.block]};">${next.subshells || "-"}</div>` : `<div style="text-align:left; font-size:14px;">-</div>`;
-        // 3. Στιβάδες: κάθε στοιχείο σε ξεχωριστή γραμμή, αριστερά στοιχισμένες, font-size 14px.
         let prevStacks = prev ? `<div style="text-align:left; font-size:14px; color:${textColors[prev.block]};">${formatShells(prev, true) || "-"}</div>` : `<div style="text-align:left; font-size:14px;">-</div>`;
         let currStacks = `<div style="text-align:left; font-size:14px; color:${textColors[curr.block]};">${formatShells(curr, true) || "-"}</div>`;
         let nextStacks = next ? `<div style="text-align:left; font-size:14px; color:${textColors[next.block]};">${formatShells(next, true) || "-"}</div>` : `<div style="text-align:left; font-size:14px;">-</div>`;
-        // 4. Μηνύματα: κάθε στοιχείο σε ξεχωριστή γραμμή, αριστερά στοιχισμένα, font-size 14px.
         let prevMsg = prev ? `<div style="text-align:left; font-size:14px; color:${textColors[prev.block]};">${messageForElement(prev) || "-"}</div>` : `<div style="text-align:left; font-size:14px;">-</div>`;
         let currMsg = `<div style="text-align:left; font-size:14px; color:${textColors[curr.block]};">${messageForElement(curr) || "-"}</div>`;
         let nextMsg = next ? `<div style="text-align:left; font-size:14px; color:${textColors[next.block]};">${messageForElement(next) || "-"}</div>` : `<div style="text-align:left; font-size:14px;">-</div>`;
-        // 5. Remarks
         let remarksBlock = `<div style="text-align:center; font-style:italic; font-size:14px;">${currentElement.remarks || ""}</div>`;
         
         let collapsedHTML = `
