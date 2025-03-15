@@ -671,11 +671,11 @@
       let screenHalf = window.innerWidth / 2;
       let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
       let overlayY = cellPos.y + cellPos.height - 5;
-      // Αν το balloon σε expanded mode επικαλύπτει τον info panel, μετατοπίζεται προς τα κάτω κατά (ύψος balloon + 22px)
+      // Σε expanded mode, αν το balloon επικαλύπτει τον info panel, μετατοπίζεται προς τα ΠΑΝΩ κατά (ύψος balloon + 22px)
       if (currentMode === "expanded") {
          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
          if (overlayRect.top < infoPanelRect.bottom) {
-           overlayY = overlayY + overlayRect.height + 22;
+           overlayY = overlayY - (overlayRect.height + 22);
          }
       }
       overlay.style.left = overlayX + "px";
