@@ -621,10 +621,10 @@
       }
     }
 
-    // Η συνάρτηση showBalloonOverlay τοποθετεί το overlay έτσι ώστε το πάνω αριστερό σημείο του
+    // Η συνάρτηση showBalloonOverlay τοποθετεί το overlay έτσι ώστε το πάνω αριστερό του σημείο
     // να είναι 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
     // Σε expanded mode, αν το overlay εμφανίζεται πάνω από το μισό του ύψους της οθόνης,
-    // μετατοπίζεται προς τα πάνω ώστε να διατηρείται η επιθυμητή επικάλυψη 8×8px.
+    // μετατοπίζεται προς τα πάνω ώστε να διατηρείται η επικάλυψη 8×8px.
     // Επιπλέον, αν το κελί βρίσκεται στο δεξί μισό της οθόνης, μετατοπίζεται προς τα αριστερά.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
@@ -695,12 +695,12 @@
         let finalX = anchorX;
         let finalY = anchorY;
         
-        // Εάν το κελί βρίσκεται στο δεξί μισό της οθόνης, μετατόπιση προς τα αριστερά
+        // Αν το κελί βρίσκεται στο δεξί μισό της οθόνης, μετατόπιση προς τα αριστερά
         if (cellPos.x + cellPos.width > window.innerWidth / 2) {
           finalX = anchorX - (overlayRect.width + 16);
         }
         
-        // Για expanded mode: σύγκριση με το μισό του ύψους της οθόνης
+        // Σε expanded mode: συγκρίνοντας με το μισό του ύψους της οθόνης.
         if (currentMode === "expanded") {
           if (overlayRect.top < window.innerHeight / 2) {
             finalY = anchorY - (overlayRect.height + 16);
