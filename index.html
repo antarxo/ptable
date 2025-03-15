@@ -622,10 +622,6 @@
       }
     }
 
-    // Η συνάρτηση showBalloonOverlay έχει επεκταθεί ώστε να λειτουργεί ομαλά σε όλα τα mode:
-    // - Αρχική τοποθέτηση: Το overlay τοποθετείται με το πάνω αριστερό σημείο του 8px πιο μέσα από την κάτω δεξιά γωνία του κελιού.
-    // - Αν το κελί βρίσκεται στο δεξί μισό της οθόνης, το overlay μετατοπίζεται προς τα αριστερά κατά (overlay.width + 16) px.
-    // - Σε expanded (και collapsed) mode, αν το overlay εμφανίζεται πάνω από το μισό του ύψους της οθόνης, μετατοπίζεται προς τα πάνω κατά (overlay.height + 16) px.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -912,7 +908,21 @@
       }
     }
 
-    window.initializeSectorsCanvas = function() {
+    // --- ΝΕΟΣ ΟΡΙΣΜΟΣ ΤΗΣ initializeCanvases ---
+    function initializeCanvases() {
+      // Προσθέτουμε event listener στον καμβά φόντου για να ανιχνεύει κλικ.
+      let bg = document.getElementById("canvasTableBackground");
+      bg.addEventListener("click", function(event) {
+        let x = event.clientX;
+        let y = event.clientY;
+        let cellNumber = performHitTest(x, y);
+        if (cellNumber) {
+          showBalloonOverlay(cellNumber);
+        }
+      });
+    }
+
+    function initializeSectorsCanvas() {
       sectorInstances = [];
       let blocks = ["s", "p", "d", "f"];
       blocks.forEach(block => {
@@ -965,13 +975,13 @@
     loadData().then(() => {
       if (currentMode === "expanded" || currentMode === "collapsed") {
         initializeBackgroundCanvas();
-        window.initializeSectorsCanvas();
+        initializeSectorsCanvas();
         initializePeriodsCanvas();
         initGroupsCanvases();
         initializeCanvases();
       } else if (currentMode === "start") {
         initializeBackgroundCanvas();
-        window.initializeSectorsCanvas();
+        initializeSectorsCanvas();
         initializeCanvases();
       }
       updateCellsPositions();
