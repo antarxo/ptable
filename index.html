@@ -612,6 +612,7 @@
         return "";
       }
     }
+    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με την νέα λογική:
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -629,7 +630,7 @@
       let nextSubshells = next ? (next.subshells || "-") : "-";
       let nextShells = next ? formatShells(next, true) : "-";
       
-      // Πίνακας του balloon με μειωμένο line-height και gap 4px μεταξύ των στιβάδων
+      // Δημιουργία πίνακα περιεχομένου του balloon με gap 4px μεταξύ των στιβάδων
       let tableHTML = `
       <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
         <tr>
@@ -662,25 +663,43 @@
       overlay.innerHTML = tableHTML;
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
+      
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
       setTimeout(() => { overlay.style.opacity = "0.96"; }, 10);
+      
+      // Ορισμός default θέσης από το ίδιο σημείο αναφοράς:
+      // Κάτω δεξιά γωνία του κελιού με μετατόπιση: 10px αριστερά και 10px πάνω.
+      let defaultX = cellPos.x + cellPos.width - 10;
+      let defaultY = cellPos.y + cellPos.height - 10;
+      
+      // Θέτουμε προσωρινά τη default θέση για να μετρήσουμε τις διαστάσεις του balloon.
+      overlay.style.left = defaultX + "px";
+      overlay.style.top = defaultY + "px";
+      
       let overlayRect = overlay.getBoundingClientRect();
-      let overlayWidth = overlayRect.width;
-      let cellRight = cellPos.x + cellPos.width;
-      let screenHalf = window.innerWidth / 2;
-      let overlayX = (cellRight > screenHalf) ? (cellPos.x + cellPos.width - (overlayWidth + 22)) : (cellPos.x + cellPos.width - 5);
-      let overlayY = cellPos.y + cellPos.height - 5;
-      // Σε expanded mode, αν το balloon επικαλύπτει τον info panel, μετατοπίζεται προς τα ΠΑΝΩ κατά (ύψος balloon + 22px)
+      let overlayX = defaultX;
+      let overlayY = defaultY;
+      
+      // Συνθήκη (α): Αν το δεξί όριο του κελιού (cellPos.x+cellPos.width) υπερβαίνει το μισό του πλάτους της σελίδας,
+      // τότε μετατοπίζεται προς τα αριστερά κατά (overlayRect.width + 22px) από το σημείο αναφοράς.
+      if (cellPos.x + cellPos.width > window.innerWidth / 2) {
+         overlayX = defaultX - (overlayRect.width + 22);
+      }
+      
+      // Συνθήκη (β): Σε expanded mode, αν το balloon καλύπτει τον πίνακα πληροφοριών,
+      // μετατοπίζεται προς τα πάνω από το default σημείο κατά (overlayRect.height + 22px).
       if (currentMode === "expanded") {
          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
          if (overlayRect.top < infoPanelRect.bottom) {
-           overlayY = overlayY - (overlayRect.height + 22);
+            overlayY = defaultY - (overlayRect.height + 22);
          }
       }
+      
       overlay.style.left = overlayX + "px";
       overlay.style.top = overlayY + "px";
       overlay.style.fontSize = "13px";
+      
       sectorInstances.forEach(inst => {
         if (typeof inst.myRedraw === "function") inst.myRedraw();
       });
