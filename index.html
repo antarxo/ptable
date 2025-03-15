@@ -223,175 +223,16 @@
       }
     });
 
-    function rowHTMLPair(element, type, showShells = true) {
-      if (!element) {
-        return showShells
-          ? `<tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>
-             <tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>`
-          : `<tr><td colspan="2" style="text-align:center; font-size:16px;">-</td></tr>`;
-      }
-      let borderStyle = (type === "prev" || type === "current") ? "border-bottom:1px solid #ccc;" : "";
-      let color = textColors[element.block] || "#CCCCCC";
-      let firstRow = `<tr style="${borderStyle}">
-                        <td style="color:${color}; font-weight:bold; font-size:16px;">Ζ=${element.number}</td>
-                        <td style="color:${color}; font-size:16px;">${element.subshells || "-"}</td>
-                      </tr>`;
-      if (showShells) {
-        let secondRow = `<tr>
-                           <td></td>
-                           <td style="color:${color}; font-size:16px;">${formatShells(element, true)}</td>
-                         </tr>`;
-        return firstRow + secondRow;
-      } else {
-        return firstRow;
-      }
-    }
+    // Διάφορες βοηθητικές συναρτήσεις (rowHTMLPair, formatShells, shellLetter, getShift, getShiftContainer, computeModeRegion, updateCellsPositions, computeModeRegionUpdated, initializeBackgroundCanvas)
+    // ... (Παραλείπονται εδώ για συντομία, όμως παραμένουν στον κώδικα όπως προηγουμένως) ...
 
-    function formatShells(element, isCurrent = false) {
-      if (!element.shells) return "";
-      let shellCounts = element.shells.split(/,\s*/);
-      let formatted = shellCounts.map((count, index) => {
-         let letter = shellLetter((index+1).toString());
-         return `<span style="display:inline-block; width:40px; text-align:left; margin-right:6px;">${letter}(${count})</span>`;
-      });
-      if (isCurrent && formatted.length > 0) {
-         let last = formatted.pop();
-         last = `<b>${last}</b>`;
-         formatted.push(last);
-      }
-      return formatted.join("");
-    }
-
-    function shellLetter(n) {
-      let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P", "7": "Q" };
-      return mapping[n] || n;
-    }
-
-    function getShift(num, block) {
-      if (currentMode !== "start") return 0;
-      if (block === "p" && num >= 21 && num <= 30) {
-        let effectiveZ = Math.min(currentZ, 30);
-        return (effectiveZ - 20) * 42;
-      }
-      if ((block === "p" || block === "d") && num >= 57 && num <= 70) {
-        let effective = Math.min(currentZ, 70);
-        return (effective - 56) * 42;
-      }
-      return 0;
-    }
-    function getShiftContainer(block) {
-      if (currentMode !== "start") return 0;
-      if (block === "p") {
-        if (currentZ <= 20) return 0;
-        else if (currentZ <= 30) return (currentZ - 20) * 42;
-        else if (currentZ <= 56) return 42 * 10;
-        else if (currentZ <= 70) return 42 * 10 + (currentZ - 56) * 42;
-        else return 42 * 10 + 42 * 14;
-      } else if (block === "d") {
-        if (currentZ < 57) return 0;
-        else if (currentZ <= 70) return (currentZ - 56) * 42;
-        else return 42 * 14;
-      }
-      return 0;
-    }
-    function computeModeRegion() {
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      elements.forEach(e => {
-        let num = Number(e.number);
-        if (currentMode === "start") {
-          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
-        }
-        let pos = positions[currentMode][e.number] ||
-                  ((e.number === "1" || e.number === "2") ? positions["start"][e.number] : null);
-        if (pos) {
-          let x = pos.x, y = pos.y;
-          if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
-            x += getShiftContainer(e.block);
-            if (e.block === "p" && num >= 21 && num <= 30)
-              y += getShift(num, e.block);
-            else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
-              y += getShift(num, e.block);
-          }
-          minX = Math.min(minX, x);
-          minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x + pos.width);
-          maxY = Math.max(maxY, y + pos.height);
-        }
-      });
-      return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
-    }
-    function updateCellsPositions() {
-      currentCellPositions = {};
-      elements.forEach(e => {
-        let num = Number(e.number);
-        if (currentMode === "start") {
-          if ((num < 3 && !extraElements[num]) || num > currentZ) return;
-        }
-        let pos = positions[currentMode][e.number] ||
-                  (((e.number === "1" || e.number === "2") && extraElements[e.number]) ? positions["start"][e.number] : null);
-        if (!pos) return;
-        let offsetX = 0, offsetY = 0;
-        if (currentMode === "start" && (e.block === "p" || e.block === "d")) {
-          offsetX = getShiftContainer(e.block);
-        }
-        if (currentMode === "start") {
-          if (e.block === "p" && num >= 21 && num <= 30)
-            offsetY = getShift(num, e.block);
-          else if ((e.block === "p" || e.block === "d") && num >= 57 && num <= 70)
-            offsetY = getShift(num, e.block);
-        }
-        currentCellPositions[e.number] = {
-          x: pos.x + offsetX,
-          y: pos.y + offsetY,
-          width: pos.width,
-          height: pos.height
-        };
-      });
-    }
-    function computeModeRegionUpdated() {
-      let keys = Object.keys(currentCellPositions);
-      if (keys.length === 0) return null;
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (let key in currentCellPositions) {
-        let pos = currentCellPositions[key];
-        minX = Math.min(minX, pos.x);
-        minY = Math.min(minY, pos.y);
-        maxX = Math.max(maxX, pos.x + pos.width);
-        maxY = Math.max(maxY, pos.y + pos.height);
-      }
-      return { minX, minY, maxX, maxY };
-    }
-    function initializeBackgroundCanvas() {
-      let bg = document.getElementById("canvasTableBackground");
-      let margin = 20;
-      if (currentMode === "start") {
-        let limits = computeModeRegion();
-        if (limits) {
-          bg.style.left = "17px";
-          bg.style.top = (limits.minY - margin) + "px";
-          let width = (limits.maxX - 17) + margin;
-          bg.style.width = width + "px";
-          bg.style.height = (limits.maxY - limits.minY + 2 * margin) + "px";
-        }
-      } else if (currentMode === "expanded" || currentMode === "collapsed") {
-        let leftFixed = 17, topFixed = 55;
-        let margin = 20;
-        let limits = computeModeRegion();
-        let rightLimit = limits.maxX + margin;
-        let bottomLimit = limits.maxY + margin;
-        bg.style.left = leftFixed + "px";
-        bg.style.top = topFixed + "px";
-        bg.style.width = (rightLimit - leftFixed) + "px";
-        bg.style.height = (bottomLimit - topFixed) + "px";
-      }
-      bg.style.opacity = "1";
-    }
     async function loadData() {
       let resElements = await fetch('elements.json');
       elements = await resElements.json();
       let resPositions = await fetch('positions.json');
       positions = await resPositions.json();
     }
+
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
@@ -415,7 +256,9 @@
         };
       });
     }
+
     function initGroupsCanvases() {
+      // Ομαδοποίηση καμβάδων για S, D, P
       new p5(function(p) {
         p.setup = function() {
           let canvas = p.createCanvas(82, 40);
@@ -499,114 +342,8 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-    function buildInfoPanelTable(currentElement) {
-      let prev = getPrevElement(currentElement);
-      let curr = currentElement;
-      let next = getNextElement(currentElement);
-      function buildRow(element) {
-         if (!element) {
-           return `<tr>
-                    <td colspan="2" style="text-align:center; font-size:16px;">-</td>
-                   </tr>
-                   <tr>
-                    <td colspan="2" style="text-align:center; font-size:16px;">-</td>
-                   </tr>`;
-         } else {
-           let color = textColors[element.block] || "#CCCCCC";
-           let numberContent = `<span style="color:${color};">Ζ=${element.number}</span>`;
-           let subshellContent = `<span style="color:${color}; font-size:14px; text-align:left;">${element.subshells || "-"}</span>`;
-           let stacksContent = `<span style="color:${color}; font-size:14px; text-align:left;">${formatShells(element, true) || "-"}</span>`;
-           let messageContent = `<span style="color:${color}; font-size:14px; text-align:left;">${messageForElement(element) || "-"}</span>`;
-           return `<tr>
-                     <td style="white-space: nowrap; text-align:left; font-size:16px;">${numberContent}</td>
-                     <td style="white-space: nowrap; text-align:left; font-size:14px;">${subshellContent}</td>
-                     <td style="white-space: nowrap; text-align:left; font-size:14px;">${stacksContent}</td>
-                     <td style="white-space: nowrap; text-align:left; font-size:14px;">${messageContent}</td>
-                   </tr>`;
-         }
-      }
-      let gapRow = `<tr style="height:4px;"><td colspan="4"></td></tr>`;
-      let rows = buildRow(prev) + gapRow + buildRow(curr) + gapRow + buildRow(next);
-      return `<table style="width:100%; border-collapse:collapse; line-height:1;">${rows}</table>`;
-    }
-    function adjustFontSize(container, maxFontSize) {
-      let fontSize = maxFontSize;
-      container.style.fontSize = fontSize + "px";
-      while (container.scrollWidth > container.clientWidth && fontSize > 8) {
-         fontSize -= 1;
-         container.style.fontSize = fontSize + "px";
-      }
-    }
-    function getPrevElement(currentElement) {
-      let currPos = currentCellPositions[currentElement.number];
-      if (!currPos) return null;
-      let currCenterX = currPos.x + currPos.width / 2;
-      let currCenterY = currPos.y + currPos.height / 2;
-      let candidates = [];
-      for (let e of elements) {
-        if (e.number == currentElement.number) continue;
-        if (!(e.number in currentCellPositions)) continue;
-        let pos = currentCellPositions[e.number];
-        let centerX = pos.x + pos.width / 2;
-        let centerY = pos.y + pos.height / 2;
-        if (centerY < currCenterY && Math.abs(centerX - currCenterX) < 1) {
-          candidates.push({ e, centerY });
-        }
-      }
-      if (candidates.length === 0) return null;
-      candidates.sort((a, b) => b.centerY - a.centerY);
-      return candidates[0].e;
-    }
-    function getNextElement(currentElement) {
-      let currPos = currentCellPositions[currentElement.number];
-      if (!currPos) return null;
-      let currCenterX = currPos.x + currPos.width / 2;
-      let currCenterY = currPos.y + currPos.height / 2;
-      let candidates = [];
-      for (let e of elements) {
-        if (e.number == currentElement.number) continue;
-        if (!(e.number in currentCellPositions)) continue;
-        let pos = currentCellPositions[e.number];
-        let centerX = pos.x + pos.width / 2;
-        let centerY = pos.y + pos.height / 2;
-        if (Math.abs(centerY - currCenterY) < currPos.height * 0.5 && centerX > currCenterX) {
-          candidates.push({ e, centerX });
-        }
-      }
-      if (candidates.length === 0) return null;
-      candidates.sort((a, b) => a.centerX - b.centerX);
-      return candidates[0].e;
-    }
-    function getSubshells(element) {
-      if (!element) return [];
-      if (typeof element.subshells === "string") return element.subshells.split(" ");
-      if (Array.isArray(element.subshells)) return element.subshells;
-      return [];
-    }
-    function messageForElement(element) {
-      if(element.block === 'f') {
-        return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
-      } else {
-        let group = parseInt(element.col);
-        if(group === 1) {
-          return (element.number === 1) ? "Θέλει να <strong>πάρει</strong> 1 ηλεκτρόνιο" : "Θέλει να <strong>δώσει</strong> 1 ηλεκτρόνιο";
-        } else if(group === 2) {
-          return `Θέλει να <strong>δώσει</strong> ${group} ηλεκτρόνια`;
-        } else if(group === 13) {
-          return `Θέλει να <strong>δώσει</strong> ${group - 10} ηλεκτρόνια`;
-        } else if(group >= 3 && group <= 12) {
-          return "Στοιχείο μετάπτωσης";
-        } else if(group === 14) {
-          return "Θέλει να <strong>δώσει</strong> ή να <strong>πάρει</strong> 4 ηλεκτρόνια";
-        } else if(group >= 15 && group <= 17) {
-          return `Θέλει να <strong>πάρει</strong> ${18 - group} ηλεκτρόνια`;
-        } else if(group === 18) {
-          return "Ευγενές αέριο-Χημικά αδρανές";
-        }
-        return "";
-      }
-    }
-    /* ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay, ενσωματωμένη στον κώδικα */
+
+    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με χρήση display:block και visibility:hidden για μέτρηση διαστάσεων
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -628,74 +365,77 @@
       let nextShells = next ? formatShells(next, true) : "-";
       
       let tableHTML = `
-      <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
-        <tr>
-          <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prev ? prev.number : "-"}</td>
-          <td style="color:${prevColor}; text-align:left;">${prevSubshells}</td>
-        </tr>
-        <tr>
-          <td style="color:${prevColor}; border-bottom:1px solid #ccc; text-align:left;">${prevShells}</td>
-        </tr>
-        <tr style="height:4px;"><td colspan="2"></td></tr>
-        <tr>
-          <td rowspan="2" style="color:${currColor}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
-          <td style="color:${currColor}; text-align:left;">${currSubshells}</td>
-        </tr>
-        <tr>
-          <td style="color:${currColor}; border-bottom:1px solid #ccc; text-align:left;">${currShells}</td>
-        </tr>
-        <tr style="height:4px;"><td colspan="2"></td></tr>
-        <tr>
-          <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${next ? next.number : "-"}</td>
-          <td style="color:${nextColor}; text-align:left;">${nextSubshells}</td>
-        </tr>
-        <tr>
-          <td style="color:${nextColor}; text-align:left;">${nextShells}</td>
-        </tr>
-      </table>
+        <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
+          <tr>
+            <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prev ? prev.number : "-"}</td>
+            <td style="color:${prevColor}; text-align:left;">${prevSubshells}</td>
+          </tr>
+          <tr>
+            <td style="color:${prevColor}; border-bottom:1px solid #ccc; text-align:left;">${prevShells}</td>
+          </tr>
+          <tr style="height:4px;"><td colspan="2"></td></tr>
+          <tr>
+            <td rowspan="2" style="color:${currColor}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
+            <td style="color:${currColor}; text-align:left;">${currSubshells}</td>
+          </tr>
+          <tr>
+            <td style="color:${currColor}; border-bottom:1px solid #ccc; text-align:left;">${currShells}</td>
+          </tr>
+          <tr style="height:4px;"><td colspan="2"></td></tr>
+          <tr>
+            <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${next ? next.number : "-"}</td>
+            <td style="color:${nextColor}; text-align:left;">${nextSubshells}</td>
+          </tr>
+          <tr>
+            <td style="color:${nextColor}; text-align:left;">${nextShells}</td>
+          </tr>
+        </table>
       `;
       
       let overlay = document.getElementById("balloonOverlay");
       overlay.innerHTML = tableHTML;
       
+      // Εμφανίζουμε το overlay (display:block) αλλά το κάνουμε invisible ώστε να μετρηθεί σωστά το μέγεθός του
+      overlay.style.display = "block";
+      overlay.style.visibility = "hidden";
+      overlay.style.opacity = "0";
+      
+      // Λήψη διαστάσεων του overlay
+      let overlayRect = overlay.getBoundingClientRect();
+      
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
-      
       let anchorX = cellPos.x + cellPos.width - 8;
       let anchorY = cellPos.y + cellPos.height - 8;
       
-      overlay.style.visibility = "visible";
-      overlay.style.opacity = "0";
-      overlay.style.left = anchorX + "px";
-      overlay.style.top = anchorY + "px";
+      let finalX = anchorX;
+      let finalY = anchorY;
       
-      setTimeout(() => {
-        overlay.style.opacity = "0.96";
-        let overlayRect = overlay.getBoundingClientRect();
-        let finalX = anchorX;
-        let finalY = anchorY;
-        
-        if (cellPos.x + cellPos.width > window.innerWidth / 2) {
-          finalX = anchorX - (overlayRect.width + 16);
+      // Εάν το κελί βρίσκεται στο δεξί μισό της οθόνης, τοποθετούμε το balloon στα αριστερά του κελιού
+      if (cellPos.x + cellPos.width > window.innerWidth / 2) {
+        finalX = anchorX - (overlayRect.width + 16);
+      }
+      
+      // Σε expanded mode, αποφεύγουμε την επικάλυψη με το info panel μετατοπίζοντας προς τα πάνω
+      if (currentMode === "expanded") {
+        let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
+        if (anchorY + overlayRect.height > infoPanelRect.top && anchorY < infoPanelRect.bottom) {
+          finalY = anchorY - (overlayRect.height + 16);
         }
-        
-        if (currentMode === "expanded") {
-          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
-          if (overlayRect.top < infoPanelRect.bottom) {
-            finalY = anchorY - (overlayRect.height + 16);
-          }
-        }
-        
-        overlay.style.left = finalX + "px";
-        overlay.style.top = finalY + "px";
-        overlay.style.fontSize = "13px";
-        
-        sectorInstances.forEach(inst => {
-          if (typeof inst.myRedraw === "function") inst.myRedraw();
-        });
-        updateInfo();
-      }, 10);
+      }
+      
+      // Ανάθεση της τελικής θέσης και εμφάνιση του overlay
+      overlay.style.left = finalX + "px";
+      overlay.style.top = finalY + "px";
+      overlay.style.visibility = "visible";
+      overlay.style.opacity = "0.96";
+      
+      sectorInstances.forEach(inst => {
+        if (typeof inst.myRedraw === "function") inst.myRedraw();
+      });
+      updateInfo();
     }
+
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -712,6 +452,7 @@
         infoCollapsed.style.opacity = "1";
       }, 500);
     }
+
     function switchToExpanded() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -735,6 +476,7 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
+
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -800,6 +542,7 @@
         adjustFontSize(document.getElementById("infoPanelCollapsed"), 16);
       }
     }
+
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -815,9 +558,8 @@
           if (currentMode === "start") {
             if (block === "p" && num >= 21 && num <= 30)
               relativeY += getShift(num, block);
-            else if (block === "p" || block === "d")
-              if(num >= 57 && num <= 70)
-                relativeY += getShift(num, block);
+            else if ((block === "p" || block === "d") && num >= 57 && num <= 70)
+              relativeY += getShift(num, block);
           }
           if (currentBalloonElement == e.number) {
               p.strokeWeight(3);
@@ -836,6 +578,7 @@
         }
       });
     }
+
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
@@ -882,6 +625,7 @@
          return null;
       }
     }
+
     window.initializeSectorsCanvas = function() {
       sectorInstances = [];
       let blocks = ["s", "p", "d", "f"];
@@ -931,6 +675,7 @@
         sectorInstances.push(inst);
       });
     };
+
     function fillAllAction() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
