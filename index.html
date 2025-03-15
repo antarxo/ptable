@@ -6,72 +6,65 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Νέο στυλ για τον τίτλο */
+    /* Στυλ για τον τίτλο */
     #pageTitleOverlay {
       position: fixed;
       top: 5px;
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.9);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.9);
       padding: 5px 10px;
       z-index: 999;
       display: flex;
       align-items: center;
       gap: 10px;
-      width: auto;
       white-space: nowrap;
     }
-    /* Τα στοιχεία του τίτλου σε μία γραμμή */
     #pageTitleOverlay h1,
     #pageTitleOverlay h2 {
       display: inline-block;
       margin: 0;
-      vertical-align: middle;
       white-space: nowrap;
     }
-    /* Κύρια φράση τίτλου */
     #pageTitleOverlay h1 {
       font-size: 24px;
       font-weight: bold;
       color: black;
       letter-spacing: 1px;
     }
-    /* Δεύτερη φράση */
     #pageTitleOverlay h2 {
       font-size: 11px;
-      font-weight: normal;
       color: #333;
     }
-    body { 
-      font-family: 'Roboto', sans-serif; 
-      margin: 0; 
-      overflow: hidden; 
-      background: #f7f7f7; 
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      overflow: hidden;
+      background: #f7f7f7;
       padding-top: 60px;
     }
-    .canvas { 
-      position: absolute; 
-      background: transparent; 
-      transition: all 0.5s ease-in-out; 
+    .canvas {
+      position: absolute;
+      background: transparent;
+      transition: all 0.5s ease-in-out;
     }
     canvas {
       padding: 8px;
       filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.5));
       overflow: visible;
     }
-    /* Background canvas – με z-index -5 */
     #canvasTableBackground {
-      position: absolute; 
-      background: white; 
+      position: absolute;
+      background: white;
       border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 6px 6px 10px rgba(0,0,0,0.3); 
+      box-shadow: 6px 6px 10px rgba(0,0,0,0.3);
       z-index: -5;
       opacity: 1;
       transition: all 0.5s ease-in-out;
     }
-    /* Group canvases */
-    #canvasS_groups, #canvasD_groups, #canvasP_groups { 
+    /* Ομαδοποίηση καμβάδων */
+    #canvasS_groups, #canvasD_groups, #canvasP_groups {
       position: absolute;
       z-index: 60;
     }
@@ -83,19 +76,19 @@
     #canvasPeriods { z-index: 50; }
     /* Button panel */
     #buttonPanel {
-      position: fixed; 
-      bottom: 20px; 
+      position: fixed;
+      bottom: 20px;
       right: 20px;
       z-index: 100;
-      display: flex; 
+      display: flex;
       flex-direction: column;
       gap: 5px;
     }
     #buttonPanel button {
-      background-color: #008CBA; 
-      color: white; 
+      background-color: #008CBA;
+      color: white;
       padding: 10px 15px;
-      border: none; 
+      border: none;
       border-radius: 5px;
       cursor: pointer;
       box-shadow: 4px 4px 4px rgba(0,0,0,0.5);
@@ -145,7 +138,7 @@
   </style>
 </head>
 <body>
-  <!-- Overlay για τον τίτλο -->
+  <!-- Overlay τίτλου -->
   <div id="pageTitleOverlay">
     <h1>
       Διαδραστική Συμπλήρωση του 
@@ -165,7 +158,7 @@
     </h1>
     <h2>2025, Created by Antonios Archontoulis, Greece</h2>
   </div>
-  
+
   <!-- Καμβάδες -->
   <div id="canvasTableBackground"></div>
   <div id="canvasS_groups" class="canvas"></div>
@@ -176,17 +169,16 @@
   <div id="canvasD" class="canvas"></div>
   <div id="canvasP" class="canvas"></div>
   <div id="canvasF" class="canvas"></div>
-  
+
   <!-- Balloon Overlay -->
   <div id="balloonOverlay"></div>
-  
+
   <!-- Info Panels -->
   <div id="infoPanelFull">
     <table style="width:100%; border-collapse:collapse;">
       <tr>
         <td id="infoLeft" style="width:200px;"></td>
         <td id="infoRight">
-          <!-- Εδώ θα δημιουργηθεί δυναμικά ο πίνακας των υποστιβάδων/στιβαδών -->
           <div id="infoSubshells"></div>
           <div id="infoRemarks"></div>
         </td>
@@ -194,7 +186,7 @@
     </table>
   </div>
   <div id="infoPanelCollapsed" style="display:none;"></div>
-  
+
   <!-- Button Panel -->
   <div id="buttonPanel">
     <button id="nextState">Επόμενο</button>
@@ -202,25 +194,20 @@
     <button id="toggleFBlock" disabled>Σύμπτυξε</button>
     <button id="reset">Reset</button>
   </div>
-  
+
   <!-- Offscreen Canvas -->
   <canvas id="offscreenCanvas" width="800" height="600"></canvas>
-  
+
   <script>
-    /********************** Global Variables & Configuration **********************/
+    /****************** Global Variables & Configuration ******************/
     let sectorColors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
-    let textColors = { 
-      s: "#8B0000", 
-      p: "#006400", 
-      d: "#00008B", 
-      f: "#FF8C00" 
-    };
+    let textColors = { s: "#8B0000", p: "#006400", d: "#00008B", f: "#FF8C00" };
     let elements = [];
     let positions = {};
     let isCollapsed = false;
-    let currentMode = "start"; 
+    let currentMode = "start";
     let currentZ = 40;
-    let extraElements = {};  
+    let extraElements = {};
     let showPeriods = false;
     let cellSize = 40;
     let currentCellPositions = {};
@@ -236,7 +223,7 @@
       }
     });
 
-    // Παλιός κώδικας rowHTMLPair (για χρήση στο balloon αν χρειαστεί)
+    // rowHTMLPair (χρησιμοποιείται μόνο για το balloon, αφήνεται ως έχει)
     function rowHTMLPair(element, type, showShells = true) {
       if (!element) {
         return showShells
@@ -267,7 +254,7 @@
       }
     }
 
-    // Συνάρτηση formatShells: στοιχίζει οριζόντια τα στοιχεία με σταθερό πλάτος 40px.
+    // formatShells: εμφανίζει τα στοιχεία οριζόντια με σταθερό πλάτος 40px
     function formatShells(element, isCurrent = false) {
       if (!element.shells) return "";
       let shellCounts = element.shells.split(/,\s*/);
@@ -283,7 +270,7 @@
       return formatted.join("");
     }
 
-    // Συνάρτηση shellLetter που περιλαμβάνει το "7" ως "Q"
+    // shellLetter: συμπεριλαμβάνει το "7" ως "Q"
     function shellLetter(n) {
       let mapping = { "1": "K", "2": "L", "3": "M", "4": "N", "5": "O", "6": "P", "7": "Q" };
       return mapping[n] || n;
@@ -521,7 +508,7 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
-    // Νέα συνάρτηση buildInfoPanelTable για τον expanded πίνακα (3 στήλες: Ζ, Στοιβάδες και Μήνυμα)
+    // Νέα buildInfoPanelTable για τον expanded πίνακα με 4 στήλες: Ζ, υποστιβάδες, στοιβάδες, μήνυμα.
     function buildInfoPanelTable(currentElement) {
       let prev = getPrevElement(currentElement);
       let curr = currentElement;
@@ -529,27 +516,29 @@
       function buildRow(element) {
          if (!element) {
            return `<tr>
-                      <td style="white-space: nowrap; text-align:left; font-size:16px;">-</td>
-                      <td style="white-space: nowrap; text-align:center; font-size:16px;">-</td>
-                      <td style="white-space: nowrap; text-align:left; font-size:16px;">-</td>
+                    <td style="white-space: nowrap; text-align:left; font-size:16px;">-</td>
+                    <td style="white-space: nowrap; text-align:center; font-size:16px;">-</td>
+                    <td style="white-space: nowrap; text-align:right; font-size:16px;">-</td>
+                    <td style="white-space: nowrap; text-align:left; font-size:16px;">-</td>
                    </tr>`;
          } else {
            let color = textColors[element.block] || "#CCCCCC";
            let numberContent = `<span style="color:${color};">Ζ=${element.number}</span>`;
-           // Εάν υπάρχει το element.subshells, το προβάλλουμε, αλλιώς το formatted result.
-           let subshellContent = `<span style="color:${color};">${element.subshells || formatShells(element, true) || "-"}</span>`;
+           let subshellContent = `<span style="color:${color};">${element.subshells || "-"}</span>`;
+           let stacksContent = `<span style="color:${color};">${formatShells(element, true) || "-"}</span>`;
            let messageContent = `<span style="color:${color};">${messageForElement(element) || "-"}</span>`;
            return `<tr>
-                      <td style="white-space: nowrap; text-align:left; font-size:16px;">${numberContent}</td>
-                      <td style="white-space: nowrap; text-align:center; font-size:16px;">${subshellContent}</td>
-                      <td style="white-space: nowrap; text-align:left; font-size:16px;">${messageContent}</td>
+                     <td style="white-space: nowrap; text-align:left; font-size:16px;">${numberContent}</td>
+                     <td style="white-space: nowrap; text-align:center; font-size:16px;">${subshellContent}</td>
+                     <td style="white-space: nowrap; text-align:right; font-size:16px;">${stacksContent}</td>
+                     <td style="white-space: nowrap; text-align:left; font-size:16px;">${messageContent}</td>
                    </tr>`;
          }
       }
       let rows = buildRow(prev) + buildRow(curr) + buildRow(next);
       return `<table style="width:100%; border-collapse:collapse; table-layout:fixed;">${rows}</table>`;
     }
-    // Συνάρτηση adjustFontSize με default μέγεθος 16px και μείωση κατά 1px το βήμα
+    // adjustFontSize: default μέγεθος 16px, μείωση κατά 1px βήμα
     function adjustFontSize(container, maxFontSize) {
       let fontSize = maxFontSize;
       container.style.fontSize = fontSize + "px";
@@ -627,7 +616,7 @@
         return "";
       }
     }
-    // Η showBalloonOverlay παραμένει παρόμοια
+    // showBalloonOverlay παραμένει παρόμοια, με font-size στο 16px
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -689,8 +678,9 @@
       });
       updateInfo();
     }
-    
-    // Συναρτήσεις αλλαγής κατάστασης των info panels
+
+    // Αλλαγές για τα Info Panels: 
+    // switchToCollapsed και switchToExpanded παραμένουν ως προηγούμενα.
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -730,8 +720,8 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
-    // Νέα updateInfo: για τον expanded πίνακα χρησιμοποιούμε buildInfoPanelTable,
-    // ενώ στον collapsed δημιουργούμε κάθε στοιχείο σε ξεχωριστή γραμμή με οριζόντιες διαχωριστικές γραμμές.
+    // updateInfo: για τον expanded πίνακα χρησιμοποιούμε buildInfoPanelTable (4 στήλες)
+    // και για τον collapsed δημιουργούμε κάθε στοιχείο σε ξεχωριστή γραμμή με οριζόντιες διαχωριστικές γραμμές.
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -739,7 +729,7 @@
                       <span style="font-size:3em; font-weight:bold; color:${textColors[currentElement.block]};">
                         ${currentElement.symbol || ""}</span> 
                       <span style="font-style: italic; color:${textColors[currentElement.block]};">${currentElement.name || ""}</span>`;
-      // Expanded view: πίνακας με 3 στήλες
+      // Expanded view: 4-στήλινος πίνακας
       let subshellsHTML = buildInfoPanelTable(currentElement);
       let remarksHTML = `<div style="text-align:center; font-style:italic; margin-top:10px;">${currentElement.remarks || ""}</div>`;
       let infoPanelFull = document.getElementById("infoPanelFull");
@@ -762,35 +752,28 @@
         infoPanelCollapsed.style.width = collapsedWidth + "px";
         infoPanelCollapsed.style.height = "auto";
         
-        // Δημιουργούμε το collapsed view με διάταξη κάθε στοιχείου σε ξεχωριστή γραμμή:
-        let prev = getPrevElement(currentElement);
-        let curr = currentElement;
-        let next = getNextElement(currentElement);
-        
-        // Πληροφορίες στοιχείων (σύμβολο, Ζ και όνομα) για προηγούμενο, τρέχον και επόμενο:
-        let prevInfo = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">Ζ=${prev.number} ${prev.symbol || ""}</div>` : `<div style="text-align:center;">-</div>`;
-        let currInfo = `<div style="text-align:center; color:${textColors[curr.block]};">Ζ=${curr.number} ${curr.symbol || ""}</div>`;
-        let nextInfo = next ? `<div style="text-align:center; color:${textColors[next.block]};">Ζ=${next.number} ${next.symbol || ""}</div>` : `<div style="text-align:center;">-</div>`;
-        
-        // Υποστιβάδες για κάθε στοιχείο:
-        let prevSubshell = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">Υποστιβάδες: ${prev.subshells || formatShells(prev, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        let currSubshell = `<div style="text-align:center; color:${textColors[curr.block]};">Υποστιβάδες: ${curr.subshells || formatShells(curr, true) || "-"}</div>`;
-        let nextSubshell = next ? `<div style="text-align:center; color:${textColors[next.block]};">Υποστιβάδες: ${next.subshells || formatShells(next, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        
-        // Στοιβάδες για κάθε στοιχείο:
-        let prevStacks = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">Στοιβάδες: ${formatShells(prev, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        let currStacks = `<div style="text-align:center; color:${textColors[curr.block]};">Στοιβάδες: ${formatShells(curr, true) || "-"}</div>`;
-        let nextStacks = next ? `<div style="text-align:center; color:${textColors[next.block]};">Στοιβάδες: ${formatShells(next, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        
-        // Μηνύματα για κάθε στοιχείο:
-        let prevMsg = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">Μήνυμα: ${messageForElement(prev) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        let currMsg = `<div style="text-align:center; color:${textColors[curr.block]};">Μήνυμα: ${messageForElement(curr) || "-"}</div>`;
-        let nextMsg = next ? `<div style="text-align:center; color:${textColors[next.block]};">Μήνυμα: ${messageForElement(next) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
-        
+        // Collapsed view:
+        // 1. Βασική πληροφορία
+        let basicInfo = `<div style="text-align:center; font-size:16px; color:${textColors[currentElement.block]};">
+                           Ζ=${currentElement.number} ${currentElement.symbol || ""} ${currentElement.name || ""}
+                         </div>`;
+        // 2. Υποστιβάδες: κάθε στοιχείο (προηγούμενο, τρέχον, επόμενο) σε ξεχωριστή γραμμή, χωρίς τίτλους.
+        let prevSubshell = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">${prev.subshells || "-"}</div>` : `<div style="text-align:center;">-</div>`;
+        let currSubshell = `<div style="text-align:center; color:${textColors[curr.block]};">${curr.subshells || "-"}</div>`;
+        let nextSubshell = next ? `<div style="text-align:center; color:${textColors[next.block]};">${next.subshells || "-"}</div>` : `<div style="text-align:center;">-</div>`;
+        // 3. Στιβάδες: χρησιμοποιούμε το formatShells για κάθε στοιχείο
+        let prevStacks = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">${formatShells(prev, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
+        let currStacks = `<div style="text-align:center; color:${textColors[curr.block]};">${formatShells(curr, true) || "-"}</div>`;
+        let nextStacks = next ? `<div style="text-align:center; color:${textColors[next.block]};">${formatShells(next, true) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
+        // 4. Μηνύματα: κάθε στοιχείο σε ξεχωριστή γραμμή
+        let prevMsg = prev ? `<div style="text-align:center; color:${textColors[prev.block]};">${messageForElement(prev) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
+        let currMsg = `<div style="text-align:center; color:${textColors[curr.block]};">${messageForElement(curr) || "-"}</div>`;
+        let nextMsg = next ? `<div style="text-align:center; color:${textColors[next.block]};">${messageForElement(next) || "-"}</div>` : `<div style="text-align:center;">-</div>`;
+        // 5. Remarks
         let remarksBlock = `<div style="text-align:center; font-style:italic;">${currentElement.remarks || ""}</div>`;
         
         let collapsedHTML = `
-          ${currInfo}
+          ${basicInfo}
           <hr>
           ${prevSubshell}
           ${currSubshell}
@@ -828,11 +811,11 @@
             else if ((block === "p" || block === "d") && num >= 57 && num <= 70)
               relativeY += getShift(num, block);
           }
-          if (currentBalloonElement == e.number) { 
-              p.strokeWeight(3); 
-              p.stroke(0); 
-          } else { 
-              p.noStroke(); 
+          if (currentBalloonElement == e.number) {
+              p.strokeWeight(3);
+              p.stroke(0);
+          } else {
+              p.noStroke();
           }
           p.fill(colors[block] || "#CCCCCC");
           p.rect(relativeX, relativeY, pos.width, pos.height, 5);
