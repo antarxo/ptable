@@ -606,7 +606,9 @@
         return "";
       }
     }
-    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με προτίμηση στην κάτω δεξιά γωνία
+    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με τοποθέτηση στην κάτω δεξιά γωνία του κελιού
+    // όπου το πάνω αριστερό σημείο του overlay βρίσκεται 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
+    // Σε περίπτωση επικαλύψεων (π.χ. σε expanded mode) γίνονται προσαρμογές με επικαλύψεις των 8×8px.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -624,7 +626,7 @@
       let nextSubshells = next ? (next.subshells || "-") : "-";
       let nextShells = next ? formatShells(next, true) : "-";
       
-      // Δημιουργία πίνακα περιεχομένου του balloon
+      // Δημιουργία πίνακα περιεχομένου του overlay
       let tableHTML = `
       <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
         <tr>
@@ -659,32 +661,33 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Καθορισμός προτιμώμενης θέσης: κάτω δεξιά γωνία του κελιού με μετατόπιση 10px
-      let anchorX = cellPos.x + cellPos.width - 10;
-      let anchorY = cellPos.y + cellPos.height - 10;
+      // Αρχική τοποθέτηση: το overlay τοποθετείται έτσι ώστε το πάνω αριστερό σημείο του να βρίσκεται
+      // 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
+      let anchorX = cellPos.x + cellPos.width - 8;
+      let anchorY = cellPos.y + cellPos.height - 8;
       
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
       overlay.style.left = anchorX + "px";
       overlay.style.top = anchorY + "px";
       
-      // Μετά από λίγο, με βάση το μέγεθος του overlay, γίνονται τυχόν διορθώσεις για αποφυγή επικαλύψεων
+      // Μετά από 10ms, προσαρμόζουμε τη θέση για αποφυγή επικαλύψεων με τα κρίσιμα στοιχεία
       setTimeout(() => {
         overlay.style.opacity = "0.96";
         let overlayRect = overlay.getBoundingClientRect();
         let finalX = anchorX;
         let finalY = anchorY;
         
-        // Έλεγχος: αν το overlay εκτείνεται πέρα από το μισό πλάτος της οθόνης, μετατόπιση προς τα αριστερά
+        // Εάν το overlay εκτείνεται πέρα από το μισό πλάτος της οθόνης, μετατόπιση προς τα αριστερά
         if (cellPos.x + cellPos.width > window.innerWidth / 2) {
-          finalX = anchorX - (overlayRect.width + 22);
+          finalX = anchorX - (overlayRect.width + 16);
         }
         
-        // Σε expanded mode: αν το overlay επικαλύπτει το info panel, μετατόπιση προς τα πάνω
+        // Σε expanded mode: εάν το overlay επικαλύπτει το info panel, μετατόπιση προς τα πάνω
         if (currentMode === "expanded") {
           let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
           if (overlayRect.top < infoPanelRect.bottom) {
-            finalY = anchorY - (overlayRect.height + 22);
+            finalY = anchorY - (overlayRect.height + 16);
           }
         }
         
