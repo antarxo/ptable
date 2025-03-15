@@ -606,7 +606,7 @@
         return "";
       }
     }
-    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με τη νέα λογική μετατόπισης:
+    // ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με προτίμηση στην κάτω δεξιά γωνία
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -624,7 +624,7 @@
       let nextSubshells = next ? (next.subshells || "-") : "-";
       let nextShells = next ? formatShells(next, true) : "-";
       
-      // Δημιουργία πίνακα περιεχομένου του balloon με gap 4px μεταξύ των στιβάδων
+      // Δημιουργία πίνακα περιεχομένου του balloon
       let tableHTML = `
       <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
         <tr>
@@ -655,46 +655,48 @@
       
       let overlay = document.getElementById("balloonOverlay");
       overlay.innerHTML = tableHTML;
+      
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
+      // Καθορισμός προτιμώμενης θέσης: κάτω δεξιά γωνία του κελιού με μετατόπιση 10px
+      let anchorX = cellPos.x + cellPos.width - 10;
+      let anchorY = cellPos.y + cellPos.height - 10;
+      
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
-      setTimeout(() => { overlay.style.opacity = "0.96"; }, 10);
+      overlay.style.left = anchorX + "px";
+      overlay.style.top = anchorY + "px";
       
-      // Ορισμός default θέσης: κάτω δεξιά γωνία του κελιού με μετατόπιση 10px αριστερά και 10px πάνω.
-      let defaultX = cellPos.x + cellPos.width - 10;
-      let defaultY = cellPos.y + cellPos.height - 10;
-      overlay.style.left = defaultX + "px";
-      overlay.style.top = defaultY + "px";
-      
-      let overlayRect = overlay.getBoundingClientRect();
-      let overlayX = defaultX;
-      let overlayY = defaultY;
-      
-      // Συνθήκη (α): Αν το δεξί όριο του κελιού υπερβαίνει το μισό του πλάτους της σελίδας,
-      // τότε μετατοπίζεται προς τα αριστερά κατά (overlayRect.width + 22px) από το default σημείο αναφοράς.
-      if (cellPos.x + cellPos.width > window.innerWidth / 2) {
-         overlayX = defaultX - (overlayRect.width + 22);
-      }
-      
-      // Συνθήκη (β): Σε expanded mode, αν το balloon καλύπτει τον πίνακα πληροφοριών,
-      // μετατοπίζεται προς τα πάνω από το default σημείο κατά (overlayRect.height + 22px).
-      if (currentMode === "expanded") {
-         let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
-         if (overlayRect.top < infoPanelRect.bottom) {
-            overlayY = defaultY - (overlayRect.height + 22);
-         }
-      }
-      
-      overlay.style.left = overlayX + "px";
-      overlay.style.top = overlayY + "px";
-      overlay.style.fontSize = "13px";
-      
-      sectorInstances.forEach(inst => {
-        if (typeof inst.myRedraw === "function") inst.myRedraw();
-      });
-      updateInfo();
+      // Μετά από λίγο, με βάση το μέγεθος του overlay, γίνονται τυχόν διορθώσεις για αποφυγή επικαλύψεων
+      setTimeout(() => {
+        overlay.style.opacity = "0.96";
+        let overlayRect = overlay.getBoundingClientRect();
+        let finalX = anchorX;
+        let finalY = anchorY;
+        
+        // Έλεγχος: αν το overlay εκτείνεται πέρα από το μισό πλάτος της οθόνης, μετατόπιση προς τα αριστερά
+        if (cellPos.x + cellPos.width > window.innerWidth / 2) {
+          finalX = anchorX - (overlayRect.width + 22);
+        }
+        
+        // Σε expanded mode: αν το overlay επικαλύπτει το info panel, μετατόπιση προς τα πάνω
+        if (currentMode === "expanded") {
+          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
+          if (overlayRect.top < infoPanelRect.bottom) {
+            finalY = anchorY - (overlayRect.height + 22);
+          }
+        }
+        
+        overlay.style.left = finalX + "px";
+        overlay.style.top = finalY + "px";
+        overlay.style.fontSize = "13px";
+        
+        sectorInstances.forEach(inst => {
+          if (typeof inst.myRedraw === "function") inst.myRedraw();
+        });
+        updateInfo();
+      }, 10);
     }
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
