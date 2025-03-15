@@ -279,6 +279,7 @@
       }
       return 0;
     }
+
     function getShiftContainer(block) {
       if (currentMode !== "start") return 0;
       if (block === "p") {
@@ -294,6 +295,7 @@
       }
       return 0;
     }
+
     function computeModeRegion() {
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       elements.forEach(e => {
@@ -320,6 +322,7 @@
       });
       return (minX === Infinity) ? null : { minX, minY, maxX, maxY };
     }
+
     function updateCellsPositions() {
       currentCellPositions = {};
       elements.forEach(e => {
@@ -348,6 +351,7 @@
         };
       });
     }
+
     function computeModeRegionUpdated() {
       let keys = Object.keys(currentCellPositions);
       if (keys.length === 0) return null;
@@ -361,6 +365,7 @@
       }
       return { minX, minY, maxX, maxY };
     }
+
     function initializeBackgroundCanvas() {
       let bg = document.getElementById("canvasTableBackground");
       let margin = 20;
@@ -386,12 +391,14 @@
       }
       bg.style.opacity = "1";
     }
+
     async function loadData() {
       let resElements = await fetch('elements.json');
       elements = await resElements.json();
       let resPositions = await fetch('positions.json');
       positions = await resPositions.json();
     }
+
     function initializePeriodsCanvas() {
       new p5(function(p) {
         p.setup = function() {
@@ -415,6 +422,7 @@
         };
       });
     }
+
     function initGroupsCanvases() {
       new p5(function(p) {
         p.setup = function() {
@@ -499,6 +507,7 @@
         groupCanvas.style.top = (parseInt(positions[currentMode]["1"].y) - 42 - 2) + "px";
       });
     }
+
     function buildInfoPanelTable(currentElement) {
       let prev = getPrevElement(currentElement);
       let curr = currentElement;
@@ -529,6 +538,7 @@
       let rows = buildRow(prev) + gapRow + buildRow(curr) + gapRow + buildRow(next);
       return `<table style="width:100%; border-collapse:collapse; line-height:1;">${rows}</table>`;
     }
+
     function adjustFontSize(container, maxFontSize) {
       let fontSize = maxFontSize;
       container.style.fontSize = fontSize + "px";
@@ -537,6 +547,7 @@
          container.style.fontSize = fontSize + "px";
       }
     }
+
     function getPrevElement(currentElement) {
       let currPos = currentCellPositions[currentElement.number];
       if (!currPos) return null;
@@ -557,6 +568,7 @@
       candidates.sort((a, b) => b.centerY - a.centerY);
       return candidates[0].e;
     }
+
     function getNextElement(currentElement) {
       let currPos = currentCellPositions[currentElement.number];
       if (!currPos) return null;
@@ -577,12 +589,14 @@
       candidates.sort((a, b) => a.centerX - b.centerX);
       return candidates[0].e;
     }
+
     function getSubshells(element) {
       if (!element) return [];
       if (typeof element.subshells === "string") return element.subshells.split(" ");
       if (Array.isArray(element.subshells)) return element.subshells;
       return [];
     }
+
     function messageForElement(element) {
       if(element.block === 'f') {
         return (element.row === 6) ? "Λανθανίδα" : "Ακτινίδα";
@@ -606,9 +620,12 @@
         return "";
       }
     }
-    // Η συνάρτηση showBalloonOverlay τοποθετεί το overlay στην κάτω δεξιά γωνία του κελιού,
-    // έτσι ώστε το πάνω αριστερό σημείο του overlay να είναι 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
-    // Σε περίπτωση expanded mode, αν το overlay επικαλύπτει το info panel, προσαρμόζεται επιπλέον η θέση με 8×8px επικάλυψη.
+
+    // Η συνάρτηση showBalloonOverlay τοποθετεί το overlay έτσι ώστε το πάνω αριστερό σημείο του
+    // να είναι 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
+    // Σε expanded mode, αν το overlay εμφανίζεται πάνω από το μισό του ύψους της οθόνης,
+    // μετατοπίζεται προς τα πάνω ώστε να διατηρείται η επιθυμητή επικάλυψη 8×8px.
+    // Επιπλέον, αν το κελί βρίσκεται στο δεξί μισό της οθόνης, μετατοπίζεται προς τα αριστερά.
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
@@ -661,34 +678,36 @@
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Αρχική τοποθέτηση: το overlay τοποθετείται ώστε το πάνω αριστερό σημείο του
-      // να είναι 8px πιο αριστερά και 8px πιο πάνω από την κάτω δεξιά γωνία του κελιού.
+      // Αρχική τοποθέτηση: το πάνω αριστερό σημείο του overlay είναι 8px πιο μέσα από την κάτω δεξιά γωνία του κελιού.
       let anchorX = cellPos.x + cellPos.width - 8;
       let anchorY = cellPos.y + cellPos.height - 8;
+      
+      console.log("Anchor:", anchorX, anchorY);
       
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
       overlay.style.left = anchorX + "px";
       overlay.style.top = anchorY + "px";
       
-      // Με καθυστέρηση ώστε να ολοκληρωθεί το layout
+      // Καθυστέρηση 100ms για να έχει ολοκληρωθεί το layout
       setTimeout(() => {
         let overlayRect = overlay.getBoundingClientRect();
         let finalX = anchorX;
         let finalY = anchorY;
         
-        // Αν το κελί βρίσκεται στη δεξιά πλευρά, μετατοπίζουμε το overlay προς τα αριστερά
+        // Εάν το κελί βρίσκεται στο δεξί μισό της οθόνης, μετατόπιση προς τα αριστερά
         if (cellPos.x + cellPos.width > window.innerWidth / 2) {
           finalX = anchorX - (overlayRect.width + 16);
         }
         
-        // Σε expanded mode: αν το overlay επικαλύπτει το info panel, μετατοπίζουμε προς τα πάνω
+        // Για expanded mode: σύγκριση με το μισό του ύψους της οθόνης
         if (currentMode === "expanded") {
-          let infoPanelRect = document.getElementById("infoPanelFull").getBoundingClientRect();
-          if (overlayRect.top < infoPanelRect.bottom) {
+          if (overlayRect.top < window.innerHeight / 2) {
             finalY = anchorY - (overlayRect.height + 16);
           }
         }
+        
+        console.log("Final overlay position:", finalX, finalY);
         
         overlay.style.left = finalX + "px";
         overlay.style.top = finalY + "px";
@@ -698,8 +717,9 @@
           if (typeof inst.myRedraw === "function") inst.myRedraw();
         });
         updateInfo();
-      }, 50);
+      }, 100);
     }
+
     function switchToCollapsed() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -716,6 +736,7 @@
         infoCollapsed.style.opacity = "1";
       }, 500);
     }
+
     function switchToExpanded() {
       let infoFull = document.getElementById("infoPanelFull");
       let infoCollapsed = document.getElementById("infoPanelCollapsed");
@@ -739,6 +760,7 @@
         infoFull.style.width = targetWidth + "px";
       }, 10);
     }
+
     function updateInfo() {
       let currentElement = elements.find(e => e.number == (currentBalloonElement || "3"));
       if (!currentElement) return;
@@ -804,6 +826,7 @@
         adjustFontSize(document.getElementById("infoPanelCollapsed"), 16);
       }
     }
+
     function drawElements(p, block, containerLeft, containerTop) {
       let colors = { s: "#FF477E", p: "#26FF31", d: "#3F99FF", f: "#FFD051" };
       elements.filter(e => e.block === block).forEach(e => {
@@ -839,6 +862,7 @@
         }
       });
     }
+
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
@@ -885,6 +909,7 @@
          return null;
       }
     }
+
     window.initializeSectorsCanvas = function() {
       sectorInstances = [];
       let blocks = ["s", "p", "d", "f"];
@@ -934,6 +959,7 @@
         sectorInstances.push(inst);
       });
     };
+
     function fillAllAction() {
       document.querySelectorAll('.canvas').forEach(el => el.innerHTML = '');
       currentMode = "expanded";
@@ -946,7 +972,9 @@
       updateCellsPositions();
       updateInfo();
     }
+
     document.getElementById('fillAll').addEventListener('click', function() { fillAllAction(); });
+
     document.getElementById('toggleFBlock').addEventListener('click', function() {
       isCollapsed = !isCollapsed;
       this.textContent = isCollapsed ? "Ανάπτυξε" : "Σύμπτυξε";
@@ -976,6 +1004,7 @@
         updateInfo();
       }, 1300);
     });
+
     document.getElementById('nextState').addEventListener('click', function() {
       if (currentMode !== "start") {
         console.log("Το κουμπί 'Επόμενο' λειτουργεί μόνο στην κατάσταση 'start'. Κάντε Reset για επαναφορά.");
@@ -1005,6 +1034,7 @@
       }
       updateInfo();
     });
+
     document.getElementById('reset').addEventListener('click', function() {
       currentMode = "start";
       currentZ = 3;
@@ -1012,11 +1042,13 @@
       showPeriods = false;
       location.reload();
     });
+
     window.addEventListener("resize", function(){
       if (currentBalloonElement !== null && currentCellPositions[currentBalloonElement]) {
         showBalloonOverlay(currentBalloonElement);
       }
     });
+
     function initializeCanvases() {
       Object.keys({ s: 1, p: 1, d: 1, f: 1 }).forEach(function(block) {
         new p5(function(p) {
@@ -1045,7 +1077,9 @@
         });
       });
     }
+
     window.drawElements = drawElements;
+
     function performHitTest(x, y) {
       let region = computeModeRegionUpdated();
       if (!region) {
@@ -1092,6 +1126,7 @@
          return null;
       }
     }
+
     window.initializeSectorsCanvas = function() {
       sectorInstances = [];
       let blocks = ["s", "p", "d", "f"];
@@ -1141,6 +1176,7 @@
         sectorInstances.push(inst);
       });
     };
+
     loadData().then(() => {
       if (currentMode === "expanded" || currentMode === "collapsed") {
         initializeBackgroundCanvas();
