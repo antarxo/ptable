@@ -606,38 +606,72 @@
         return "";
       }
     }
-    /* ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με τη νέα λογική τοποθέτησης */
+    /* ΕΝΗΜΕΡΩΜΕΝΗ συνάρτηση showBalloonOverlay με τη νέα λογική τοποθέτησης και κατασκευή περιεχομένου */
     function showBalloonOverlay(elementNumber) {
       let currentElement = elements.find(e => e.number == elementNumber);
       if (!currentElement) return;
       
+      let prev = getPrevElement(currentElement);
+      let next = getNextElement(currentElement);
+      let prevColor = prev ? (textColors[prev.block] || "#CCCCCC") : "#CCCCCC";
+      let currColor = currentElement ? (textColors[currentElement.block] || "#CCCCCC") : "#CCCCCC";
+      let nextColor = next ? (textColors[next.block] || "#CCCCCC") : "#CCCCCC";
+      let prevSubshells = prev ? (prev.subshells || "-") : "-";
+      let prevShells = prev ? formatShells(prev, true) : "-";
+      let currSubshells = currentElement ? (currentElement.subshells || "-") : "-";
+      let currShells = currentElement ? formatShells(currentElement, true) : "-";
+      let nextSubshells = next ? (next.subshells || "-") : "-";
+      let nextShells = next ? formatShells(next, true) : "-";
+      
+      let tableHTML = `
+      <table style="border-collapse: collapse; width:100%; font-size:13px; line-height:1;">
+        <tr>
+          <td rowspan="2" style="color:${prevColor}; font-weight:bold;">Ζ=${prev ? prev.number : "-"}</td>
+          <td style="color:${prevColor}; text-align:left;">${prevSubshells}</td>
+        </tr>
+        <tr>
+          <td style="color:${prevColor}; border-bottom:1px solid #ccc; text-align:left;">${prevShells}</td>
+        </tr>
+        <tr style="height:4px;"><td colspan="2"></td></tr>
+        <tr>
+          <td rowspan="2" style="color:${currColor}; font-weight:bold;">Ζ=${currentElement ? currentElement.number : "-"}</td>
+          <td style="color:${currColor}; text-align:left;">${currSubshells}</td>
+        </tr>
+        <tr>
+          <td style="color:${currColor}; border-bottom:1px solid #ccc; text-align:left;">${currShells}</td>
+        </tr>
+        <tr style="height:4px;"><td colspan="2"></td></tr>
+        <tr>
+          <td rowspan="2" style="color:${nextColor}; font-weight:bold;">Ζ=${next ? next.number : "-"}</td>
+          <td style="color:${nextColor}; text-align:left;">${nextSubshells}</td>
+        </tr>
+        <tr>
+          <td style="color:${nextColor}; text-align:left;">${nextShells}</td>
+        </tr>
+      </table>
+      `;
+      
+      let overlay = document.getElementById("balloonOverlay");
+      overlay.innerHTML = tableHTML;
+      
       let cellPos = currentCellPositions[elementNumber];
       if (!cellPos) return;
       
-      // Υπολογισμός της κάτω δεξιάς γωνίας του κελιού και εφαρμογή offset (8px σε top και left)
       let anchorX = cellPos.x + cellPos.width - 8;
       let anchorY = cellPos.y + cellPos.height - 8;
       
-      let overlay = document.getElementById("balloonOverlay");
       overlay.style.left = anchorX + "px";
       overlay.style.top = anchorY + "px";
       overlay.style.visibility = "visible";
       overlay.style.opacity = "0";
       
-      // Αρχική τοποθέτηση: το overlay τοποθετείται "κολλημένο" στο συγκεκριμένο σημείο
       setTimeout(() => {
         let overlayRect = overlay.getBoundingClientRect();
         
-        // Έλεγχος για οριζόντια μετατόπιση:
-        // Αν η δεξιά κάτω γωνία του κελιού (cellPos.x + cellPos.width) εκτείνεται πέρα από το μισό πλάτος της οθόνης,
-        // μετατοπίζουμε το overlay προς τα αριστερά (αφαιρούμε το πλάτος του overlay + επιπλέον offset 16px)
         if ((cellPos.x + cellPos.width) > window.innerWidth / 2) {
           anchorX = anchorX - (overlayRect.width + 16);
         }
         
-        // Έλεγχος για κατακόρυφη μετατόπιση:
-        // Αν η δεξιά κάτω γωνία του κελιού (cellPos.y + cellPos.height) εκτείνεται κάτω από το μισό ύψος της οθόνης,
-        // μετατοπίζουμε το overlay προς τα πάνω (αφαιρούμε το ύψος του overlay + επιπλέον offset 16px)
         if ((cellPos.y + cellPos.height) > window.innerHeight / 2) {
           anchorY = anchorY - (overlayRect.height + 16);
         }
